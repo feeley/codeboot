@@ -118,8 +118,8 @@ function createREPL(node) {
         lineNumbers:  false,   // Show line numbers
         matchBrackets: true,
         extraKeys: {
-            "Ctrl-C": function (cm) { set_prompt(cm); cm.refresh(); cm.cp.history.resetPos(); },
-            "Ctrl-L": function (cm) { cp.clearConsole(); cm.cp.history.resetPos(); },
+            "Ctrl-C": function (cm) { cp.clearREPL(); cm.cp.history.resetPos(); },
+            "Ctrl-L": function (cm) { cp.clearAll(); cm.cp.history.resetPos(); },
             "Ctrl-Enter": function(cm) { cm.autoInsertBraces(cm)},
             "Shift-Enter": function(cm) { cp.run(true); },
             "Enter": function(cm) { cp.run(false); },

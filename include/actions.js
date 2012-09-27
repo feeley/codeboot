@@ -161,24 +161,20 @@ cp.reportWarning = function (text, title) {
 };
 
 cp.addLineToTranscript = function (text, cssClass) {
-
     var line;
-    if (cp.non_empty !== void 0)
-        line = cp.transcript.lineCount();
-    else
-        line = 0;
-
+    
     text = String(text);
-
     if (text.charAt(text.length - 1) === "\n")
-        text = text.slice(0,text.length-1);
-
-    if (line > 0) {
+        text = text.slice(0,text.length-1);    
+        
+    if (cp.non_empty) {
+        line = cp.transcript.lineCount();
         text = "\n" + text;
     } else {
-        cp.non_empty = true;
-        document.getElementById("transcript").style.display='block';
+        line = 0;
+        $("#transcript").show();
         $("#transcript-sep").show();
+        cp.non_empty = true;
     }
 
     cp.transcript.replaceRange(text, { line: line, ch: 0 });
@@ -414,10 +410,23 @@ cp.run = function(single_step) {
     cp.execute(single_step);
 };
 
-cp.clearConsole = function () {
-    $(cp.console).empty();
-    cp.repl.setValue("");
+cp.clearREPL = function () {
+    set_prompt(cp.repl);
+    cp.repl.refresh();
 };
+
+cp.clearTranscript = function () {
+    cp.transcript.setValue("");
+    cp.transcript.refresh();
+    cp.non_empty = false;
+    $("#transcript").hide();
+    $("#transcript-sep").hide();
+};
+
+cp.clearAll = function () {
+    cp.clearREPL();
+    cp.clearTranscript();
+}
 
 cp.loadFile = function (cm, f) {
     if (!cm) return;
