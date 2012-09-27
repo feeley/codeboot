@@ -413,6 +413,7 @@ cp.run = function(single_step) {
 cp.clearREPL = function () {
     set_prompt(cp.repl);
     cp.repl.refresh();
+    cp.repl.focus();
 };
 
 cp.clearTranscript = function () {
