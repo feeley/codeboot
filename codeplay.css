@@ -98,6 +98,14 @@ body {
   color: #f89406 !important; /* Bootstrap accent - orange */    
 }
 
+/* ----- Transcript ----- */
+
+#transcript .CodeMirror-scroll {
+    /* Fix size, use scroll bars on overflow */
+    max-height: 400px;
+    overflow: auto;
+}
+
 /* ----- REPL ----- */
 
 #repl CodeMirror {
@@ -126,10 +134,10 @@ body {
 }
 
 /* Disable scrolling in REPL */
-#repl .CodeMirror-scroll {
+/*#repl .CodeMirror-scroll {
   height: auto;
   overflow: visible;
-}
+}*/
 
 /* Use a block cursor in REPL to differentiate from normal editors */
 #repl .CodeMirror-cursor {
