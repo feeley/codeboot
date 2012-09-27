@@ -1,0 +1,57 @@
+#! /bin/sh
+
+OPT_PROFILE=""
+OPT_NAMESPACE=""
+OPT_EXPORTS=""
+OPT_REPORT=""
+OPT_DEBUG=""
+OPT_WARN=""
+OPT_AST=""
+OPT_JS=""
+LAST_FILE=""
+FILES=""
+
+DIR=`dirname $0`
+
+JS2JS="d8 $DIR/system.js $DIR/num.js $DIR/scanner.js $DIR/parser.js $DIR/pp.js $DIR/ast-passes.js $DIR/js2js.js --"
+
+while [ "$1" != "" ]; do
+  case "$1" in
+    "-profile") OPT_PROFILE="-profile" ;;
+  "-namespace") shift
+                OPT_NAMESPACE="-namespace $1" ;;
+     "-export") shift
+                OPT_EXPORTS="$OPT_EXPORTS -export $1" ;;
+     "-report") OPT_REPORT="-report" ;;
+      "-debug") OPT_DEBUG="-debug" ;;
+       "-warn") OPT_WARN="-warn" ;;
+        "-ast") OPT_AST="-ast" ;;
+         "-js") OPT_JS="-js" ;;
+         "-raw") OPT_RAW="-raw" ;;
+          "--") shift
+                break ;;
+          *.js) LAST_FILE="$1"
+                FILES="$FILES $LAST_FILE"
+                ;;
+             *) echo "Usage: $0 [-profile|-namespace <ns>|-export <id>|-report|-debug|-warn|-ast|-js|-raw] file1.js file2.js ..."
+                exit 1
+                ;;
+  esac
+  shift
+done
+
+if [ "$OPT_AST" != "" ]; then
+  if ! $JS2JS $OPT_PROFILE $OPT_NAMESPACE $OPT_EXPORTS $OPT_REPORT $OPT_DEBUG $OPT_WARN $OPT_RAW -ast -nojs $FILES; then
+    exit 1
+  fi
+else
+  if ! $JS2JS $OPT_PROFILE $OPT_NAMESPACE $OPT_EXPORTS $OPT_REPORT $OPT_DEBUG $OPT_WARN $OPT_RAW $FILES < /dev/null > $LAST_FILE.js; then
+    cat "$LAST_FILE.js"
+    rm -f "$LAST_FILE.js"
+    exit 1
+  fi
+  if [ "$OPT_JS" == "" ]; then
+    cat "$LAST_FILE.js"
+    rm -f "$LAST_FILE.js"
+  fi
+fi

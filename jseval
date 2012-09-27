@@ -1,0 +1,22 @@
+#! /bin/sh
+
+LAST_FILE=""
+FILES=""
+
+DIR=`dirname $0`
+
+JSEVAL="d8 $DIR/system.js $DIR/num.js $DIR/scanner.js $DIR/parser.js $DIR/pp.js $DIR/ast-passes.js $DIR/eval.js $DIR/jseval.js --"
+
+while [ "$1" != "" ]; do
+  case "$1" in
+          *.js) LAST_FILE="$1"
+                FILES="$FILES $LAST_FILE"
+                ;;
+             *) echo "Usage: $0 file1.js file2.js ..."
+                exit 1
+                ;;
+  esac
+  shift
+done
+
+$JSEVAL $FILES
