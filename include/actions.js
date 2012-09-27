@@ -178,6 +178,7 @@ cp.addLineToTranscript = function (text, cssClass) {
     } else {
         cp.non_empty = true;
         document.getElementById("transcript").style.display='block';
+        $("#transcript-sep").show();
     }
 
     cp.transcript.replaceRange(text, { line: line, ch: 0 });

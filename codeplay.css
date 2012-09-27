@@ -106,6 +106,13 @@ body {
     overflow: auto;
 }
 
+#transcript-sep {
+    display: none; /* initially hidden */
+    margin: 2px 0;
+    border-top: 0;
+    border-bottom: 1px solid #c5c5c5;
+}
+
 /* ----- REPL ----- */
 
 #repl CodeMirror {
