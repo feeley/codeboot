@@ -508,7 +508,9 @@ cp.load = function (cm) {
 cp.serializeState = function () {
     var state = {
         tabs: [],
-        console: undefined
+        repl: {
+            history: undefined
+        }
     };
     var tabs = cp.tabs;
     for (var i = 0; i < tabs.length; i++) {
@@ -522,7 +524,7 @@ cp.serializeState = function () {
         }
     }
     
-    state.console = cp.console.innerHTML;
+    state.repl.history = cp.repl.cp.history.serializeState();
     
     return state;
 };
@@ -544,8 +546,8 @@ cp.restoreState = function (state) {
             }
         }
         
-        // Restore console
-        cp.console.innerHTML = state.console || "";
+        // Restore history
+        cp.repl.cp.history.restoreState(state.repl.history);
     } catch (e) {
         cp.reportError("Unable to restore state: " + e);
     }

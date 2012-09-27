@@ -79,6 +79,18 @@ REPLHistoryManager.prototype.previous = function () {
     }
 };
 
+REPLHistoryManager.prototype.serializeState = function () {
+    return {
+        history: this.history
+    };
+}
+
+REPLHistoryManager.prototype.restoreState = function (state) {
+    this.history = state.history;
+    this.resetPos();
+};
+
+
 REPLHistoryManager.prototype.next = function () {
     var index = this.pos + 1;
     if (index < this.history.length) {
