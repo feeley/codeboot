@@ -96,7 +96,8 @@ function createTranscript(node) {
         indentUnit: 4,         // Indent by 4 spaces
         lineNumbers:  false,   // Show line numbers
         matchBrackets: true,
-        readOnly: "nocursor"
+        readOnly: "nocursor",
+        lineWrapping: true
     };
     var editor = CodeMirror(node, options);
     return editor;
@@ -137,6 +138,7 @@ function createREPL(node) {
                 event.preventDefault();
             }
         },
+        lineWrapping: true
     };
     var editor = CodeMirror(node, options);
     editor.cp = {};
