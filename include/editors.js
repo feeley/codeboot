@@ -142,9 +142,15 @@ function createREPL(node) {
             "Down": function (cm) {
                 cm.cp.history.next();
                 return true;
-            }
+            },
         },
         onKeyEvent: function (cm, event) {
+            if (event.keyCode == 8 && cm.getValue() === "> ") {
+                // Backspace
+                event.stopPropagation();
+                event.preventDefault();
+                return true;
+            }
             if (cm.busy) {
                 event.stopPropagation();
                 event.preventDefault();
