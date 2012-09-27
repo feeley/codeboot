@@ -118,7 +118,7 @@ function createREPL(node) {
         lineNumbers:  false,   // Show line numbers
         matchBrackets: true,
         extraKeys: {
-            "Ctrl-C": function (cm) { cm.setValue(""); cm.refresh(); cm.cp.history.resetPos(); },
+            "Ctrl-C": function (cm) { set_prompt(cm); cm.refresh(); cm.cp.history.resetPos(); },
             "Ctrl-L": function (cm) { cp.clearConsole(); cm.cp.history.resetPos(); },
             "Ctrl-Enter": function(cm) { cm.autoInsertBraces(cm)},
             "Shift-Enter": function(cm) { cp.run(true); },
