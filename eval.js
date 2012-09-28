@@ -50,6 +50,11 @@ function js_eval_result(rte)
     return rte.result;
 }
 
+function js_eval_error(rte)
+{
+    return rte.error;
+}
+
 function js_eval_step(rte, nb_steps)
 {
     if (nb_steps === void 0)
@@ -166,9 +171,10 @@ function RTE(glo, stack, frame)
     this.frame = frame;
     this.step_count = 0;
     this.step_limit = 0;
-    this.exec_point = { ast: null, value: void 0 };
     this.resume = null;
-    this.result = void 0;
+    this.ast = null;
+    this.result = null;
+    this.error = null;
 }
 
 function RTFrame(this_, callee, params, locals, env)
@@ -686,7 +692,10 @@ function comp_expr(cte, ast)
                                                                               var fn = obj[prop];
 
                                                                               if (typeof fn !== "function")
-                                                                                  throw "cannot call a non function";/////////////
+                                                                                  return step_end_with_error(rte,
+                                                                                                             cont,
+                                                                                                             ast,
+                                                                                                             "cannot call a non function");
                                                                               else if ("_apply_" in fn)
                                                                                   return fn._apply_(rte,
                                                                                                     function (rte, result)
@@ -720,7 +729,10 @@ function comp_expr(cte, ast)
                                                      function (rte, args)
                                                      {
                                                          if (typeof fn !== "function")
-                                                             throw "cannot call a non function";///////////////
+                                                             return step_end_with_error(rte,
+                                                                                        cont,
+                                                                                        ast,
+                                                                                        "cannot call a non function");
                                                          else if ("_apply_" in fn)
                                                              return fn._apply_(rte,
                                                                                function (rte, result)
@@ -756,6 +768,7 @@ function comp_expr(cte, ast)
                 locals[id_str] = i-nb_params;
                 nb_locals++;
             }
+            i++;
         }
 
         var fn_cte = new CTE((ast.id !== null) ? ast.id.toString() : null,
@@ -863,7 +876,13 @@ function comp_expr(cte, ast)
             return function (rte, cont)
                    {
                        var result = rte.frame.locals[index];
-                       return step_end(rte, cont, ast, result);
+                       if (result === void 0)
+                           return step_end_with_error(rte,
+                                                      cont,
+                                                      ast,
+                                                      "cannot read an undefined variable");
+                       else
+                           return step_end(rte, cont, ast, result);
                    };
         }
         else if (id_str in cte.params)
@@ -873,7 +892,13 @@ function comp_expr(cte, ast)
             return function (rte, cont)
                    {
                        var result = rte.frame.params[index];
-                       return step_end(rte, cont, ast, result);
+                       if (result === void 0)
+                           return step_end_with_error(rte,
+                                                      cont,
+                                                      ast,
+                                                      "cannot read an undefined variable");
+                       else
+                           return step_end(rte, cont, ast, result);
                    };
         }
         else
@@ -881,7 +906,13 @@ function comp_expr(cte, ast)
             return function (rte, cont)
                    {
                        var result = rte.glo[id_str];
-                       return step_end(rte, cont, ast, result);
+                       if (result === void 0)
+                           return step_end_with_error(rte,
+                                                      cont,
+                                                      ast,
+                                                      "cannot read an undefined variable");
+                       else
+                           return step_end(rte, cont, ast, result);
                    };
         }
     }
@@ -1467,14 +1498,14 @@ function sem_x_modequal_y(rte, cont, ast, obj, prop, y) // "x %= y"
 
 //-----------------------------------------------------------------------------
 
-function step_end(rte, cont, ast, value)
+function step_end(rte, cont, ast, result)
 {
-    rte.exec_point.ast = ast;
-    rte.exec_point.value = value;
+    rte.ast = ast;
+    rte.result = result;
 
     var resume = function ()
     {
-        return cont(rte, value);
+        return cont(rte, result);
     };
 
     if (++rte.step_count < rte.step_limit)
@@ -1486,6 +1517,15 @@ function step_end(rte, cont, ast, value)
         rte.resume = resume;
         return null;
     }
+}
+
+function step_end_with_error(rte, cont, ast, error)
+{
+    rte.ast = ast;
+    rte.error = error;
+    rte.resume = null;
+
+    return null;
 }
 
 //=============================================================================

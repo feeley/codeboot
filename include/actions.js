@@ -218,7 +218,9 @@ function printed_repr(x) {
     if (typeof x === "string") {
         return "\"" + x + "\""; //TODO: should escape ", \, etc!
     } else if (typeof x === "object") {
-        if (x instanceof Array) {
+        if (x === null) {
+            return "null";
+        } else if (x instanceof Array) {
             var a = [];
             for (var i=0; i<x.length; i++)
                 a.push(printed_repr(x[i]));
@@ -236,7 +238,13 @@ function printed_repr(x) {
     }
 }
 
-var program_state = { rte: null, mark: null, timeout_id: null, step_delay: 0 };
+var program_state = {
+    rte: null,
+    error_mark: null,
+    step_mark: null,
+    timeout_id: null,
+    step_delay: 0
+};
 
 cp.animate = function (new_step_delay) {
     program_state.step_delay = new_step_delay;
@@ -277,21 +285,31 @@ cp.cancel = function () {
     cp.repl.focus();
 };
 
-cp.show_step = function (show) {
+cp.show_error = function (show) {
 
-    if (program_state.mark !== null) {
-        program_state.mark.clear();
-        program_state.mark = null;
+    if (program_state.error_mark !== null) {
+        program_state.error_mark.clear();
+        program_state.error_mark = null;
     }
 
     if (show) {
-        program_state.mark = code_highlight(program_state.rte.exec_point.ast.loc, "exec-point-code");
-        var value = program_state.rte.exec_point.value;
+        program_state.error_mark = code_highlight(program_state.rte.ast.loc, "error-code");
+    }
+};
+
+cp.show_step = function (show) {
+
+    if (program_state.step_mark !== null) {
+        program_state.step_mark.clear();
+        program_state.step_mark = null;
+    }
+
+    if (show) {
+        program_state.step_mark = code_highlight(program_state.rte.ast.loc, "exec-point-code");
+        var value = program_state.rte.result;
         document.getElementById("step-value").innerHTML = printed_repr(value);
         document.getElementById("step-value").style.display = (value === void 0) ? "none" : "block";
-        //document.getElementById("step-button").style.display = "block";
     } else {
-        //document.getElementById("step-button").style.display = "none";
         document.getElementById("step-value").style.display = "none";
         document.getElementById("step-value").innerHTML = "";
     }        
@@ -327,11 +345,15 @@ cp.execute = function (single_step) {
                                                       1);
             }
         } else {
-            cp.show_step(false);
 
-            var result = js_eval_result(rte);
-            if (result !== void 0) {
-                cp.addLineToTranscript(printed_repr(result), null);
+            if (rte.error !== null) {
+                cp.show_error(true);
+                cp.addLineToTranscript(rte.error, "error-message");
+            } else {
+                var result = js_eval_result(rte);
+                if (result !== void 0) {
+                    cp.addLineToTranscript(printed_repr(result), null);
+                }
             }
 
             cp.cancel();
@@ -376,6 +398,8 @@ cp.run = function(single_step) {
 
     cp.repl.cp.history.add(str);
     cp.addLineToTranscript(str, null);
+
+    cp.show_error(false);
 
     var error = function (loc, kind, msg) {
         if (kind !== "warning") {
