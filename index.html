@@ -143,6 +143,9 @@ tyle="display:block;">Play</button>
         }
 
         $(document).ready(function() {
+            window.onbeforeunload = function () {
+                return "You codePlay session will be lost."
+            };
             checkBrowserFeatures();
 
             cp.alerts = document.getElementById("alerts");
