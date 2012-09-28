@@ -449,6 +449,7 @@ cp.clearTranscript = function () {
 };
 
 cp.clearAll = function () {
+    cp.cancel();
     cp.clearREPL();
     cp.clearTranscript();
 }
