@@ -79,6 +79,18 @@ REPLHistoryManager.prototype.previous = function () {
     }
 };
 
+REPLHistoryManager.prototype.serializeState = function () {
+    return {
+        history: this.history
+    };
+}
+
+REPLHistoryManager.prototype.restoreState = function (state) {
+    this.history = state.history;
+    this.resetPos();
+};
+
+
 REPLHistoryManager.prototype.next = function () {
     var index = this.pos + 1;
     if (index < this.history.length) {
@@ -130,9 +142,15 @@ function createREPL(node) {
             "Down": function (cm) {
                 cm.cp.history.next();
                 return true;
-            }
+            },
         },
         onKeyEvent: function (cm, event) {
+            if (event.keyCode == 8 && cm.getValue() === "> ") {
+                // Backspace
+                event.stopPropagation();
+                event.preventDefault();
+                return true;
+            }
             if (cm.busy) {
                 event.stopPropagation();
                 event.preventDefault();

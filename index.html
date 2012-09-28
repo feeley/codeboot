@@ -48,7 +48,7 @@
     </script>
   </head>
 
-  <body>
+  <body onunload="cp.saveSession();">
     <!-- Navbar -->
     <div class="navbar navbar-fixed-top navbar-inverse">
       <div class="navbar-inner">
@@ -152,6 +152,8 @@ tyle="display:block;">Play</button>
             cp.output = document.getElementById("outputBox");
 
             document.getElementById("transcript").style.display='none';
+            
+            cp.loadSession();
 
             cp.newTab();
 

@@ -1,15 +1,15 @@
 cp.clearSession = function () {
-    localStorage.removeItem("cp");
+    localStorage.removeItem("codeplay");
 };
 
 cp.saveSession = function () {
     var state = cp.serializeState();
-    localStorage["cp"] = JSON.stringify(state);
+    localStorage["codeplay"] = JSON.stringify(state);
 };
 
 cp.loadSession = function () {
     // Restore tabs
-    var state = localStorage["cp"];
+    var state = localStorage["codeplay"];
     if (state) {
         cp.restoreState(JSON.parse(state));
     }
