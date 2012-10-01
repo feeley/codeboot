@@ -238,6 +238,12 @@ function printed_repr(x) {
     }
 }
 
+cp.query = function (query) {
+    if (query !== null) {
+        alert(query);
+    }
+}
+
 var program_state = {
     rte: null,
     error_mark: null,

@@ -66,6 +66,7 @@ body {
   font-size: 20px;
   position: relative;
   height: 200px;
+  width: 100px;
 }
 
 .CodeMirror-scroll {
