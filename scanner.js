@@ -584,7 +584,8 @@ Scanner.prototype.parse_number = function ()
         var snd_char = scanner.lookahead_char(1);
         var exp_sign = 1;
 
-        if (snd_char === LOWER_X_CH || snd_char === UPPER_X_CH)
+        if (fst_char === ZERO_CH &&
+            (snd_char === LOWER_X_CH || snd_char === UPPER_X_CH))
         {
             // We got an hex number!
             chars.write_char(fst_char);
