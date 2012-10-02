@@ -256,9 +256,9 @@ cp.handle_query = function () {
                cp.saved_query.charCodeAt(j) !== 126) j++;
         if (i<j)
             set_input(cp.repl, default_prompt + cp.saved_query.slice(i, j));
-        if (cp.saved_query.charCodeAt(j) === 96) { // ~
+        if (cp.saved_query.charCodeAt(j) === 126) { // ~
             cp.run(false);
-        } else if (cp.saved_query.charCodeAt(j) === 126) { // `
+        } else if (cp.saved_query.charCodeAt(j) === 96) { // `
             cp.step();
         }
         j++;
