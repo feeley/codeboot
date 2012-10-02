@@ -250,7 +250,7 @@ cp.handle_query = function () {
         query = decodeURIComponent(query);
     }
 
-    if (query.slice(0, 7) === "replay?") {
+    if (query.slice(0, 7) === "replay=") {
 
         var i = 7;
 
