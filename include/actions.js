@@ -239,30 +239,36 @@ function printed_repr(x) {
 }
 
 cp.query = function (query) {
-    if (query !== null) {
-        query = decodeURIComponent(query);
-    }
     cp.saved_query = query;
 };
 
 cp.handle_query = function () {
 
-    var i = 0;
+    var query = cp.saved_query;
 
-    while (i < cp.saved_query.length) {
-        var j = i;
-        while (j < cp.saved_query.length &&
-               cp.saved_query.charCodeAt(j) !== 96 &&
-               cp.saved_query.charCodeAt(j) !== 126) j++;
-        if (i<j)
-            set_input(cp.repl, default_prompt + cp.saved_query.slice(i, j));
-        if (cp.saved_query.charCodeAt(j) === 126) { // ~
-            cp.run(false);
-        } else if (cp.saved_query.charCodeAt(j) === 96) { // `
-            cp.step();
+    if (query !== null) {
+        query = decodeURIComponent(query);
+    }
+
+    if (query.slice(0, 7) === "replay?") {
+
+        var i = 7;
+
+        while (i < query.length) {
+            var j = i;
+            while (j < query.length &&
+                   query.charCodeAt(j) !== 96 &&
+                   query.charCodeAt(j) !== 126) j++;
+            if (i<j)
+                set_input(cp.repl, default_prompt + query.slice(i, j));
+            if (query.charCodeAt(j) === 126) { // ~
+                cp.run(false);
+            } else if (query.charCodeAt(j) === 96) { // `
+                cp.step();
+            }
+            j++;
+            i = j;
         }
-        j++;
-        i = j;
     }
 };
 
