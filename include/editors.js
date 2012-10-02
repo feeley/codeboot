@@ -115,11 +115,17 @@ function createTranscript(node) {
     return editor;
 }
 
+var default_prompt = "> ";
+
 var set_prompt = function (cm, prompt) {
     if (prompt === void 0)
-        prompt = "> ";
-    cm.setValue(prompt);
-    cm.setCursor(0, prompt.length);
+        prompt = default_prompt;
+    set_input(cm, prompt);
+};
+
+var set_input = function (cm, str) {
+    cm.setValue(str);
+    cm.setCursor(0, str.length);
 };
 
 function createREPL(node) {

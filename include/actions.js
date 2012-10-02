@@ -240,9 +240,27 @@ function printed_repr(x) {
 
 cp.query = function (query) {
     if (query !== null) {
-        alert(query);
+        query = decodeURIComponent(query);
     }
-}
+    cp.saved_query = query;
+};
+
+cp.handle_query = function () {
+
+    var i = 0;
+
+    while (i < cp.saved_query.length) {
+        var j = i;
+        while (j < cp.saved_query.length &&
+               cp.saved_query.charCodeAt(j) !== 10) j++;
+        set_input(cp.repl, default_prompt + cp.saved_query.slice(i, j));
+        if (cp.saved_query.charCodeAt(j) === 10) {
+            cp.run(false);
+            j++;
+        }
+        i = j;
+    }
+};
 
 var program_state = {
     rte: null,
