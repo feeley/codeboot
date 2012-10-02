@@ -74,6 +74,8 @@ cp.clearOutput = function () {
 
 cp.onOutputKindClicked = function (outputPlugin) {
     var container = cp.output;
+    if (!container) return;
+
     $("[data-cp-role=outputKindLabel]", container.parentNode).text(outputPlugin.label);
     cp.currentOutput = outputPlugin;
     cp.builtins = outputPlugin.builtins || {};
