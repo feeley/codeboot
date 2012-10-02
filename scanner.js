@@ -501,6 +501,8 @@ Scanner.prototype.parse_number = function ()
     // to access the "this" object
     var scanner;
 
+    var chars;
+
     // Computes the value of a serie of digit characters
     // as if they are on the "left-hand side" of the decimal point
     var lhs_value = function (accepted_char, base, char_value) 
@@ -511,6 +513,7 @@ Scanner.prototype.parse_number = function ()
             var c = scanner.lookahead_char(0);
             if (!accepted_char(c))
                 break;
+            chars.write_char(c);
             scanner.advance(1);
             n = num_add(num_mul(n, base), char_value(c));
         }
@@ -528,6 +531,7 @@ Scanner.prototype.parse_number = function ()
             var c = scanner.lookahead_char(0);
             if (!accepted_char(c))
                 break;
+            chars.write_char(c);
             scanner.advance(1);
             pos = pos * base;
             n = n * base + char_value(c);
@@ -572,6 +576,8 @@ Scanner.prototype.parse_number = function ()
         // Workaround for passing "this"
         scanner = this;
 
+        chars = new String_output_port("");
+
         var start_pos = scanner.lookahead_pos(0);
         var n;
         var fst_char = scanner.lookahead_char(0);
@@ -581,6 +587,8 @@ Scanner.prototype.parse_number = function ()
         if (snd_char === LOWER_X_CH || snd_char === UPPER_X_CH)
         {
             // We got an hex number!
+            chars.write_char(fst_char);
+            chars.write_char(snd_char);
             scanner.advance(2);
             n = lhs_value(hexadecimal, 16, hexadecimal_value);
         }
@@ -596,6 +604,7 @@ Scanner.prototype.parse_number = function ()
             // We might have numbers after the decimal points
             if (scanner.lookahead_char(0) === PERIOD_CH)
             {
+                chars.write_char(PERIOD_CH);
                 scanner.advance(1);
                 n = n + rhs_value(decimal, 10, decimal_value);
             }
@@ -604,6 +613,7 @@ Scanner.prototype.parse_number = function ()
             fst_char = scanner.lookahead_char(0);
             if (fst_char === LOWER_E_CH || fst_char === UPPER_E_CH)
             {
+                chars.write_char(fst_char);
                 scanner.advance(1);
 
                 // The exponent might have a sign  
@@ -611,10 +621,12 @@ Scanner.prototype.parse_number = function ()
                 if (fst_char === PLUS_CH)
                 {
                     exp_sign = 1;
+                    chars.write_char(fst_char);
                     scanner.advance(1);
                 } else if (fst_char === MINUS_CH)
                 {  
                     exp_sign = -1;
+                    chars.write_char(fst_char);
                     scanner.advance(1);
                 } 
 
@@ -623,8 +635,8 @@ Scanner.prototype.parse_number = function ()
             }
         }
 
-
-        return scanner.valued_token(NUMBER_CAT, n, start_pos);
+        // Use the JavaScript unary + operator to convert token to number
+        return scanner.valued_token(NUMBER_CAT, +chars.get_output_string(), start_pos);
     };
 }();
 

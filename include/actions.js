@@ -309,9 +309,9 @@ cp.cancel_animation = function () {
 };
 
 cp.cancel = function () {
-    document.getElementById("cancel-button").style.display = "none";
     cp.cancel_animation();
     cp.show_step(false);
+    cp.show_cancel(false);
     program_state.rte = null;
     cp.repl.busy = false;
     set_prompt(cp.repl);
@@ -331,6 +331,17 @@ cp.show_error = function (show) {
     }
 };
 
+cp.show_cancel = function (show) {
+
+    var cancel = document.getElementById("cancel-button");
+
+    if (show) {
+        cancel.style.display = "block";
+    } else {
+        cancel.style.display = "none";
+    }
+};
+
 cp.show_step = function (show) {
 
     if (program_state.step_mark !== null) {
@@ -338,15 +349,17 @@ cp.show_step = function (show) {
         program_state.step_mark = null;
     }
 
+    var step_value = document.getElementById("step-value");
+
     if (show) {
         program_state.step_mark = code_highlight(program_state.rte.ast.loc, "exec-point-code");
         var value = program_state.rte.result;
-        document.getElementById("step-value").innerHTML = printed_repr(value);
-        document.getElementById("step-value").style.display = (value === void 0) ? "none" : "block";
+        step_value.textContent = printed_repr(value);
+        step_value.style.display = (value === void 0) ? "none" : "block";
     } else {
-        document.getElementById("step-value").style.display = "none";
-        document.getElementById("step-value").innerHTML = "";
-    }        
+        step_value.style.display = "none";
+        step_value.textContent = "";
+    }
 };
 
 cp.execute = function (single_step) {
@@ -367,6 +380,7 @@ cp.execute = function (single_step) {
 
         if (!js_eval_finished(rte)) {
             cp.show_step(single_step);
+            cp.show_cancel(true);
             if (single_step) {
                 if (program_state.step_delay > 0) {
                     program_state.timeout_id = setTimeout(function ()
@@ -462,8 +476,6 @@ cp.run = function(single_step) {
         cp.repl.refresh();
         return;
     }
-
-    document.getElementById("cancel-button").style.display = "block";
 
     cp.execute(single_step);
 };
