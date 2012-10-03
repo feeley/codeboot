@@ -585,6 +585,7 @@ cp.serializeState = function () {
         },
         devMode: cp.devMode
     };
+    /*
     var tabs = cp.tabs;
     for (var i = 0; i < tabs.length; i++) {
         var tab = tabs[i];
@@ -596,6 +597,7 @@ cp.serializeState = function () {
             });
         }
     }
+    */
     
     state.repl.history = cp.repl.cp.history.serializeState();
     
@@ -606,6 +608,7 @@ cp.restoreState = function (state) {
     if (state === undefined) return;
     
     try {
+        /*
         if (state.tabs) {
             var tabs = state.tabs;
             cp.closeAllTabs();
@@ -618,6 +621,7 @@ cp.restoreState = function (state) {
                 cp.newTab();
             }
         }
+        */
         
         // Restore history
         cp.repl.cp.history.restoreState(state.repl.history);
