@@ -145,8 +145,8 @@
 
 /* Use a block cursor in REPL to differentiate from normal editors */
 #repl .CodeMirror-cursor {
-  width: 1.3ex;
-  background-color: gray;
+  width: 0.5ex;
+  background-color: rgba(0,0,0,0.3);
   border: none;
 }
 
