@@ -250,7 +250,7 @@ cp.handle_query = function () {
         query = decodeURIComponent(query);
     }
 
-    if (query.slice(0, 7) === "replay=") {
+    if (query && query.slice(0, 7) === "replay=") {
 
         var i = 7;
 
@@ -582,7 +582,8 @@ cp.serializeState = function () {
         tabs: [],
         repl: {
             history: undefined
-        }
+        },
+        devMode: cp.devMode
     };
     var tabs = cp.tabs;
     for (var i = 0; i < tabs.length; i++) {
@@ -620,6 +621,7 @@ cp.restoreState = function (state) {
         
         // Restore history
         cp.repl.cp.history.restoreState(state.repl.history);
+        cp.setDevMode(!!state.devMode);
     } catch (e) {
         cp.reportError("Unable to restore state: " + e);
     }

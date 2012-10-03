@@ -149,6 +149,7 @@ function createREPL(node) {
                 cm.cp.history.next();
                 return true;
             },
+            "Ctrl-/": function (cm) { Mousetrap.trigger("ctrl+/"); }
         },
         onKeyEvent: function (cm, event) {
             if (event.keyCode == 8 && cm.getValue() === "> ") {

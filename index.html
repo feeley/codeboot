@@ -55,10 +55,10 @@
 
   <body onunload="cp.saveSession();">
     <!-- Navbar -->
-    <div class="navbar navbar-fixed-top navbar-inverse">
+    <div id="navbar" class="navbar navbar-fixed-top navbar-inverse">
       <div class="navbar-inner">
         <div class="container">
-          <a class="brand" href="#">codePlay v0.3</a>
+          <a class="brand" href="#">codePlay v0.3<span id="devModeTitle"></span></a>
 
           <div class="btn-group pull-right">
             <button id="btn-run" class="btn" onclick="cp.step();">Step</button>
@@ -146,10 +146,28 @@ tyle="display:block;">Play</button>
                 }
             });
         }
+        
+        cp.setDevMode = function (devMode) {
+            cp.devMode = devMode;
+            if (cp.devMode) {
+                $("#navbar").removeClass("navbar-inverse");
+                $("#devModeTitle").text(" (dev mode)");
+            } else {
+                $("#navbar").addClass("navbar-inverse");
+                $("#devModeTitle").text("");
+            }
+        };        
 
         $(document).ready(function() {
+            Mousetrap.bind('ctrl+/', function () {
+                cp.setDevMode(!cp.devMode);
+            });
             window.onbeforeunload = function () {
-                return "You codePlay session will be lost."
+                if (!cp.devMode) {
+                    return "You codePlay session will be lost."
+                } else {
+                    return undefined;
+                }
             };
             checkBrowserFeatures();
 
@@ -158,6 +176,7 @@ tyle="display:block;">Play</button>
             cp.transcript = createTranscript(document.getElementById("transcript"));
             cp.console = document.getElementById("console");
             cp.output = document.getElementById("outputBox");
+            cp.devMode = false;
 
             document.getElementById("transcript").style.display='none';
             
@@ -275,6 +294,7 @@ tyle="display:block;">Play</button>
     <script src="include/builtins.js"></script>
     <script src="include/storage.js"></script>
     <script src="include/output.js"></script>
+    <script src="include/mousetrap.min.js"></script>
     <script>cp.query(null);</script>
   </body>
 </html>
