@@ -1,0 +1,275 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>codePlay</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Styles -->
+    <link href="include/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="include/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <link rel="stylesheet" href="include/codemirror3/lib/codemirror.css">
+    <link rel="stylesheet" href="include/codemirror3/theme/eclipse.css">
+    <link href="codeplay3.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <script src="include/modernizr-custom.js"></script>
+    <script type="text/javascript">
+        window.MISSING   = 0;
+        window.EMULATED  = 1;
+        window.SUPPORTED = 2;
+
+        window.features = [
+            {
+              name: "File reader",
+              url:  "http://caniuse.com/filereader",
+              status: Modernizr.filereader ? SUPPORTED : MISSING
+            },
+            {
+              name: "JSON",
+              url:  "http://caniuse.com/json",
+              status: Modernizr.json ? SUPPORTED : EMULATED
+            }
+        ];
+
+        Modernizr.load([
+            {
+                test : Modernizr.json,
+                nope : ['include/polyfills/json2.js']
+            }
+        ]);
+    </script>
+  </head>
+
+  <body onunload="cp.saveSession();">
+    <!-- Navbar -->
+    <div class="navbar navbar-fixed-top navbar-inverse">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="#">codePlay v0.3.1</a>
+
+          <div class="btn-group pull-right">
+            <button id="btn-run" class="btn" onclick="cp.step();">Step</button>
+            <button id="btn-run-dropdown" class="btn dropdown-toggle" data-toggle="dropdown">
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+              <li><a href="#" onclick="cp.animate(0);">Stop</a></li>
+              <li><a href="#" onclick="cp.animate(2000);">Animate slowly</a></li>
+              <li><a href="#" onclick="cp.animate(500);">Animate</a></li>
+              <li><a href="#" onclick="cp.animate(125);">Animate quickly</a></li>
+            </ul>
+          </div>
+
+          <button id="play-button" class="btn pull-right" onclick="cp.play();" s
+tyle="display:block;">Play</button>
+
+          <button id="clear-button" class="btn pull-right" onclick="cp.clearAll();">Clear</button>
+          <button id="cancel-button" class="btn pull-right" onclick="cp.cancel();" style="display:none;">Cancel</button>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="container">
+
+      <!-- Console -->
+      <div class="row">
+        <pre id="repl"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"></div></pre>
+      </div>
+
+      <div class="row">
+        <pre id="step-value" class="exec-point-code" style="display:none;"></pre>
+      </div>
+
+    </div>
+
+    <!-- Imports (importing at the end makes the page load faster) -->
+    <script src="include/jquery.js"></script>
+    <script src="include/bootstrap/js/bootstrap.js"></script>
+    <script src="include/codemirror3/lib/codemirror.js"></script>
+    <script src="include/codemirror3/mode/javascript/javascript.js"></script>
+    <script src="include/cm-autoclose.js"></script>
+
+    <script src="include/polyfills/BlobBuilder.js"></script>
+    <script src="include/polyfills/FileSaver.js"></script>
+
+    <script src="system.js"></script>
+    <script src="num.js"></script>
+    <script src="scanner.js"></script>
+    <script src="parser.js"></script>
+    <script src="pp.js"></script>
+    <script src="ast-passes.js"></script>
+    <script src="eval.js"></script>
+
+    <script type="text/javascript">
+        window.cp = {
+            builtins: {},
+
+            // state
+            tabs: [],
+            currentTab: undefined,
+            currentConsoleLine: undefined,
+            currentOutput: undefined,
+            outputPlugins: [],
+
+            // Elements
+            alerts: undefined,
+            repl: undefined,
+            console: undefined,
+            output: undefined,
+        };
+
+        function disableHashLinks() {
+            $("a").each(function () {
+                if (this.onclick && (this.href === '#' || this.href === document.baseURI + "#")) {
+                    var oldHandler = this.onclick;
+                    this.onclick = (function (h) {
+                        return function (event) {
+                            event.preventDefault();
+                            h(event);
+                        };
+                    })(oldHandler);
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            window.onbeforeunload = function () {
+                return "You codePlay session will be lost."
+            };
+            checkBrowserFeatures();
+
+            cp.alerts = document.getElementById("alerts");
+            cp.repl   = createREPL(document.getElementById("repl"));
+            cp.transcript = createTranscript(document.getElementById("transcript"));
+            cp.console = document.getElementById("console");
+            cp.output = document.getElementById("outputBox");
+
+            document.getElementById("transcript").style.display='none';
+            
+            cp.loadSession();
+
+            cp.newTab();
+
+            $("#repl").click(focusREPL);
+
+            $("#fileOpenDialog").on('show', function () {
+                // Reset file open model before displaying
+                document.getElementById('fileInputForm').innerHTML = document.getElementById('fileInputForm').innerHTML;
+                $("#btnOpenFile").addClass("disabled");
+            });
+
+            cp.handle_query();
+
+        //disableHashLinks();
+        });
+
+        function checkBrowserFeatures() {
+            var MISSING = 0, EMULATED = 1, SUPPORTED = 2;
+            var status = SUPPORTED;
+
+            for (var i = 0; i < window.features.length; i++) {
+                var feature = window.features[i];
+                var status_label;
+                switch (feature.status) {
+                  case MISSING:
+                    status_label = "missing";
+                    break;
+                  case EMULATED:
+                    status_label = "emulated";
+                    break;
+                  default:
+                    status_label = "supported";
+                    break;
+                }
+
+                $("#browserIssues ul").append($("<li/>").append($('<a/>').attr('href', feature.url).attr("target", "new").text(feature.name + " " + status_label)));
+                status = Math.min(status, feature.status);
+            }
+
+            if (status === SUPPORTED) {
+                $("#browserStatus").addClass("badge-success");
+                $("#browserStatusMsg").text("All features supported");
+                $("#browserStatusIcon").addClass("icon-ok");
+            } else if (status === EMULATED) {
+                $("#browserStatus").addClass("badge-warning");
+                $("#browserStatusMsg").text("Some features are emulated");
+                $("#browserStatusIcon").addClass("icon-warning-sign");
+            } else {
+                $("#browserStatus").addClass("badge-important");
+                $("#browserStatusMsg").text("Some features are missing");
+                $("#browserStatusIcon").addClass("icon-exclamation-sign");
+            }
+        }
+
+        function doOpen() {
+            var tab = cp.getCurrentTab();
+            cp.load(tab.editor);
+        }
+
+        function onFileSelected() {
+            $('#btnOpenFile').removeClass('disabled');
+        }
+
+        function doSave() {
+            var tab = cp.getCurrentTab();
+            if (tab) cp.save(tab.editor);
+        }
+
+        function cp_internal_run(tabs, mode) {
+            $("#btn-run").removeClass("btn-primary").addClass("btn-danger").text("Stop");
+            $("#btn-run-dropdown").removeClass("btn-primary").addClass("btn-danger");
+            for (var i = 0; i < tabs.length; i++) {
+                var tab = tabs[i];
+                if (tab) {
+                    var ed = tab.editor;
+                    var script = mode === "selection" ? ed.getSelection() : ed.getValue();
+                    try {
+                        cp.runScript(script);
+                    } catch (e) {
+                        cp.reportError(tab.title + " - " + e);
+                        break;
+                    }
+                }
+            }
+            $("#btn-run").removeClass("btn-danger").addClass("btn-primary").text("Run all");
+            $("#btn-run-dropdown").removeClass("btn-danger").addClass("btn-primary");
+        }
+
+        function doRunAll() {
+            cp_internal_run(cp.tabs);
+        }
+
+        function doRunCurrent() {
+           cp_internal_run([cp.getCurrentTab()]);
+        }
+
+        function doRunSelection() {
+            cp_internal_run([cp.getCurrentTab()], "selection");
+        }
+
+        function doClear() {
+            cp.clearAll();
+        }
+
+        function focusREPL() {
+            cp.repl.focus();
+        }
+    </script>
+    <script src="include/actions.js"></script>
+    <script src="include/editors.js"></script>
+    <script src="include/builtins.js"></script>
+    <script src="include/storage.js"></script>
+    <script src="include/output.js"></script>
+    <script>cp.query(null);</script>
+  </body>
+</html>
