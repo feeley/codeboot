@@ -53,9 +53,9 @@ For example, if bignum_radix_log2 = 2, here is how the numbers from
 
 */
 
-const bignum_radix_log2 = 14; // must be between 5 and 14 (could be as low as 1 if it wasn't for the division by 10 required by bignum_to_string)
-const bignum_radix = 1 << bignum_radix_log2;
-const bignum_radix_div2 = 1 << (bignum_radix_log2-1);
+var bignum_radix_log2 = 14; // must be between 5 and 14 (could be as low as 1 if it wasn't for the division by 10 required by bignum_to_string)
+var bignum_radix = 1 << bignum_radix_log2;
+var bignum_radix_div2 = 1 << (bignum_radix_log2-1);
 
 function bignum_from_js(n)
 {
