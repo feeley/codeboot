@@ -59,7 +59,9 @@
     <div id="navbar" class="navbar navbar-fixed-top navbar-inverse">
       <div class="navbar-inner">
         <div class="container">
-          <a class="brand" href="#">codePlay v0.4<span id="devModeTitle"></span></a>
+          <a class="brand" href="#">codePlay v0.5<span id="devModeTitle"></span></a>
+
+          <button id="btn-help" class="btn btn-primary" onclick="cp_tutorial();">Help</button>
 
           <div class="btn-group pull-right">
             <button id="btn-run" class="btn" onclick="cp.step();">Step</button>
@@ -96,9 +98,6 @@ tyle="display:block;">Play</button>
         <pre id="step-value" class="exec-point-code" style="display:none;"></pre>
       </div>
 
-      <div class="row">
-        <a href="#" onclick="cp_tutorial();">Need help?</a>
-      </div>
     </div>
 
     <!-- Imports (importing at the end makes the page load faster) -->

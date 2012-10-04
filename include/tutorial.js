@@ -13,7 +13,7 @@ function cp_tutorial1() {
 		placement: "bottom",
 		trigger: "manual",
 		title: "REPL",
-		content: '<p>Enter JavaScript expressions here to evaluate them.</p> ' + 
+		content: '<p>This is the Read-Eval-Print Loop (REPL).  After the prompt, enter the JavaScript code you wish to execute.</p> ' + 
 		         '<p><a class="btn btn-primary" onclick="cp_tutorial_setREPLExpression();">Show me</a> ' +
 		         '<a class="btn btn-primary" onclick="cp_tutorial2();">Next</a></p>',
 		html: true,
@@ -29,7 +29,7 @@ function cp_tutorial2() {
 		placement: "bottom",
 		trigger: "manual",
 		title: "Play button",
-		content: '<p>Use this button to evaluate the current expression.</p>' +
+		content: '<p>Use this button to evaluate the code entered at the REPL, or simply press the Enter key.</p>' +
 		    '<p><a class="btn btn-primary" onclick="cp_tutorial_setREPLExpression();' + "$('#play-button').click();" + '">Show me</a> ' +
 			'<a class="btn btn-primary" onclick="cp_tutorial3();">Next</a></p>',
 		html: true,
@@ -45,7 +45,7 @@ function cp_tutorial3() {
 		placement: "bottom",
 		trigger: "manual",
 		title: "Step button",
-		content: '<p>Use this button to evaluate the current expression one step at a time.</p>' +
+		content: '<p>Use this button to execute one step of the code.</p>' +
 		         '<p><a class="btn btn-primary" onclick="cp_tutorial_setREPLExpression();' + "$('#btn-run').click(); cp_tutorial4();" + '">Show me</a>  ' +
 		         '<a class="btn btn-primary" onclick="cp_tutorial_end();">Done</a></p>',
 		html: true,
@@ -61,7 +61,7 @@ function cp_tutorial4() {
 		placement: "bottom",
 		trigger: "manual",
 		title: "Step button",
-		content: '<p>Press the button again to execute the next step. Repeat until the expression is fully evaluated.</p>' +
+		content: '<p>Press the button again to execute the next step. Repeat until the code is fully evaluated, or press the Play button.</p>' +
 		         '<p><a class="btn btn-primary" onclick="cp_tutorial_end();">Done</a></p>',
 		html: true,
 	});
