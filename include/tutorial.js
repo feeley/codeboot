@@ -5,6 +5,7 @@ function cp_tutorial() {
 }
 
 function cp_tutorial_setREPLExpression() {
+    cp.cancel();
     cp.query("replay=1+2*3");
     cp.handle_query();
     focusREPL();
