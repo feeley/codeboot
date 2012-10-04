@@ -1,12 +1,13 @@
 function cp_tutorial() {
     if (cp.inTutorial) return;
     cp.inTutorial = true;
-	cp_tutorial1();
+    cp_tutorial1();
 }
 
 function cp_tutorial_setREPLExpression() {
-	cp.query("replay=1+2*3");
-	cp.handle_query();
+    cp.query("replay=1+2*3");
+    cp.handle_query();
+    focusREPL();
 }
 
 function cp_tutorial1() {
