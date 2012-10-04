@@ -1,4 +1,6 @@
 function cp_tutorial() {
+    if (cp.inTutorial) return;
+    cp.inTutorial = true;
 	cp_tutorial1();
 }
 
@@ -20,6 +22,7 @@ function cp_tutorial1() {
 	});
 	
 	$("#repl").popover('show');
+    focusREPL();
 }
 
 function cp_tutorial2() {
@@ -36,6 +39,7 @@ function cp_tutorial2() {
 	});
 	
 	$("#play-button").popover('show');
+    focusREPL();
 }
 
 function cp_tutorial3() {
@@ -52,6 +56,7 @@ function cp_tutorial3() {
 	});
 	
 	$("#btn-run").popover('show');
+    focusREPL();
 }
 
 function cp_tutorial4() {
@@ -67,8 +72,11 @@ function cp_tutorial4() {
 	});
 	
 	$("#btn-run").popover('show');
+    focusREPL();
 }
 
 function cp_tutorial_end() {
 	$("#btn-run").popover('destroy');
+    focusREPL();
+    cp.inTutorial = false;
 }
