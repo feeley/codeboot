@@ -354,11 +354,11 @@ cp.show_step = function (show) {
     if (show) {
         program_state.step_mark = code_highlight(program_state.rte.ast.loc, "exec-point-code");
         var value = program_state.rte.result;
-        step_value.textContent = printed_repr(value);
+        $(step_value).text(printed_repr(value));
         step_value.style.display = (value === void 0) ? "none" : "block";
     } else {
         step_value.style.display = "none";
-        step_value.textContent = "";
+        $(step_value).text("");
     }
 };
 
