@@ -7,20 +7,16 @@ function createCodeEditor(node) {
         matchBrackets: true,
         extraKeys: {
             "Enter": function(cm) { cm.autoInsertBraces(cm)},
-            "Ctrl-Enter": function(cm) { cm.autoInsertBraces(cm)},
-            "Shift-Cmd-S": function(cm) { cp.saveProject(cm); return true; },
-            "Shift-Cmd-O": function(cm) { cp.loadProject(cm); return true; },
-            "Ctrl-O": function (cm) { cp.load(cm); return true; },            
+            "Ctrl-Enter": function(cm) { cm.autoInsertBraces(cm)}, 
         },
         
         onDragEvent: function(cm, event) {
             if (event.type === "drop") { 
-                console.log(event);
                 event.stopPropagation();
                 event.preventDefault();
                 var dt = event.dataTransfer; 
                 var files = dt.files;            
-                cp.loadFile(cm, files[0]);
+                // cp.loadFile(cm, files[0]); // TODO
                 return true;
             } else if (event.type === "dragover") {
                 event.stopPropagation();
@@ -31,7 +27,7 @@ function createCodeEditor(node) {
     };
     
     var editor = CodeMirror(node, options);
-    editor.save = cp.save;
+    // editor.save = cp.save; // TODO
     return editor;
 }
 

@@ -40,16 +40,3 @@ cp.restoreState = function (state) {
         cp.reportError("Unable to restore state: " + e);
     }
 };
-
-cp.saveProject = function (cm) {
-    var state = cp.serializeState();
-    cp_internal_saveFile(JSON.stringify(state), "project.cp");
-};
-
-cp.loadProject = function (cm) {
-    cp_internal_openFile(function (file) {
-        cp_internal_readTextFile(file, function (contents) {
-            cp.restoreState(JSON.parse(contents));
-        });
-    });
-};

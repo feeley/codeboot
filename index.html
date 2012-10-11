@@ -124,8 +124,6 @@ tyle="display:block;">Play</button>
             builtins: {},
 
             // state
-            tabs: [],
-            currentTab: undefined,
             currentConsoleLine: undefined,
 
             // Elements
@@ -133,20 +131,6 @@ tyle="display:block;">Play</button>
             repl: undefined,
             console: undefined,
         };
-
-        function disableHashLinks() {
-            $("a").each(function () {
-                if (this.onclick && (this.href === '#' || this.href === document.baseURI + "#")) {
-                    var oldHandler = this.onclick;
-                    this.onclick = (function (h) {
-                        return function (event) {
-                            event.preventDefault();
-                            h(event);
-                        };
-                    })(oldHandler);
-                }
-            });
-        }
         
         cp.setDevMode = function (devMode) {
             cp.devMode = devMode;
@@ -170,7 +154,7 @@ tyle="display:block;">Play</button>
                     return undefined;
                 }
             };
-            checkBrowserFeatures();
+            // checkBrowserFeatures();
 
             cp.alerts = document.getElementById("alerts");
             cp.repl   = createREPL(document.getElementById("repl"));
@@ -182,19 +166,9 @@ tyle="display:block;">Play</button>
             
             cp.loadSession();
 
-            // cp.newTab();
-
             $("#repl").click(focusREPL);
 
-            $("#fileOpenDialog").on('show', function () {
-                // Reset file open model before displaying
-                document.getElementById('fileInputForm').innerHTML = document.getElementById('fileInputForm').innerHTML;
-                $("#btnOpenFile").addClass("disabled");
-            });
-
             cp.handle_query();
-
-        //disableHashLinks();
         });
 
         function checkBrowserFeatures() {
@@ -233,56 +207,6 @@ tyle="display:block;">Play</button>
                 $("#browserStatusMsg").text("Some features are missing");
                 $("#browserStatusIcon").addClass("icon-exclamation-sign");
             }
-        }
-
-        function doOpen() {
-            var tab = cp.getCurrentTab();
-            cp.load(tab.editor);
-        }
-
-        function onFileSelected() {
-            $('#btnOpenFile').removeClass('disabled');
-        }
-
-        function doSave() {
-            var tab = cp.getCurrentTab();
-            if (tab) cp.save(tab.editor);
-        }
-
-        function cp_internal_run(tabs, mode) {
-            $("#btn-run").removeClass("btn-primary").addClass("btn-danger").text("Stop");
-            $("#btn-run-dropdown").removeClass("btn-primary").addClass("btn-danger");
-            for (var i = 0; i < tabs.length; i++) {
-                var tab = tabs[i];
-                if (tab) {
-                    var ed = tab.editor;
-                    var script = mode === "selection" ? ed.getSelection() : ed.getValue();
-                    try {
-                        cp.runScript(script);
-                    } catch (e) {
-                        cp.reportError(tab.title + " - " + e);
-                        break;
-                    }
-                }
-            }
-            $("#btn-run").removeClass("btn-danger").addClass("btn-primary").text("Run all");
-            $("#btn-run-dropdown").removeClass("btn-danger").addClass("btn-primary");
-        }
-
-        function doRunAll() {
-            cp_internal_run(cp.tabs);
-        }
-
-        function doRunCurrent() {
-           cp_internal_run([cp.getCurrentTab()]);
-        }
-
-        function doRunSelection() {
-            cp_internal_run([cp.getCurrentTab()], "selection");
-        }
-
-        function doClear() {
-            cp.clearAll();
         }
 
         function focusREPL() {
