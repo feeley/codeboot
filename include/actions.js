@@ -462,10 +462,8 @@ cp.run = function(single_step) {
     try {
         program_state.rte = js_eval_setup(source,
                                           {
-                                              filename: "",
-                                              error: error,
-                                              line: line+1,
-                                              column: ch+1
+                                              container: new SourceContainer(source, "<REPL>", line+1, ch+1),
+                                              error: error
                                           });
     }
     catch (e) {

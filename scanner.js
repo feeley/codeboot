@@ -274,7 +274,7 @@ Scanner.prototype.get_token = function ()
                 {
                     c = this.lookahead_char(0);
                     if (c === EOF)
-                        this.syntax_error(new Location(this.port.filename,
+                        this.syntax_error(new Location(this.port.container,
                                                        start_pos,
                                                        this.lookahead_pos(1)),
                                           "*/ missing at end of comment");
@@ -385,7 +385,7 @@ Scanner.prototype.get_token = function ()
             return this.parse_string();
         else
         {
-            this.syntax_error(new Location(this.port.filename,
+            this.syntax_error(new Location(this.port.container,
                                            this.lookahead_pos(0),
                                            this.lookahead_pos(1)),
                               "illegal token");
@@ -398,10 +398,428 @@ Scanner.prototype.get_token = function ()
 
 Scanner.prototype.identifier_class = function (c)
 {
-    return (c >= LOWER_A_CH && c <= LOWER_Z_CH) ||
-        (c >= UPPER_A_CH && c <= UPPER_Z_CH) ||
-        c === UNDERSCORE_CH ||
-        c === DOLLAR_CH;
+    return Scanner.prototype.letter_class(c) ||
+           c === UNDERSCORE_CH ||
+           c === DOLLAR_CH;
+};
+
+
+// method letter_class()
+
+Scanner.prototype.letter_class = function (c)
+{
+    return (c < 128)
+           ? ((c >= LOWER_A_CH && c <= LOWER_Z_CH) ||
+              (c >= UPPER_A_CH && c <= UPPER_Z_CH))
+           : (c === 0xAA ||
+              c === 0xB5 ||
+              c === 0xBA ||
+              (c >= 0xC0 && c <= 0xD6) ||
+              (c >= 0xD8 && c <= 0xF6) ||
+              (c >= 0xF8 && c <= 0x02C1) ||
+              (c >= 0x02C6 && c <= 0x02D1) ||
+              (c >= 0x02E0 && c <= 0x02E4) ||
+              (c >= 0x02EC) ||
+              (c >= 0x02EE) ||
+              (c >= 0x0370 && c <= 0x0374) ||
+              (c >= 0x0376) ||
+              (c >= 0x0377) ||
+              (c >= 0x037A && c <= 0x037D) ||
+              (c >= 0x0386) ||
+              (c >= 0x0388 && c <= 0x038A) ||
+              (c >= 0x038C) ||
+              (c >= 0x038E && c <= 0x03A1) ||
+              (c >= 0x03A3 && c <= 0x03F5) ||
+              (c >= 0x03F7 && c <= 0x0481) ||
+              (c >= 0x048A && c <= 0x0527) ||
+              (c >= 0x0531 && c <= 0x0556) ||
+              (c >= 0x0559) ||
+              (c >= 0x0561 && c <= 0x0587) ||
+              (c >= 0x05D0 && c <= 0x05EA) ||
+              (c >= 0x05F0 && c <= 0x05F2) ||
+              (c >= 0x0620 && c <= 0x064A) ||
+              (c >= 0x066E) ||
+              (c >= 0x066F) ||
+              (c >= 0x0671 && c <= 0x06D3) ||
+              (c >= 0x06D5) ||
+              (c >= 0x06E5) ||
+              (c >= 0x06E6) ||
+              (c >= 0x06EE) ||
+              (c >= 0x06EF) ||
+              (c >= 0x06FA && c <= 0x06FC) ||
+              (c >= 0x06FF) ||
+              (c >= 0x0710) ||
+              (c >= 0x0712 && c <= 0x072F) ||
+              (c >= 0x074D && c <= 0x07A5) ||
+              (c >= 0x07B1) ||
+              (c >= 0x07CA && c <= 0x07EA) ||
+              (c >= 0x07F4) ||
+              (c >= 0x07F5) ||
+              (c >= 0x07FA) ||
+              (c >= 0x0800 && c <= 0x0815) ||
+              (c >= 0x081A) ||
+              (c >= 0x0824) ||
+              (c >= 0x0828) ||
+              (c >= 0x0840 && c <= 0x0858) ||
+              (c >= 0x08A0) ||
+              (c >= 0x08A2 && c <= 0x08AC) ||
+              (c >= 0x0904 && c <= 0x0939) ||
+              (c >= 0x093D) ||
+              (c >= 0x0950) ||
+              (c >= 0x0958 && c <= 0x0961) ||
+              (c >= 0x0971 && c <= 0x0977) ||
+              (c >= 0x0979 && c <= 0x097F) ||
+              (c >= 0x0985 && c <= 0x098C) ||
+              (c >= 0x098F) ||
+              (c >= 0x0990) ||
+              (c >= 0x0993 && c <= 0x09A8) ||
+              (c >= 0x09AA && c <= 0x09B0) ||
+              (c >= 0x09B2) ||
+              (c >= 0x09B6 && c <= 0x09B9) ||
+              (c >= 0x09BD) ||
+              (c >= 0x09CE) ||
+              (c >= 0x09DC) ||
+              (c >= 0x09DD) ||
+              (c >= 0x09DF && c <= 0x09E1) ||
+              (c >= 0x09F0) ||
+              (c >= 0x09F1) ||
+              (c >= 0x0A05 && c <= 0x0A0A) ||
+              (c >= 0x0A0F) ||
+              (c >= 0x0A10) ||
+              (c >= 0x0A13 && c <= 0x0A28) ||
+              (c >= 0x0A2A && c <= 0x0A30) ||
+              (c >= 0x0A32) ||
+              (c >= 0x0A33) ||
+              (c >= 0x0A35) ||
+              (c >= 0x0A36) ||
+              (c >= 0x0A38) ||
+              (c >= 0x0A39) ||
+              (c >= 0x0A59 && c <= 0x0A5C) ||
+              (c >= 0x0A5E) ||
+              (c >= 0x0A72 && c <= 0x0A74) ||
+              (c >= 0x0A85 && c <= 0x0A8D) ||
+              (c >= 0x0A8F && c <= 0x0A91) ||
+              (c >= 0x0A93 && c <= 0x0AA8) ||
+              (c >= 0x0AAA && c <= 0x0AB0) ||
+              (c >= 0x0AB2) ||
+              (c >= 0x0AB3) ||
+              (c >= 0x0AB5 && c <= 0x0AB9) ||
+              (c >= 0x0ABD) ||
+              (c >= 0x0AD0) ||
+              (c >= 0x0AE0) ||
+              (c >= 0x0AE1) ||
+              (c >= 0x0B05 && c <= 0x0B0C) ||
+              (c >= 0x0B0F) ||
+              (c >= 0x0B10) ||
+              (c >= 0x0B13 && c <= 0x0B28) ||
+              (c >= 0x0B2A && c <= 0x0B30) ||
+              (c >= 0x0B32) ||
+              (c >= 0x0B33) ||
+              (c >= 0x0B35 && c <= 0x0B39) ||
+              (c >= 0x0B3D) ||
+              (c >= 0x0B5C) ||
+              (c >= 0x0B5D) ||
+              (c >= 0x0B5F && c <= 0x0B61) ||
+              (c >= 0x0B71) ||
+              (c >= 0x0B83) ||
+              (c >= 0x0B85 && c <= 0x0B8A) ||
+              (c >= 0x0B8E && c <= 0x0B90) ||
+              (c >= 0x0B92 && c <= 0x0B95) ||
+              (c >= 0x0B99) ||
+              (c >= 0x0B9A) ||
+              (c >= 0x0B9C) ||
+              (c >= 0x0B9E) ||
+              (c >= 0x0B9F) ||
+              (c >= 0x0BA3) ||
+              (c >= 0x0BA4) ||
+              (c >= 0x0BA8 && c <= 0x0BAA) ||
+              (c >= 0x0BAE && c <= 0x0BB9) ||
+              (c >= 0x0BD0) ||
+              (c >= 0x0C05 && c <= 0x0C0C) ||
+              (c >= 0x0C0E && c <= 0x0C10) ||
+              (c >= 0x0C12 && c <= 0x0C28) ||
+              (c >= 0x0C2A && c <= 0x0C33) ||
+              (c >= 0x0C35 && c <= 0x0C39) ||
+              (c >= 0x0C3D) ||
+              (c >= 0x0C58) ||
+              (c >= 0x0C59) ||
+              (c >= 0x0C60) ||
+              (c >= 0x0C61) ||
+              (c >= 0x0C85 && c <= 0x0C8C) ||
+              (c >= 0x0C8E && c <= 0x0C90) ||
+              (c >= 0x0C92 && c <= 0x0CA8) ||
+              (c >= 0x0CAA && c <= 0x0CB3) ||
+              (c >= 0x0CB5 && c <= 0x0CB9) ||
+              (c >= 0x0CBD) ||
+              (c >= 0x0CDE) ||
+              (c >= 0x0CE0) ||
+              (c >= 0x0CE1) ||
+              (c >= 0x0CF1) ||
+              (c >= 0x0CF2) ||
+              (c >= 0x0D05 && c <= 0x0D0C) ||
+              (c >= 0x0D0E && c <= 0x0D10) ||
+              (c >= 0x0D12 && c <= 0x0D3A) ||
+              (c >= 0x0D3D) ||
+              (c >= 0x0D4E) ||
+              (c >= 0x0D60) ||
+              (c >= 0x0D61) ||
+              (c >= 0x0D7A && c <= 0x0D7F) ||
+              (c >= 0x0D85 && c <= 0x0D96) ||
+              (c >= 0x0D9A && c <= 0x0DB1) ||
+              (c >= 0x0DB3 && c <= 0x0DBB) ||
+              (c >= 0x0DBD) ||
+              (c >= 0x0DC0 && c <= 0x0DC6) ||
+              (c >= 0x0E01 && c <= 0x0E30) ||
+              (c >= 0x0E32) ||
+              (c >= 0x0E33) ||
+              (c >= 0x0E40 && c <= 0x0E46) ||
+              (c >= 0x0E81) ||
+              (c >= 0x0E82) ||
+              (c >= 0x0E84) ||
+              (c >= 0x0E87) ||
+              (c >= 0x0E88) ||
+              (c >= 0x0E8A) ||
+              (c >= 0x0E8D) ||
+              (c >= 0x0E94 && c <= 0x0E97) ||
+              (c >= 0x0E99 && c <= 0x0E9F) ||
+              (c >= 0x0EA1 && c <= 0x0EA3) ||
+              (c >= 0x0EA5) ||
+              (c >= 0x0EA7) ||
+              (c >= 0x0EAA) ||
+              (c >= 0x0EAB) ||
+              (c >= 0x0EAD && c <= 0x0EB0) ||
+              (c >= 0x0EB2) ||
+              (c >= 0x0EB3) ||
+              (c >= 0x0EBD) ||
+              (c >= 0x0EC0 && c <= 0x0EC4) ||
+              (c >= 0x0EC6) ||
+              (c >= 0x0EDC && c <= 0x0EDF) ||
+              (c >= 0x0F00) ||
+              (c >= 0x0F40 && c <= 0x0F47) ||
+              (c >= 0x0F49 && c <= 0x0F6C) ||
+              (c >= 0x0F88 && c <= 0x0F8C) ||
+              (c >= 0x1000 && c <= 0x102A) ||
+              (c >= 0x103F) ||
+              (c >= 0x1050 && c <= 0x1055) ||
+              (c >= 0x105A && c <= 0x105D) ||
+              (c >= 0x1061) ||
+              (c >= 0x1065) ||
+              (c >= 0x1066) ||
+              (c >= 0x106E && c <= 0x1070) ||
+              (c >= 0x1075 && c <= 0x1081) ||
+              (c >= 0x108E) ||
+              (c >= 0x10A0 && c <= 0x10C5) ||
+              (c >= 0x10C7) ||
+              (c >= 0x10CD) ||
+              (c >= 0x10D0 && c <= 0x10FA) ||
+              (c >= 0x10FC && c <= 0x1248) ||
+              (c >= 0x124A && c <= 0x124D) ||
+              (c >= 0x1250 && c <= 0x1256) ||
+              (c >= 0x1258) ||
+              (c >= 0x125A && c <= 0x125D) ||
+              (c >= 0x1260 && c <= 0x1288) ||
+              (c >= 0x128A && c <= 0x128D) ||
+              (c >= 0x1290 && c <= 0x12B0) ||
+              (c >= 0x12B2 && c <= 0x12B5) ||
+              (c >= 0x12B8 && c <= 0x12BE) ||
+              (c >= 0x12C0) ||
+              (c >= 0x12C2 && c <= 0x12C5) ||
+              (c >= 0x12C8 && c <= 0x12D6) ||
+              (c >= 0x12D8 && c <= 0x1310) ||
+              (c >= 0x1312 && c <= 0x1315) ||
+              (c >= 0x1318 && c <= 0x135A) ||
+              (c >= 0x1380 && c <= 0x138F) ||
+              (c >= 0x13A0 && c <= 0x13F4) ||
+              (c >= 0x1401 && c <= 0x166C) ||
+              (c >= 0x166F && c <= 0x167F) ||
+              (c >= 0x1681 && c <= 0x169A) ||
+              (c >= 0x16A0 && c <= 0x16EA) ||
+              (c >= 0x1700 && c <= 0x170C) ||
+              (c >= 0x170E && c <= 0x1711) ||
+              (c >= 0x1720 && c <= 0x1731) ||
+              (c >= 0x1740 && c <= 0x1751) ||
+              (c >= 0x1760 && c <= 0x176C) ||
+              (c >= 0x176E && c <= 0x1770) ||
+              (c >= 0x1780 && c <= 0x17B3) ||
+              (c >= 0x17D7) ||
+              (c >= 0x17DC) ||
+              (c >= 0x1820 && c <= 0x1877) ||
+              (c >= 0x1880 && c <= 0x18A8) ||
+              (c >= 0x18AA) ||
+              (c >= 0x18B0 && c <= 0x18F5) ||
+              (c >= 0x1900 && c <= 0x191C) ||
+              (c >= 0x1950 && c <= 0x196D) ||
+              (c >= 0x1970 && c <= 0x1974) ||
+              (c >= 0x1980 && c <= 0x19AB) ||
+              (c >= 0x19C1 && c <= 0x19C7) ||
+              (c >= 0x1A00 && c <= 0x1A16) ||
+              (c >= 0x1A20 && c <= 0x1A54) ||
+              (c >= 0x1AA7) ||
+              (c >= 0x1B05 && c <= 0x1B33) ||
+              (c >= 0x1B45 && c <= 0x1B4B) ||
+              (c >= 0x1B83 && c <= 0x1BA0) ||
+              (c >= 0x1BAE) ||
+              (c >= 0x1BAF) ||
+              (c >= 0x1BBA && c <= 0x1BE5) ||
+              (c >= 0x1C00 && c <= 0x1C23) ||
+              (c >= 0x1C4D && c <= 0x1C4F) ||
+              (c >= 0x1C5A && c <= 0x1C7D) ||
+              (c >= 0x1CE9 && c <= 0x1CEC) ||
+              (c >= 0x1CEE && c <= 0x1CF1) ||
+              (c >= 0x1CF5) ||
+              (c >= 0x1CF6) ||
+              (c >= 0x1D00 && c <= 0x1DBF) ||
+              (c >= 0x1E00 && c <= 0x1F15) ||
+              (c >= 0x1F18 && c <= 0x1F1D) ||
+              (c >= 0x1F20 && c <= 0x1F45) ||
+              (c >= 0x1F48 && c <= 0x1F4D) ||
+              (c >= 0x1F50 && c <= 0x1F57) ||
+              (c >= 0x1F59) ||
+              (c >= 0x1F5B) ||
+              (c >= 0x1F5D) ||
+              (c >= 0x1F5F && c <= 0x1F7D) ||
+              (c >= 0x1F80 && c <= 0x1FB4) ||
+              (c >= 0x1FB6 && c <= 0x1FBC) ||
+              (c >= 0x1FBE) ||
+              (c >= 0x1FC2 && c <= 0x1FC4) ||
+              (c >= 0x1FC6 && c <= 0x1FCC) ||
+              (c >= 0x1FD0 && c <= 0x1FD3) ||
+              (c >= 0x1FD6 && c <= 0x1FDB) ||
+              (c >= 0x1FE0 && c <= 0x1FEC) ||
+              (c >= 0x1FF2 && c <= 0x1FF4) ||
+              (c >= 0x1FF6 && c <= 0x1FFC) ||
+              (c >= 0x2071) ||
+              (c >= 0x207F) ||
+              (c >= 0x2090 && c <= 0x209C) ||
+              (c >= 0x2102) ||
+              (c >= 0x2107) ||
+              (c >= 0x210A && c <= 0x2113) ||
+              (c >= 0x2115) ||
+              (c >= 0x2119 && c <= 0x211D) ||
+              (c >= 0x2124) ||
+              (c >= 0x2126) ||
+              (c >= 0x2128) ||
+              (c >= 0x212A && c <= 0x212D) ||
+              (c >= 0x212F && c <= 0x2139) ||
+              (c >= 0x213C && c <= 0x213F) ||
+              (c >= 0x2145 && c <= 0x2149) ||
+              (c >= 0x214E) ||
+              (c >= 0x2183) ||
+              (c >= 0x2184) ||
+              (c >= 0x2C00 && c <= 0x2C2E) ||
+              (c >= 0x2C30 && c <= 0x2C5E) ||
+              (c >= 0x2C60 && c <= 0x2CE4) ||
+              (c >= 0x2CEB && c <= 0x2CEE) ||
+              (c >= 0x2CF2) ||
+              (c >= 0x2CF3) ||
+              (c >= 0x2D00 && c <= 0x2D25) ||
+              (c >= 0x2D27) ||
+              (c >= 0x2D2D) ||
+              (c >= 0x2D30 && c <= 0x2D67) ||
+              (c >= 0x2D6F) ||
+              (c >= 0x2D80 && c <= 0x2D96) ||
+              (c >= 0x2DA0 && c <= 0x2DA6) ||
+              (c >= 0x2DA8 && c <= 0x2DAE) ||
+              (c >= 0x2DB0 && c <= 0x2DB6) ||
+              (c >= 0x2DB8 && c <= 0x2DBE) ||
+              (c >= 0x2DC0 && c <= 0x2DC6) ||
+              (c >= 0x2DC8 && c <= 0x2DCE) ||
+              (c >= 0x2DD0 && c <= 0x2DD6) ||
+              (c >= 0x2DD8 && c <= 0x2DDE) ||
+              (c >= 0x2E2F) ||
+              (c >= 0x3005) ||
+              (c >= 0x3006) ||
+              (c >= 0x3031 && c <= 0x3035) ||
+              (c >= 0x303B) ||
+              (c >= 0x303C) ||
+              (c >= 0x3041 && c <= 0x3096) ||
+              (c >= 0x309D && c <= 0x309F) ||
+              (c >= 0x30A1 && c <= 0x30FA) ||
+              (c >= 0x30FC && c <= 0x30FF) ||
+              (c >= 0x3105 && c <= 0x312D) ||
+              (c >= 0x3131 && c <= 0x318E) ||
+              (c >= 0x31A0 && c <= 0x31BA) ||
+              (c >= 0x31F0 && c <= 0x31FF) ||
+              (c >= 0x3400 && c <= 0x4DB5) ||
+              (c >= 0x4E00 && c <= 0x9FCC) ||
+              (c >= 0xA000 && c <= 0xA48C) ||
+              (c >= 0xA4D0 && c <= 0xA4FD) ||
+              (c >= 0xA500 && c <= 0xA60C) ||
+              (c >= 0xA610 && c <= 0xA61F) ||
+              (c >= 0xA62A) ||
+              (c >= 0xA62B) ||
+              (c >= 0xA640 && c <= 0xA66E) ||
+              (c >= 0xA67F && c <= 0xA697) ||
+              (c >= 0xA6A0 && c <= 0xA6E5) ||
+              (c >= 0xA717 && c <= 0xA71F) ||
+              (c >= 0xA722 && c <= 0xA788) ||
+              (c >= 0xA78B && c <= 0xA78E) ||
+              (c >= 0xA790 && c <= 0xA793) ||
+              (c >= 0xA7A0 && c <= 0xA7AA) ||
+              (c >= 0xA7F8 && c <= 0xA801) ||
+              (c >= 0xA803 && c <= 0xA805) ||
+              (c >= 0xA807 && c <= 0xA80A) ||
+              (c >= 0xA80C && c <= 0xA822) ||
+              (c >= 0xA840 && c <= 0xA873) ||
+              (c >= 0xA882 && c <= 0xA8B3) ||
+              (c >= 0xA8F2 && c <= 0xA8F7) ||
+              (c >= 0xA8FB) ||
+              (c >= 0xA90A && c <= 0xA925) ||
+              (c >= 0xA930 && c <= 0xA946) ||
+              (c >= 0xA960 && c <= 0xA97C) ||
+              (c >= 0xA984 && c <= 0xA9B2) ||
+              (c >= 0xA9CF) ||
+              (c >= 0xAA00 && c <= 0xAA28) ||
+              (c >= 0xAA40 && c <= 0xAA42) ||
+              (c >= 0xAA44 && c <= 0xAA4B) ||
+              (c >= 0xAA60 && c <= 0xAA76) ||
+              (c >= 0xAA7A) ||
+              (c >= 0xAA80 && c <= 0xAAAF) ||
+              (c >= 0xAAB1) ||
+              (c >= 0xAAB5) ||
+              (c >= 0xAAB6) ||
+              (c >= 0xAAB9 && c <= 0xAABD) ||
+              (c >= 0xAAC0) ||
+              (c >= 0xAAC2) ||
+              (c >= 0xAADB && c <= 0xAADD) ||
+              (c >= 0xAAE0 && c <= 0xAAEA) ||
+              (c >= 0xAAF2 && c <= 0xAAF4) ||
+              (c >= 0xAB01 && c <= 0xAB06) ||
+              (c >= 0xAB09 && c <= 0xAB0E) ||
+              (c >= 0xAB11 && c <= 0xAB16) ||
+              (c >= 0xAB20 && c <= 0xAB26) ||
+              (c >= 0xAB28 && c <= 0xAB2E) ||
+              (c >= 0xABC0 && c <= 0xABE2) ||
+              (c >= 0xAC00 && c <= 0xD7A3) ||
+              (c >= 0xD7B0 && c <= 0xD7C6) ||
+              (c >= 0xD7CB && c <= 0xD7FB) ||
+              (c >= 0xF900 && c <= 0xFA6D) ||
+              (c >= 0xFA70 && c <= 0xFAD9) ||
+              (c >= 0xFB00 && c <= 0xFB06) ||
+              (c >= 0xFB13 && c <= 0xFB17) ||
+              (c >= 0xFB1D) ||
+              (c >= 0xFB1F && c <= 0xFB28) ||
+              (c >= 0xFB2A && c <= 0xFB36) ||
+              (c >= 0xFB38 && c <= 0xFB3C) ||
+              (c >= 0xFB3E) ||
+              (c >= 0xFB40) ||
+              (c >= 0xFB41) ||
+              (c >= 0xFB43) ||
+              (c >= 0xFB44) ||
+              (c >= 0xFB46 && c <= 0xFBB1) ||
+              (c >= 0xFBD3 && c <= 0xFD3D) ||
+              (c >= 0xFD50 && c <= 0xFD8F) ||
+              (c >= 0xFD92 && c <= 0xFDC7) ||
+              (c >= 0xFDF0 && c <= 0xFDFB) ||
+              (c >= 0xFE70 && c <= 0xFE74) ||
+              (c >= 0xFE76 && c <= 0xFEFC) ||
+              (c >= 0xFF21 && c <= 0xFF3A) ||
+              (c >= 0xFF41 && c <= 0xFF5A) ||
+              (c >= 0xFF66 && c <= 0xFFBE) ||
+              (c >= 0xFFC2 && c <= 0xFFC7) ||
+              (c >= 0xFFCA && c <= 0xFFCF) ||
+              (c >= 0xFFD2 && c <= 0xFFD7) ||
+              (c >= 0xFFDA && c <= 0xFFDC));
 };
 
 
@@ -658,7 +1076,7 @@ Scanner.prototype.parse_string = function ()
 
     function unterminated_string()
     {
-        scanner.syntax_error(new Location(scanner.port.filename,
+        scanner.syntax_error(new Location(scanner.port.container,
                                           start_pos,
                                           scanner.lookahead_pos(1)),
                              (close === DOUBLEQUOTE_CH)
@@ -776,7 +1194,7 @@ Scanner.prototype.parse_regexp = function (div_tok)
 
     function unterminated_regexp()
     {
-        scanner.syntax_error(new Location(scanner.port.filename,
+        scanner.syntax_error(new Location(scanner.port.container,
                                           div_tok.loc.start_pos,
                                           scanner.lookahead_pos(1)),
                              "/ missing at end of regexp");
@@ -850,7 +1268,7 @@ Scanner.prototype.parse_regexp = function (div_tok)
              regexp: regexp_chars.get_output_string(),
              pattern: pattern_chars.get_output_string(),
              flags: flags_chars.get_output_string(),
-             loc: new Location(this.port.filename,
+             loc: new Location(this.port.container,
                                start_pos,
                                this.lookahead_pos(0))
            };
@@ -860,7 +1278,7 @@ Scanner.prototype.parse_regexp = function (div_tok)
 
 Scanner.prototype.simple_token = function (cat, n)
 {
-    var loc = new Location(this.port.filename,
+    var loc = new Location(this.port.container,
                            this.lookahead_pos(0),
                            this.lookahead_pos(n));
     this.advance(n);
@@ -872,7 +1290,7 @@ Scanner.prototype.simple_token = function (cat, n)
 
 Scanner.prototype.valued_token = function (cat, value, start_pos)
 {
-    var loc = new Location(this.port.filename,
+    var loc = new Location(this.port.container,
                            start_pos,
                            this.lookahead_pos(0));
     return new Token(cat, value, loc);
@@ -913,9 +1331,29 @@ function position_to_column(pos)
 }
 
 
-function Location(filename, start_pos, end_pos)
+function position_to_char_offset(loc, pos)
 {
-    this.filename  = filename;
+    var source = loc.container.source;
+    var line = position_to_line(pos) - loc.container.start_line;
+    var column = position_to_column(pos);
+
+    if (line === 0)
+        return column - loc.container.start_column;
+
+    for (var offs=0; offs<source.length; offs++)
+    {
+        if (source.charCodeAt(offs) === EOL_CH &&
+            --line === 0)
+            return offs + column;
+    }
+
+    return 0;
+}
+
+
+function Location(container, start_pos, end_pos)
+{
+    this.container = container;
     this.start_pos = start_pos;
     this.end_pos   = end_pos;
 
@@ -923,14 +1361,14 @@ function Location(filename, start_pos, end_pos)
 
     this.join = function (loc)
     {
-        return new Location(this.filename, this.start_pos, loc.end_pos);
+        return new Location(this.container, this.start_pos, loc.end_pos);
     };
 
     // method toString()
 
     this.toString = function()
     {
-        return "\"" + this.filename + "\"@" +
+        return "\"" + this.container.toString() + "\"@" +
                position_to_line(this.start_pos) + "." +
                position_to_column(this.start_pos) +
                "-" +

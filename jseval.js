@@ -16,7 +16,14 @@ function main()
         var filename = args[i++];
         var str = read_file(filename);
 
-        js_eval(str, { filename: filename });
+        try
+        {
+            js_eval(str, { container: new SourceContainer(str, filename, 1, 1) });
+        }
+        catch (e)
+        {
+            print(e);
+        }
     }
 }
 

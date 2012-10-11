@@ -899,9 +899,9 @@ profiling_pass_ctx.prototype.filter = function (ast)
 {
     // TODO: This filtering should be user configurable from a
     // command line option.
-    if (ast.loc.filename === "parser/parser.js" ||
-        ast.loc.filename === "parser/scanner.js" ||
-//        ast.loc.filename === "utility/debug.js" ||
+    if (ast.loc.container.toString() === "parser/parser.js" ||
+        ast.loc.container.toString() === "parser/scanner.js" ||
+//        ast.loc.container.toString() === "utility/debug.js" ||
         (this.fn_decl !== null &&
          this.fn_decl.id.toString() === "assert"))
         return false;

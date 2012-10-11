@@ -37,6 +37,9 @@ function js_eval_exec(rte)
     while (!js_eval_finished(rte))
         js_eval_step(rte);
 
+    if (rte.error !== null)
+        throw rte.ast.loc.toString() + ": " + rte.error;
+
     return js_eval_result(rte);
 }
 
@@ -72,6 +75,19 @@ function js_eval_step(rte, nb_steps)
     }
 }
 
+function SourceContainer(source, tostr, start_line, start_column)
+{
+    this.source = source;
+    this.tostr = tostr;
+    this.start_line = start_line;
+    this.start_column = start_column;
+}
+
+SourceContainer.prototype.toString = function ()
+{
+    return this.tostr;
+};
+
 function js_compile(source, options)
 {
     var error = function (loc, kind, msg)
@@ -81,11 +97,11 @@ function js_compile(source, options)
     };
 
     var opts = {
-                 filename:
+                 container:
                    (typeof options === "object" &&
-                    options.filename !== void 0)
-                   ? options.filename
-                 : "<string>",
+                    options.container !== void 0)
+                   ? options.container
+                 : new SourceContainer(source, "<string>", 1, 1),
 
                  error:
                    (typeof options === "object" &&
@@ -102,23 +118,11 @@ function js_compile(source, options)
                        non_integer: true,
                        division: true,
                        equality: true
-                     },
-
-                 line:
-                   (typeof options === "object" &&
-                    options.line !== void 0)
-                   ? options.line
-                   : 1,
-
-                 column:
-                   (typeof options === "object" &&
-                    options.column !== void 0)
-                   ? options.column
-                   : 1
+                     }
                };
 
-    var port = new String_input_port(source, opts.filename);
-    var s = new Scanner(port, opts.error, opts.line, opts.column);
+    var port = new String_input_port(source, opts.container);
+    var s = new Scanner(port, opts.error, opts.container.start_line, opts.container.start_column);
     var p = new Parser(s, opts.warnings);
     var ast = p.parse();
     var cte = new_global_cte();
@@ -777,6 +781,10 @@ function comp_expr(cte, ast)
 
         var code_body = comp_statements(fn_cte, ast, ast.body);
 
+        var loc = ast.loc;
+        var start_char_offs = position_to_char_offset(loc, loc.start_pos);
+        var end_char_offs = position_to_char_offset(loc, loc.end_pos);
+
         return function (rte, cont)
                {
                    var env = rte.frame;
@@ -788,8 +796,8 @@ function comp_expr(cte, ast)
 
                    closure.toString = function ()
                    {
-                       //FIXME: should return exact source code
-                       return js_to_string(ast);
+                       var source = ast.loc.container.source;
+                       return source.slice(start_char_offs, end_char_offs);
                    };
 
                    closure._apply_ = function (rte, cont, this_, params)
@@ -880,7 +888,7 @@ function comp_expr(cte, ast)
                            return step_end_with_error(rte,
                                                       cont,
                                                       ast,
-                                                      "cannot read an undefined variable");
+                                                      "cannot read the undefined variable " + id_str);
                        else
                            return step_end(rte, cont, ast, result);
                    };
@@ -896,7 +904,7 @@ function comp_expr(cte, ast)
                            return step_end_with_error(rte,
                                                       cont,
                                                       ast,
-                                                      "cannot read an undefined variable");
+                                                      "cannot read the undefined variable " + id_str);
                        else
                            return step_end(rte, cont, ast, result);
                    };
@@ -910,7 +918,7 @@ function comp_expr(cte, ast)
                            return step_end_with_error(rte,
                                                       cont,
                                                       ast,
-                                                      "cannot read an undefined variable");
+                                                      "cannot read the undefined variable " + id_str);
                        else
                            return step_end(rte, cont, ast, result);
                    };

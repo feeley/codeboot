@@ -64,21 +64,16 @@ var EOF = -1;
 
 function File_input_port(filename)
 {
-    return new String_input_port(
-        read_file(filename),
-        filename
-    );
+    return new String_input_port(read_file(filename), filename);
 }
 
 function File_output_port(filename, init)
 {
-    var port = new String_output_port(init);
-
-    port.filename = filename;
+    var port = new String_output_port(init, filename);
 
     port.flush = function ()
     {
-        write_file(this.filename, this.get_output_string());
+        write_file(this.container, this.get_output_string());
     };
 
     port.close = function ()
@@ -90,16 +85,16 @@ function File_output_port(filename, init)
     return port;
 }
 
-function String_input_port(content, filename)
+function String_input_port(content, container)
 {
-    if (filename === void 0)
-        filename = '<string>';
+    if (container === void 0)
+        container = '<string>';
 
     // TEMPORARY BUG FIX
     if (content.length > 0 && content.charCodeAt(content.length-1) !== 10)
         content = content + "\n";
 
-    this.filename = filename;
+    this.container = container;
     this.content = content;
     this.pos = 0;
 

@@ -1033,7 +1033,7 @@ function loc_to_Location(loc)
 
     expect(DOUBLEQUOTE_CH);
 
-    var filename = loc.substr(1,end-1);
+    var container = loc.substr(1,end-1);
 
     expect(AT_CH);
 
@@ -1054,7 +1054,7 @@ function loc_to_Location(loc)
     if (i !== loc.length)
         error("illformed location");
 
-    return new Location(filename,
+    return new Location(container,
                         line_and_column_to_position(start_line, start_column),
                         line_and_column_to_position(end_line, end_column));
 }
