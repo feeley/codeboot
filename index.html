@@ -61,27 +61,7 @@
         <div class="container">
           <a class="brand" href="#">codePlay v0.6<span id="devModeTitle"></span></a>
 
-          <button id="btn-help" class="btn btn-primary" onclick="cp_tutorial();">Help</button>
-
-          <div class="btn-group pull-right">
-            <button id="btn-run" class="btn" onclick="cp.step();">Step</button>
-            <button id="btn-run-dropdown" class="btn dropdown-toggle" data-toggle="dropdown">
-              <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu">
-              <li><a href="#" onclick="cp.animate(0);">Stop</a></li>
-              <li><a href="#" onclick="cp.animate(2000);">Animate slowly</a></li>
-              <li><a href="#" onclick="cp.animate(500);">Animate</a></li>
-              <li><a href="#" onclick="cp.animate(125);">Animate quickly</a></li>
-            </ul>
-          </div>
-
-          <button id="play-button" class="btn pull-right" onclick="cp.play();" s
-tyle="display:block;">Play</button>
-
-          <button id="clear-button" class="btn pull-right" onclick="cp.clearAll();">Clear</button>
-          <button id="cancel-button" class="btn pull-right" onclick="cp.cancel();" style="display:none;">Cancel</button>
-
+          <button id="btn-help" class="btn btn-primary pull-right" onclick="cp_tutorial();">Help</button>
         </div>
       </div>
     </div>
@@ -102,7 +82,26 @@ tyle="display:block;">Play</button>
       
       <!-- Console -->
       <div class="row">
-        <ul class="nav nav-tabs">
+        <div class="btn-group pull-right">
+          <button id="btn-run" class="btn" onclick="cp.step();">Step</button>
+          <button id="btn-run-dropdown" class="btn dropdown-toggle" data-toggle="dropdown">
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a href="#" onclick="cp.animate(0);">Stop</a></li>
+            <li><a href="#" onclick="cp.animate(2000);">Animate slowly</a></li>
+            <li><a href="#" onclick="cp.animate(500);">Animate</a></li>
+            <li><a href="#" onclick="cp.animate(125);">Animate quickly</a></li>
+          </ul>
+        </div>
+
+        <button id="play-button" class="btn pull-right" onclick="cp.play();" s
+tyle="display:block;">Play</button>
+
+        <button id="clear-button" class="btn pull-right" onclick="cp.clearAll();">Clear</button>
+        <button id="cancel-button" class="btn pull-right" onclick="cp.cancel();" style="display:none;">Cancel</button>
+          
+        <ul class="nav nav-tabs">          
           <li class="active"><a href="#">REPL</a></li>
         </ul>
         <pre id="repl"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"></div></pre>
