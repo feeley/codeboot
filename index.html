@@ -128,13 +128,11 @@ tyle="display:block;">Play</button>
             currentTab: undefined,
             currentConsoleLine: undefined,
             currentOutput: undefined,
-            outputPlugins: [],
 
             // Elements
             alerts: undefined,
             repl: undefined,
             console: undefined,
-            output: undefined,
         };
 
         function disableHashLinks() {
@@ -179,7 +177,6 @@ tyle="display:block;">Play</button>
             cp.repl   = createREPL(document.getElementById("repl"));
             cp.transcript = createTranscript(document.getElementById("transcript"));
             cp.console = document.getElementById("console");
-            cp.output = document.getElementById("outputBox");
             cp.devMode = false;
 
             document.getElementById("transcript").style.display='none';
@@ -297,7 +294,6 @@ tyle="display:block;">Play</button>
     <script src="include/editors.js"></script>
     <script src="include/builtins.js"></script>
     <script src="include/storage.js"></script>
-    <script src="include/output.js"></script>
     <script src="include/mousetrap.min.js"></script>
     <script src="include/tutorial.js"></script>
     <script>cp.query(null);</script>
