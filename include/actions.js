@@ -252,7 +252,7 @@ cp.execute = function (single_step) {
             return;
         }
         
-        $("#step-count").text(rte.step_count);
+        $("#step-count").text("Step " + rte.step_count);
 
         if (!js_eval_finished(rte)) {
             newMode = 'stepping';
