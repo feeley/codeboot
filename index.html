@@ -84,14 +84,15 @@
       <div class="row">
         <div class="btn-toolbar pull-right">
           <div class="btn-group">
-            <button id="clear-button" title="Clear REPL" class="btn" onclick="cp.clearAll();"><i class="icon-trash"></i></button>
+            <span id="step-count" class="badge hide">0</span>
           </div>
+                    
           <div class="btn-group">
-            <button id="step-button" title="Step" class="btn" onclick="cp.step();"><i class="icon-play"></i><img id="step-mode-icon" src="icons/exp_pause.png"><img id="single-step-icon" style="display:none;" src="icons/exp_1.png"></button>
+            <button id="step-button" title="Step" class="btn" onclick="cp.animate(0);"><i class="icon-play"></i><img id="step-mode-icon" src="icons/exp_pause.png"><img id="single-step-icon" class="hide" src="icons/exp_1.png"></button>
             <button id="play-button" title="Execute" class="btn" onclick="cp.play();"><i class="icon-play"></i><img src="icons/exp_inf.png"></button>
             <div class="btn-group">
               <button id="animate-button" title="Animate" class="btn" onclick="cp.animate(500);"><i class="icon-play"></i></button>
-	          <button id="animate-dropdown" class="btn dropdown-toggle hidden" data-toggle="dropdown">
+	          <button id="animate-dropdown" class="btn dropdown-toggle hide" data-toggle="dropdown">
 			    <span class="caret"></span>
 			  </button>
 	          <ul class="dropdown-menu">
@@ -102,11 +103,15 @@
             </div>
             <button id="pause-button" title="Pause" class="btn disabled" onclick="cp.animate(0);"><i class="icon-pause"></i></button>
             <button id="cancel-button" title="Stop" class="btn disabled" onclick="cp.cancel();"><i class="icon-stop"></i></button>
-          </div>          
+          </div>    
+          
+          <div class="btn-group">
+            <button id="clear-button" title="Clear REPL" class="btn" onclick="cp.clearAll();"><i class="icon-trash"></i></button>
+          </div>      
         </div>
           
         <ul class="nav nav-tabs">          
-          <li class="active"><a href="#">REPL</a></li>
+          <li class="active"><a href="#">REPL</a>
         </ul>
         <pre id="repl" class="tab-content"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"></div></pre>
       </div>

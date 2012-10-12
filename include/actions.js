@@ -156,13 +156,11 @@ cp.enterMode = function (newMode) {
     
     // Step button + icon
 	$("#step-button").toggleClass("disabled", newMode === 'animating');
-	if (newMode === 'stepping') {
-  	    $("#step-mode-icon").hide();
-        $("#single-step-icon").show();
-    } else {
-	    $("#step-mode-icon").show();
-        $("#single-step-icon").hide();
-    }
+	$("#single-step-icon").toggle(newMode === 'stepping');
+	$("#step-mode-icon").toggle(newMode !== 'stepping');
+    
+    // Step counter
+    $("#step-count").toggle(newMode !== 'stopped');
 
 	program_state.mode = newMode;
 }
@@ -253,6 +251,8 @@ cp.execute = function (single_step) {
             cp.cancel();
             return;
         }
+        
+        $("#step-count").text(rte.step_count);
 
         if (!js_eval_finished(rte)) {
             newMode = 'stepping';
