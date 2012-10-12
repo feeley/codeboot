@@ -160,6 +160,8 @@ cp.play = function () {
 }
 
 cp.step = function () {
+    $("#step-mode-icon").hide();
+    $("#single-step-icon").show();
     cp.play_or_step(true);
 }
 
@@ -175,6 +177,8 @@ cp.cancel = function () {
     cp.show_step(false);
     cp.show_cancel(false);
     cp.show_pause(false);
+    $("#step-mode-icon").show();
+    $("#single-step-icon").hide();
     program_state.rte = null;
     cp.repl.busy = false;
     set_prompt(cp.repl);
