@@ -60,14 +60,24 @@
       <div class="navbar-inner">
         <div class="container">
           <a class="brand" href="#">codePlay v0.6<span id="devModeTitle"></span></a>
-
-          <button id="btn-help" class="btn btn-primary pull-right" onclick="cp_tutorial();">Help</button>
+          
+          <button id="btn-help" class="btn btn-primary" onclick="cp_tutorial();">Help</button>
+          
+          <div class="btn-group pull-right">
+		    <button id="new-file-button" class="btn" onclick="cp.newFile();"><i class="icon-file"></i></button>
+		    <button class="btn dropdown-toggle" data-toggle="dropdown">
+		      <span class="caret"></span>
+		    </button>
+		    <ul id="file-list" class="dropdown-menu">
+		      <!-- This menu will be populated dynamically -->
+		    </ul>
+		  </div>
         </div>
       </div>
     </div>
 
     <!-- Content -->
-    <div class="container">    
+    <div id="contents" class="container">    
       <!-- Editor -->
       <!--
       <div class="row">
@@ -250,6 +260,7 @@
     <script src="include/actions.js"></script>
     <script src="include/editors.js"></script>
     <script src="include/builtins.js"></script>
+    <script src="include/fs.js"></script>
     <script src="include/storage.js"></script>
     <script src="include/mousetrap.min.js"></script>
     <script src="include/tutorial.js"></script>
