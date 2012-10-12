@@ -174,6 +174,7 @@ cp.cancel = function () {
     cp.cancel_animation();
     cp.show_step(false);
     cp.show_cancel(false);
+    cp.show_pause(false);
     program_state.rte = null;
     cp.repl.busy = false;
     set_prompt(cp.repl);
@@ -194,15 +195,20 @@ cp.show_error = function (show) {
 };
 
 cp.show_cancel = function (show) {
-
-    var cancel = document.getElementById("cancel-button");
-
-    if (show) {
-        cancel.style.display = "block";
-    } else {
-        cancel.style.display = "none";
-    }
+	if (show) {
+		$("#cancel-button").removeClass("disabled");
+	} else {
+		$("#cancel-button").addClass("disabled");
+	}
 };
+
+cp.show_pause = function (show) {
+	if (show) {
+		$("#pause-button").removeClass("disabled");
+	} else {
+		$("#pause-button").addClass("disabled");
+	}
+}
 
 cp.show_step = function (show) {
 
@@ -245,11 +251,13 @@ cp.execute = function (single_step) {
             cp.show_cancel(true);
             if (single_step) {
                 if (program_state.step_delay > 0) {
+                    cp.show_pause(true);
                     program_state.timeout_id = setTimeout(function ()
                                                           { cp.execute(true); },
                                                           program_state.step_delay);
                 }
             } else {
+                cp.show_pause(true);
                 program_state.timeout_id = setTimeout(function ()
                                                       { cp.execute(false); },
                                                       1);

@@ -46,24 +46,24 @@ function cp_tutorial2() {
 
 function cp_tutorial3() {
     $("#play-button").popover('destroy');
-	$("#btn-run").popover({
+	$("#run-button").popover({
 		animation: true,
 		placement: "bottom",
 		trigger: "manual",
 		title: "Step button",
 		content: '<p>Use this button to execute one step of the code.</p>' +
-		         '<p><a class="btn btn-primary" onclick="cp_tutorial_setREPLExpression();' + "$('#btn-run').click(); cp_tutorial4();" + '">Show me</a>  ' +
+		         '<p><a class="btn btn-primary" onclick="cp_tutorial_setREPLExpression();' + "$('#run-button').click(); cp_tutorial4();" + '">Show me</a>  ' +
 		         '<a class="btn btn-primary" onclick="cp_tutorial_end();">Done</a></p>',
 		html: true,
 	});
 	
-	$("#btn-run").popover('show');
+	$("#run-button").popover('show');
     focusREPL();
 }
 
 function cp_tutorial4() {
-    $("#btn-run").popover('destroy');
-	$("#btn-run").popover({
+    $("#run-button").popover('destroy');
+	$("#run-button").popover({
 		animation: false,
 		placement: "bottom",
 		trigger: "manual",
@@ -73,12 +73,12 @@ function cp_tutorial4() {
 		html: true,
 	});
 	
-	$("#btn-run").popover('show');
+	$("#run-button").popover('show');
     focusREPL();
 }
 
 function cp_tutorial_end() {
-	$("#btn-run").popover('destroy');
+	$("#run-button").popover('destroy');
     focusREPL();
     cp.inTutorial = false;
 }

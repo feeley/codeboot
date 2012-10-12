@@ -82,8 +82,21 @@
       
       <!-- Console -->
       <div class="row">
+        <div class="btn-toolbar pull-right">
+          <div class="btn-group">
+            <button id="clear-button" title="Clear REPL" class="btn" onclick="cp.clearAll();"><i class="icon-trash"></i></button>
+          </div>
+          <div class="btn-group">
+            <button id="run-button" title="Step" class="btn" onclick="cp.step();"><i class="icon-play"></i><img src="icons/exp_pause.png"></button>
+            <button id="play-button" title="Execute" class="btn" onclick="cp.play();"><i class="icon-play"></i><img src="icons/exp_inf.png"></button>
+            <button id="animate-button" title="Animate" class="btn" onclick="cp.animate(500);"><i class="icon-play"></i></button>
+            <button id="pause-button" title="Pause" class="btn disabled" onclick="cp.animate(0);"><i class="icon-pause"></i></button>
+            <button id="cancel-button" title="Stop" class="btn disabled" onclick="cp.cancel();"><i class="icon-stop"></i></button>
+          </div>          
+        </div>
+        <!--        
         <div class="btn-group pull-right">
-          <button id="btn-run" class="btn" onclick="cp.step();">Step</button>
+          <button id="btn-run" class="btn" onclick="cp.step();"><i class="icon-play"></i><img src="icons/exp_pause.png"></button>
           <button id="btn-run-dropdown" class="btn dropdown-toggle" data-toggle="dropdown">
             <span class="caret"></span>
           </button>
@@ -96,10 +109,10 @@
         </div>
 
         <button id="play-button" class="btn pull-right" onclick="cp.play();" s
-tyle="display:block;">Play</button>
-
+tyle="display:block;"><i class="icon-play"></i><img src="icons/exp_inf.png"></button>        
+        <button id="cancel-button" class="btn pull-right" onclick="cp.cancel();" style="display:none;"><i class="icon-stop"></i></button>
         <button id="clear-button" class="btn pull-right" onclick="cp.clearAll();">Clear</button>
-        <button id="cancel-button" class="btn pull-right" onclick="cp.cancel();" style="display:none;">Cancel</button>
+        -->
           
         <ul class="nav nav-tabs">          
           <li class="active"><a href="#">REPL</a></li>
@@ -144,6 +157,10 @@ tyle="display:block;">Play</button>
             repl: undefined,
             console: undefined,
         };
+                        
+        function onAnimateClickAndHold() {
+	        window.alert("Held");
+        }
         
         cp.setDevMode = function (devMode) {
             cp.devMode = devMode;
@@ -154,7 +171,7 @@ tyle="display:block;">Play</button>
                 $("#navbar").addClass("navbar-inverse");
                 $("#devModeTitle").text("");
             }
-        };        
+        };    
 
         $(document).ready(function() {
             Mousetrap.bind('ctrl+\\', function () {
@@ -168,6 +185,14 @@ tyle="display:block;">Play</button>
                 }
             };
             // checkBrowserFeatures();
+            
+            // Install click-and-hold handler on animate button
+            var clickAndHoldTimeout = 0;
+			$('#animate-button').bind('mousedown', function() {
+			    clickAndHoldTimeout = setTimeout(onAnimateClickAndHold, 1000);
+			}).bind('mouseup mouseleave', function() {
+			    clearTimeout(clickAndHoldTimeout);
+			});
 
             cp.alerts = document.getElementById("alerts");
             cp.repl   = createREPL(document.getElementById("repl"));
