@@ -139,8 +139,33 @@ var program_state = {
     error_mark: null,
     step_mark: null,
     timeout_id: null,
-    step_delay: 0
+    step_delay: 0,
+    mode: 'stopped'
 };
+
+cp.enterMode = function (newMode) {
+	if (program_state.mode === newMode) return;
+	
+	// newMode is one of 'stopped', 'animating', 'stepping'
+
+    // Cancel button
+    $("#cancel-button").toggleClass("disabled", newMode === 'stopped');
+    
+    // Pause button
+    $("#pause-button").toggleClass("disabled", newMode !== 'animating');
+    
+    // Step button + icon
+	$("#step-button").toggleClass("disabled", newMode === 'animating');
+	if (newMode === 'stepping') {
+  	    $("#step-mode-icon").hide();
+        $("#single-step-icon").show();
+    } else {
+	    $("#step-mode-icon").show();
+        $("#single-step-icon").hide();
+    }
+
+	program_state.mode = newMode;
+}
 
 cp.animate = function (new_step_delay) {
     program_state.step_delay = new_step_delay;
@@ -160,8 +185,6 @@ cp.play = function () {
 }
 
 cp.step = function () {
-    $("#step-mode-icon").hide();
-    $("#single-step-icon").show();
     cp.play_or_step(true);
 }
 
@@ -175,10 +198,7 @@ cp.cancel_animation = function () {
 cp.cancel = function () {
     cp.cancel_animation();
     cp.show_step(false);
-    cp.show_cancel(false);
-    cp.show_pause(false);
-    $("#step-mode-icon").show();
-    $("#single-step-icon").hide();
+    cp.enterMode('stopped');
     program_state.rte = null;
     cp.repl.busy = false;
     set_prompt(cp.repl);
@@ -197,22 +217,6 @@ cp.show_error = function (show) {
         program_state.error_mark = code_highlight(program_state.rte.ast.loc, "error-code");
     }
 };
-
-cp.show_cancel = function (show) {
-	if (show) {
-		$("#cancel-button").removeClass("disabled");
-	} else {
-		$("#cancel-button").addClass("disabled");
-	}
-};
-
-cp.show_pause = function (show) {
-	if (show) {
-		$("#pause-button").removeClass("disabled");
-	} else {
-		$("#pause-button").addClass("disabled");
-	}
-}
 
 cp.show_step = function (show) {
 
@@ -235,7 +239,7 @@ cp.show_step = function (show) {
 };
 
 cp.execute = function (single_step) {
-
+    var newMode = 'stopped';
     cp.cancel_animation();
 
     var rte = program_state.rte;
@@ -251,17 +255,17 @@ cp.execute = function (single_step) {
         }
 
         if (!js_eval_finished(rte)) {
+            newMode = 'stepping';
             cp.show_step(single_step);
-            cp.show_cancel(true);
             if (single_step) {
                 if (program_state.step_delay > 0) {
-                    cp.show_pause(true);
+                    newMode = 'animating';
                     program_state.timeout_id = setTimeout(function ()
                                                           { cp.execute(true); },
                                                           program_state.step_delay);
                 }
             } else {
-                cp.show_pause(true);
+                newMode = 'animating';
                 program_state.timeout_id = setTimeout(function ()
                                                       { cp.execute(false); },
                                                       1);
@@ -280,7 +284,9 @@ cp.execute = function (single_step) {
 
             cp.cancel();
         }
-    }
+    } 
+    
+    cp.enterMode(newMode);
 };
 
 cp.run = function(single_step) {
@@ -314,6 +320,7 @@ cp.run = function(single_step) {
         if (single_step) {
             set_prompt(cp.repl);
             cp.repl.refresh();
+            cp.enterMode('stopped');
             return;
         }
     }
