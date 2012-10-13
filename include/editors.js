@@ -6,16 +6,17 @@ function createCodeEditor(node) {
         lineNumbers:  true,   // Show line numbers
         matchBrackets: true,
         extraKeys: {
-            "Enter": function(cm) { cm.autoInsertBraces(cm)},
-            "Ctrl-Enter": function(cm) { cm.autoInsertBraces(cm)}, 
+            "Enter": function(cm) { cm.autoInsertBraces(cm); },
+            "Ctrl-Enter": function(cm) { cm.autoInsertBraces(cm); },
+            "Ctrl-\\": function (cm) { Mousetrap.trigger("ctrl+\\"); }
         },
-        
+
         onDragEvent: function(cm, event) {
-            if (event.type === "drop") { 
+            if (event.type === "drop") {
                 event.stopPropagation();
                 event.preventDefault();
-                var dt = event.dataTransfer; 
-                var files = dt.files;            
+                var dt = event.dataTransfer;
+                var files = dt.files;
                 // cp.loadFile(cm, files[0]); // TODO
                 return true;
             } else if (event.type === "dragover") {
@@ -25,7 +26,7 @@ function createCodeEditor(node) {
             }
         }
     };
-    
+
     var editor = CodeMirror(node, options);
     // editor.save = cp.save; // TODO
     return editor;
@@ -79,7 +80,7 @@ REPLHistoryManager.prototype.serializeState = function () {
     return {
         history: this.history
     };
-}
+};
 
 REPLHistoryManager.prototype.restoreState = function (state) {
     this.history = state.history;
@@ -134,7 +135,7 @@ function createREPL(node) {
         extraKeys: {
             "Ctrl-C": function (cm) { cp.clearREPL(); cm.cp.history.resetPos(); },
             "Ctrl-L": function (cm) { cp.clearAll(); cm.cp.history.resetPos(); },
-            "Ctrl-Enter": function(cm) { cm.autoInsertBraces(cm)},
+            "Ctrl-Enter": function(cm) { cm.autoInsertBraces(cm); },
             "Shift-Enter": function(cm) { cp.run(true); },
             "Enter": function(cm) { cp.run(false); },
             "Up": function (cm) {

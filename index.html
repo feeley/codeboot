@@ -129,7 +129,6 @@
       <div class="row">
         <pre id="step-value" class="exec-point-code" style="display:none;"></pre>
       </div>
-
     </div>
 
     <!-- Imports (importing at the end makes the page load faster) -->
@@ -162,6 +161,9 @@
             alerts: undefined,
             repl: undefined,
             console: undefined,
+            
+            // Open files
+            fileEditors: [],
         };
                         
         function onAnimateClickAndHold() {
