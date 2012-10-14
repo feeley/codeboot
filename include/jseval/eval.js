@@ -147,8 +147,11 @@ function readFileInternal(filename)
     // does not exist.
 
     //return { stamp: 12345, content: read_file(filename) };
-
-    return cp.fs.getByName(filename);
+    var file = cp.fs.getByName(filename);
+    return {
+        stamp: file.stamp,
+        content: file.getContent(),
+    };
 }
 
 function SourceContainerInternalFile(source, tostr, start_line, start_column, stamp)

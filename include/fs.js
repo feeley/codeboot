@@ -91,10 +91,25 @@ function CPFile(filename, content, opts) {
     }
 }
 
+CPFile.prototype.getContent = function () {
+    if (this.editor) {
+        return this.editor.getValue();
+    }
+
+    return this.content;
+};
+
+CPFile.prototype.save = function () {
+    if (this.editor) {
+        this.content = this.editor.getValue();
+        this.stamp += 1;
+    }
+};
+
 CPFile.prototype.serialize = function () {
     var json = {
         filename: this.filename,
-        content: this.content,
+        content: this.getContent(),
         stamp: this.stamp
     };
     return json;
@@ -166,7 +181,8 @@ CPFileManager.prototype.renameFile = function (fileOrFilename, newFilename) {
 };
 
 CPFileManager.prototype.getContent = function (fileOrFilename) {
-    return this._asFile(fileOrFilename).content;
+    var file = this._asFile(fileOrFilename);
+    return file.getContent();
 };
 
 CPFileManager.prototype.getEditor = function (fileOrFilename) {
@@ -272,11 +288,8 @@ cp.openFile = function (filename) {
 
 cp.closeFile = function (filename) {
     var file = cp.fs._asFile(filename);
-    var editor = cp.fs.getEditor(file);
-    if (editor) {
-        file.content = editor.getValue();
-        file.editor = null;
-    }
+    file.save();
+    file.editor = null;
 
     $(cp.getContainerFor(filename)).remove();
 };
@@ -341,7 +354,7 @@ cp.newTab = function (fileOrFilename) {
 
 	var editor = createCodeEditor($pre.get(0));
 	file.editor = editor;
-    editor.setValue(cp.fs.getContent(file));
+    editor.setValue(file.content);
 };
 
 cp.newFile = function () {
