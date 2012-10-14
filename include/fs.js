@@ -162,6 +162,12 @@ cp.makeEditorToolbar = function (filename) {
     $group.appendTo($toolbar);
 
     var $loadButton = makeTBButton("load");
+    $loadButton.click(function () {
+        // Emulate typing the command and executing it.
+        // TODO: replace this with a proper implementation
+        set_input(cp.repl, default_prompt + "load('" + filename + "');");
+        cp.run(false);
+    });
     $loadButton.appendTo($group);
 
     return $toolbar;
