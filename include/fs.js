@@ -299,6 +299,14 @@ cp.deleteFile = function (filename) {
     cp.fs.deleteFile(filename);
 };
 
+function basename(filename) {
+    return filename.replace(/\\/g,'/').replace( /.*\//, '');
+}
+
+function endsWith(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+}
+
 cp.makeEditorToolbar = function (filename) {
     var $toolbar = makeToolbar();
 
@@ -314,6 +322,16 @@ cp.makeEditorToolbar = function (filename) {
         cp.run(false);
     });
     $loadButton.appendTo($group);
+
+    $saveButton = makeTBButton($('<i class="icon-download-alt"/>'), {"title" : "Download"});
+    $saveButton.click(function () {
+        var name = basename(filename);
+        if (!endsWith(name, ".js")) {
+            name = name + ".js";
+        }
+        saveAs(cp.fs.getContent(filename), name);
+    });
+    $saveButton.appendTo($group);
 
     return $toolbar;
 };

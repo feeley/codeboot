@@ -256,6 +256,13 @@
         function focusREPL() {
             cp.repl.focus();
         }
+        
+        function saveAs(content, filename) {
+            $("#form-download-content").val(content);
+            $("#form-download-filename").val(filename);
+            
+            $("#form-download").submit();
+        }
     </script>
     <script src="include/actions.js"></script>
     <script src="include/editors.js"></script>
@@ -265,5 +272,10 @@
     <script src="include/mousetrap.min.js"></script>
     <script src="include/tutorial.js"></script>
     <script>cp.query(null);</script>
+    
+	<form id="form-download" class="hide" action="download.php" method="post">
+	  <textarea id="form-download-content" name="content" style="width: 0; height: 0;"></textarea>
+	  <textarea id="form-download-filename" name="filename" style="width: 0; height: 0;"></textarea>
+	</form>
   </body>
 </html>
