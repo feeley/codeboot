@@ -84,27 +84,25 @@ div.tab-pane {
 
 /* ----- Editors ----- */
 
-.CodeMirror {
-  font-size: 20px;
+/*
+.file-editor .CodeMirror {
   position: relative;
   height: 200px;
 }
 
 .CodeMirror-scroll {
-  position:  relative;
+  position: relative;
   height: 100%;
 }
 
 .CodeMirror-gutter {
   height: 100%;
-/*  background-color: transparent; */
   border: none;
   width: 40px;
 }
+*/
 
 .CodeMirror-gutter-text {
-  font-size: 20px;
-/*  background-color: transparent; */
   color: #bebec5;
 }
 
@@ -141,14 +139,17 @@ div.tab-pane {
   height: 1.5em;
 }
 
+/*
 #repl {
   font-family: monospace;
   font-size: 12px;
   line-height: 12px;
 }
+*/
 
 /* REPL should be 1 line high */
 #repl .CodeMirror {
+  font-size: 20px;
   height: 100%;
   padding: 0;
   margin: 0;
@@ -157,11 +158,13 @@ div.tab-pane {
 #repl .CodeMirror-lines {
   padding: 0;
   margin: 0;
+  line-height: 20px;
 }
 
 /* Use a block cursor in REPL to differentiate from normal editors */
 #repl .CodeMirror-cursor {
   width: 0.5ex;
+  height: 20px !important; /* FIXME: forcing this for now but we should find out why the height is too low by default */
   background-color: #9a9a9a;
   border: none;
 }
