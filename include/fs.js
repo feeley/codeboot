@@ -34,6 +34,7 @@ if (cp.fs === (void 0)) {
                              '}',
     };
     cp.fs.files = Object.create(cp.fs.builtins);
+    cp.fs.editors = {};
 }
 
 cp.addFileToMenu = function (filename, builtin) {
@@ -63,17 +64,23 @@ cp.generateUniqueFilename = function () {
     }
 };
 
+cp.getContainerFor = function (filename) {
+    return $('.row[data-cp-filename="' + filename + '"]').get(0);
+};
+
 cp.openFile = function (filename) {
-    var $editor = $('.row[data-cp-filename="' + filename + '"]');
-    if ($editor.size() > 0) {
-        scrollTo($editor.get(0));
+    var container = cp.getContainerFor(filename);
+    if (container) {
+        scrollTo(container);
     } else {
         cp.newTab(filename);
     }
 };
 
 cp.closeFile = function (filename) {
-
+    cp.fs.files[filename] = cp.fs.editors[filename].getValue();
+    delete cp.fs.editors[filename];
+    $(cp.getContainerFor(filename)).remove();
 };
 
 cp.newTab = function (filename) {
@@ -91,7 +98,11 @@ cp.newTab = function (filename) {
 
 	var $nav = $('<ul class="nav nav-tabs"/>');
 
-	$tab_label = $('<a href="#"/>').text(filename).append(makeCloseButton());
+	var $closeButton = makeCloseButton();
+	$closeButton.click(function () {
+	    cp.closeFile(filename);
+	});
+	$tab_label = $('<a href="#"/>').text(filename).append($closeButton);
 	$nav.append($('<li class="active"/>').append($tab_label));
 	$row.append($nav);
 
@@ -102,6 +113,7 @@ cp.newTab = function (filename) {
 
 	var editor = createCodeEditor($pre.get(0));
     editor.setValue(cp.fs.files[filename]);
+    cp.fs.editors[filename] = editor;
 };
 
 cp.newFile = function () {
