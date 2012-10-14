@@ -84,23 +84,14 @@ div.tab-pane {
 
 /* ----- Editors ----- */
 
-/*
+.tab-content.file-editor {
+	margin-bottom: 20px;
+}
+
 .file-editor .CodeMirror {
   position: relative;
   height: 200px;
 }
-
-.CodeMirror-scroll {
-  position: relative;
-  height: 100%;
-}
-
-.CodeMirror-gutter {
-  height: 100%;
-  border: none;
-  width: 40px;
-}
-*/
 
 .CodeMirror-gutter-text {
   color: #bebec5;
@@ -138,14 +129,6 @@ div.tab-pane {
 #repl CodeMirror {
   height: 1.5em;
 }
-
-/*
-#repl {
-  font-family: monospace;
-  font-size: 12px;
-  line-height: 12px;
-}
-*/
 
 /* REPL should be 1 line high */
 #repl .CodeMirror {
