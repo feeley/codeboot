@@ -14,7 +14,7 @@ println.toString = function () {
     return "function println() { [native code] }";
 };
 
-var load = js_load;
+var load = builtin_load;
 
 load.toString = function () {
     return "function load() { [native code] }";

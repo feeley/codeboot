@@ -8,7 +8,7 @@
 
 function js_eval(source, options)
 {
-    var rte = js_eval_setup(source, options);
+    var rte = js_eval_setup(source, options)
 
     return js_eval_exec(rte);
 }
@@ -75,12 +75,12 @@ function js_eval_step(rte, nb_steps)
     }
 }
 
-function js_load(filename)
+function builtin_load(filename)
 {
     throw "unimplemented";///////////////////////////
 }
 
-js_load._apply_ = function (rte, cont, this_, params)
+builtin_load._apply_ = function (rte, cont, this_, params)
 {
     var filename = params[0];
     var options = params[1];
@@ -117,7 +117,7 @@ js_load._apply_ = function (rte, cont, this_, params)
                 };
 
     rte.frame = new RTFrame(this_,
-                            js_load,
+                            builtin_load,
                             params,
                             [],
                             null);
@@ -130,7 +130,7 @@ js_load._apply_ = function (rte, cont, this_, params)
                     rte.stack = rte.stack.stack;
                     return cont(rte, result);
                 });
-};
+}
 
 function readFileInternal(filename)
 {
@@ -147,7 +147,9 @@ function readFileInternal(filename)
     // does not exist.
 
     //return { stamp: 12345, content: read_file(filename) };
+
     var file = cp.fs.getByName(filename);
+
     return {
         stamp: file.stamp,
         content: file.getContent(),
@@ -687,7 +689,7 @@ function comp_expr(cte, ast)
             }
             else
             {
-                var id = ast.exprs[0].id.toString();
+                var id = ast.exprs[0].id.toString()
 
                 return gen_op_dyn_cst(ast,
                                       assign_op1_to_semfn(ast.op),
@@ -960,7 +962,7 @@ function comp_expr(cte, ast)
     {
         //print("Ref");
 
-        var id_str = ast.id.toString();
+        var id_str = ast.id.toString()
 
         if (id_str === cte.callee)
         {
@@ -1285,7 +1287,7 @@ function assign_op2_to_semfn(op)
 {
   switch (op)
   {
-  case "var x = y": return sem_var_x_equal_y;
+  case "var x = y": return sem_var_x_equal_y
   case "x = y": return sem_x_equal_y;
   case "x += y": return sem_x_plusequal_y;
   case "x -= y": return sem_x_minusequal_y;
