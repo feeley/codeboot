@@ -399,6 +399,7 @@ function cp_internal_onTabDblClick(event) {
             cp.fs.renameFile(oldFilename, newFilename);
             $inputBox.remove();
             $element.text(newFilename);
+            $('[data-cp-filename="' + oldFilename + '"]').attr("data-cp-filename", newFilename);
 
             cp.rebuildFileMenu(); // TODO: inefficient
         } else if (event.keyCode == 27) {
