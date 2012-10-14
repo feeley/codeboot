@@ -42,6 +42,10 @@
 	margin-left: -1px;
 }
 
+.navbar .btn-group .btn {
+	margin-left: -1px; /* Fix group layout in navbar */
+}
+
 /* ----- Tabs ----- */
 
 .nav-tabs {
