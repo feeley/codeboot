@@ -26,7 +26,7 @@ cp.serializeState = function () {
 
     state.repl.history = cp.repl.cp.history.serializeState();
 
-    state.files = cp.fs.files;
+    state.files = cp.fs.serialize();
     state.openEditors = [];
     $(".row[data-cp-filename]").each(function () {
         state.openEditors.push($(this).attr("data-cp-filename"));
@@ -44,9 +44,7 @@ cp.restoreState = function (state) {
         cp.setDevMode(!!state.devMode);
 
         if (state.files) {
-            for (var filename in state.files) {
-                cp.fs.files[filename] = state.files[filename];
-            }
+            cp.fs.restore(state.files);
             cp.rebuildFileMenu();
         }
 

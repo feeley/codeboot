@@ -148,14 +148,7 @@ function readFileInternal(filename)
 
     //return { stamp: 12345, content: read_file(filename) };
 
-    if (!(filename in cp.fs.files)) {
-        throw "File not found: " + filename;
-    }
-
-    return {
-             stamp: 0, // TODO
-             content: cp.fs.files[filename]
-           };
+    return cp.fs.getByName(filename);
 }
 
 function SourceContainerInternalFile(source, tostr, start_line, start_column, stamp)

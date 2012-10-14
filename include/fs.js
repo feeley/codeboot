@@ -64,26 +64,157 @@ function makeTBButton($contents, props) {
 
 /* ----- Internal file system ----- */
 
+var BUILTIN_FILES = {
+        'sample/hello' : 'println("Hello, world!\\n")',
+        'sample/fact'  : 'function fact(n) {\n' +
+                         '    if (n <= 0) return 1;\n' +
+                         '    return n * fact(n-1);\n' +
+                         '}',
+        'sample/fib'   : 'function fib(n) {\n' +
+                         '    if (n <= 2) return n;\n' +
+                         '    return fib(n-1) + fib(n-2);\n' +
+                         '}',
+};
+
 var NEW_FILE_DEFAULT_CONTENT = "// Enter JavaScript code here";
 
-if (cp.fs === (void 0)) {
-    cp.fs = {};
-    cp.fs.builtins = {
-            'sample/hello' : 'println("Hello, world!\\n")',
-            'sample/fact'  : 'function fact(n) {\n' +
-                             '    if (n <= 0) return 1;\n' +
-                             '    return n * fact(n-1);\n' +
-                             '}',
-            'sample/fib'   : 'function fib(n) {\n' +
-                             '    if (n <= 2) return n;\n' +
-                             '    return fib(n-1) + fib(n-2);\n' +
-                             '}',
-    };
-    cp.fs.files = Object.create(cp.fs.builtins);
-    cp.fs.editors = {};
+function CPFile(filename, content, opts) {
+    this.filename = filename;
+    this.content = (content !== (void 0)) ? content : NEW_FILE_DEFAULT_CONTENT;
+    this.stamp = 0;
+    this.editor = undefined;
+
+    if (opts) {
+        for (var prop in opts) {
+            this[prop] = opts[prop];
+        }
+    }
 }
 
-cp.addFileToMenu = function (filename, builtin) {
+CPFile.prototype.serialize = function () {
+    var json = {
+        filename: this.filename,
+        content: this.content,
+        stamp: this.stamp
+    };
+    return json;
+};
+
+function CPFileManager() {
+    this.clear();
+}
+
+CPFileManager.prototype.clear = function () {
+    this.builtins = {};
+    this.files = Object.create(this.builtins);
+    this._loadBuiltins();
+};
+
+CPFileManager.prototype._loadBuiltins = function () {
+    for (var filename in BUILTIN_FILES) {
+        var f = new CPFile(filename, BUILTIN_FILES[filename]);
+        this.builtins[filename] = f;
+    };
+};
+
+CPFileManager.prototype._asFilename = function (fileOrFilename) {
+    if (typeof fileOrFilename === "string") return fileOrFilename;
+    return fileOrFilename.filename;
+};
+
+CPFileManager.prototype._asFile = function (fileOrFilename) {
+    if (typeof fileOrFilename !== "string") return fileOrFilename;
+    return this.getByName(fileOrFilename);
+};
+
+CPFileManager.prototype.isBuiltin = function (fileOrFilename) {
+    var filename = this._asFilename(fileOrFilename);
+    return this.builtins.hasOwnProperty(filename);
+};
+
+CPFileManager.prototype.addFile = function (f) {
+    this.files[f.filename] = f;
+};
+
+CPFileManager.prototype.hasFile = function (fileOrFilename) {
+    var filename = this._asFilename(fileOrFilename);
+    return this.files.hasOwnProperty(filename) || this.builtins.hasOwnProperty(filename);
+};
+
+CPFileManager.prototype.getByName = function (filename) {
+    if (!this.hasFile(filename)) {
+        throw "File not found: '" + filename + "'";
+    }
+    return this.files[filename];
+};
+
+CPFileManager.prototype.deleteFile = function (fileOrFilename) {
+    var filename = this._asFilename(fileOrFilename);
+    if (this.hasFile(filename)) {
+        delete this.files[filename];
+        return true;
+    }
+
+    return false;
+};
+
+CPFileManager.prototype.renameFile = function (fileOrFilename, newFilename) {
+    var file = this._asFile(fileOrFilename);
+    delete this.files[filename];
+    file.filename = newFilename;
+    this.addFile(file);
+};
+
+CPFileManager.prototype.getContent = function (fileOrFilename) {
+    return this._asFile(fileOrFilename).content;
+};
+
+CPFileManager.prototype.getEditor = function (fileOrFilename) {
+    return this._asFile(fileOrFilename).editor;
+};
+
+CPFileManager.prototype.each = function (callback, selector) {
+    if (!selector) selector = function (f) { return true; };
+    for (var filename in this.files) {
+        if (!this.hasFile(filename)) continue; // Prune Object method name
+
+        var file = this.getByName(filename);
+        if (selector(file)) {
+            callback(file);
+        }
+    }
+};
+
+CPFileManager.prototype.serialize = function () {
+    var json = [];
+    var self = this;
+    var isUserFile = function (file) {
+        return self.files.hasOwnProperty(file.filename);
+    };
+
+    this.each(function (file) {
+        json.push(file.serialize());
+    },
+    isUserFile);
+
+    return json;
+};
+
+CPFileManager.prototype.restore = function (json) {
+    this.clear();
+    for (var i = 0; i < json.length; i++) {
+        var fileProps = json[i];
+        var file = new CPFile(fileProps.filename, fileProps.content, fileProps);
+        this.addFile(file);
+    }
+};
+
+// ----------------------------------------------------------------------
+
+cp.addFileToMenu = function (fileOrFilename) {
+    var file = cp.fs._asFile(fileOrFilename);
+    var filename = file.filename;
+
     var $file_item = $('<li/>');
     $file_item.attr("data-cp-filename", filename);
     var $file_link = $('<a href="#"/>');
@@ -93,7 +224,7 @@ cp.addFileToMenu = function (filename, builtin) {
     $file_link.text(filename);
     $file_item.append($file_link);
 
-    if (!builtin) {
+    if (!cp.fs.isBuiltin(file)) {
         var $deleteButton = $('<i class="icon-trash pull-right"/>');
         $file_link.append($deleteButton);
         $deleteButton.click(function () {
@@ -106,13 +237,13 @@ cp.addFileToMenu = function (filename, builtin) {
 
 cp.rebuildFileMenu = function () {
     $("#file-list").empty();
-    for (var filename in cp.fs.files) {
-        var isBuiltin = cp.fs.builtins.hasOwnProperty(filename);
-        cp.addFileToMenu(filename, isBuiltin);
-    }
+    cp.fs.each(function (file) {
+        cp.addFileToMenu(file);
+    });
 };
 
 cp.initFS = function () {
+    cp.fs = new CPFileManager();
     cp.rebuildFileMenu();
 };
 
@@ -120,7 +251,7 @@ cp.generateUniqueFilename = function () {
     var prefix = "script";
     for (var index = 1; ; index++) {
         var candidateName = prefix + index;
-        if (!(candidateName in cp.fs.files)) {
+        if (!cp.fs.hasFile(candidateName)) {
             return candidateName;
         }
     }
@@ -140,9 +271,11 @@ cp.openFile = function (filename) {
 };
 
 cp.closeFile = function (filename) {
-    if (cp.fs.editors.hasOwnProperty(filename)) {
-        cp.fs.files[filename] = cp.fs.editors[filename].getValue();
-        delete cp.fs.editors[filename];
+    var file = cp.fs._asFile(filename);
+    var editor = cp.fs.getEditor(file);
+    if (editor) {
+        file.content = editor.getValue();
+        file.editor = null;
     }
 
     $(cp.getContainerFor(filename)).remove();
@@ -150,9 +283,7 @@ cp.closeFile = function (filename) {
 
 cp.deleteFile = function (filename) {
     $('[data-cp-filename="' + filename + '"]').remove();
-
-    delete cp.fs.editors[filename];
-    delete cp.fs.files[filename];
+    cp.fs.deleteFile(filename);
 };
 
 cp.makeEditorToolbar = function (filename) {
@@ -174,7 +305,7 @@ cp.makeEditorToolbar = function (filename) {
     return $toolbar;
 };
 
-cp.newTab = function (filename) {
+cp.newTab = function (fileOrFilename) {
 	/*
      * <div class="row">
      *   <ul class="nav nav-tabs">
@@ -183,6 +314,9 @@ cp.newTab = function (filename) {
      *   <pre class="tab-content"></pre>
      * </div>
     */
+
+    var file = cp.fs._asFile(fileOrFilename);
+    var filename = file.filename;
 
 	var $row = $('<div class="row"/>');
 	$row.attr("data-cp-filename", filename);
@@ -206,13 +340,15 @@ cp.newTab = function (filename) {
 	$("#contents").prepend($row);
 
 	var editor = createCodeEditor($pre.get(0));
-    editor.setValue(cp.fs.files[filename]);
-    cp.fs.editors[filename] = editor;
+	file.editor = editor;
+    editor.setValue(cp.fs.getContent(file));
 };
 
 cp.newFile = function () {
     var filename = cp.generateUniqueFilename();
-    cp.fs.files[filename] = NEW_FILE_DEFAULT_CONTENT || "";
-    cp.addFileToMenu(filename);
-    cp.newTab(filename);
+    var file = new CPFile(filename);
+    cp.fs.addFile(file);
+
+    cp.addFileToMenu(file);
+    cp.newTab(file);
 };
