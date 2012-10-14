@@ -75,17 +75,17 @@ function js_eval_step(rte, nb_steps)
     }
 }
 
-function js_load(filename)
+function builtin_load(filename)
 {
     throw "unimplemented";///////////////////////////
 }
 
-js_load.toString = function ()
+builtin_load.toString = function ()
 {
     return "function load(filename) { ... }";
 };
 
-js_load._apply_ = function (rte, cont, this_, params)
+builtin_load._apply_ = function (rte, cont, this_, params)
 {
     var filename = params[0];
     var options = params[1];
@@ -122,7 +122,7 @@ js_load._apply_ = function (rte, cont, this_, params)
                 };
 
     rte.frame = new RTFrame(this_,
-                            js_load,
+                            builtin_load,
                             params,
                             [],
                             null);
@@ -137,7 +137,7 @@ js_load._apply_ = function (rte, cont, this_, params)
                 });
 }
 
-var load = js_load; // make it available as a builtin
+var load = builtin_load; // make it available as a builtin
 
 function readFileInternal(filename)
 {
