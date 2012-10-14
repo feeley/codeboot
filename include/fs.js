@@ -66,11 +66,11 @@ function makeTBButton($contents, props) {
 
 var BUILTIN_FILES = {
         'sample/hello' : 'println("Hello, world!\\n")',
-        'sample/fact'  : 'function fact(n) {\n' +
+        'sample/fact'  : 'var fact = function (n) {\n' +
                          '    if (n <= 0) return 1;\n' +
                          '    return n * fact(n-1);\n' +
                          '}',
-        'sample/fib'   : 'function fib(n) {\n' +
+        'sample/fib'   : 'var fib = function (n) {\n' +
                          '    if (n <= 2) return n;\n' +
                          '    return fib(n-1) + fib(n-2);\n' +
                          '}',
