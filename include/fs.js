@@ -58,11 +58,16 @@ cp.addFileToMenu = function (filename, builtin) {
     $("#file-list").prepend($file_item);
 };
 
-cp.initFS = function () {
+cp.rebuildFileMenu = function () {
+    $("#file-list").empty();
     for (var filename in cp.fs.files) {
         var isBuiltin = cp.fs.builtins.hasOwnProperty(filename);
         cp.addFileToMenu(filename, isBuiltin);
     }
+};
+
+cp.initFS = function () {
+    cp.rebuildFileMenu();
 };
 
 cp.generateUniqueFilename = function () {
