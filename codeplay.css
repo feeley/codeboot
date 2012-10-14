@@ -1,5 +1,11 @@
 /* ----- Layout ----- */
 
+.rename-box {
+	margin: 0 !important;
+	padding-top: 0 !important;
+	padding-bottom: 0 !important;
+}
+
 /* ----- Toolbars ----- */
 
 .btn-toolbar {

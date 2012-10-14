@@ -174,8 +174,11 @@ CPFileManager.prototype.deleteFile = function (fileOrFilename) {
 };
 
 CPFileManager.prototype.renameFile = function (fileOrFilename, newFilename) {
+    if (this.hasFile(newFilename)) {
+        throw "File already exists: " + newFilename;
+    }
     var file = this._asFile(fileOrFilename);
-    delete this.files[filename];
+    delete this.files[file.filename];
     file.filename = newFilename;
     this.addFile(file);
 };
@@ -367,6 +370,46 @@ function createFileEditor(node, file) {
     });
 }
 
+function cp_internal_onTabDblClick(event) {
+    var $element = $(event.target);
+
+    var oldFilename = $element.text();
+    var $inputBox = $('<input type="text" class="rename-box span2"/>');
+    $inputBox.val(oldFilename);
+    $element.empty();
+    $element.append($inputBox);
+
+    var resetTab = function () {
+        $inputBox.remove();
+        $element.text(oldFilename);
+    };
+
+    $inputBox.focusout(resetTab);
+
+    $inputBox.keydown(function (event) {
+        if (event.keyCode == 13) {
+            // Enter pressed, perform renaming
+            var newFilename = $inputBox.val();
+            if (cp.fs.hasFile(newFilename)) {
+                alert("Filename already in use");
+                resetTab();
+                return;
+            }
+
+            cp.fs.renameFile(oldFilename, newFilename);
+            $inputBox.remove();
+            $element.text(newFilename);
+
+            cp.rebuildFileMenu(); // TODO: inefficient
+        } else if (event.keyCode == 27) {
+            // Escape pressed, reset
+            resetTab();
+        }
+    });
+
+    $inputBox.focus();
+}
+
 cp.newTab = function (fileOrFilename) {
 	/*
      * <div class="row">
@@ -392,9 +435,13 @@ cp.newTab = function (fileOrFilename) {
 	$closeButton.click(function () {
 	    cp.closeFile(filename);
 	});
-	$tab_label = $('<a href="#"/>').text(filename).append($closeButton);
+	$tab_text_container = $('<span class="tab-label"/>').text(filename);
+	$tab_label = $('<a href="#"/>').append($tab_text_container).append($closeButton);
 	$nav.append($('<li class="active"/>').append($tab_label));
 	$row.append($nav);
+
+	// Support renaming
+	$tab_text_container.dblclick(cp_internal_onTabDblClick);
 
 	var $pre = $('<pre class="tab-content file-editor"/>');
 	$row.append($pre);
