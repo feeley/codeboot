@@ -318,6 +318,26 @@ cp.makeEditorToolbar = function (filename) {
     return $toolbar;
 };
 
+var SAVE_DELAY = 300; // length of window (in ms) during which changes will be buffered
+
+function createFileEditor(node, file) {
+    var editor = createCodeEditor(node);
+
+    file.editor = editor;
+    editor.setValue(file.content);
+    var saveHandler = function () {
+        file.save();
+        editor.currentSaveTimeout = (void 0);
+    };
+    editor.on("change", function (cm, change) {
+        if (editor.currentSaveTimeout !== (void 0)) {
+            // extend the window
+            clearTimeout(editor.currentSaveTimeout);
+        }
+        editor.currentSaveTimeout = setTimeout(saveHandler, SAVE_DELAY);
+    });
+}
+
 cp.newTab = function (fileOrFilename) {
 	/*
      * <div class="row">
@@ -352,9 +372,7 @@ cp.newTab = function (fileOrFilename) {
 
 	$("#contents").prepend($row);
 
-	var editor = createCodeEditor($pre.get(0));
-	file.editor = editor;
-    editor.setValue(file.content);
+	createFileEditor($pre.get(0), file);
 };
 
 cp.newFile = function () {
