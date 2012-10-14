@@ -246,8 +246,14 @@ cp.addFileToMenu = function (fileOrFilename) {
     if (!cp.fs.isBuiltin(file)) {
         var $deleteButton = $('<i class="icon-trash pull-right"/>');
         $file_link.append($deleteButton);
-        $deleteButton.click(function () {
-            cp.deleteFile(filename);
+        $deleteButton.click(function (event) {
+            var reallyDelete = confirm("Delete file '" + filename + "'? This cannot be undone.");
+            if (reallyDelete) {
+                cp.deleteFile(filename);
+            } else {
+                event.preventDefault();
+                event.stopPropagation();
+            }
         });
     }
 
