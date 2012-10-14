@@ -115,6 +115,16 @@ CPFile.prototype.serialize = function () {
     return json;
 };
 
+CPFile.prototype.clone = function () {
+    var other = new CPFile(this.filename, this.content);
+    for (var prop in this) {
+        if (this.hasOwnProperty(prop)) {
+            other[prop] = this[prop];
+        }
+    }
+    return other;
+};
+
 function CPFileManager() {
     this.clear();
 }
@@ -160,7 +170,13 @@ CPFileManager.prototype.getByName = function (filename) {
     if (!this.hasFile(filename)) {
         throw "File not found: '" + filename + "'";
     }
-    return this.files[filename];
+    var file = this.files[filename];
+    if (!this.files.hasOwnProperty(filename)) {
+        // This is a builtin file, make an editable copy
+        file = file.clone();
+        this.files[filename] = file;
+    }
+    return file;
 };
 
 CPFileManager.prototype.deleteFile = function (fileOrFilename) {
