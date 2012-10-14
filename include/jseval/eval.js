@@ -8,7 +8,7 @@
 
 function js_eval(source, options)
 {
-    var rte = js_eval_setup(source, options)
+    var rte = js_eval_setup(source, options);
 
     return js_eval_exec(rte);
 }
@@ -80,11 +80,6 @@ function js_load(filename)
     throw "unimplemented";///////////////////////////
 }
 
-js_load.toString = function ()
-{
-    return "function load(filename) { ... }";
-};
-
 js_load._apply_ = function (rte, cont, this_, params)
 {
     var filename = params[0];
@@ -135,9 +130,7 @@ js_load._apply_ = function (rte, cont, this_, params)
                     rte.stack = rte.stack.stack;
                     return cont(rte, result);
                 });
-}
-
-var load = js_load; // make it available as a builtin
+};
 
 function readFileInternal(filename)
 {
@@ -155,9 +148,13 @@ function readFileInternal(filename)
 
     //return { stamp: 12345, content: read_file(filename) };
 
+    if (!(filename in cp.fs.files)) {
+        throw "File not found: " + filename;
+    }
+
     return {
-             stamp: 12345,
-             content: "var fib = function (n) {\n    if (n<2)\n        return 1;\n    else\n        return fib(n-1)+fib(n-2);\n};\n"
+             stamp: 0, // TODO
+             content: cp.fs.files[filename]
            };
 }
 
@@ -289,7 +286,7 @@ function RTFrame(this_, callee, params, locals, env)
     this.locals = locals;
     this.env = env;
 }
-         
+
 function comp_statement(cte, ast)
 {
     if (ast instanceof Program)
@@ -303,7 +300,7 @@ function comp_statement(cte, ast)
         //print("FunctionDeclaration");
 
         throw "unimplemented"; /////////////////////////////////////////
-        
+
         ///ast.funct = ctx.walk_expr(ast.funct);
     }
     else if (ast instanceof BlockStatement)
@@ -694,7 +691,7 @@ function comp_expr(cte, ast)
             }
             else
             {
-                var id = ast.exprs[0].id.toString()
+                var id = ast.exprs[0].id.toString();
 
                 return gen_op_dyn_cst(ast,
                                       assign_op1_to_semfn(ast.op),
@@ -967,7 +964,7 @@ function comp_expr(cte, ast)
     {
         //print("Ref");
 
-        var id_str = ast.id.toString()
+        var id_str = ast.id.toString();
 
         if (id_str === cte.callee)
         {
@@ -1292,7 +1289,7 @@ function assign_op2_to_semfn(op)
 {
   switch (op)
   {
-  case "var x = y": return sem_var_x_equal_y
+  case "var x = y": return sem_var_x_equal_y;
   case "x = y": return sem_x_equal_y;
   case "x += y": return sem_x_plusequal_y;
   case "x -= y": return sem_x_minusequal_y;
