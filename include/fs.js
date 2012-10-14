@@ -161,7 +161,8 @@ cp.makeEditorToolbar = function (filename) {
     var $group = makeTBGroup();
     $group.appendTo($toolbar);
 
-    var $loadButton = makeTBButton("load");
+    var $loadButton = makeTBButton($('<i class="icon-play"/>'), {"title" : "Load"});
+    $loadButton.append($('<img src="icons/exp_inf.png"/>'));
     $loadButton.click(function () {
         // Emulate typing the command and executing it.
         // TODO: replace this with a proper implementation
