@@ -75,6 +75,106 @@ function js_eval_step(rte, nb_steps)
     }
 }
 
+function js_load(filename)
+{
+    throw "unimplemented";///////////////////////////
+}
+
+js_load.toString = function ()
+{
+    return "function load(filename) { ... }";
+};
+
+js_load._apply_ = function (rte, cont, this_, params)
+{
+    var filename = params[0];
+    var options = params[1];
+
+    var state = readFileInternal(filename);
+    var source = state.content;
+
+    var opts = {
+                 container:
+                   (typeof options === "object" &&
+                    options.container !== void 0)
+                   ? options.container
+                 : new SourceContainerInternalFile(source, filename, 1, 1, state.stamp),
+
+                 error:
+                   (typeof options === "object" &&
+                    options.error !== void 0)
+                   ? options.error
+                   : void 0,
+
+                 warnings:
+                   (typeof options === "object" &&
+                    options.warnings !== void 0)
+                   ? options.warnings
+                   : void 0
+               };
+
+    var code = js_compile(source, opts);
+
+    rte.stack = {
+                  cont: cont,
+                  frame: rte.frame,
+                  stack: rte.stack
+                };
+
+    rte.frame = new RTFrame(this_,
+                            js_load,
+                            params,
+                            [],
+                            null);
+
+    return code(rte,
+                function (rte, result)
+                {
+                    var cont = rte.stack.cont;
+                    rte.frame = rte.stack.frame;
+                    rte.stack = rte.stack.stack;
+                    return cont(rte, result);
+                });
+}
+
+var load = js_load; // make it available as a builtin
+
+function readFileInternal(filename)
+{
+    // TODO: replace this with an actual access of the internal file system
+    //
+    // The stamp is a number associated with the file which is incremented
+    // whenever there has been an edit of the file since the last time the
+    // file was read.  This is useful to avoid highlighting the wrong
+    // part of the source code in an editor (if the user edits a file
+    // containing a function that will later be called without reloading
+    // the file).
+    //
+    // The function should raise a suitable exception if the filename
+    // does not exist.
+
+    //return { stamp: 12345, content: read_file(filename) };
+
+    return {
+             stamp: 12345,
+             content: "var fib = function (n) {\n    if (n<2)\n        return 1;\n    else\n        return fib(n-1)+fib(n-2);\n};\n"
+           };
+}
+
+function SourceContainerInternalFile(source, tostr, start_line, start_column, stamp)
+{
+    this.source = source;
+    this.tostr = tostr;
+    this.start_line = start_line;
+    this.start_column = start_column;
+    this.stamp = stamp;
+}
+
+SourceContainerInternalFile.prototype.toString = function ()
+{
+    return this.tostr;
+};
+
 function SourceContainer(source, tostr, start_line, start_column)
 {
     this.source = source;
