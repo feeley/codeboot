@@ -17,7 +17,7 @@ function createCodeEditor(node) {
                 event.preventDefault();
                 var dt = event.dataTransfer;
                 var files = dt.files;
-                // cp.loadFile(cm, files[0]); // TODO
+                cp.loadFile(cm, files[0]);
                 return true;
             } else if (event.type === "dragover") {
                 event.stopPropagation();
@@ -30,6 +30,29 @@ function createCodeEditor(node) {
     var editor = CodeMirror(node, options);
     // editor.save = cp.save; // TODO
     return editor;
+}
+
+cp.loadFile = function (cm, f) {
+    if (!cm) return;
+
+    cp_internal_readTextFile(f, function(contents) {
+        cm.setValue(contents);
+    });
+};
+
+function cp_internal_readTextFile(f, callback) {
+    if (!Modernizr.filereader) {
+        cp.reportError("File is reader not supported by the browser");
+    } else {
+        var reader = new FileReader();
+        reader.onerror = function (e) {
+            cp.reportError("File read failed");
+        };
+        reader.onload = function(e) {
+            callback(e.target.result);
+        };
+        reader.readAsText(f);
+    }
 }
 
 // ================================================================================
