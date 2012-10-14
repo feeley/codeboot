@@ -248,7 +248,18 @@ cp.addFileToMenu = function (fileOrFilename) {
         });
     }
 
-    $("#file-list").prepend($file_item);
+    // Keep the menu sorted
+    var $children = $("#file-list").children();
+    for (var i = 0; i < $children.size(); i++) {
+        var $element = $($children.get(i));
+        var element_filename = $element.attr('data-cp-filename');
+        if (filename < element_filename) {
+            $file_item.insertBefore($element);
+            return;
+        }
+    }
+
+    $("#file-list").append($file_item);
 };
 
 cp.rebuildFileMenu = function () {
