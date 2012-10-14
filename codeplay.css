@@ -158,7 +158,7 @@ div.tab-pane {
 #repl .CodeMirror-lines {
   padding: 0;
   margin: 0;
-  line-height: 20px;
+  line-height: 22px;
 }
 
 /* Use a block cursor in REPL to differentiate from normal editors */
