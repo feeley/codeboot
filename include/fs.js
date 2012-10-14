@@ -16,6 +16,52 @@ function scrollTo(elementOrSelector) {
     $("body").animate({scrollTop: elementOffset}, 400);
 }
 
+function makeToolbar() {
+    /*
+      <div class="btn-toolbar pull-right">
+        <div class="btn-group">
+          <button id="step-button" title="Step" class="btn" onclick="cp.animate(0);"><i class="icon-play"></i><img id="step-mode-icon" src="icons/exp_pause.png"><img id="single-step-icon" class="hide" src="icons/exp_1.png"></button>
+          <button id="play-button" title="Execute" class="btn" onclick="cp.play();"><i class="icon-play"></i><img src="icons/exp_inf.png"></button>
+          <div class="btn-group">
+            <button id="animate-button" title="Animate" class="btn" onclick="cp.animate(500);"><i class="icon-play"></i></button>
+            <button id="animate-dropdown" class="btn dropdown-toggle hide" data-toggle="dropdown">
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+              <li><a href="#" onclick="cp.animate(2000);">Animate slowly</a></li>
+              <li><a href="#" onclick="cp.animate(500);">Animate</a></li>
+              <li><a href="#" onclick="cp.animate(125);">Animate quickly</a></li>
+            </ul>
+          </div>
+          <button id="pause-button" title="Pause" class="btn disabled" onclick="cp.animate(0);"><i class="icon-pause"></i></button>
+          <button id="cancel-button" title="Stop" class="btn disabled" onclick="cp.cancel();"><i class="icon-stop"></i></button>
+        </div>
+      </div>
+    */
+
+    var $toolbar = $('<div class="btn-toolbar pull-right"/>');
+
+    return $toolbar;
+}
+
+function makeTBGroup() {
+    return $('<div class="btn-group"/>');
+}
+
+function makeTBButton($contents, props) {
+    var $btn = $('<button class="btn"/>');
+
+    for (var key in props) {
+        $btn.attr(key, props[key]);
+    }
+
+    if (contents) {
+        $btn.append($contents);
+    }
+
+    return $btn;
+}
+
 /* ----- Internal file system ----- */
 
 var NEW_FILE_DEFAULT_CONTENT = "// Enter JavaScript code here";
@@ -109,6 +155,18 @@ cp.deleteFile = function (filename) {
     delete cp.fs.files[filename];
 };
 
+cp.makeEditorToolbar = function (filename) {
+    var $toolbar = makeToolbar();
+
+    var $group = makeTBGroup();
+    $group.appendTo($toolbar);
+
+    var $loadButton = makeTBButton("load");
+    $loadButton.appendTo($group);
+
+    return $toolbar;
+};
+
 cp.newTab = function (filename) {
 	/*
      * <div class="row">
@@ -121,6 +179,9 @@ cp.newTab = function (filename) {
 
 	var $row = $('<div class="row"/>');
 	$row.attr("data-cp-filename", filename);
+
+	var $toolbar = cp.makeEditorToolbar(filename);
+	$row.append($toolbar);
 
 	var $nav = $('<ul class="nav nav-tabs"/>');
 
