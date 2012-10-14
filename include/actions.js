@@ -67,9 +67,30 @@ function position_to_line_ch(pos) {
 }
 
 function code_highlight(loc, cssClass) {
+
+    var container = loc.container;
+    var editor;
+
+    if (container instanceof SourceContainerInternalFile) {
+        var filename = container.toString();
+        var state = readFileInternal(filename);
+        if (container.stamp !== state.stamp) {
+            return null; // the content of the editor has changed so can't highlight
+        }
+        //TODO: find the correct editor for this internal file
+        //editor = ???;
+        print("can't find the correct editor for " + filename);
+        return null;
+    } else if (container instanceof SourceContainer) {
+        editor = cp.transcript;
+    } else {
+        // unknown source container
+        return null;
+    }
+
     var start = position_to_line_ch(loc.start_pos);
     var end = position_to_line_ch(loc.end_pos);
-    return cp.transcript.markText(start, end, cssClass);
+    return editor.markText(start, end, cssClass);
 }
 
 function printed_repr(x) {
