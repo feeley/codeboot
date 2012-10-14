@@ -373,6 +373,8 @@ cp.newTab = function (fileOrFilename) {
 	$("#contents").prepend($row);
 
 	createFileEditor($pre.get(0), file);
+
+	scrollTo($row);
 };
 
 cp.newFile = function () {
