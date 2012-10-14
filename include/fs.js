@@ -1,8 +1,82 @@
+/* ----- UI helpers ----- */
+
+var NAVBAR_HEIGHT = 40;
+var EDITOR_SPACING = 20;
+
 function makeCloseButton() {
-	return $("<button/>").addClass("close").append("&times;");
+    return $("<button/>").addClass("close").append("&times;");
 }
 
-cp.newTab = function (title) {
+function makeMenuSeparator() {
+    return $('<li class="divider"></li>');
+}
+
+function scrollTo(elementOrSelector) {
+    var elementOffset = $(elementOrSelector).offset().top - NAVBAR_HEIGHT - EDITOR_SPACING;
+    $("body").animate({scrollTop: elementOffset}, 400);
+}
+
+/* ----- Internal file system ----- */
+
+var NEW_FILE_DEFAULT_CONTENT = "// Enter JavaScript code here";
+
+if (cp.fs === (void 0)) {
+    cp.fs = {};
+    cp.fs.builtins = {
+            'sample/hello' : 'println("Hello, world!\\n")',
+            'sample/fact'  : 'function fact(n) {\n' +
+                             '    if (n <= 0) return 1;\n' +
+                             '    return n * fact(n-1);\n' +
+                             '}',
+            'sample/fib'   : 'function fib(n) {\n' +
+                             '    if (n <= 2) return n;\n' +
+                             '    return fib(n-1) + fib(n-2);\n' +
+                             '}',
+    };
+    cp.fs.files = Object.create(cp.fs.builtins);
+}
+
+cp.addFileToMenu = function (filename, builtin) {
+    var $file_item = $('<li/>');
+    var $file_link = $('<a href="#"/>');
+    $file_link.click(function () {
+        cp.openFile(filename);
+    });
+    $file_link.text(filename);
+    $file_item.append($file_link);
+    $("#file-list").prepend($file_item);
+};
+
+cp.initFS = function () {
+    for (var filename in cp.fs.files) {
+        cp.addFileToMenu(filename);
+    }
+};
+
+cp.generateUniqueFilename = function () {
+    var prefix = "script";
+    for (var index = 1; ; index++) {
+        var candidateName = prefix + index;
+        if (!(candidateName in cp.fs.files)) {
+            return candidateName;
+        }
+    }
+};
+
+cp.openFile = function (filename) {
+    var $editor = $('.row[data-cp-filename="' + filename + '"]');
+    if ($editor.size() > 0) {
+        scrollTo($editor.get(0));
+    } else {
+        cp.newTab(filename);
+    }
+};
+
+cp.closeFile = function (filename) {
+
+};
+
+cp.newTab = function (filename) {
 	/*
      * <div class="row">
      *   <ul class="nav nav-tabs">
@@ -13,27 +87,26 @@ cp.newTab = function (title) {
     */
 
 	var $row = $('<div class="row"/>');
+	$row.attr("data-cp-filename", filename);
+
 	var $nav = $('<ul class="nav nav-tabs"/>');
 
-	$tab_label = $('<a href="#"/>').text(title).append(makeCloseButton());
+	$tab_label = $('<a href="#"/>').text(filename).append(makeCloseButton());
 	$nav.append($('<li class="active"/>').append($tab_label));
 	$row.append($nav);
 
-	var $pre = $('<pre class="tab-content"/>');
+	var $pre = $('<pre class="tab-content file-editor"/>');
 	$row.append($pre);
 
 	$("#contents").prepend($row);
 
 	var editor = createCodeEditor($pre.get(0));
-	cp.fileEditors.unshift(editor);
-
-	var $file_item = $('<li/>');
-	var $file_link = $('<a href="#"/>');
-	$file_link.text(title);
-	$file_item.append($file_link);
-	$("#file-list").prepend($file_item);
+    editor.setValue(cp.fs.files[filename]);
 };
 
 cp.newFile = function () {
-    cp.newTab("untitled.js");
+    var filename = cp.generateUniqueFilename();
+    cp.fs.files[filename] = NEW_FILE_DEFAULT_CONTENT || "";
+    cp.addFileToMenu(filename);
+    cp.newTab(filename);
 };

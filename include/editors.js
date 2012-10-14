@@ -1,6 +1,6 @@
 function createCodeEditor(node) {
     var options = {
-        value: "// Enter javascript code here\nprintln(\"Hello, world!\");",
+        value: "",
         mode:  "javascript",
         indentUnit: 4,       // Indent with 4 spaces
         lineNumbers:  true,   // Show line numbers

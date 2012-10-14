@@ -161,9 +161,6 @@
             alerts: undefined,
             repl: undefined,
             console: undefined,
-            
-            // Open files
-            fileEditors: [],
         };
                         
         function onAnimateClickAndHold() {
@@ -209,6 +206,7 @@
             cp.devMode = false;
 
             document.getElementById("transcript").style.display='none';
+            cp.initFS();
             
             cp.loadSession();
 
