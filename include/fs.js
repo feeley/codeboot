@@ -39,18 +39,29 @@ if (cp.fs === (void 0)) {
 
 cp.addFileToMenu = function (filename, builtin) {
     var $file_item = $('<li/>');
+    $file_item.attr("data-cp-filename", filename);
     var $file_link = $('<a href="#"/>');
     $file_link.click(function () {
         cp.openFile(filename);
     });
     $file_link.text(filename);
     $file_item.append($file_link);
+
+    if (!builtin) {
+        var $deleteButton = $('<i class="icon-trash pull-right"/>');
+        $file_link.append($deleteButton);
+        $deleteButton.click(function () {
+            cp.deleteFile(filename);
+        });
+    }
+
     $("#file-list").prepend($file_item);
 };
 
 cp.initFS = function () {
     for (var filename in cp.fs.files) {
-        cp.addFileToMenu(filename);
+        var isBuiltin = cp.fs.builtins.hasOwnProperty(filename);
+        cp.addFileToMenu(filename, isBuiltin);
     }
 };
 
@@ -78,9 +89,19 @@ cp.openFile = function (filename) {
 };
 
 cp.closeFile = function (filename) {
-    cp.fs.files[filename] = cp.fs.editors[filename].getValue();
-    delete cp.fs.editors[filename];
+    if (cp.fs.editors.hasOwnProperty(filename)) {
+        cp.fs.files[filename] = cp.fs.editors[filename].getValue();
+        delete cp.fs.editors[filename];
+    }
+
     $(cp.getContainerFor(filename)).remove();
+};
+
+cp.deleteFile = function (filename) {
+    $('[data-cp-filename="' + filename + '"]').remove();
+
+    delete cp.fs.editors[filename];
+    delete cp.fs.files[filename];
 };
 
 cp.newTab = function (filename) {
