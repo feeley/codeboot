@@ -90,6 +90,7 @@ div.tab-pane {
 
 .nav-tabs button.close {
   margin: -3px 0 0 3px;
+  padding-left: 3px;
 }
 
 /* ----- Editors ----- */
