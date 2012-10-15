@@ -256,8 +256,6 @@ cp.addFileToMenu = function (fileOrFilename) {
     $file_link.click(function () {
         cp.openFile(filename);
     });
-    $file_link.text(filename);
-    $file_item.append($file_link);
 
     if (!cp.fs.isBuiltin(file)) {
         var $deleteButton = $('<i class="icon-trash pull-right"/>');
@@ -272,6 +270,9 @@ cp.addFileToMenu = function (fileOrFilename) {
             }
         });
     }
+
+    $file_link.append(filename);
+    $file_item.append($file_link);
 
     // Keep the menu sorted
     var $children = $("#file-list").children();
