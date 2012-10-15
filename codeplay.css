@@ -94,6 +94,14 @@ div.tab-pane {
 
 /* ----- Editors ----- */
 
+.CodeMirror {
+  font-size: 20px;
+}
+
+.CodeMirror-cursor {
+  height: 20px !important; /* FIXME: forcing this for now but we should find out why the height is too low by default */
+}
+
 .tab-content.file-editor {
 	margin-bottom: 20px;
 }
@@ -142,7 +150,6 @@ div.tab-pane {
 
 /* REPL should be 1 line high */
 #repl .CodeMirror {
-  font-size: 20px;
   height: 100%;
   padding: 0;
   margin: 0;
@@ -156,8 +163,7 @@ div.tab-pane {
 
 /* Use a block cursor in REPL to differentiate from normal editors */
 #repl .CodeMirror-cursor {
-  width: 0.5ex;
-  height: 20px !important; /* FIXME: forcing this for now but we should find out why the height is too low by default */
+  width: 0.5ex;  
   background-color: #9a9a9a;
   border: none;
 }
