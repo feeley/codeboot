@@ -73,14 +73,15 @@ function code_highlight(loc, cssClass) {
 
     if (container instanceof SourceContainerInternalFile) {
         var filename = container.toString();
+        if (!cp.fs.hasFile(filename)) {
+            return null; // the file is not known
+        }
         var state = readFileInternal(filename);
         if (container.stamp !== state.stamp) {
             return null; // the content of the editor has changed so can't highlight
         }
+        cp.openFile(filename);
         editor = cp.fs.getEditor(filename);
-        if (!editor) {
-            return null;
-        }
     } else if (container instanceof SourceContainer) {
         editor = cp.transcript;
     } else {

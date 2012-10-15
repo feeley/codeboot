@@ -101,8 +101,12 @@ CPFile.prototype.getContent = function () {
 
 CPFile.prototype.save = function () {
     if (this.editor) {
-        this.content = this.editor.getValue();
-        this.stamp += 1;
+        var old_content = this.content;
+        var new_content = this.editor.getValue();
+        if (new_content !== old_content) {
+            this.content = new_content;
+            this.stamp += 1;
+        }
     }
 };
 
