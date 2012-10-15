@@ -77,10 +77,10 @@ function code_highlight(loc, cssClass) {
         if (container.stamp !== state.stamp) {
             return null; // the content of the editor has changed so can't highlight
         }
-        //TODO: find the correct editor for this internal file
-        //editor = ???;
-        print("can't find the correct editor for " + filename);
-        return null;
+        editor = cp.fs.getEditor(filename);
+        if (!editor) {
+            return null;
+        }
     } else if (container instanceof SourceContainer) {
         editor = cp.transcript;
     } else {
