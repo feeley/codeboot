@@ -55,7 +55,7 @@ function makeTBButton($contents, props) {
         $btn.attr(key, props[key]);
     }
 
-    if (contents) {
+    if ($contents) {
         $btn.append($contents);
     }
 
