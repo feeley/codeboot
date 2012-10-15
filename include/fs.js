@@ -309,7 +309,8 @@ cp.generateUniqueFilename = function () {
     }
 };
 
-cp.getContainerFor = function (filename) {
+cp.getContainerFor = function (fileOrFilename) {
+    var filename = cp.fs._asFilename(fileOrFilename);
     return $('.row[data-cp-filename="' + filename + '"]').get(0);
 };
 
@@ -322,12 +323,12 @@ cp.openFile = function (filename) {
     }
 };
 
-cp.closeFile = function (filename) {
-    var file = cp.fs._asFile(filename);
+cp.closeFile = function (fileOrFilename) {
+    var file = cp.fs._asFile(fileOrFilename);
     file.save();
     file.editor = null;
 
-    $(cp.getContainerFor(filename)).remove();
+    $(cp.getContainerFor(file)).remove();
 };
 
 cp.deleteFile = function (filename) {
@@ -343,7 +344,7 @@ function endsWith(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }
 
-cp.makeEditorToolbar = function (filename) {
+cp.makeEditorToolbar = function (file) {
     var $toolbar = makeToolbar();
 
     var $group = makeTBGroup();
@@ -354,18 +355,18 @@ cp.makeEditorToolbar = function (filename) {
     $loadButton.click(function () {
         // Emulate typing the command and executing it.
         // TODO: replace this with a proper implementation
-        set_input(cp.repl, default_prompt + "load('" + filename + "');");
+        set_input(cp.repl, default_prompt + "load('" + file.filename + "');");
         cp.run(false);
     });
     $loadButton.appendTo($group);
 
     $saveButton = makeTBButton($('<i class="icon-download-alt"/>'), {"title" : "Download"});
     $saveButton.click(function () {
-        var name = basename(filename);
+        var name = basename(file.filename);
         if (!endsWith(name, ".js")) {
             name = name + ".js";
         }
-        saveAs(cp.fs.getContent(filename), name);
+        saveAs(cp.fs.getContent(file), name);
     });
     $saveButton.appendTo($group);
 
@@ -449,14 +450,14 @@ cp.newTab = function (fileOrFilename) {
 	var $row = $('<div class="row"/>');
 	$row.attr("data-cp-filename", filename);
 
-	var $toolbar = cp.makeEditorToolbar(filename);
+	var $toolbar = cp.makeEditorToolbar(file);
 	$row.append($toolbar);
 
 	var $nav = $('<ul class="nav nav-tabs"/>');
 
 	var $closeButton = makeCloseButton();
 	$closeButton.click(function () {
-	    cp.closeFile(filename);
+	    cp.closeFile(file);
 	});
 	$tab_text_container = $('<span class="tab-label"/>').text(filename);
 	$tab_label = $('<a href="#"/>').append($tab_text_container).append($closeButton);
