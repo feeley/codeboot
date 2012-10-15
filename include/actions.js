@@ -401,7 +401,7 @@ cp.run = function(single_step) {
 
 cp.load = function(filename, single_step) {
 
-    var source = "load('" + filename + "')";
+    var source = "load(\"" + filename + "\")";
     var str = "> " + source;
 
     set_prompt(cp.repl, "");
