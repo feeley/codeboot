@@ -18,7 +18,12 @@ function main()
 
         try
         {
-            js_eval(str, { container: new SourceContainer(str, filename, 1, 1) });
+            var code = js_compile(str,
+                                  {
+                                      container: new SourceContainer(str, filename, 1, 1)
+                                  });
+
+            js_run(code);
         }
         catch (e)
         {

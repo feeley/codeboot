@@ -354,10 +354,8 @@ cp.makeEditorToolbar = function (file) {
     var $loadButton = makeTBButton($('<i class="icon-play"/>'), {"title" : "Load"});
     $loadButton.append($('<img src="icons/exp_inf.png"/>'));
     $loadButton.click(function () {
-        // Emulate typing the command and executing it.
-        // TODO: replace this with a proper implementation
-        set_input(cp.repl, default_prompt + "load('" + file.filename + "');");
-        cp.run(false);
+        // TODO: have a single-step version (play-pause icon)
+        cp.load(file.filename, false);
     });
     $loadButton.appendTo($group);
 

@@ -6,16 +6,15 @@
 
 //=============================================================================
 
-function js_eval(source, options)
+function js_run(code)
 {
-    var rte = js_eval_setup(source, options)
+    var rte = js_run_setup(code);
 
     return js_eval_exec(rte);
 }
 
-function js_eval_setup(source, options)
+function js_run_setup(code)
 {
-    var code = js_compile(source, options);
     var rte = new_global_rte();
 
     rte.resume = function (rte)
@@ -73,87 +72,6 @@ function js_eval_step(rte, nb_steps)
     {
         resume = resume(rte);
     }
-}
-
-function builtin_load(filename)
-{
-    throw "unimplemented";///////////////////////////
-}
-
-builtin_load._apply_ = function (rte, cont, this_, params)
-{
-    var filename = params[0];
-    var options = params[1];
-
-    var state = readFileInternal(filename);
-    var source = state.content;
-
-    var opts = {
-                 container:
-                   (typeof options === "object" &&
-                    options.container !== void 0)
-                   ? options.container
-                 : new SourceContainerInternalFile(source, filename, 1, 1, state.stamp),
-
-                 error:
-                   (typeof options === "object" &&
-                    options.error !== void 0)
-                   ? options.error
-                   : void 0,
-
-                 warnings:
-                   (typeof options === "object" &&
-                    options.warnings !== void 0)
-                   ? options.warnings
-                   : void 0
-               };
-
-    var code = js_compile(source, opts);
-
-    rte.stack = {
-                  cont: cont,
-                  frame: rte.frame,
-                  stack: rte.stack
-                };
-
-    rte.frame = new RTFrame(this_,
-                            builtin_load,
-                            params,
-                            [],
-                            null);
-
-    return code(rte,
-                function (rte, result)
-                {
-                    var cont = rte.stack.cont;
-                    rte.frame = rte.stack.frame;
-                    rte.stack = rte.stack.stack;
-                    return cont(rte, result);
-                });
-}
-
-function readFileInternal(filename)
-{
-    // TODO: replace this with an actual access of the internal file system
-    //
-    // The stamp is a number associated with the file which is incremented
-    // whenever there has been an edit of the file since the last time the
-    // file was read.  This is useful to avoid highlighting the wrong
-    // part of the source code in an editor (if the user edits a file
-    // containing a function that will later be called without reloading
-    // the file).
-    //
-    // The function should raise a suitable exception if the filename
-    // does not exist.
-
-    //return { stamp: 12345, content: read_file(filename) };
-
-    var file = cp.fs.getByName(filename);
-
-    return {
-        stamp: file.stamp,
-        content: file.getContent(),
-    };
 }
 
 function SourceContainerInternalFile(source, tostr, start_line, start_column, stamp)
@@ -897,26 +815,7 @@ function comp_expr(cte, ast)
 
                    closure._apply_ = function (rte, cont, this_, params)
                    {
-                       rte.stack = {
-                                     cont: cont,
-                                     frame: rte.frame,
-                                     stack: rte.stack
-                                   };
-
-                       rte.frame = new RTFrame(this_,
-                                               closure,
-                                               params,
-                                               new Array(nb_locals),
-                                               env);
-
-                       return code_body(rte,
-                                        function (rte, result)
-                                        {
-                                            var cont = rte.stack.cont;
-                                            rte.frame = rte.stack.frame;
-                                            rte.stack = rte.stack.stack;
-                                            return cont(rte, result);
-                                        });
+                       return exec_fn_body(code_body, closure, rte, cont, this_, params, new Array(nb_locals), env);
                    };
 
                    return step_end(rte, cont, ast, closure);
@@ -1038,6 +937,30 @@ function comp_expr(cte, ast)
     else
         throw "unknown ast";
 }
+
+function exec_fn_body(code, callee, rte, cont, this_, params, locals, env)
+{
+    rte.stack = {
+                  cont: cont,
+                  frame: rte.frame,
+                  stack: rte.stack
+                };
+
+    rte.frame = new RTFrame(this_,
+                            callee,
+                            params,
+                            locals,
+                            env);
+
+    return code(rte,
+                function (rte, result)
+                {
+                    var cont = rte.stack.cont;
+                    rte.frame = rte.stack.frame;
+                    rte.stack = rte.stack.stack;
+                    return cont(rte, result);
+                });
+};
 
 function comp_exprs(cte, asts)
 {

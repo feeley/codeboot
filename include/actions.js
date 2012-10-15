@@ -225,15 +225,15 @@ cp.cancel = function () {
     cp.repl.focus();
 };
 
-cp.show_error = function (show) {
+cp.show_error = function (loc) {
 
     if (program_state.error_mark !== null) {
         program_state.error_mark.clear();
         program_state.error_mark = null;
     }
 
-    if (show) {
-        program_state.error_mark = code_highlight(program_state.rte.ast.loc, "error-code");
+    if (loc !== void 0) {
+        program_state.error_mark = code_highlight(loc, "error-code");
     }
 };
 
@@ -294,7 +294,7 @@ cp.execute = function (single_step) {
         } else {
 
             if (rte.error !== null) {
-                cp.show_error(true);
+                cp.show_error(program_state.rte.ast.loc);
                 cp.addLineToTranscript(rte.error, "error-message");
             } else {
                 var result = js_eval_result(rte);
@@ -349,24 +349,35 @@ cp.run = function(single_step) {
     cp.repl.cp.history.add(str);
     cp.addLineToTranscript(str, null);
 
-    cp.show_error(false);
+    var code = cp.compile_repl_expression(source, line, ch);
 
-    var error = function (loc, kind, msg) {
-        if (kind !== "warning") {
-            code_highlight(loc, "error-code");
-            cp.addLineToTranscript(kind + " -- " + msg, "error-message");
-            throw false;
-        }
-    };
+    cp.run_setup_and_execute(code, single_step);
+};
+
+cp.load = function(filename, single_step) {
+
+    var source = "load('" + filename + "')";
+    var str = "> " + source;
+
+    set_prompt(cp.repl, "");
+    cp.repl.refresh();
+
+    cp.repl.cp.history.add(str);
+    cp.addLineToTranscript(str, null);
+
+    var code = cp.compile_internal_file(filename);
+
+    cp.run_setup_and_execute(code, single_step);
+};
+
+cp.run_setup_and_execute = function (code, single_step) {
+
+    cp.show_error();
 
     cp.repl.busy = true;
 
     try {
-        program_state.rte = js_eval_setup(source,
-                                          {
-                                              container: new SourceContainer(source, "<REPL>", line+1, ch+1),
-                                              error: error
-                                          });
+        program_state.rte = js_run_setup(code);
     }
     catch (e) {
         if (e !== false)
@@ -378,6 +389,63 @@ cp.run = function(single_step) {
     }
 
     cp.execute(single_step);
+
+    cp.repl.focus();
+};
+
+function builtin_load(filename)
+{
+    throw "unimplemented";///////////////////////////
+}
+
+builtin_load._apply_ = function (rte, cont, this_, params)
+{
+    var filename = params[0];
+    var code = cp.compile_internal_file(filename);
+
+    return exec_fn_body(code, builtin_load, rte, cont, this_, params, [], null);
+};
+
+cp.compile_repl_expression = function (source, line, ch)
+{
+    return cp.compile(source,
+                      new SourceContainer(source, "<REPL>", line+1, ch+1));
+};
+
+cp.compile_internal_file = function (filename)
+{
+    var state = readFileInternal(filename);
+    var source = state.content;
+
+    return cp.compile(source,
+                      new SourceContainerInternalFile(source, filename, 1, 1, state.stamp));
+};
+
+function readFileInternal(filename)
+{
+    var file = cp.fs.getByName(filename);
+
+    return {
+        stamp: file.stamp,
+        content: file.getContent(),
+    };
+}
+
+cp.compile = function (source, container) {
+    return js_compile(source,
+                      {
+                          container: container,
+                          error: cp.syntax_error
+                      });
+};
+
+cp.syntax_error = function (loc, kind, msg) {
+
+    if (kind !== "warning") {
+        cp.show_error(loc);
+        cp.addLineToTranscript(kind + " -- " + msg, "error-message");
+        throw false;
+    }
 };
 
 cp.clearREPL = function () {
