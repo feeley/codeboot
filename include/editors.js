@@ -3,7 +3,7 @@ function createCodeEditor(node) {
         value: "",
         mode:  "javascript",
         indentUnit: 4,       // Indent with 4 spaces
-        lineNumbers:  true,   // Show line numbers
+        lineNumbers:  false,   // Show line numbers
         matchBrackets: true,
         extraKeys: {
             "Enter": function(cm) { cm.autoInsertBraces(cm); },
