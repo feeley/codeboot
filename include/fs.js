@@ -17,28 +17,6 @@ function scrollTo(elementOrSelector) {
 }
 
 function makeToolbar() {
-    /*
-      <div class="btn-toolbar pull-right">
-        <div class="btn-group">
-          <button id="step-button" title="Step" class="btn" onclick="cp.animate(0);"><i class="icon-play"></i><img id="step-mode-icon" src="icons/exp_pause.png"><img id="single-step-icon" class="hide" src="icons/exp_1.png"></button>
-          <button id="play-button" title="Execute" class="btn" onclick="cp.play();"><i class="icon-play"></i><img src="icons/exp_inf.png"></button>
-          <div class="btn-group">
-            <button id="animate-button" title="Animate" class="btn" onclick="cp.animate(500);"><i class="icon-play"></i></button>
-            <button id="animate-dropdown" class="btn dropdown-toggle hide" data-toggle="dropdown">
-              <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu">
-              <li><a href="#" onclick="cp.animate(2000);">Animate slowly</a></li>
-              <li><a href="#" onclick="cp.animate(500);">Animate</a></li>
-              <li><a href="#" onclick="cp.animate(125);">Animate quickly</a></li>
-            </ul>
-          </div>
-          <button id="pause-button" title="Pause" class="btn disabled" onclick="cp.animate(0);"><i class="icon-pause"></i></button>
-          <button id="cancel-button" title="Stop" class="btn disabled" onclick="cp.cancel();"><i class="icon-stop"></i></button>
-        </div>
-      </div>
-    */
-
     var $toolbar = $('<div class="btn-toolbar pull-right"/>');
 
     return $toolbar;
@@ -351,17 +329,67 @@ function endsWith(str, suffix) {
 
 cp.makeEditorToolbar = function (file) {
     var $toolbar = makeToolbar();
+    var controller = $toolbar.get(0);
+    $toolbar.attr('data-cp-exec', 'controller');
 
-    var $group = makeTBGroup();
-    $group.appendTo($toolbar);
+    var $stepCounterGroup = makeTBGroup();
+    $stepCounterGroup.append($('<span class="badge badge-info exec-lbl-count hide"/>'));
+    $stepCounterGroup.appendTo($toolbar);
+
+    var $execControlsGroup = makeTBGroup();
+    $execControlsGroup.appendTo($toolbar);
+
+    var $stepButton = makeTBButton($('<i class="icon-play"/>'), {"title" : "Step"});
+    $stepButton.addClass('exec-btn-step');
+    $stepButton.append($('<img class="exec-icon-stepMode" src="icons/exp_pause.png"/>'));
+    $stepButton.append($('<img class="exec-icon-singleStep hide" src="icons/exp_1.png"/>'));
+    $stepButton.click(function () {
+        if (!cp.setController(controller)) return false;
+        if (program_state.mode === 'stopped') {
+            program_state.step_delay = 0;
+            cp.load(file.filename, true);
+        } else {
+            cp.animate(0);
+        }
+    });
+    $stepButton.appendTo($execControlsGroup);
 
     var $loadButton = makeTBButton($('<i class="icon-play"/>'), {"title" : "Load"});
+    $loadButton.addClass('exec-btn-play');
     $loadButton.append($('<img src="icons/exp_inf.png"/>'));
     $loadButton.click(function () {
-        // TODO: have a single-step version (play-pause icon)
+        if (!cp.setController(controller)) return false;
         cp.load(file.filename, false);
     });
-    $loadButton.appendTo($group);
+    $loadButton.appendTo($execControlsGroup);
+
+    var $animateButton = makeTBButton($('<i class="icon-play"/>'), {"title" : "Load"});
+    $animateButton.addClass('exec-btn-anim');
+    $animateButton.click(function () {
+        if (!cp.setController(controller)) return false;
+        program_state.step_delay = 500;
+        cp.load(file.filename, true);
+    });
+    $animateButton.appendTo($execControlsGroup);
+
+    var $pauseButton = makeTBButton($('<i class="icon-pause"/>'), {"title" : "Pause"});
+    $pauseButton.addClass('exec-btn-pause disabled');
+    $pauseButton.click(function () {
+        if (!cp.setController(controller)) return false;
+        cp.animate(0);
+    });
+    $pauseButton.appendTo($execControlsGroup);
+
+    var $stopButton = makeTBButton($('<i class="icon-stop"/>'), {"title" : "Stop"});
+    $stopButton.addClass('exec-btn-stop disabled');
+    $stopButton.click(function () {
+        if (!cp.setController(controller)) return false;
+        cp.cancel();
+    });
+    $stopButton.appendTo($execControlsGroup);
+
+    var $fileEditorGroup = makeTBGroup();
+    $fileEditorGroup.appendTo($toolbar);
 
     $saveButton = makeTBButton($('<i class="icon-download-alt"/>'), {"title" : "Download"});
     $saveButton.click(function () {
@@ -371,7 +399,7 @@ cp.makeEditorToolbar = function (file) {
         }
         saveAs(cp.fs.getContent(file), name);
     });
-    $saveButton.appendTo($group);
+    $saveButton.appendTo($fileEditorGroup);
 
     return $toolbar;
 };

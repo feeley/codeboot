@@ -19,21 +19,21 @@ cp.addAlert = function (text, title, kind) {
 
 cp.reportError = function (text, title) {
     if (title === undefined) title = "Error!";
-    cp.addAlert(text, title, "error"); 
+    cp.addAlert(text, title, "error");
 };
 
 cp.reportWarning = function (text, title) {
     if (title === undefined) title = "Warning!";
-    cp.addAlert(text, title); 
+    cp.addAlert(text, title);
 };
 
 cp.addLineToTranscript = function (text, cssClass) {
     var line;
-    
+
     text = String(text);
     if (text.charAt(text.length - 1) === "\n")
-        text = text.slice(0,text.length-1);    
-        
+        text = text.slice(0,text.length-1);
+
     if (cp.non_empty) {
         line = cp.transcript.lineCount();
         text = "\n" + text;
@@ -48,7 +48,7 @@ cp.addLineToTranscript = function (text, cssClass) {
 
     if (cssClass !== null)
         cp.transcript.markText({ line: line, ch: 0 }, { line: line+1, ch: 0 }, cssClass);
-}
+};
 
 cp.addLineToConsole = function (line, cssClass) {
 
@@ -162,30 +162,52 @@ var program_state = {
     step_mark: null,
     timeout_id: null,
     step_delay: 0,
-    mode: 'stopped'
+    mode: 'stopped',
+    controller: null,
+};
+
+cp.setController = function (idOrElement) {
+    var element;
+    if (typeof idOrElement === "string") {
+        element = document.getElementById(idOrElement);
+    } else {
+        element = idOrElement;
+    }
+
+    if (program_state.controller === null) {
+        program_state.controller = element;
+        return true;
+    }
+
+    if (program_state.controller === element) return true;
+
+    return false;
 };
 
 cp.enterMode = function (newMode) {
+    if (newMode === "stopped") program_state.controller = null;
 	if (program_state.mode === newMode) return;
-	
+
 	// newMode is one of 'stopped', 'animating', 'stepping'
 
+	var control = program_state.controller;
+
     // Cancel button
-    $("#cancel-button").toggleClass("disabled", newMode === 'stopped');
-    
+    $(".exec-btn-cancel", control).toggleClass("disabled", newMode === 'stopped');
+
     // Pause button
-    $("#pause-button").toggleClass("disabled", newMode !== 'animating');
-    
+    $(".exec-btn-pause", control).toggleClass("disabled", newMode !== 'animating');
+
     // Step button + icon
-	$("#step-button").toggleClass("disabled", newMode === 'animating');
-	$("#single-step-icon").toggle(newMode === 'stepping');
-	$("#step-mode-icon").toggle(newMode !== 'stepping');
-    
+    $(".exec-btn-step", control).toggleClass("disabled", newMode === 'animating');
+	$('.exec-icon-singleStep', control).toggle(newMode === 'stepping');
+	$(".exec-icon-stepMode", control).toggle(newMode !== 'stepping');
+
     // Step counter
-    $("#step-count").toggle(newMode !== 'stopped');
+    $(".exec-lbl-count", control).toggle(newMode !== 'stopped');
 
 	program_state.mode = newMode;
-}
+};
 
 cp.animate = function (new_step_delay) {
     program_state.step_delay = new_step_delay;
@@ -198,15 +220,15 @@ cp.play_or_step = function (single_step) {
         cp.execute(single_step);
     else
         cp.run(single_step);
-}
+};
 
 cp.play = function () {
     cp.play_or_step(false);
-}
+};
 
 cp.step = function () {
     cp.play_or_step(true);
-}
+};
 
 cp.cancel_animation = function () {
     if (program_state.timeout_id !== null) {
@@ -273,8 +295,8 @@ cp.execute = function (single_step) {
             cp.cancel();
             return;
         }
-        
-        $("#step-count").text("Step " + rte.step_count);
+
+        $(".exec-lbl-count", program_state.controller).text("Step " + rte.step_count);
 
         if (!js_eval_finished(rte)) {
             newMode = 'stepping';
@@ -306,8 +328,8 @@ cp.execute = function (single_step) {
 
             cp.cancel();
         }
-    } 
-    
+    }
+
     cp.enterMode(newMode);
 };
 
