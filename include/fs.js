@@ -381,7 +381,7 @@ cp.makeEditorToolbar = function (file) {
     $pauseButton.appendTo($execControlsGroup);
 
     var $stopButton = makeTBButton($('<i class="icon-stop"/>'), {"title" : "Stop"});
-    $stopButton.addClass('exec-btn-stop disabled');
+    $stopButton.addClass('exec-btn-cancel disabled');
     $stopButton.click(function () {
         if (!cp.setController(controller)) return false;
         cp.cancel();

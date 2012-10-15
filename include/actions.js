@@ -166,6 +166,24 @@ var program_state = {
     controller: null,
 };
 
+function disableOtherControllers(controller) {
+    $('[data-cp-exec="controller"]').each(function () {
+        if (this !== controller) {
+            $(".exec-btn-step", this).addClass('disabled');
+            $(".exec-btn-play", this).addClass('disabled');
+            $(".exec-btn-anim", this).addClass('disabled');
+        }
+    });
+}
+
+function enableAllControllers() {
+    $('[data-cp-exec="controller"]').each(function () {
+        $(".exec-btn-step", this).removeClass('disabled');
+        $(".exec-btn-play", this).removeClass('disabled');
+        $(".exec-btn-anim", this).removeClass('disabled');
+    });
+}
+
 cp.setController = function (idOrElement) {
     var element;
     if (typeof idOrElement === "string") {
@@ -176,6 +194,7 @@ cp.setController = function (idOrElement) {
 
     if (program_state.controller === null) {
         program_state.controller = element;
+        disableOtherControllers(element);
         return true;
     }
 
@@ -185,7 +204,10 @@ cp.setController = function (idOrElement) {
 };
 
 cp.enterMode = function (newMode) {
-    if (newMode === "stopped") program_state.controller = null;
+    if (newMode === "stopped") {
+        program_state.controller = null;
+        enableAllControllers();
+    }
 	if (program_state.mode === newMode) return;
 
 	// newMode is one of 'stopped', 'animating', 'stepping'
