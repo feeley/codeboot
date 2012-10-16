@@ -359,7 +359,11 @@ cp.makeEditorToolbar = function (file) {
     $loadButton.append($('<img src="icons/exp_inf.png"/>'));
     $loadButton.click(function () {
         if (!cp.setController(controller)) return false;
-        cp.load(file.filename, false);
+        if (program_state.mode === 'stopped') {
+            cp.load(file.filename, false);
+        } else {
+            cp.play();
+        }
     });
     $loadButton.appendTo($execControlsGroup);
 
@@ -367,8 +371,12 @@ cp.makeEditorToolbar = function (file) {
     $animateButton.addClass('exec-btn-anim');
     $animateButton.click(function () {
         if (!cp.setController(controller)) return false;
-        program_state.step_delay = 500;
-        cp.load(file.filename, true);
+        if (program_state.mode === 'stopped') {
+            program_state.step_delay = 500;
+            cp.load(file.filename, true);
+        } else {
+            cp.animate(500);
+        }
     });
     $animateButton.appendTo($execControlsGroup);
 
