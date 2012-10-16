@@ -359,7 +359,11 @@ cp.makeEditorToolbar = function (file) {
     $loadButton.append($('<img src="icons/exp_inf.png"/>'));
     $loadButton.click(function () {
         if (!cp.setController(controller)) return false;
-        cp.load(file.filename, false);
+        if (program_state.mode === 'stopped') {
+            cp.load(file.filename, false);
+        } else {
+            cp.play();
+        }
     });
     $loadButton.appendTo($execControlsGroup);
 
@@ -367,8 +371,13 @@ cp.makeEditorToolbar = function (file) {
     $animateButton.addClass('exec-btn-anim');
     $animateButton.click(function () {
         if (!cp.setController(controller)) return false;
-        program_state.step_delay = cp.stepDelay;
-        cp.load(file.filename, true);
+        
+        if (program_state.mode === 'stopped') {
+            program_state.step_delay = cp.stepDelay;
+            cp.load(file.filename, true);
+        } else {
+            cp.animate(cp.stepDelay);
+        }
     });
     $animateButton.appendTo($execControlsGroup);
 
@@ -391,6 +400,14 @@ cp.makeEditorToolbar = function (file) {
     var $fileEditorGroup = makeTBGroup();
     $fileEditorGroup.appendTo($toolbar);
 
+    return $toolbar;
+};
+
+cp.makeLHSEditorToolbar = function (file) {
+    var $toolbar = makeToolbar();
+    var $group = makeTBGroup();
+    $group.appendTo($toolbar);
+
     $saveButton = makeTBButton($('<i class="icon-download-alt"/>'), {"title" : "Download"});
     $saveButton.click(function () {
         var name = basename(file.filename);
@@ -399,7 +416,7 @@ cp.makeEditorToolbar = function (file) {
         }
         saveAs(cp.fs.getContent(file), name);
     });
-    $saveButton.appendTo($fileEditorGroup);
+    $saveButton.appendTo($group);
 
     return $toolbar;
 };
@@ -484,7 +501,7 @@ cp.newTab = function (fileOrFilename) {
 	var $toolbar = cp.makeEditorToolbar(file);
 	$row.append($toolbar);
 
-	if (program_state.state !== "stopped") {
+	if (program_state.mode !== "stopped") {
 	    setControllerState($toolbar, false);
 	}
 
@@ -497,6 +514,7 @@ cp.newTab = function (fileOrFilename) {
 	$tab_text_container = $('<span class="tab-label"/>').text(filename);
 	$tab_label = $('<a href="#"/>').append($tab_text_container).append($closeButton);
 	$nav.append($('<li class="active"/>').append($tab_label));
+    $nav.append($('<li/>').append(cp.makeLHSEditorToolbar(file)));
 	$row.append($nav);
 
 	// Support renaming

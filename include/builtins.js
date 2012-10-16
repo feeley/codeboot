@@ -19,3 +19,9 @@ var load = builtin_load;
 load.toString = function () {
     return "function load() { [native code] }";
 };
+
+var pause = builtin_pause;
+
+pause.toString = function () {
+    return "function pause() { [native code] }";
+};
