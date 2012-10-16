@@ -349,6 +349,27 @@ cp.show_error = function (loc) {
     }
 };
 
+function within(point, rect) {
+    if (point.left < rect.left) return false;
+    if (point.right > rect.left + rect.clientWidth) return false;
+    if (point.top < rect.top) return false;
+    if (point.top > rect.top + rect.clientHeight) return false;
+    return true;
+}
+
+function scrollToMarker(marker) {
+    var range = marker.find();
+    var editor = marker.cm; // TODO: non-documented, so brittle
+    if (range) {
+        var pos = range.from;
+        var point = editor.charCoords(pos, "local");
+        var scrollInfo = editor.getScrollInfo();
+        if (!within(point, scrollInfo)) {
+            editor.scrollTo(point.left, point.top);
+        }
+    }
+}
+
 cp.show_step = function (show) {
 
     if (program_state.step_mark !== null) {
@@ -361,6 +382,7 @@ cp.show_step = function (show) {
     if (show) {
         program_state.step_mark = code_highlight(program_state.rte.ast.loc, "exec-point-code");
         var value = program_state.rte.result;
+        scrollToMarker(program_state.step_mark);
 //        $(step_value).text(printed_repr(value));
 //        step_value.style.display = (value === void 0) ? "none" : "block";
         $(".exec-point-code").last().popover({
