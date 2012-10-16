@@ -399,6 +399,14 @@ cp.makeEditorToolbar = function (file) {
     var $fileEditorGroup = makeTBGroup();
     $fileEditorGroup.appendTo($toolbar);
 
+    return $toolbar;
+};
+
+cp.makeLHSEditorToolbar = function (file) {
+    var $toolbar = makeToolbar();
+    var $group = makeTBGroup();
+    $group.appendTo($toolbar);
+
     $saveButton = makeTBButton($('<i class="icon-download-alt"/>'), {"title" : "Download"});
     $saveButton.click(function () {
         var name = basename(file.filename);
@@ -407,7 +415,7 @@ cp.makeEditorToolbar = function (file) {
         }
         saveAs(cp.fs.getContent(file), name);
     });
-    $saveButton.appendTo($fileEditorGroup);
+    $saveButton.appendTo($group);
 
     return $toolbar;
 };
@@ -505,6 +513,7 @@ cp.newTab = function (fileOrFilename) {
 	$tab_text_container = $('<span class="tab-label"/>').text(filename);
 	$tab_label = $('<a href="#"/>').append($tab_text_container).append($closeButton);
 	$nav.append($('<li class="active"/>').append($tab_label));
+    $nav.append($('<li/>').append(cp.makeLHSEditorToolbar(file)));
 	$row.append($nav);
 
 	// Support renaming
