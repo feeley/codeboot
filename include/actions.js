@@ -19,21 +19,21 @@ cp.addAlert = function (text, title, kind) {
 
 cp.reportError = function (text, title) {
     if (title === undefined) title = "Error!";
-    cp.addAlert(text, title, "error"); 
+    cp.addAlert(text, title, "error");
 };
 
 cp.reportWarning = function (text, title) {
     if (title === undefined) title = "Warning!";
-    cp.addAlert(text, title); 
+    cp.addAlert(text, title);
 };
 
 cp.addLineToTranscript = function (text, cssClass) {
     var line;
-    
+
     text = String(text);
     if (text.charAt(text.length - 1) === "\n")
-        text = text.slice(0,text.length-1);    
-        
+        text = text.slice(0,text.length-1);
+
     if (cp.non_empty) {
         line = cp.transcript.lineCount();
         text = "\n" + text;
@@ -48,7 +48,7 @@ cp.addLineToTranscript = function (text, cssClass) {
 
     if (cssClass !== null)
         cp.transcript.markText({ line: line, ch: 0 }, { line: line+1, ch: 0 }, cssClass);
-}
+};
 
 cp.addLineToConsole = function (line, cssClass) {
 
@@ -73,14 +73,15 @@ function code_highlight(loc, cssClass) {
 
     if (container instanceof SourceContainerInternalFile) {
         var filename = container.toString();
+        if (!cp.fs.hasFile(filename)) {
+            return null; // the file is not known
+        }
         var state = readFileInternal(filename);
         if (container.stamp !== state.stamp) {
             return null; // the content of the editor has changed so can't highlight
         }
+        cp.openFile(filename);
         editor = cp.fs.getEditor(filename);
-        if (!editor) {
-            return null;
-        }
     } else if (container instanceof SourceContainer) {
         editor = cp.transcript;
     } else {
@@ -161,30 +162,76 @@ var program_state = {
     step_mark: null,
     timeout_id: null,
     step_delay: 0,
-    mode: 'stopped'
+    mode: 'stopped',
+    controller: null,
+};
+
+function setControllerState(controller, enabled) {
+    $(".exec-btn-step", controller).toggleClass('disabled', !enabled);
+    $(".exec-btn-play", controller).toggleClass('disabled', !enabled);
+    $(".exec-btn-anim", controller).toggleClass('disabled', !enabled);
+}
+
+function disableOtherControllers(controller) {
+    $('[data-cp-exec="controller"]').each(function () {
+        if (this !== controller) {
+            setControllerState(this, false);
+        }
+    });
+}
+
+function enableAllControllers() {
+    $('[data-cp-exec="controller"]').each(function () {
+        setControllerState(this, true);
+    });
+}
+
+cp.setController = function (idOrElement) {
+    var element;
+    if (typeof idOrElement === "string") {
+        element = document.getElementById(idOrElement);
+    } else {
+        element = idOrElement;
+    }
+
+    if (program_state.controller === null) {
+        program_state.controller = element;
+        disableOtherControllers(element);
+        return true;
+    }
+
+    if (program_state.controller === element) return true;
+
+    return false;
 };
 
 cp.enterMode = function (newMode) {
+    if (newMode === "stopped") {
+        program_state.controller = null;
+        enableAllControllers();
+    }
 	if (program_state.mode === newMode) return;
-	
+
 	// newMode is one of 'stopped', 'animating', 'stepping'
 
+	var control = program_state.controller;
+
     // Cancel button
-    $("#cancel-button").toggleClass("disabled", newMode === 'stopped');
-    
+    $(".exec-btn-cancel", control).toggleClass("disabled", newMode === 'stopped');
+
     // Pause button
-    $("#pause-button").toggleClass("disabled", newMode !== 'animating');
-    
+    $(".exec-btn-pause", control).toggleClass("disabled", newMode !== 'animating');
+
     // Step button + icon
-	$("#step-button").toggleClass("disabled", newMode === 'animating');
-	$("#single-step-icon").toggle(newMode === 'stepping');
-	$("#step-mode-icon").toggle(newMode !== 'stepping');
-    
+    $(".exec-btn-step", control).toggleClass("disabled", newMode === 'animating');
+	$('.exec-icon-singleStep', control).toggle(newMode === 'stepping');
+	$(".exec-icon-stepMode", control).toggle(newMode !== 'stepping');
+
     // Step counter
-    $("#step-count").toggle(newMode !== 'stopped');
+    $(".exec-lbl-count", control).toggle(newMode !== 'stopped');
 
 	program_state.mode = newMode;
-}
+};
 
 cp.animate = function (new_step_delay) {
     program_state.step_delay = new_step_delay;
@@ -197,15 +244,15 @@ cp.play_or_step = function (single_step) {
         cp.execute(single_step);
     else
         cp.run(single_step);
-}
+};
 
 cp.play = function () {
     cp.play_or_step(false);
-}
+};
 
 cp.step = function () {
     cp.play_or_step(true);
-}
+};
 
 cp.cancel_animation = function () {
     if (program_state.timeout_id !== null) {
@@ -225,15 +272,15 @@ cp.cancel = function () {
     cp.repl.focus();
 };
 
-cp.show_error = function (show) {
+cp.show_error = function (loc) {
 
     if (program_state.error_mark !== null) {
         program_state.error_mark.clear();
         program_state.error_mark = null;
     }
 
-    if (show) {
-        program_state.error_mark = code_highlight(program_state.rte.ast.loc, "error-code");
+    if (loc !== void 0) {
+        program_state.error_mark = code_highlight(loc, "error-code");
     }
 };
 
@@ -272,8 +319,8 @@ cp.execute = function (single_step) {
             cp.cancel();
             return;
         }
-        
-        $("#step-count").text("Step " + rte.step_count);
+
+        $(".exec-lbl-count", program_state.controller).text("Step " + rte.step_count);
 
         if (!js_eval_finished(rte)) {
             newMode = 'stepping';
@@ -294,7 +341,7 @@ cp.execute = function (single_step) {
         } else {
 
             if (rte.error !== null) {
-                cp.show_error(true);
+                cp.show_error(program_state.rte.ast.loc);
                 cp.addLineToTranscript(rte.error, "error-message");
             } else {
                 var result = js_eval_result(rte);
@@ -305,8 +352,8 @@ cp.execute = function (single_step) {
 
             cp.cancel();
         }
-    } 
-    
+    }
+
     cp.enterMode(newMode);
 };
 
@@ -349,24 +396,35 @@ cp.run = function(single_step) {
     cp.repl.cp.history.add(str);
     cp.addLineToTranscript(str, null);
 
-    cp.show_error(false);
+    var code = cp.compile_repl_expression(source, line, ch);
 
-    var error = function (loc, kind, msg) {
-        if (kind !== "warning") {
-            code_highlight(loc, "error-code");
-            cp.addLineToTranscript(kind + " -- " + msg, "error-message");
-            throw false;
-        }
-    };
+    cp.run_setup_and_execute(code, single_step);
+};
+
+cp.load = function(filename, single_step) {
+
+    var source = "load(\"" + filename + "\")";
+    var str = "> " + source;
+
+    set_prompt(cp.repl, "");
+    cp.repl.refresh();
+
+    cp.repl.cp.history.add(str);
+    cp.addLineToTranscript(str, null);
+
+    var code = cp.compile_internal_file(filename);
+
+    cp.run_setup_and_execute(code, single_step);
+};
+
+cp.run_setup_and_execute = function (code, single_step) {
+
+    cp.show_error();
 
     cp.repl.busy = true;
 
     try {
-        program_state.rte = js_eval_setup(source,
-                                          {
-                                              container: new SourceContainer(source, "<REPL>", line+1, ch+1),
-                                              error: error
-                                          });
+        program_state.rte = js_run_setup(code);
     }
     catch (e) {
         if (e !== false)
@@ -378,6 +436,63 @@ cp.run = function(single_step) {
     }
 
     cp.execute(single_step);
+
+    cp.repl.focus();
+};
+
+function builtin_load(filename)
+{
+    throw "unimplemented";///////////////////////////
+}
+
+builtin_load._apply_ = function (rte, cont, this_, params)
+{
+    var filename = params[0];
+    var code = cp.compile_internal_file(filename);
+
+    return exec_fn_body(code, builtin_load, rte, cont, this_, params, [], null);
+};
+
+cp.compile_repl_expression = function (source, line, ch)
+{
+    return cp.compile(source,
+                      new SourceContainer(source, "<REPL>", line+1, ch+1));
+};
+
+cp.compile_internal_file = function (filename)
+{
+    var state = readFileInternal(filename);
+    var source = state.content;
+
+    return cp.compile(source,
+                      new SourceContainerInternalFile(source, filename, 1, 1, state.stamp));
+};
+
+function readFileInternal(filename)
+{
+    var file = cp.fs.getByName(filename);
+
+    return {
+        stamp: file.stamp,
+        content: file.getContent(),
+    };
+}
+
+cp.compile = function (source, container) {
+    return js_compile(source,
+                      {
+                          container: container,
+                          error: cp.syntax_error
+                      });
+};
+
+cp.syntax_error = function (loc, kind, msg) {
+
+    if (kind !== "warning") {
+        cp.show_error(loc);
+        cp.addLineToTranscript(kind + " -- " + msg, "error-message");
+        throw false;
+    }
 };
 
 cp.clearREPL = function () {
