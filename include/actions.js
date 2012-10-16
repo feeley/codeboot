@@ -124,9 +124,74 @@ function printed_repr(x) {
 
 cp.query = function (query) {
     cp.saved_query = query;
+    cp.replay_command = "";
+    cp.replay_command_index = 0;
 };
 
 cp.handle_query = function () {
+
+    var query = cp.saved_query;
+
+    if (query !== null) {
+        query = decodeURIComponent(query);
+    }
+
+    if (query && query.slice(0, 7) === "replay=") {
+
+        cp.replay_command = query.slice(7);
+        cp.replay_command_index = 0;
+
+        cp.replay();
+    }
+};
+
+cp.replay = function () {
+
+    var command = cp.replay_command;
+    var i = cp.replay_command_index;
+
+    if (i < command.length) {
+        var j = i;
+        while (j < command.length &&
+               (command.charAt(j) === "@"
+                ? command.charAt(j+1) === "@" 
+                : (command.charAt(j) !== "`" &&
+                   command.charAt(j) !== "~")))
+            j++;
+        var str = command.slice(i, j).replace(/@@/g,"\n");
+        if (command.charAt(j) === "@") {
+            if (command.charAt(j+1) === "P") {
+                set_input(cp.repl, default_prompt + str);
+                j += 2;
+            } else if (command.charAt(j+1) === "S") {
+                set_input(cp.repl, default_prompt + str);
+                j += 2;
+            } else {
+                // unknown command
+                j += 2;
+            }
+        } else {
+            if (str !== "") {
+                set_input(cp.repl, default_prompt + str);
+            }
+            if (command.charAt(j) === "~") {
+                cp.run(false);
+                j += 1;
+            } else if (command.charAt(j) === "`") {
+                cp.step();
+                j += 1;
+            }
+        }
+
+        cp.replay_command_index = j;
+
+        if (j < command.length) {
+            setTimeout(function () { cp.replay(); }, 1);
+        }
+    }
+};
+
+cp.handle_query_old = function () {
 
     var query = cp.saved_query;
 
@@ -296,8 +361,17 @@ cp.show_step = function (show) {
     if (show) {
         program_state.step_mark = code_highlight(program_state.rte.ast.loc, "exec-point-code");
         var value = program_state.rte.result;
-        $(step_value).text(printed_repr(value));
-        step_value.style.display = (value === void 0) ? "none" : "block";
+//        $(step_value).text(printed_repr(value));
+//        step_value.style.display = (value === void 0) ? "none" : "block";
+        $(".exec-point-code").last().popover({
+		animation: false,
+		placement: "bottom",
+		trigger: "manual",
+	    //title: "",
+		content: "<div class=\"step-value\">" + printed_repr(value) + "</div>" ,
+		html: true,
+	});
+        $(".exec-point-code").last().popover('show');
     } else {
         step_value.style.display = "none";
         $(step_value).text("");
@@ -321,6 +395,10 @@ cp.execute = function (single_step) {
         }
 
         $(".exec-lbl-count", program_state.controller).text("Step " + rte.step_count);
+
+        if (program_state.mode === 'stepping') {
+            single_step = true;
+        }
 
         if (!js_eval_finished(rte)) {
             newMode = 'stepping';
@@ -438,6 +516,24 @@ cp.run_setup_and_execute = function (code, single_step) {
     cp.execute(single_step);
 
     cp.repl.focus();
+};
+
+function builtin_pause(filename)
+{
+    throw "unimplemented";///////////////////////////
+}
+
+builtin_pause._apply_ = function (rte, cont, this_, params)
+{
+    var code = function (rte, cont)
+               {
+                   cp.enterMode("stepping");
+                   program_state.step_delay = 0;
+                   rte.step_limit = rte.step_count; // exit trampoline
+                   return cont(rte, void 0);
+               };
+
+    return exec_fn_body(code, builtin_pause, rte, cont, this_, params, [], null);
 };
 
 function builtin_load(filename)

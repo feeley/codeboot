@@ -127,7 +127,7 @@
       </div>
 
       <div id="step-value-row" class="row">
-        <pre id="step-value" class="exec-point-code" style="display:none;"></pre>
+        <pre id="step-value" class="step-value" style="display:none;"></pre>
       </div>
     </div>
 
@@ -271,7 +271,7 @@
     <script src="include/storage.js"></script>
     <script src="include/mousetrap.min.js"></script>
     <script src="include/tutorial.js"></script>
-    <script>cp.query(null);</script>
+    <script>cp.query(null/* "replay=1+@@2*3"*/);</script>
     
 	<form id="form-download" class="hide" action="download.php" method="post">
 	  <textarea id="form-download-content" name="content" style="width: 0; height: 0;"></textarea>

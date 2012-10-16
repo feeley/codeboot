@@ -196,6 +196,12 @@ div.tab-pane {
   background-color: yellow;
 }
 
+.step-value {
+/*  border: 1px solid #aaa;*/
+  font-size: 20px;
+  background-color: yellow;
+}
+
 .error-code {
 /*  border: 1px solid #aaa;*/
   background-color: pink;
