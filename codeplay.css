@@ -193,6 +193,11 @@ div.tab-pane {
   margin-left: 14px;
 }
 
+#console-row li.active > a {
+    background-color: #3272c0;
+    color: white;
+}
+
 /* ----- Source code highlighting ----- */
 
 .exec-point-code {
