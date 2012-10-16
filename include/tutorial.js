@@ -16,8 +16,8 @@ function cp_tutorial1() {
 		animation: true,
 		placement: "bottom",
 		trigger: "manual",
-		title: "REPL",
-		content: '<p>This is the Read-Eval-Print Loop (REPL).  After the prompt, enter the JavaScript code you wish to execute.</p> ' + 
+		title: "Console",
+		content: '<p>This is the Console.  After the prompt, enter the JavaScript code you wish to execute.</p> ' +
 		         '<p><a class="btn btn-primary" onclick="cp_tutorial_setREPLExpression();">Show me</a> ' +
 		         '<a class="btn btn-primary" onclick="cp_tutorial2();">Next</a></p>',
 		html: true,
@@ -34,7 +34,7 @@ function cp_tutorial2() {
 		placement: "bottom",
 		trigger: "manual",
 		title: "Play button",
-		content: '<p>Use this button to evaluate the code entered at the REPL, or simply press the Enter key.</p>' +
+		content: '<p>Use this button to evaluate the code entered at the Console, or simply press the Enter key.</p>' +
 		    '<p><a class="btn btn-primary" onclick="cp_tutorial_setREPLExpression();' + "$('#play-button').click();" + '">Show me</a> ' +
 			'<a class="btn btn-primary" onclick="cp_tutorial3();">Next</a></p>',
 		html: true,
