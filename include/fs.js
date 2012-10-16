@@ -484,6 +484,10 @@ cp.newTab = function (fileOrFilename) {
 	var $toolbar = cp.makeEditorToolbar(file);
 	$row.append($toolbar);
 
+	if (program_state.state !== "stopped") {
+	    setControllerState($toolbar, false);
+	}
+
 	var $nav = $('<ul class="nav nav-tabs"/>');
 
 	var $closeButton = makeCloseButton();

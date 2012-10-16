@@ -166,21 +166,23 @@ var program_state = {
     controller: null,
 };
 
+function setControllerState(controller, enabled) {
+    $(".exec-btn-step", controller).toggleClass('disabled', !enabled);
+    $(".exec-btn-play", controller).toggleClass('disabled', !enabled);
+    $(".exec-btn-anim", controller).toggleClass('disabled', !enabled);
+}
+
 function disableOtherControllers(controller) {
     $('[data-cp-exec="controller"]').each(function () {
         if (this !== controller) {
-            $(".exec-btn-step", this).addClass('disabled');
-            $(".exec-btn-play", this).addClass('disabled');
-            $(".exec-btn-anim", this).addClass('disabled');
+            setControllerState(this, false);
         }
     });
 }
 
 function enableAllControllers() {
     $('[data-cp-exec="controller"]').each(function () {
-        $(".exec-btn-step", this).removeClass('disabled');
-        $(".exec-btn-play", this).removeClass('disabled');
-        $(".exec-btn-anim", this).removeClass('disabled');
+        setControllerState(this, true);
     });
 }
 
