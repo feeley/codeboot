@@ -484,7 +484,7 @@ cp.newTab = function (fileOrFilename) {
 	var $toolbar = cp.makeEditorToolbar(file);
 	$row.append($toolbar);
 
-	if (program_state.state !== "stopped") {
+	if (program_state.mode !== "stopped") {
 	    setControllerState($toolbar, false);
 	}
 
