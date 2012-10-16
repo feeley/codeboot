@@ -136,7 +136,7 @@ div.tab-pane {
 
 #transcript .CodeMirror-scroll {
     /* Fix size, use scroll bars on overflow */
-    max-height: 400px;
+    max-height: 132px;
     overflow: auto;
 }
 

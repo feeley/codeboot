@@ -141,7 +141,7 @@ cp.handle_query = function () {
         cp.replay_command = query.slice(7);
         cp.replay_command_index = 0;
 
-        cp.replay();
+        setTimeout(function () { cp.replay(); }, 100);
     }
 };
 
@@ -156,15 +156,47 @@ cp.replay = function () {
                (command.charAt(j) === "@"
                 ? command.charAt(j+1) === "@" 
                 : (command.charAt(j) !== "`" &&
-                   command.charAt(j) !== "~")))
-            j++;
+                   command.charAt(j) !== "~"))) {
+            if (command.charAt(j) === "@") {
+                j += 2;
+            } else {
+                j += 1;
+            }
+        }
         var str = command.slice(i, j).replace(/@@/g,"\n");
         if (command.charAt(j) === "@") {
             if (command.charAt(j+1) === "P") {
-                set_input(cp.repl, default_prompt + str);
-                j += 2;
+                if (str !== "") {
+                    set_input(cp.repl, default_prompt + str);
+                    cp.repl.refresh();
+                    cp.repl.focus();
+                } else {
+                    cp.run(false);
+                    j += 2;
+                }
             } else if (command.charAt(j+1) === "S") {
-                set_input(cp.repl, default_prompt + str);
+                if (str !== "") {
+                    set_input(cp.repl, default_prompt + str);
+                    cp.repl.refresh();
+                    cp.repl.focus();
+                } else {
+                    cp.animate(0);
+                    j += 2;
+                }
+            } else if (command.charAt(j+1) === "A") {
+                if (str !== "") {
+                    set_input(cp.repl, default_prompt + str);
+                    cp.repl.refresh();
+                    cp.repl.focus();
+                } else {
+                    cp.animate(500);
+                    j += 2;
+                }
+            } else if (command.charAt(j+1) === "E") {
+                var filename = "sample";
+                cp.openFileExistingOrNew(filename);
+                var editor = cp.fs.getEditor(filename);
+                editor.setValue(str);
                 j += 2;
             } else {
                 // unknown command
@@ -225,6 +257,7 @@ var program_state = {
     rte: null,
     error_mark: null,
     step_mark: null,
+    step_popover: null,
     timeout_id: null,
     step_delay: 0,
     mode: 'stopped',
@@ -377,26 +410,27 @@ cp.show_step = function (show) {
         program_state.step_mark = null;
     }
 
-    var step_value = document.getElementById("step-value");
+    if (program_state.step_popover !== null) {
+        program_state.step_popover.popover('destroy');
+        program_state.step_popover = null;
+    }
 
     if (show) {
         program_state.step_mark = code_highlight(program_state.rte.ast.loc, "exec-point-code");
+
         var value = program_state.rte.result;
-        scrollToMarker(program_state.step_mark);
-//        $(step_value).text(printed_repr(value));
-//        step_value.style.display = (value === void 0) ? "none" : "block";
-        $(".exec-point-code").last().popover({
+        if (value !== void 0) {
+            program_state.step_popover = $(".exec-point-code").last();
+            program_state.step_popover.last().popover({
 		animation: false,
 		placement: "bottom",
 		trigger: "manual",
-	    //title: "",
-		content: "<div class=\"step-value\">" + printed_repr(value) + "</div>" ,
+	        title: printed_repr(value),
+		content: "",
 		html: true,
-	});
-        $(".exec-point-code").last().popover('show');
-    } else {
-        step_value.style.display = "none";
-        $(step_value).text("");
+	    });
+            program_state.step_popover.popover('show');
+        }
     }
 };
 
