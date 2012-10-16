@@ -59,33 +59,33 @@
     <div id="navbar" class="navbar navbar-fixed-top navbar-inverse">
       <div class="navbar-inner">
         <div class="container">
-          <a class="brand" href="#">codePlay v0.6<span id="devModeTitle"></span></a>
-          
+          <a class="brand" href="#">codePlay v0.7<span id="devModeTitle"></span></a>
+
           <ul class="nav">
-            <li class="divider-vertical"></li>
-            <li id="btn-help"><a onclick="cp_tutorial();" href="#">Help</a></li>
-            <li class="divider-vertical"></li>
-            <!--<li><a href="#">About</a></li>-->
+              <li class="divider-vertical"></li>
+              <li id="btn-help"><a onclick="cp_tutorial();" href="#">Help</a></li>
+              <li class="divider-vertical"></li>
+              <!--<li><a href="#">About</a></li>-->
           </ul>
-          
+
           <div class="btn-toolbar pull-right">
               <div class="btn-group" data-toggle="buttons-radio">
-                <button id="anim-slow-button" type="button" class="btn" onclick="setStepDelay(2000);"><img src="icons/snail.png" alt="slow" title="Slow animation"></img></button>
-                <button id="anim-norm-button" type="button" class="btn" onclick="setStepDelay(500);"><img src="icons/turtle.png" alt="normal" title="Normal animation"></img></button>
-                <button id="anim-fast-button" type="button" class="btn" onclick="setStepDelay(125);"><img src="icons/hare.png" alt="fast" title="Fast animation"></img></button>
+                  <button id="anim-slow-button" type="button" class="btn" onclick="setStepDelay(2000);"><img src="icons/snail.png" alt="slow" title="Slow animation"></img></button>
+                  <button id="anim-norm-button" type="button" class="btn" onclick="setStepDelay(500);"><img src="icons/turtle.png" alt="normal" title="Normal animation"></img></button>
+                  <button id="anim-fast-button" type="button" class="btn" onclick="setStepDelay(125);"><img src="icons/hare.png" alt="fast" title="Fast animation"></img></button>
               </div>
-          
+
               <div class="btn-group">
-    		    <button id="new-file-button" title="New file" class="btn" onclick="cp.newFile();"><i class="icon-plus"></i><i class="icon-file"></i></button>
-    		    <button class="btn dropdown-toggle" data-toggle="dropdown">
-    		      <span class="caret"></span>
-    		    </button>
-    		    <ul id="file-list" class="dropdown-menu">
-    		      <!-- This menu will be populated dynamically -->
-    		    </ul>
-    		  </div>
+                  <button id="new-file-button" title="New file" class="btn" onclick="cp.newFile();"><i class="icon-plus"></i><i class="icon-file"></i></button>
+                  <button class="btn dropdown-toggle" data-toggle="dropdown">
+                      <span class="caret"></span>
+                  </button>
+                  <ul id="file-list" class="dropdown-menu">
+                      <!-- This menu will be populated dynamically -->
+                  </ul>
+              </div>
           </div>
-         </div>
+        </div>
       </div>
     </div>
 
@@ -271,7 +271,7 @@
     <script src="include/storage.js"></script>
     <script src="include/mousetrap.min.js"></script>
     <script src="include/tutorial.js"></script>
-    <script>cp.query(null/* "replay=1+@@2*3"*/);</script>
+    <script>cp.query(null);</script>
 
 	<form id="form-download" class="hide" action="download.php" method="post">
 	  <textarea id="form-download-content" name="content" style="width: 0; height: 0;"></textarea>
