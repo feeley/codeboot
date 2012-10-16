@@ -84,7 +84,8 @@
   margin-top: -1px;
 }
 
-div.tab-content {
+div.tab-content,
+pre.tab-content {
 	margin-bottom: 20px;
 }
 
