@@ -1,13 +1,13 @@
-function print(s) {
-    cp.addLineToTranscript(s, null);
+function print() {
+    cp.addLineToTranscript(Array.prototype.slice.call(arguments).join(""), null);
 }
 
 print.toString = function () {
     return "function print() { [native code] }";
 };
 
-function println(s) {
-    cp.addLineToTranscript(s, null);
+function println() {
+    cp.addLineToTranscript(Array.prototype.slice.call(arguments).join(""), null);
 }
 
 println.toString = function () {
