@@ -68,3 +68,12 @@ if (!Array.prototype.filter)
     return res;
   };
 }
+
+if (typeof Object.create === 'undefined') {
+    // Crockford's shim for Object.create
+    Object.create = function (o) { 
+        function F() {} 
+        F.prototype = o; 
+        return new F(); 
+    };
+}

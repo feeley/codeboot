@@ -397,9 +397,6 @@ cp.makeEditorToolbar = function (file) {
     });
     $stopButton.appendTo($execControlsGroup);
 
-    var $fileEditorGroup = makeTBGroup();
-    $fileEditorGroup.appendTo($toolbar);
-
     return $toolbar;
 };
 
