@@ -429,18 +429,17 @@ cp.show_hide_step = function (show) {
         program_state.step_mark = code_highlight(program_state.rte.ast.loc, "exec-point-code");
 
         var value = program_state.rte.result;
-        if (value !== void 0) {
-            program_state.step_popover = $(".exec-point-code").last();
-            program_state.step_popover.last().popover({
-		animation: false,
-		placement: "bottom",
-		trigger: "manual",
-	        title: printed_repr(value),
-		content: cp.dump_context(),
-		html: true,
-	    });
-            program_state.step_popover.popover('show');
-        }
+        var value_repr = (value === void 0) ? "NO VALUE" : printed_repr(value);
+        program_state.step_popover = $(".exec-point-code").last();
+        program_state.step_popover.last().popover({
+	    animation: false,
+	    placement: "bottom",
+	    trigger: "manual",
+	    title: value_repr,
+	    content: cp.dump_context(),
+	    html: true,
+	});
+        program_state.step_popover.popover('show');
     }
 };
 
