@@ -361,7 +361,7 @@ cp.cancel_animation = function () {
 
 cp.cancel = function () {
     cp.cancel_animation();
-    cp.show_step(false);
+    cp.hide_step();
     cp.enterMode('stopped');
     program_state.rte = null;
     cp.repl.busy = false;
@@ -372,13 +372,15 @@ cp.cancel = function () {
 
 cp.show_error = function (loc) {
 
+    cp.hide_error();
+
+    program_state.error_mark = code_highlight(loc, "error-code");
+};
+
+cp.hide_error = function () {
     if (program_state.error_mark !== null) {
         program_state.error_mark.clear();
         program_state.error_mark = null;
-    }
-
-    if (loc !== void 0) {
-        program_state.error_mark = code_highlight(loc, "error-code");
     }
 };
 
@@ -403,7 +405,15 @@ function scrollToMarker(marker) {
     }
 }
 
-cp.show_step = function (show) {
+cp.show_step = function () {
+    cp.show_hide_step(true);
+};
+
+cp.hide_step = function () {
+    cp.show_hide_step(false);
+};
+
+cp.show_hide_step = function (show) {
 
     if (program_state.step_mark !== null) {
         program_state.step_mark.clear();
@@ -426,13 +436,81 @@ cp.show_step = function (show) {
 		placement: "bottom",
 		trigger: "manual",
 	        title: printed_repr(value),
-		content: "",
+		content: cp.dump_context(),
 		html: true,
 	    });
             program_state.step_popover.popover('show');
         }
     }
 };
+
+cp.dump_context = function () {
+
+    //return ""; // don't dump context yet
+
+    var rte = program_state.rte;
+    var f = rte.frame;
+    var cte = f.cte;
+    var result = [];
+    var seen = {};
+
+    var add = function (id, val)
+    {
+        if (seen[id] === void 0)
+        {
+            if (val !== void 0) // don't show undefined variables
+            {
+                result.push("<strong>" + id + ":</strong> " + printed_repr(val));
+            }
+            seen[id] = true;
+        }
+    };
+
+    while (cte !== null)
+    {
+        for (var id_str in cte.params)
+        {
+            var i = cte.params[id_str];
+            add(id_str, f.params[i]);
+        }
+        for (var id_str in cte.locals)
+        {
+            if (cte.parent !== null)
+            {
+                var i = cte.locals[id_str];
+                add(id_str, f.locals[i]);
+            }
+            else
+            {
+                if (uninteresting_global[id_str] === void 0)
+                {
+                    add(id_str, rte.glo[id_str]);
+                }
+            }
+        }
+        if (cte.callee !== null)
+        {
+            add(cte.callee, f.callee);
+        }
+        cte = cte.parent;
+        f = f.parent;
+    }
+
+    return result.join("<br/>");
+};
+
+var uninteresting_global = {};
+uninteresting_global["print"] = true;
+uninteresting_global["alert"] = true;
+uninteresting_global["prompt"] = true;
+uninteresting_global["println"] = true;
+uninteresting_global["pause"] = true;
+uninteresting_global["load"] = true;
+uninteresting_global["Math"] = true;
+uninteresting_global["Date"] = true;
+uninteresting_global["String"] = true;
+uninteresting_global["Array"] = true;
+uninteresting_global["Number"] = true;
 
 cp.execute = function (single_step) {
     var newMode = 'stopped';
@@ -444,8 +522,10 @@ cp.execute = function (single_step) {
 
         try {
             js_eval_step(rte, single_step ? 1 : 257);
-        } catch (e) {
-            cp.addLineToTranscript(String(e), "error-message");
+        }
+        catch (e) {
+            if (e !== false)
+                cp.addLineToTranscript(String(e), "error-message");
             cp.cancel();
             return;
         }
@@ -458,8 +538,8 @@ cp.execute = function (single_step) {
 
         if (!js_eval_finished(rte)) {
             newMode = 'stepping';
-            cp.show_step(single_step);
             if (single_step) {
+                cp.show_step();
                 if (program_state.step_delay > 0) {
                     newMode = 'animating';
                     program_state.timeout_id = setTimeout(function ()
@@ -530,9 +610,12 @@ cp.run = function(single_step) {
     cp.repl.cp.history.add(str);
     cp.addLineToTranscript(str, null);
 
-    var code = cp.compile_repl_expression(source, line, ch);
+    var code_gen = function ()
+                   {
+                       return cp.compile_repl_expression(source, line, ch);
+                   };
 
-    cp.run_setup_and_execute(code, single_step);
+    cp.run_setup_and_execute(code_gen, single_step);
 };
 
 cp.load = function(filename, single_step) {
@@ -546,26 +629,28 @@ cp.load = function(filename, single_step) {
     cp.repl.cp.history.add(str);
     cp.addLineToTranscript(str, null);
 
-    var code = cp.compile_internal_file(filename);
+    var code_gen = function ()
+                   {
+                       return cp.compile_internal_file(filename);
+                   };
 
-    cp.run_setup_and_execute(code, single_step);
+    cp.run_setup_and_execute(code_gen, single_step);
 };
 
-cp.run_setup_and_execute = function (code, single_step) {
+cp.run_setup_and_execute = function (code_gen, single_step) {
 
-    cp.show_error();
+    cp.hide_error();
 
     cp.repl.busy = true;
 
     try {
+        var code = code_gen();
         program_state.rte = js_run_setup(code);
     }
     catch (e) {
         if (e !== false)
             cp.addLineToTranscript(String(e), "error-message");
-        cp.repl.busy = false;
-        set_prompt(cp.repl);
-        cp.repl.refresh();
+        cp.cancel();
         return;
     }
 
@@ -589,7 +674,15 @@ builtin_pause._apply_ = function (rte, cont, this_, params)
                    return cont(rte, void 0);
                };
 
-    return exec_fn_body(code, builtin_pause, rte, cont, this_, params, [], null);
+    return exec_fn_body(code,
+                        builtin_pause,
+                        rte,
+                        cont,
+                        this_,
+                        params,
+                        [],
+                        null,
+                        null);
 };
 
 function builtin_load(filename)
@@ -602,7 +695,15 @@ builtin_load._apply_ = function (rte, cont, this_, params)
     var filename = params[0];
     var code = cp.compile_internal_file(filename);
 
-    return exec_fn_body(code, builtin_load, rte, cont, this_, params, [], null);
+    return exec_fn_body(code,
+                        builtin_load,
+                        rte,
+                        cont,
+                        this_,
+                        params,
+                        [],
+                        null,
+                        null);
 };
 
 cp.compile_repl_expression = function (source, line, ch)
