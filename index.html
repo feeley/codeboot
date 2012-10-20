@@ -62,10 +62,8 @@
           <a class="brand" href="#">codePlay v0.7.1<span id="devModeTitle"></span></a>
 
           <ul class="nav">
-              <li class="divider-vertical"></li>
-              <li id="btn-help"><a onclick="cp_tutorial();" href="#">Help</a></li>
-              <li class="divider-vertical"></li>
-              <!--<li><a href="#">About</a></li>-->
+            <li><a onclick="cp_tutorial();">Help</a></li>
+            <li><a role="button" data-toggle="modal" data-target="#about-box">About</a></li>
           </ul>
 
           <div class="btn-toolbar pull-right">
@@ -133,6 +131,26 @@
 
       <div id="step-value-row" class="row">
         <pre id="step-value" class="step-value" style="display:none;"></pre>
+      </div>
+      
+      <div id="about-box" class="modal hide fade">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h3>About codePlay</h3>
+        </div>
+        <div class="modal-body">
+          <p>codePlay is developped by Marc Feeley and Bruno Dufour using the following components:</p>
+          <ul>
+            <li><a href="http://twitter.github.com/bootstrap/" target="_blank">Twitter Bootstrap</a></li>
+            <li><a href="http://jquery.com/" target="_blank">jQuery</a></li>
+            <li><a href="http://codemirror.net/" target="_blank">CodeMirror</a></li>
+            <li><a href="http://ekamanganese.deviantart.com/art/Snail-Vector-94976805" target="_blank">Snail icon</a> by ekamanganese</li>
+            <li><a href="http://thenounproject.com/noun/rabbit/#icon-No5354" target="_blank">Rabbit icon</a> by Samuel Fine from The Noun Project</li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+        </div>
       </div>
     </div>
 
@@ -262,6 +280,10 @@
             $("#form-download-filename").val(filename);
 
             $("#form-download").submit();
+        }
+        
+        function cp_about() {
+            
         }
     </script>
     <script src="include/actions.js"></script>
