@@ -194,7 +194,8 @@ Parser.prototype.parse = function ()
 
             if (this.autosemicolon_enabled &&
                 (this.scanner.crossed_eol ||
-                 this.token_cat(this.input) === RBRACE_CAT))
+                 cat === this.eoi_cat ||
+                 cat === RBRACE_CAT))
             {
                 // automatic semicolon insertion should be considered
 
@@ -246,7 +247,8 @@ Parser.prototype.parse = function ()
             }
             else if (op === this.error_op)
             {
-                if (this.input.cat === this.eoi_cat)
+print(autosemicolon_inserted);
+                if (this.token_cat(this.input) === this.eoi_cat)
                     this.syntax_error(this.input.loc,
                                       "unexpected end of input");
                 else
@@ -260,7 +262,7 @@ Parser.prototype.parse = function ()
                     this.shift(op, this.token_attr(this.previous_input));
                     if (this.warnings.autosemicolon === true)
                     {
-                        if (this.input.cat === this.eoi_cat)
+                        if (this.token_cat(this.input) === this.eoi_cat)
                             this.syntax_warning(this.previous_input.loc,
                                                 "';' missing after this token at end of input");
                         else

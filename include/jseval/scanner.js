@@ -165,8 +165,11 @@ Scanner.prototype.fill_window = function (n)
 
 // method get_token()
 
-Scanner.prototype.get_token = function ()
+Scanner.prototype.get_token = function (include_comments)
 {
+    if (include_comments === void 0)
+        include_comments = false;
+
     var c = this.lookahead_char(0);
 
     this.crossed_eol = false;
@@ -251,6 +254,7 @@ Scanner.prototype.get_token = function ()
         }
         else if (c === SLASH_CH)
         {
+            var start_pos = this.lookahead_pos(0);
             var x = this.lookahead_char(1);
             if (x === SLASH_CH)
             {
@@ -265,6 +269,8 @@ Scanner.prototype.get_token = function ()
                     }
                     this.advance(1);
                 }
+                if (include_comments)
+                    return this.valued_token(COMMENT_CAT, COMMENT_CAT, start_pos);
             }
             else if (x === STAR_CH)
             {
@@ -285,6 +291,8 @@ Scanner.prototype.get_token = function ()
                     this.advance(1);
                 }
                 this.advance(2);
+                if (include_comments)
+                    return this.valued_token(COMMENT_CAT, COMMENT_CAT, start_pos);
                 c = this.lookahead_char(0);
             }
             else if (x === EQUAL_CH)
@@ -392,6 +400,8 @@ Scanner.prototype.get_token = function ()
         }
     }
 };
+
+var COMMENT_CAT = -1;
 
 
 // method identifier_class()

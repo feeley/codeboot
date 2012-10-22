@@ -728,6 +728,12 @@ function ast_to_js(ast, ctx)
             ast_to_js(ast.exprs[1], ctx);
             js_out("]", ctx);
         }
+        else if (ast.op === "var x = y")
+        {
+            ast_to_js(ast.exprs[0], ctx);
+            js_out(" = ", ctx);
+            ast_to_js(ast.exprs[1], ctx);
+        }
         else
         {
             var len = ast.op.length;
@@ -1080,6 +1086,10 @@ function generate_html_listing(input_filenames, options)
                   (options.page_width === void 0)
                   ? 80
                   : options.page_width,
+                xml:
+                  (options.xml === void 0)
+                  ? false
+                  : options.xml,
                 full_html:
                   options.full_html,
                 get_insertions:
@@ -1118,16 +1128,29 @@ function generate_html_listing_to_port(input_filename, oport, options)
 
     var c = iport.read_char();
 
-    oport.write_string("<h1>" + input_filename + "</h1>\n");
+    if (!options.xml) {
+        oport.write_string("<h1>" + input_filename + "</h1>\n");
 
-    oport.write_string("<div id=\"" + string_to_id("\"" + input_filename + "\"") + "\">\n");
-    oport.write_string("<pre>\n");
+        oport.write_string("<div id=\"" + string_to_id("\"" + input_filename + "\"") + "\">\n");
+        oport.write_string("<pre>\n");
+    }
 
     if (c >= 0)
     {
         function start_line(line)
         {
-            oport.write_string(options.start_line(input_filename, line+1));
+            if (options.xml) {
+                oport.write_string("<line>");
+            } else {
+                oport.write_string(options.start_line(input_filename, line+1));
+            }
+        }
+
+        function end_line(line)
+        {
+            if (options.xml) {
+                oport.write_string("</line>");
+            }
         }
 
         function pad_right()
@@ -1167,30 +1190,32 @@ function generate_html_listing_to_port(input_filename, oport, options)
             {
                 pad_right();
 
-                oport.write_string("\n");
-                //oport.write_char(c);
-
                 if (c === CR_CH)
                 {
                     c = iport.read_char();
                     if (c === LF_CH)
                     {
-                        //oport.write_char(c);
                         c = iport.read_char();
                     }
                 }
                 else
                     c = iport.read_char();
 
+                end_line(line);
+
+                oport.write_string("\n");
+
                 line++;
                 column = 0;
 
-                if (c >= 0)
+                if (c === 0)
+                    c = -1;
+                else
                     start_line(line);
             }
             else
             {
-                if (options.page_width > 0)
+                if (options.page_width > 0 && ~options.xml)
                 {
                     if (column > 0 && column % options.page_width === 0)
                     {
@@ -1199,14 +1224,16 @@ function generate_html_listing_to_port(input_filename, oport, options)
                     }
                 }
 
-                // TODO: should probably escape other characters too
-
                 if (c === LT_CH)
                     oport.write_string("&lt;");
                 else if (c === GT_CH)
                     oport.write_string("&gt;");
                 else if (c === AMPERSAND_CH)
                     oport.write_string("&amp;");
+                else if (c < SPACE_CH || (c >= 127 && c <= 255))
+                    oport.write_string("&#x" + (c+256).toString(16).slice(1) + ";");
+                else if (c >= 256)
+                    oport.write_string("&#x" + (c+65536).toString(16).slice(1) + ";");
                 else
                     oport.write_char(c);
 
@@ -1214,10 +1241,15 @@ function generate_html_listing_to_port(input_filename, oport, options)
                 column++;
             }
         }
+
+        if (c !== 0)
+            end_line(line);
     }
 
-    oport.write_string("</pre>\n");
-    oport.write_string("</div>\n");
+    if (!options.xml) {
+        oport.write_string("</pre>\n");
+        oport.write_string("</div>\n");
+    }
 }
 
 function syntax_highlighting(input_filenames, options)
@@ -1233,28 +1265,42 @@ function syntax_highlighting(input_filenames, options)
 
         if (line === 0)
         {
-            return "<span class=\"lineinfo\">" +
-                   "<span class=\"lineno\">" + blanks + " </span>" +
-                   "<span class=\"linespace\"> </span>" +
-                   "</span>";
+            if (options.xml) {
+                return "<lineinfo>" +
+                       "<lineno>" + blanks + " </lineno>" +
+                       "<linespace> </linespace>" +
+                       "</lineinfo>";
+            } else {
+                return "<span class=\"lineinfo\">" +
+                       "<span class=\"lineno\">" + blanks + " </span>" +
+                       "<span class=\"linespace\"> </span>" +
+                       "</span>";
+            }
         }
         else
         {
-            var id = string_to_id("\"" + input_filename + "\"@" + line);
-            return "<span class=\"lineinfo\" id=\"" + id + "\">" +
-                   "<span class=\"lineno\">" + (blanks+line).substr(-lineno_width) + ":</span>" +
-                   "<span class=\"linespace\"> </span>" +
-                   "</span>";
+            if (options.xml) {
+                return "<lineinfo>" +
+                       "<lineno>" + (blanks+line).substr(-lineno_width) + ":</lineno>" +
+                       "<linespace> </linespace>" +
+                       "</lineinfo>";
+            } else {
+                var id = string_to_id("\"" + input_filename + "\"@" + line);
+                return "<span class=\"lineinfo\" id=\"" + id + "\">" +
+                       "<span class=\"lineno\">" + (blanks+line).substr(-lineno_width) + ":</span>" +
+                       "<span class=\"linespace\"> </span>" +
+                       "</span>";
+            }
         }
     }
 
     function get_insertions(input_filename)
     {
-        var sh_highlights = syntax_highlighting_highlights(input_filename);
+        var sh_highlights = syntax_highlighting_highlights(input_filename, options);
 
-        var st_highlights = syntax_tree_highlights(input_filename);
+        var st_highlights = options.xml ? [] : syntax_tree_highlights(input_filename);
 
-        return highlights_to_insertions(sh_highlights.concat(st_highlights));
+        return highlights_to_insertions(sh_highlights.concat(st_highlights), options);
     }
 
     if (options === void 0)
@@ -1276,6 +1322,10 @@ function syntax_highlighting(input_filenames, options)
                   (options.page_width === void 0)
                   ? 80
                   : options.page_width,
+                xml:
+                  (options.xml === void 0)
+                  ? false
+                  : options.xml,
                 full_html:
                   options.full_html,
                 get_insertions:
@@ -1328,27 +1378,24 @@ function ast_highlights(ast)
     return ctx.highlights;
 }
 
-function syntax_highlighting_highlights(input_filename)
+function syntax_highlighting_highlights(input_filename, options)
 {
     var iport = new File_input_port(input_filename);
     var scanner = new Scanner(iport);
     var tokens = [];
     var highlights = [];
 
-    var parse_regexp_orig = scanner.parse_regexp;
     var get_token_orig = scanner.get_token;
-
-    scanner.parse_regexp = function  (divequal)
-    {
-        var regexp = parse_regexp_orig.call(scanner, divequal);
-        //tokens[tokens.length-1] = { loc: xxx, cat: xxx };
-        return regexp;
-    };
 
     scanner.get_token = function ()
     {
-        var tok = get_token_orig.call(scanner);
-        tokens.push(tok);
+        var tok;
+        for (;;) {
+            tok = get_token_orig.call(scanner,true);
+            tokens.push(tok);
+            if (tok.cat !== COMMENT_CAT)
+                break;
+        }
         return tok;
     };
 
@@ -1357,10 +1404,31 @@ function syntax_highlighting_highlights(input_filename)
 
     tokens.forEach(function (tok)
                    {
-                       var h = token_highlights[tok.cat];
-                       if (h !== void 0)
-                       {
-                           highlights.push({ loc: tok.loc, text: " class=\"token_" + h + "\"" });
+                       var kind = "";
+                       if (tok.cat === NUMBER_CAT) {
+                           kind = "number";
+                       } else if (tok.cat === IDENT_CAT) {
+                           kind = "ident";
+                       } else if (tok.cat === STRING_CAT) {
+                           kind = "string";
+                       } else if (tok.cat === COMMENT_CAT) {
+                           kind = "comment";
+                       } else {
+                           var h = token_highlights[tok.cat];
+                           if (h !== void 0) {
+                               if (options.xml) {
+                                   kind = "token";
+                               } else {
+                                   kind = h;
+                               }
+                           }
+                       }
+                       if (kind !== "") {
+                           if (options.xml) {
+                               highlights.push({ loc: tok.loc, text: kind })
+                           } else {
+                               highlights.push({ loc: tok.loc, text: " class=\"token_" + kind + "\"" })
+                           };
                        }
                    });
 
@@ -1518,7 +1586,7 @@ function stable_sort(o, comparefn)
     return o;
 }
 
-function highlights_to_insertions(highlights)
+function highlights_to_insertions(highlights, options)
 {
     var sorted_highlights =
         stable_sort(highlights,
@@ -1540,9 +1608,14 @@ function highlights_to_insertions(highlights)
 
     function pop()
     {
-        var end_pos = stack.pop().loc.end_pos;
+        var highlight = stack.pop();
+        var end_pos = highlight.loc.end_pos;
 
-        insertions.push({ pos: end_pos, text: "</span>" });
+        if (options.xml) {
+            insertions.push({ pos: end_pos, text: "</" + highlight.text + ">" });
+        } else {
+            insertions.push({ pos: end_pos, text: "</span>" });
+        }
     }
 
     for (i=0; i<sorted_highlights.length; i++)
@@ -1555,7 +1628,11 @@ function highlights_to_insertions(highlights)
             pop();
 
         stack.push(sorted_highlights[i]);
-        insertions.push({ pos: start_pos, text: "<span" + text + ">" });
+        if (options.xml) {
+            insertions.push({ pos: start_pos, text: "<" + text + ">" });
+        } else {
+            insertions.push({ pos: start_pos, text: "<span" + text + ">" });
+        }
     }
 
     while (stack.length > 0)

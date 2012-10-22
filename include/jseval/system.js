@@ -57,6 +57,7 @@ if ("exports" in global_obj) {
     write_file = function (filename, str)
     {
         global_obj.writeFile(filename, str);
+
     };
 }
 
@@ -71,9 +72,11 @@ function File_output_port(filename, init)
 {
     var port = new String_output_port(init, filename);
 
+    port.filename = filename;
+
     port.flush = function ()
     {
-        write_file(this.container, this.get_output_string());
+        write_file(this.filename, this.get_output_string());
     };
 
     port.close = function ()
@@ -89,10 +92,6 @@ function String_input_port(content, container)
 {
     if (container === void 0)
         container = '<string>';
-
-    // TEMPORARY BUG FIX
-    if (content.length > 0 && content.charCodeAt(content.length-1) !== 10)
-        content = content + "\n";
 
     this.container = container;
     this.content = content;

@@ -173,6 +173,7 @@ function new_global_rte()
                                [],
                                [],
                                null,
+                               [],
                                null));
 }
 
@@ -197,13 +198,14 @@ function RTE(glo, stack, frame)
     this.error = null;
 }
 
-function RTFrame(this_, callee, params, locals, parent, cte)
+function RTFrame(this_, callee, params, locals, parent, ctrl_stack, cte)
 {
     this.this_ = this_;
     this.callee = callee;
     this.params = params;
     this.locals = locals;
     this.parent = parent;
+    this.ctrl_stack = ctrl_stack;
     this.cte = cte;
 }
 
@@ -307,18 +309,16 @@ function comp_statement(cte, ast)
         var code_stat = comp_statement(cte, ast.statement);
         var code_expr = comp_expr(cte, ast.expr);
 
-        return function (rte, cont)
-               {
-                   var loop = function (rte)
-                   {
-                       var subcont1 = function (rte, value1)
-                       {
-                           var subcont2 = function (rte, value2)
-                           {
-                               if (value2)
+        return function (rte, cont) {
+                   var loop = function (rte) {
+                       var subcont1 = function (rte, value1) {
+                           var subcont2 = function (rte, value2) {
+                               if (value2) {
                                    return loop(rte);
-                               else
-                                   return cont(rte, void 0);
+                               } else {
+                                   var ctrl = rte.frame.ctrl_stack.pop();
+                                   return ctrl.exit(rte, void 0);
+                               }
                            };
 
                            return code_expr(rte, subcont2);
@@ -326,6 +326,8 @@ function comp_statement(cte, ast)
 
                        return code_stat(rte, subcont1);
                    };
+
+                   rte.frame.ctrl_stack.push({ exit: cont });
 
                    return loop(rte);
                };
@@ -337,27 +339,25 @@ function comp_statement(cte, ast)
         var code_expr = comp_expr(cte, ast.expr);
         var code_stat = comp_statement(cte, ast.statement);
 
-        return function (rte, cont)
-               {
-                   var loop = function (rte)
-                   {
-                       var subcont1 = function (rte, value1)
-                       {
-                           if (value1)
-                           {
-                               var subcont2 = function (rte, value2)
-                               {
+        return function (rte, cont) {
+                   var loop = function (rte) {
+                       var subcont1 = function (rte, value1) {
+                           if (value1) {
+                               var subcont2 = function (rte, value2) {
                                    return loop(rte);
                                }
 
                                return code_stat(rte, subcont2);
+                           } else {
+                               var ctrl = rte.frame.ctrl_stack.pop();
+                               return ctrl.exit(rte, void 0);
                            }
-                           else
-                               return cont(rte, void 0);
                        };
 
                        return code_expr(rte, subcont1);
                    };
+
+                   rte.frame.ctrl_stack.push({ exit: cont });
 
                    return loop(rte);
                };
@@ -371,20 +371,13 @@ function comp_statement(cte, ast)
         var code_expr3 = comp_expr(cte, ast.expr3);
         var code_stat = comp_statement(cte, ast.statement);
 
-        return function (rte, cont)
-               {
-                   var subcont1 = function (rte, value1)
-                   {
-                       var loop = function (rte)
-                       {
-                           var subcont2 = function (rte, value2)
-                           {
-                               if (value2)
-                               {
-                                   var subcont3 = function (rte, value3)
-                                   {
-                                       var subcont4 = function (rte, value4)
-                                       {
+        return function (rte, cont) {
+                   var subcont1 = function (rte, value1) {
+                       var loop = function (rte) {
+                           var subcont2 = function (rte, value2) {
+                               if (value2) {
+                                   var subcont3 = function (rte, value3) {
+                                       var subcont4 = function (rte, value4) {
                                            return loop(rte);
                                        };
 
@@ -392,13 +385,16 @@ function comp_statement(cte, ast)
                                    };
 
                                    return code_stat(rte, subcont3);
+                               } else {
+                                   var ctrl = rte.frame.ctrl_stack.pop();
+                                   return ctrl.exit(rte, void 0);
                                }
-                               else
-                                   return cont(rte, void 0);
                            };
 
                            return code_expr2(rte, subcont2);
                        };
+
+                       rte.frame.ctrl_stack.push({ exit: cont });
 
                        return loop(rte);
                    };
@@ -451,17 +447,38 @@ function comp_statement(cte, ast)
     {
         //print("ContinueStatement");
 
-        throw "unimplemented"; /////////////////////////////////////////
-
-        return ast;
+        return function (rte, cont) {
+            if (rte.frame.ctrl_stack.length > 0) {
+                return step_error(rte,
+                                  cont,
+                                  ast,
+                                  "continue statement is not implemented");
+            } else {
+                return step_error(rte,
+                                  cont,
+                                  ast,
+                                  "continue statement is not properly nested");
+            }
+        }
     }
     else if (ast instanceof BreakStatement)
     {
         //print("BreakStatement");
 
-        throw "unimplemented"; /////////////////////////////////////////
-
-        return ast;
+        return function (rte, cont) {
+            if (rte.frame.ctrl_stack.length > 0) {
+                var ctrl = rte.frame.ctrl_stack.pop();
+                return step_end(rte,
+                                ctrl.exit,
+                                ast,
+                                void 0);
+            } else {
+                return step_error(rte,
+                                  cont,
+                                  ast,
+                                  "break statement is not properly nested");
+            }
+        }
     }
     else if (ast instanceof ReturnStatement)
     {
@@ -1259,6 +1276,7 @@ function exec_fn_body(code, callee, rte, cont, this_, params, locals, parent, ct
                             params,
                             locals,
                             parent,
+                            [],
                             cte);
 
     return code(rte,

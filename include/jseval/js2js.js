@@ -54,6 +54,7 @@ function report_globals(ast)
 function main()
 {
     var args = command_line();
+    var input_filenames = [];
     var statements = [];
     var prog = null;
     var options = { profile: false,
@@ -64,6 +65,7 @@ function main()
                     warn: false,
                     ast: false,
                     nojs: false,
+                    xml: false,
                     simplify: true
                   };
     var i = 0;
@@ -86,6 +88,8 @@ function main()
             options.ast = true;
         else if (args[i] === "-nojs")
             options.nojs = true;
+        else if (args[i] === "-xml")
+            options.xml = true;
         else if (args[i] === "-raw")
             options.simplify = false;
         else
@@ -101,6 +105,7 @@ function main()
     while (i < args.length)
     {
         var filename = args[i];
+        input_filenames.push(filename);
         var port = new File_input_port(filename);
         var s = new Scanner(port, error);
         var p = new Parser(s, options.warn ? { autosemicolon: true, non_integer: true, division: true, equality: true } : {});
@@ -125,6 +130,14 @@ function main()
 
         if (options.report)
             report_globals(normalized_prog);
+
+        if (options.xml)
+            syntax_highlighting(input_filenames,
+                                {
+                                    xml: true,
+                                    page_width: 0,
+                                    lineno_width: 0
+                                });
     }
 }
 

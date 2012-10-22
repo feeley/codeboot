@@ -114,7 +114,7 @@ div.tab-pane {
 
 .file-editor .CodeMirror {
   position: relative;
-  height: 200px;
+  height: 400px;
 }
 
 .CodeMirror-gutter-text {

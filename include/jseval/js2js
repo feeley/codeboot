@@ -8,6 +8,7 @@ OPT_DEBUG=""
 OPT_WARN=""
 OPT_AST=""
 OPT_JS=""
+OPT_XML=""
 LAST_FILE=""
 FILES=""
 
@@ -27,31 +28,38 @@ while [ "$1" != "" ]; do
        "-warn") OPT_WARN="-warn" ;;
         "-ast") OPT_AST="-ast" ;;
          "-js") OPT_JS="-js" ;;
-         "-raw") OPT_RAW="-raw" ;;
+        "-xml") OPT_XML="-xml" ;;
+        "-raw") OPT_RAW="-raw" ;;
           "--") shift
                 break ;;
           *.js) LAST_FILE="$1"
                 FILES="$FILES $LAST_FILE"
                 ;;
-             *) echo "Usage: $0 [-profile|-namespace <ns>|-export <id>|-report|-debug|-warn|-ast|-js|-raw] file1.js file2.js ..."
+             *) echo "Usage: $0 [-profile|-namespace <ns>|-export <id>|-report|-debug|-warn|-ast|-js|-xml|-raw] file1.js file2.js ..."
                 exit 1
                 ;;
   esac
   shift
 done
 
-if [ "$OPT_AST" != "" ]; then
-  if ! $JS2JS $OPT_PROFILE $OPT_NAMESPACE $OPT_EXPORTS $OPT_REPORT $OPT_DEBUG $OPT_WARN $OPT_RAW -ast -nojs $FILES; then
+if [ "$OPT_XML" != "" ]; then
+  if ! $JS2JS $OPT_PROFILE $OPT_NAMESPACE $OPT_EXPORTS $OPT_REPORT $OPT_DEBUG $OPT_WARN $OPT_RAW $OPT_XML -nojs $FILES; then
     exit 1
   fi
 else
-  if ! $JS2JS $OPT_PROFILE $OPT_NAMESPACE $OPT_EXPORTS $OPT_REPORT $OPT_DEBUG $OPT_WARN $OPT_RAW $FILES < /dev/null > $LAST_FILE.js; then
-    cat "$LAST_FILE.js"
-    rm -f "$LAST_FILE.js"
-    exit 1
-  fi
-  if [ "$OPT_JS" == "" ]; then
-    cat "$LAST_FILE.js"
-    rm -f "$LAST_FILE.js"
+  if [ "$OPT_AST" != "" ]; then
+    if ! $JS2JS $OPT_PROFILE $OPT_NAMESPACE $OPT_EXPORTS $OPT_REPORT $OPT_DEBUG $OPT_WARN $OPT_RAW $OPT_XML -ast -nojs $FILES; then
+      exit 1
+    fi
+  else
+    if ! $JS2JS $OPT_PROFILE $OPT_NAMESPACE $OPT_EXPORTS $OPT_REPORT $OPT_DEBUG $OPT_WARN $OPT_RAW $OPT_XML $FILES < /dev/null > $LAST_FILE.js; then
+      cat "$LAST_FILE.js"
+      rm -f "$LAST_FILE.js"
+      exit 1
+    fi
+    if [ "$OPT_JS" == "" ]; then
+      cat "$LAST_FILE.js"
+      rm -f "$LAST_FILE.js"
+    fi
   fi
 fi

@@ -405,42 +405,48 @@ function scrollToMarker(marker) {
     }
 }
 
-cp.show_step = function () {
-    cp.show_hide_step(true);
-};
-
 cp.hide_step = function () {
-    cp.show_hide_step(false);
+
+    if (program_state.step_mark !== null ||
+        program_state.step_popover !== null) {
+
+        if (program_state.step_mark !== null) {
+            program_state.step_mark.clear();
+            program_state.step_mark = null;
+        }
+
+        if (program_state.step_popover !== null) {
+            program_state.step_popover.popover('destroy');
+            program_state.step_popover = null;
+        }
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 };
 
-cp.show_hide_step = function (show) {
+cp.show_step = function () {
 
-    if (program_state.step_mark !== null) {
-        program_state.step_mark.clear();
-        program_state.step_mark = null;
-    }
+    cp.hide_step();
 
-    if (program_state.step_popover !== null) {
-        program_state.step_popover.popover('destroy');
-        program_state.step_popover = null;
-    }
+    program_state.step_mark = code_highlight(program_state.rte.ast.loc, "exec-point-code");
 
-    if (show) {
-        program_state.step_mark = code_highlight(program_state.rte.ast.loc, "exec-point-code");
+    var value = program_state.rte.result;
+    var value_repr = (value === void 0) ? "NO VALUE" : printed_repr(value);
+    program_state.step_popover = $(".exec-point-code").last();
+    program_state.step_popover.last().popover({
+	animation: false,
+	placement: "bottom",
+	trigger: "manual",
+	title: value_repr,
+	content: cp.dump_context(),
+	html: true,
+    });
 
-        var value = program_state.rte.result;
-        var value_repr = (value === void 0) ? "NO VALUE" : printed_repr(value);
-        program_state.step_popover = $(".exec-point-code").last();
-        program_state.step_popover.last().popover({
-	    animation: false,
-	    placement: "bottom",
-	    trigger: "manual",
-	    title: value_repr,
-	    content: cp.dump_context(),
-	    html: true,
-	});
-        program_state.step_popover.popover('show');
-    }
+    program_state.step_popover.popover('show');
 };
 
 cp.dump_context = function () {
@@ -512,6 +518,18 @@ uninteresting_global["Array"] = true;
 uninteresting_global["Number"] = true;
 
 cp.execute = function (single_step) {
+
+    if (cp.hide_step()) {
+        // give some time for the browser to refresh the page
+        setTimeout(function () { cp.execute2(single_step); }, 10);
+    } else {
+        // step was not shown, so no need to wait
+        cp.execute2(single_step);
+    }
+};
+
+cp.execute2 = function (single_step) {
+
     var newMode = 'stopped';
     cp.cancel_animation();
 
