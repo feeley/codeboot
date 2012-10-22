@@ -153,10 +153,8 @@ cp.replay = function () {
     if (i < command.length) {
         var j = i;
         while (j < command.length &&
-               (command.charAt(j) === "@"
-                ? command.charAt(j+1) === "@" 
-                : (command.charAt(j) !== "`" &&
-                   command.charAt(j) !== "~"))) {
+               (command.charAt(j) === "@" &&
+                command.charAt(j+1) === "@")) {
             if (command.charAt(j) === "@") {
                 j += 2;
             } else {
@@ -206,49 +204,12 @@ cp.replay = function () {
             if (str !== "") {
                 set_input(cp.repl, default_prompt + str);
             }
-            if (command.charAt(j) === "~") {
-                cp.run(false);
-                j += 1;
-            } else if (command.charAt(j) === "`") {
-                cp.step();
-                j += 1;
-            }
         }
 
         cp.replay_command_index = j;
 
         if (j < command.length) {
             setTimeout(function () { cp.replay(); }, 1);
-        }
-    }
-};
-
-cp.handle_query_old = function () {
-
-    var query = cp.saved_query;
-
-    if (query !== null) {
-        query = decodeURIComponent(query);
-    }
-
-    if (query && query.slice(0, 7) === "replay=") {
-
-        var i = 7;
-
-        while (i < query.length) {
-            var j = i;
-            while (j < query.length &&
-                   query.charCodeAt(j) !== 96 &&
-                   query.charCodeAt(j) !== 126) j++;
-            if (i<j)
-                set_input(cp.repl, default_prompt + query.slice(i, j));
-            if (query.charCodeAt(j) === 126) { // ~
-                cp.run(false);
-            } else if (query.charCodeAt(j) === 96) { // `
-                cp.step();
-            }
-            j++;
-            i = j;
         }
     }
 };
