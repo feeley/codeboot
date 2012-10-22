@@ -6,6 +6,10 @@
 	padding-bottom: 0 !important;
 }
 
+.row {
+    margin-left: 0; /* Somehow, Bootstrap uses a negative margin for rows that makes our contents extend too far to the left. */
+}
+
 /* ----- Toolbars ----- */
 
 .btn-toolbar {
