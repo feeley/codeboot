@@ -293,21 +293,34 @@ testCM("markTextMultiLine", function(cm) {
 });
 
 testCM("markTextUndo", function(cm) {
-  var marker1 = cm.markText({line: 0, ch: 1}, {line: 0, ch: 3}, "CodeMirror-matchingbracket");
-  var marker2 = cm.markText({line: 0, ch: 0}, {line: 2, ch: 1}, "CodeMirror-matchingbracket");
-  var bookmark = cm.setBookmark({line: 1, ch: 5});
-  cm.replaceRange("foo", {line: 0, ch: 2});
-  cm.replaceRange("bar\baz\bug\n", {line: 2, ch: 0}, {line: 3, ch: 0});
+  var marker1, marker2, bookmark;
+  cm.compoundChange(function(){
+    marker1 = cm.markText({line: 0, ch: 1}, {line: 0, ch: 3}, "CodeMirror-matchingbracket");
+    marker2 = cm.markText({line: 0, ch: 0}, {line: 2, ch: 1}, "CodeMirror-matchingbracket");
+    bookmark = cm.setBookmark({line: 1, ch: 5});
+  });
+  cm.compoundChange(function(){
+    cm.replaceRange("foo", {line: 0, ch: 2});
+    cm.replaceRange("bar\baz\bug\n", {line: 2, ch: 0}, {line: 3, ch: 0});
+  });
   cm.setValue("");
   eq(marker1.find(), null); eq(marker2.find(), null); eq(bookmark.find(), null);
   cm.undo();
   eqPos(bookmark.find(), {line: 1, ch: 5});
-  cm.undo(); cm.undo();
+  cm.undo();
   var m1Pos = marker1.find(), m2Pos = marker2.find();
   eqPos(m1Pos.from, {line: 0, ch: 1}); eqPos(m1Pos.to, {line: 0, ch: 3});
   eqPos(m2Pos.from, {line: 0, ch: 0}); eqPos(m2Pos.to, {line: 2, ch: 1});
   eqPos(bookmark.find(), {line: 1, ch: 5});
 }, {value: "1234\n56789\n00\n"});
+
+testCM("markTextStayGone", function(cm) {
+  var m1 = cm.markText({line: 0, ch: 0}, {line: 0, ch: 1}, "CodeMirror-matchingbracket");
+  cm.replaceRange("hi", {line: 0, ch: 2});
+  m1.clear();
+  cm.undo();
+  eq(m1.find(), null);
+}, {value: "hello"});
 
 testCM("markClearBetween", function(cm) {
   cm.setValue("aaa\nbbb\nccc\nddd\n");
@@ -460,13 +473,13 @@ testCM("hiddenLines", function(cm) {
 });
 
 testCM("hiddenLinesAutoUnfold", function(cm) {
-  var folded = cm.foldLines(1, 3, true), unfolded = 0;
+  var folded = cm.foldLines(1, 3, {unfoldOnEnter: true}), unfolded = 0;
   CodeMirror.on(folded, "unfold", function() {unfolded++;});
   cm.setCursor({line: 3, ch: 0});
   eq(unfolded, 0);
   cm.execCommand("goCharLeft");
   eq(unfolded, 1);
-  var folded = cm.foldLines(1, 3, true), unfolded = 0;
+  var folded = cm.foldLines(1, 3, {unfoldOnEnter: true}), unfolded = 0;
   CodeMirror.on(folded, "unfold", function() {unfolded++;});
   eqPos(cm.getCursor(), {line: 3, ch: 0});
   cm.setCursor({line: 0, ch: 3});
@@ -718,6 +731,14 @@ testCM("rtlMovement", function(cm) {
   });
 });
 
+// Verify that updating a line clears its bidi ordering
+testCM("bidiUpdate", function(cm) {
+  cm.setCursor({line: 0, ch: 2});
+  cm.replaceSelection("خحج", "start");
+  cm.execCommand("goCharRight");
+  eqPos(cm.getCursor(), {line: 0, ch: 4});
+}, {value: "abcd\n"});
+
 testCM("movebyTextUnit", function(cm) {
   cm.setValue("בְּרֵאשִ\ńéée\n");
   cm.execCommand("goLineEnd");
@@ -783,3 +804,32 @@ testCM("getLineNumber", function(cm) {
   cm.setValue("");
   eq(cm.getLineNumber(h1), null);
 });
+
+testCM("jumpTheGap", function(cm) {
+  var longLine = "abcdef ghiklmnop qrstuvw xyz ";
+  longLine += longLine; longLine += longLine; longLine += longLine;
+  cm.setLine(2, longLine);
+  cm.setSize("200px", null);
+  cm.getWrapperElement().style.lineHeight = 2;
+  cm.setCursor({line: 0, ch: 1});
+  cm.execCommand("goLineDown");
+  eqPos(cm.getCursor(), {line: 1, ch: 1});
+  cm.execCommand("goLineDown");
+  eqPos(cm.getCursor(), {line: 2, ch: 1});
+  cm.execCommand("goLineDown");
+  eq(cm.getCursor().line, 2);
+  is(cm.getCursor().ch > 1);
+  cm.execCommand("goLineUp");
+  eqPos(cm.getCursor(), {line: 2, ch: 1});
+  cm.execCommand("goLineUp");
+  eqPos(cm.getCursor(), {line: 1, ch: 1});
+  var node = document.createElement("div");
+  node.innerHTML = "hi"; node.style.height = "30px";
+  cm.addLineWidget(0, node);
+  cm.addLineWidget(1, node.cloneNode(true), {above: true});
+  cm.setCursor({line: 0, ch: 2});
+  cm.execCommand("goLineDown");
+  eqPos(cm.getCursor(), {line: 1, ch: 2});
+  cm.execCommand("goLineUp");
+  eqPos(cm.getCursor(), {line: 0, ch: 2});
+}, {lineWrapping: true, value: "abc\ndef\nghi\njkl\n"});

@@ -218,24 +218,6 @@
       simply <code>true</code>), focusing of the editor is also
       disallowed.</dd>
 
-      <dt id="option_cursorBlinkRate"><code>cursorBlinkRate (number)</code></dt>
-      <dd>Half-period in milliseconds used for cursor blinking. The default blink
-      rate is 530ms.</dd>
-
-      <dt id="option_workTime"><code>workTime, workDelay (number)</code></dt>
-      <dd>Highlighting is done by a pseudo background-thread that will
-      work for <code>workTime</code> milliseconds, and then use
-      timeout to sleep for <code>workDelay</code> milliseconds. The
-      defaults are 200 and 300, you can change these options to make
-      the highlighting more or less aggressive.</dd>
-
-      <dt id="option_pollInterval"><code>pollInterval (number)</code></dt>
-      <dd>Indicates how quickly CodeMirror should poll its input
-      textarea for changes (when focused). Most input is captured by
-      events, but some things, like IME input on some browsers, don't
-      generate events that allow CodeMirror to properly detect it.
-      Thus, it polls. Default is 100 milliseconds.</dd>
-
       <dt id="option_undoDepth"><code>undoDepth (integer)</code></dt>
       <dd>The maximum number of undo levels that the editor stores.
       Defaults to 40.</dd>
@@ -253,7 +235,13 @@
       set to true when either the source textarea is focused, or it
       has an <code>autofocus</code> attribute and no other element is
       focused.</dd>
+    </dl>
 
+    <p>Below this a few more specialized, low-level options are
+    listed. These are only useful in very specific situations, you
+    might want to skip them the first time you read this manual.</p>
+
+    <dl>
       <dt id="option_dragDrop"><code>dragDrop (boolean)</code></dt>
       <dd>Controls whether drag-and-drop is enabled. On by default.</dd>
 
@@ -284,6 +272,50 @@
       its <code>type</code> property and only do something when it
       is <code>keydown</code> (or <code>keypress</code> for actions
       that need character data).</dd>
+
+      <dt id="option_cursorBlinkRate"><code>cursorBlinkRate (number)</code></dt>
+      <dd>Half-period in milliseconds used for cursor blinking. The default blink
+      rate is 530ms.</dd>
+
+      <dt id="option_cursorHeight"><code>cursorHeight (number)</code></dt>
+      <dd>Determines the height of the cursor. Default is 1, meaning
+      it spans the whole height of the line. For some fonts (and by
+      some tastes) a smaller height (for example <code>0.85</code>),
+      which causes the cursor to not reach all the way to the bottom
+      of the line, looks better</dd>
+
+      <dt id="option_workTime"><code>workTime, workDelay (number)</code></dt>
+      <dd>Highlighting is done by a pseudo background-thread that will
+      work for <code>workTime</code> milliseconds, and then use
+      timeout to sleep for <code>workDelay</code> milliseconds. The
+      defaults are 200 and 300, you can change these options to make
+      the highlighting more or less aggressive.</dd>
+
+      <dt id="option_pollInterval"><code>pollInterval (number)</code></dt>
+      <dd>Indicates how quickly CodeMirror should poll its input
+      textarea for changes (when focused). Most input is captured by
+      events, but some things, like IME input on some browsers, don't
+      generate events that allow CodeMirror to properly detect it.
+      Thus, it polls. Default is 100 milliseconds.</dd>
+
+      <dt id="option_flattenSpans"><code>flattenSpans (boolean)</code></dt>
+      <dd>By default, CodeMirror will combine adjacent tokens into a
+      single span if they have the same class. This will result in a
+      simpler DOM tree, and thus perform better. With some kinds of
+      styling (such as rounded corners), this will change the way the
+      document looks. You can set this option to false to disable this
+      behavior.</dd>
+
+      <dt id="option_viewportMargin"><code>viewportMargin (integer)</code></dt>
+      <dd>Specifies the amount of lines that are rendered above and
+      below the part of the document that's currently scrolled into
+      view. This affects the amount of updates needed when scrolling,
+      and the amount of work that such an update does. You should
+      usually leave it at its default, 100. Can be set
+      to <code>Infinity</code> to make sure the whole document is
+      always rendered, and thus the browser's text search works on it.
+      This <em>will</em> have bad effects on performance of big
+      documents.</dd>
     </dl>
 
     <h2 id="events">Events</h2>
@@ -738,18 +770,24 @@
       background (which lies behind the selection).
       Pass <code>null</code> to clear the classes for a line.</dd>
 
-      <dt id="foldLines"><code>foldLines(from, to, unfoldOnEnter) → foldHandle</code></dt>
+      <dt id="foldLines"><code>foldLines(from, to, options) → foldHandle</code></dt>
       <dd>Hide the given range of lines (<code>to</code> is
       non-inclusive). Hidden lines don't show up in the editor.
       Deleting a region around them does delete them, and copying a
       region around will include them in the copied text. Vertical
-      cursor movement will skip hidden lines.
+      cursor movement will skip hidden lines. The <code>options</code>
+      parameter is optional. When given, it should be an object
+      containing <code>unfoldOnEnter</code>
+      and/or <code>showWidgets</code> properties.
       When <code>unfoldOnEnter</code> is true, horizontal movement
       into the range will un-hide the range. When it is false,
-      horizonal cursor movement will skip it as if it isn't there. The
-      handle this function returns can be used to unfold the range,
-      and emits an <a href="#event_unfold"><code>unfold</code></a>
-      event when unfolded. Folded ranges may overlap and nest.</dd>
+      horizonal cursor movement will skip it as if it isn't there.
+      When <code>showWidgets</code> is
+      true, <a href="#addLineWidget">line widgets</a> in the folded
+      range will remain visible. The handle this function returns can
+      be used to unfold the range, and emits
+      an <a href="#event_unfold"><code>unfold</code></a> event when
+      unfolded. Folded ranges may overlap and nest.</dd>
       <dt id="unfoldLines"><code>unfoldLines(foldHandle)</code></dt>
       <dd>When given a handle as returned
       by <a href="#foldLines"><code>foldLines</code></a>, this will
@@ -806,6 +844,9 @@
           <dt><code>noHScroll (boolean)</code></dt>
           <dd>Whether the widget should stay fixed in the face of
           horizontal scrolling.</dd>
+          <dt><code>above (boolean)</code></dt>
+          <dd>Causes the widget to be placed above instead of below
+          the text of the line.</dd>
         </dl>
       Note that the widget node will become a descendant of nodes with
       CodeMirror-specific CSS classes, and those classes might in some
@@ -915,6 +956,13 @@
     editor instance and the new value when an editor is initialized,
     and whenever the option is modified
     through <a href="#setOption"><code>setOption</code></a>.</p>
+
+    <p id="defineInitHook">If your extention just needs to run some
+    code whenever a CodeMirror instance is initialized,
+    use <code>CodeMirror.defineInitHook</code>. Give it a function as
+    its only argument, and from then on, that function will be called
+    (with the instance as argument) whenever a new CodeMirror instance
+    is initialized.</p>
 
     <h2 id="addons">Add-ons</h2>
 
@@ -1207,7 +1255,7 @@
     state.</p>
 
     <p id="indent">If you want your mode to provide smart indentation
-    (though the <a href="#indentLine"><code>indentLine</code></a>
+    (through the <a href="#indentLine"><code>indentLine</code></a>
     method and the <code>indentAuto</code>
     and <code>newlineAndIndent</code> commands, which keys can be
     <a href="#option_extraKeys">bound</a> to), you must define
