@@ -179,6 +179,7 @@
 
             // state
             currentConsoleLine: undefined,
+            saveInProgress: false,
 
             // Elements
             alerts: undefined,
@@ -207,6 +208,10 @@
                 cp.setDevMode(!cp.devMode);
             });
             window.onbeforeunload = function () {
+                if (cp.saveInProgress) {
+                    cp.saveInProgress = false;
+                    return undefined;
+                }
                 if (!cp.devMode) {
                     return "You codePlay session will be lost."
                 } else {
@@ -278,7 +283,7 @@
         function saveAs(content, filename) {
             $("#form-download-content").val(content);
             $("#form-download-filename").val(filename);
-
+            cp.saveInProgress = true;
             $("#form-download").submit();
         }
         
