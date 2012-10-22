@@ -530,6 +530,7 @@ cp.newTab = function (fileOrFilename) {
     // Make editor resizable
     $(".CodeMirror", $row).resizable({
           handles: "s",
+          minHeight: 100,
           stop: function() { editor.refresh(); },
           resize: function() {
             $(".CodeMirror-scroll", $row).height($(this).height());
