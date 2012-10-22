@@ -153,7 +153,7 @@ cp.replay = function () {
     if (i < command.length) {
         var j = i;
         while (j < command.length &&
-               (command.charAt(j) === "@" &&
+               (command.charAt(j) !== "@" ||
                 command.charAt(j+1) === "@")) {
             if (command.charAt(j) === "@") {
                 j += 2;
