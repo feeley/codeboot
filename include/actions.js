@@ -519,7 +519,7 @@ uninteresting_global["Number"] = true;
 
 cp.execute = function (single_step) {
 
-    if (cp.hide_step()) {
+    if (false && cp.hide_step()) { //TODO: find a better way... this causes too much flicker
         // give some time for the browser to refresh the page
         setTimeout(function () { cp.execute2(single_step); }, 10);
     } else {
