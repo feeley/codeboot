@@ -790,31 +790,56 @@ function comp_expr(cte, ast)
         }
         else if (is_pure_op1(ast.op))
         {
-            var code0 = comp_expr(cte, ast.exprs[0]);
+            var code_expr0 = comp_expr(cte, ast.exprs[0]);
 
             return gen_op_dyn(ast,
                               pure_op1_to_semfn(ast.op),
-                              code0);
+                              code_expr0);
         }
         else // if (is_pure_op2(ast.op))
         {
-            var code0 = comp_expr(cte, ast.exprs[0]);
-            var code1 = comp_expr(cte, ast.exprs[1]);
+            var code_expr0 = comp_expr(cte, ast.exprs[0]);
+            var code_expr1 = comp_expr(cte, ast.exprs[1]);
 
-            switch (ast.op)
-            {
-/*
-            /////////// fixme (short circuiting op)
+            switch (ast.op) {
+
             case "x && y":
-                return ...;
+                return function (rte, cont) {
+                    return code_expr0(rte,
+                                      function (rte, res0) {
+                                          if (res0) {
+                                              return code_expr1(rte, cont);
+                                          } else {
+                                              return cont(rte, res0);
+                                          }
+                                      });
+                };
+
             case "x || y":
-                return ...;
-*/
+                return function (rte, cont) {
+                    return code_expr0(rte,
+                                      function (rte, res0) {
+                                          if (res0) {
+                                              return cont(rte, res0);
+                                          } else {
+                                              return code_expr1(rte, cont);
+                                          }
+                                      });
+                };
+
+            case "x , y":
+                return function (rte, cont) {
+                    return code_expr0(rte,
+                                      function (rte, res0) {
+                                          return code_expr1(rte, cont);
+                                      });
+                };
+
             default:
                 return gen_op_dyn_dyn(ast,
                                       pure_op2_to_semfn(ast.op),
-                                      code0,
-                                      code1);
+                                      code_expr0,
+                                      code_expr1);
             }
         }
     }
@@ -1558,9 +1583,6 @@ function pure_op2_to_semfn(op)
   case "x & y": return sem_x_bitand_y;
   case "x ^ y": return sem_x_bitxor_y;
   case "x | y": return sem_x_bitor_y;
-  case "x && y": return sem_x_and_y; /////////// fixme (short cirtuiting op)
-  case "x || y": return sem_x_or_y; /////////// fixme (short cirtuiting op)
-  case "x , y": return sem_x_comma_y;
   }
 }
 
@@ -1781,24 +1803,6 @@ function sem_x_bitxor_y(rte, cont, ast, x, y) // "x ^ y"
 function sem_x_bitor_y(rte, cont, ast, x, y) // "x | y"
 {
     var result = (x | y);
-    return step_end(rte, cont, ast, result);
-}
-
-function sem_x_and_y(rte, cont, ast, x, y) // "x && y"
-{
-    var result = (x && y); /////////////////// fixme (short circuiting op)
-    return step_end(rte, cont, ast, result);
-}
-
-function sem_x_or_y(rte, cont, ast, x, y) // "x || y"
-{
-    var result = (x || y); /////////////////// fixme (short circuiting op)
-    return step_end(rte, cont, ast, result);
-}
-
-function sem_x_comma_y(rte, cont, ast, x, y) // "x , y"
-{
-    var result = (x , y);
     return step_end(rte, cont, ast, result);
 }
 
