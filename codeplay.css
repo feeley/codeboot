@@ -137,6 +137,12 @@ div.tab-pane {
   color: #f89406 !important; /* Bootstrap accent - orange */
 }
 
+.ui-resizable-s {
+    height: 7px;
+    bottom: 0;
+    background: transparent url('icons/resize_handle_corner.png') no-repeat top right;
+}
+
 /* ----- Transcript ----- */
 
 #transcript .CodeMirror-scroll {

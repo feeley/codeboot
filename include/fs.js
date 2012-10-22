@@ -436,6 +436,7 @@ function createFileEditor(node, file) {
         }
         editor.currentSaveTimeout = setTimeout(saveHandler, SAVE_DELAY);
     });
+    return editor;
 }
 
 function cp_internal_onTabDblClick(event) {
@@ -522,9 +523,20 @@ cp.newTab = function (fileOrFilename) {
 
     $row.insertAfter($("#step-value-row"));
 
-	createFileEditor($pre.get(0), file);
+	var editor = createFileEditor($pre.get(0), file);
 
 	scrollTo($row);
+
+    // Make editor resizable
+    $(".CodeMirror", $row).resizable({
+          handles: "s",
+          stop: function() { editor.refresh(); },
+          resize: function() {
+            $(".CodeMirror-scroll", $row).height($(this).height());
+            $(".CodeMirror-scroll", $row).width($(this).width());
+            editor.refresh();
+          }
+    });
 };
 
 cp.newFile = function () {
