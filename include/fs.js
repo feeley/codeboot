@@ -371,11 +371,12 @@ cp.makeEditorToolbar = function (file) {
     $animateButton.addClass('exec-btn-anim');
     $animateButton.click(function () {
         if (!cp.setController(controller)) return false;
+        
         if (program_state.mode === 'stopped') {
-            program_state.step_delay = 500;
+            program_state.step_delay = cp.stepDelay;
             cp.load(file.filename, true);
         } else {
-            cp.animate(500);
+            cp.animate(cp.stepDelay);
         }
     });
     $animateButton.appendTo($execControlsGroup);
