@@ -209,6 +209,9 @@
             Mousetrap.bind('ctrl+\\', function () {
                 cp.setDevMode(!cp.devMode);
             });
+            Mousetrap.bind('ctrl+shift+c', function () {
+                cp.closeAll();
+            });
             window.onbeforeunload = function () {
                 if (cp.saveInProgress) {
                     cp.saveInProgress = false;

@@ -314,6 +314,13 @@ cp.closeFile = function (fileOrFilename) {
     $(cp.getContainerFor(file)).remove();
 };
 
+cp.closeAll = function () {
+    $("[data-cp-filename]").each(function () {
+        var filename = $(this).attr('data-cp-filename');
+        cp.closeFile(filename);
+    });
+};
+
 cp.deleteFile = function (filename) {
     $('[data-cp-filename="' + filename + '"]').remove();
     cp.fs.deleteFile(filename);
