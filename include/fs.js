@@ -43,15 +43,30 @@ function makeTBButton($contents, props) {
 /* ----- Internal file system ----- */
 
 var BUILTIN_FILES = {
-        'sample/hello' : 'println("Hello, world!\\n")',
-        'sample/fact'  : 'var fact = function (n) {\n' +
-                         '    if (n <= 0) return 1;\n' +
-                         '    return n * fact(n-1);\n' +
-                         '}',
-        'sample/fib'   : 'var fib = function (n) {\n' +
-                         '    if (n <= 2) return n;\n' +
-                         '    return fib(n-1) + fib(n-2);\n' +
-                         '}',
+        'sample/hello.js' : '// This program prints a famous greeting\n' +
+                            '\n' +
+                            'print("Hello, world!\\n");\n',
+        'sample/fact.js'  : '// This program prints the factorial of 5\n' +
+                            '\n' +
+                            'var fact = function (n) {\n' +
+                            '    if (n <= 1) {\n' +
+                            '        return 1;\n' +
+                            '    } else {\n' +
+                            '        return n * fact(n-1);\n' +
+                            '    }\n' +
+                            '};\n' +
+                            '\n' +
+                            'print(fact(5));\n',
+        'sample/sqrt2.js' : '// This program computes the square root of 2 without using Math.sqrt\n' +
+                            '\n' +
+                            'var n = 2;\n' +
+                            'var a = n; // approximation of sqrt(n)\n' +
+                            '\n' +
+                            'do {\n' +
+                            '    a = (a + n/a) / 2;\n' +
+                            '} while (a != (a + n/a) / 2);\n' +
+                            '\n' +
+                            'print(a);\n',
 };
 
 var NEW_FILE_DEFAULT_CONTENT = "// Enter JavaScript code here";

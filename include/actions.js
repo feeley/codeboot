@@ -196,6 +196,9 @@ cp.replay = function () {
                 var editor = cp.fs.getEditor(filename);
                 editor.setValue(str);
                 j += 2;
+            } else if (command.charAt(j+1) === "C") {
+                cp.closeAll();
+                j += 2;
             } else {
                 // unknown command
                 j += 2;
