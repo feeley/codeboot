@@ -98,9 +98,30 @@ function printed_repr(x) {
 
     //TODO: avoid infinite loops for circular data!
     //TODO: avoid printing wider than page!
-
+    //TODO: emit HTML markup, so that objects with a toHTML method can be represented specially (such as images)
+ 
     if (typeof x === "string") {
-        return "\"" + x + "\""; //TODO: should escape ", \, etc!
+        var chars = [];
+        chars.push("\"");
+        for (var i=0; i<x.length; i++) {
+            var c = x.charAt(i);
+            if (c === "\"") {
+                chars.push("\\\"");
+            } else if (c === "\\") {
+                chars.push("\\\\");
+            } else if (c === "\n") {
+                chars.push("\\n");
+            } else {
+                var n = x.charCodeAt(i);
+                if (n <= 32 || n >= 127) {
+                    chars.push("\\u" + (n+65536).toString(16).slice(1));
+                } else {
+                    chars.push(c);
+                }
+            }
+        }
+        chars.push("\"");
+        return chars.join("");
     } else if (typeof x === "object") {
         if (x === null) {
             return "null";
