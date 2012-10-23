@@ -418,6 +418,7 @@ cp.show_step = function () {
     cp.hide_step();
 
     program_state.step_mark = code_highlight(program_state.rte.ast.loc, "exec-point-code");
+    scrollToMarker(program_state.step_mark);
 
     var value = program_state.rte.result;
     var value_repr = (value === void 0) ? "NO VALUE" : printed_repr(value);
