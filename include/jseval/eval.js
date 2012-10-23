@@ -209,39 +209,31 @@ function RTFrame(this_, callee, params, locals, parent, ctrl_stack, cte)
     this.cte = cte;
 }
 
-function comp_statement(cte, ast)
-{
-    if (ast instanceof Program)
-    {
+function comp_statement(cte, ast) {
+
+    if (ast instanceof Program) {
         //print("Program");
 
         var code = comp_statement(cte, ast.block);
 
-        return function (rte, cont)
-               {
-                   rte.frame.cte = cte;
-                   return code(rte, cont);
-               };
-    }
-    else if (ast instanceof FunctionDeclaration)
-    {
+        return function (rte, cont) {
+            rte.frame.cte = cte;
+            return code(rte, cont);
+        };
+    } else if (ast instanceof FunctionDeclaration) {
         //print("FunctionDeclaration");
 
-        throw "unimplemented"; /////////////////////////////////////////
+        throw "function declarations are not implemented";
 
         ///ast.funct = ctx.walk_expr(ast.funct);
-    }
-    else if (ast instanceof BlockStatement)
-    {
+    } else if (ast instanceof BlockStatement) {
         //print("BlockStatement");
 
         return comp_statements(cte, ast, ast.statements);
-    }
-    else if (ast instanceof VariableStatement)
-    {
+    } else if (ast instanceof VariableStatement) {
         //print("VariableStatement");
 
-        throw "unimplemented"; /////////////////////////////////////////
+        throw "variable declarations are not implemented";
 
 /*
         ast.decls.forEach(function (decl, i, self)
@@ -249,110 +241,105 @@ function comp_statement(cte, ast)
                               decl.initializer = ctx.walk_expr(decl.initializer);
                           });
 */
-    }
-    else if (ast instanceof ConstStatement)
-    {
+    } else if (ast instanceof ConstStatement) {
         //print("ConstStatement");
 
-        throw "unimplemented"; /////////////////////////////////////////
-    }
-    else if (ast instanceof ExprStatement)
-    {
+        throw "const declarations are not implemented";
+    } else if (ast instanceof ExprStatement) {
         //print("ExprStatement");
 
         return comp_expr(cte, ast.expr);
-    }
-    else if (ast instanceof IfStatement)
-    {
+    } else if (ast instanceof IfStatement) {
         //print("IfStatement");
 
         var code_expr = comp_expr(cte, ast.expr);
         var code_stat0 = comp_statement(cte, ast.statements[0]);
 
-        if (ast.statements.length === 1)
-        {
-            return function (rte, cont)
-                   {
-                       var subcont1 = function (rte, value1)
-                       {
-                           if (value1)
-                               return code_stat0(rte, cont);
-                           else
-                               return cont(rte, void 0);
-                       };
+        if (ast.statements.length === 1) {
 
-                       return code_expr(rte, subcont1);
-                   };
-        }
-        else
-        {
+            return function (rte, cont) {
+
+                var subcont1 = function (rte, value1) {
+                    if (value1) {
+                        return code_stat0(rte, cont);
+                    } else {
+                        return cont(rte, void 0);
+                    }
+                };
+
+                return code_expr(rte, subcont1);
+            };
+        } else {
+
             var code_stat1 = comp_statement(cte, ast.statements[1]);
 
-            return function (rte, cont)
-                   {
-                       var subcont1 = function (rte, value1)
-                       {
-                           if (value1)
-                               return code_stat0(rte, cont);
-                           else
-                               return code_stat1(rte, cont);
-                       };
+            return function (rte, cont) {
 
-                       return code_expr(rte, subcont1);
-                   };
+                var subcont1 = function (rte, value1) {
+                    if (value1) {
+                        return code_stat0(rte, cont);
+                    } else {
+                        return code_stat1(rte, cont);
+                    }
+                };
+
+                return code_expr(rte, subcont1);
+            };
         }
-    }
-    else if (ast instanceof DoWhileStatement)
-    {
+    } else if (ast instanceof DoWhileStatement) {
         //print("DoWhileStatement");
 
         var code_stat = comp_statement(cte, ast.statement);
         var code_expr = comp_expr(cte, ast.expr);
 
         return function (rte, cont) {
-                   var loop = function (rte) {
-                       var subcont1 = function (rte, value1) {
-                           var subcont2 = function (rte, value2) {
-                               if (value2) {
-                                   return loop(rte);
-                               } else {
-                                   var ctrl = rte.frame.ctrl_stack.pop();
-                                   return ctrl.exit(rte, void 0);
-                               }
-                           };
 
-                           return code_expr(rte, subcont2);
-                       };
+            var loop = function (rte) {
 
-                       return code_stat(rte, subcont1);
-                   };
+                var subcont1 = function (rte, value1) {
 
-                   rte.frame.ctrl_stack.push({ exit: cont });
+                    var subcont2 = function (rte, value2) {
+                        if (value2) {
+                            return loop(rte);
+                        } else {
+                            var ctrl = rte.frame.ctrl_stack.pop();
+                            return ctrl.exit(rte, void 0);
+                        }
+                    };
 
-                   return loop(rte);
-               };
-    }
-    else if (ast instanceof WhileStatement)
-    {
+                    return code_expr(rte, subcont2);
+                };
+
+                return code_stat(rte, subcont1);
+            };
+
+            rte.frame.ctrl_stack.push({ exit: cont });
+
+            return loop(rte);
+        };
+    } else if (ast instanceof WhileStatement) {
         //print("WhileStatement");
 
         var code_expr = comp_expr(cte, ast.expr);
         var code_stat = comp_statement(cte, ast.statement);
 
         return function (rte, cont) {
-                   var loop = function (rte) {
-                       var subcont1 = function (rte, value1) {
-                           if (value1) {
-                               var subcont2 = function (rte, value2) {
-                                   return loop(rte);
-                               }
 
-                               return code_stat(rte, subcont2);
-                           } else {
-                               var ctrl = rte.frame.ctrl_stack.pop();
-                               return ctrl.exit(rte, void 0);
-                           }
-                       };
+            var loop = function (rte) {
+
+                var subcont1 = function (rte, value1) {
+                    if (value1) {
+
+                        var subcont2 = function (rte, value2) {
+                            return loop(rte);
+                        }
+
+                        return code_stat(rte, subcont2);
+                    } else {
+                        var ctrl = rte.frame.ctrl_stack.pop();
+                        return ctrl.exit(rte, void 0);
+                    }
+                };
 
                        return code_expr(rte, subcont1);
                    };
@@ -361,9 +348,7 @@ function comp_statement(cte, ast)
 
                    return loop(rte);
                };
-    }
-    else if (ast instanceof ForStatement)
-    {
+    } else if (ast instanceof ForStatement) {
         //print("ForStatement");
 
         var code_expr1 = comp_expr(cte, ast.expr1);
@@ -372,41 +357,42 @@ function comp_statement(cte, ast)
         var code_stat = comp_statement(cte, ast.statement);
 
         return function (rte, cont) {
-                   var subcont1 = function (rte, value1) {
-                       var loop = function (rte) {
-                           var subcont2 = function (rte, value2) {
-                               if (value2) {
-                                   var subcont3 = function (rte, value3) {
-                                       var subcont4 = function (rte, value4) {
-                                           return loop(rte);
-                                       };
 
-                                       return code_expr3(rte, subcont4);
-                                   };
+            var subcont1 = function (rte, value1) {
 
-                                   return code_stat(rte, subcont3);
-                               } else {
-                                   var ctrl = rte.frame.ctrl_stack.pop();
-                                   return ctrl.exit(rte, void 0);
-                               }
-                           };
+                var loop = function (rte) {
 
-                           return code_expr2(rte, subcont2);
-                       };
+                    var subcont2 = function (rte, value2) {
+                        if (value2) {
+                            var subcont3 = function (rte, value3) {
+                                var subcont4 = function (rte, value4) {
+                                    return loop(rte);
+                                };
 
-                       rte.frame.ctrl_stack.push({ exit: cont });
+                                return code_expr3(rte, subcont4);
+                            };
 
-                       return loop(rte);
-                   };
+                            return code_stat(rte, subcont3);
+                        } else {
+                            var ctrl = rte.frame.ctrl_stack.pop();
+                            return ctrl.exit(rte, void 0);
+                        }
+                    };
 
-                   return code_expr1(rte, subcont1);
-               };
-    }
-    else if (ast instanceof ForVarStatement)
-    {
+                    return code_expr2(rte, subcont2);
+                };
+
+                rte.frame.ctrl_stack.push({ exit: cont });
+
+                return loop(rte);
+            };
+
+            return code_expr1(rte, subcont1);
+        };
+    } else if (ast instanceof ForVarStatement) {
         //print("ForVarStatement");
 
-        throw "unimplemented"; /////////////////////////////////////////
+        throw "for var statements are not implemented";
 
         /*
         for (var i=ast.decls.length-1; i>=0; i--)
@@ -418,34 +404,32 @@ function comp_statement(cte, ast)
         ast.expr3 = ctx.walk_expr(ast.expr3);
         ast.statement = ctx.walk_statement(ast.statement);
         */
-    }
-    else if (ast instanceof ForInStatement)
-    {
+    } else if (ast instanceof ForInStatement) {
         //print("ForInStatement");
 
-        throw "unimplemented"; /////////////////////////////////////////
+        throw "for in statements are not implemented";
 
         /*
         ast.lhs_expr = ctx.walk_expr(ast.lhs_expr);
         ast.set_expr = ctx.walk_expr(ast.set_expr);
         ast.statement = ctx.walk_statement(ast.statement);
         */
-    }
-    else if (ast instanceof ForVarInStatement)
-    {
+    } else if (ast instanceof ForVarInStatement) {
         //print("ForVarInStatement");
 
-        throw "unimplemented"; /////////////////////////////////////////
+        throw "for var in statements are not implemented";
 
         /*
         ast.initializer = ctx.walk_expr(ast.initializer);
         ast.set_expr = ctx.walk_expr(ast.set_expr);
         ast.statement = ctx.walk_statement(ast.statement);
         */
-    }
-    else if (ast instanceof ContinueStatement)
-    {
+    } else if (ast instanceof ContinueStatement) {
         //print("ContinueStatement");
+
+        if (ast.label !== null) {
+            throw "continue with label is not implemented";
+        }
 
         return function (rte, cont) {
             if (rte.frame.ctrl_stack.length > 0) {
@@ -459,11 +443,13 @@ function comp_statement(cte, ast)
                                   ast,
                                   "continue statement is not properly nested");
             }
-        }
-    }
-    else if (ast instanceof BreakStatement)
-    {
+        };
+    } else if (ast instanceof BreakStatement) {
         //print("BreakStatement");
+
+        if (ast.label !== null) {
+            throw "break with label is not implemented";
+        }
 
         return function (rte, cont) {
             if (rte.frame.ctrl_stack.length > 0) {
@@ -478,53 +464,41 @@ function comp_statement(cte, ast)
                                   ast,
                                   "break statement is not properly nested");
             }
-        }
-    }
-    else if (ast instanceof ReturnStatement)
-    {
+        };
+    } else if (ast instanceof ReturnStatement) {
         //print("ReturnStatement");
 
-        if (ast.expr === null)
-        {
-            return function (rte, cont)
-                   {
-                       var cont = rte.stack.cont;
-                       rte.frame = rte.stack.frame;
-                       rte.stack = rte.stack.stack;
-                       return cont(rte, void 0);
-                   };
-        }
-        else
-        {
+        if (ast.expr === null) {
+            return function (rte, cont) {
+                var cont = rte.stack.cont;
+                rte.frame = rte.stack.frame;
+                rte.stack = rte.stack.stack;
+                return cont(rte, void 0);
+            };
+        } else {
             var code_expr = comp_expr(cte, ast.expr);
 
-            return function (rte, cont)
-                   {
-                       return code_expr(rte,
-                                        function (rte, value)
-                                        {
-                                            var cont = rte.stack.cont;
-                                            rte.frame = rte.stack.frame;
-                                            rte.stack = rte.stack.stack;
-                                            return cont(rte, value);
-                                        });
-                   };
+            return function (rte, cont) {
+                return code_expr(rte,
+                                 function (rte, value) {
+                                     var cont = rte.stack.cont;
+                                     rte.frame = rte.stack.frame;
+                                     rte.stack = rte.stack.stack;
+                                     return cont(rte, value);
+                                 });
+            };
         };
-    }
-    else if (ast instanceof WithStatement)
-    {
+    } else if (ast instanceof WithStatement) {
         //print("WithStatement");
 
-        throw "unimplemented"; /////////////////////////////////////////
+        throw "with statements are not implemented";
 
         //ast.expr = ctx.walk_expr(ast.expr);
         //ast.statement = ctx.walk_statement(ast.statement);
-    }
-    else if (ast instanceof SwitchStatement)
-    {
+    } else if (ast instanceof SwitchStatement) {
         //print("SwitchStatement");
 
-        throw "unimplemented"; /////////////////////////////////////////
+        throw "switch statements are not implemented";
 
         /*
         ast.expr = ctx.walk_expr(ast.expr);
@@ -534,53 +508,43 @@ function comp_statement(cte, ast)
                                 c.statements = comp_statements(c, c.statements, ctx);
                             });
         */
-    }
-    else if (ast instanceof LabelledStatement)
-    {
+    } else if (ast instanceof LabelledStatement) {
         //print("LabelledStatement");
 
-        throw "unimplemented"; /////////////////////////////////////////
+        throw "labelled statements are not implemented";
 
         /*
         ast.statement = ctx.walk_statement(ast.statement);
         */
-    }
-    else if (ast instanceof ThrowStatement)
-    {
+    } else if (ast instanceof ThrowStatement) {
         //print("ThrowStatement");
 
-        throw "unimplemented"; /////////////////////////////////////////
+        throw "throw statements are not implemented";
 
         //ast.expr = ctx.walk_expr(ast.expr);
-    }
-    else if (ast instanceof TryStatement)
-    {
+    } else if (ast instanceof TryStatement) {
         //print("TryStatement");
 
-        throw "unimplemented"; /////////////////////////////////////////
+        throw "try statements are not implemented";
 
         /*
         ast.statement = ctx.walk_statement(ast.statement);
         ast.catch_part = ctx.walk_statement(ast.catch_part);
         ast.finally_part = ctx.walk_statement(ast.finally_part);
         */
-    }
-    else if (ast instanceof CatchPart)
-    {
+    } else if (ast instanceof CatchPart) {
         //print("CatchPart");
 
         throw "unimplemented"; /////////////////////////////////////////
 
         //ast.statement = ctx.walk_statement(ast.statement);
-    }
-    else if (ast instanceof DebuggerStatement)
-    {
+    } else if (ast instanceof DebuggerStatement) {
         //print("DebuggerStatement");
 
-        throw "unimplemented"; /////////////////////////////////////////
-    }
-    else
+        throw "debugger statements are not implemented";
+    } else {
         throw "unknown ast";
+    }
 }
 
 function comp_statements(cte, ast, asts)
