@@ -10,6 +10,11 @@
     margin-left: 0; /* Somehow, Bootstrap uses a negative margin for rows that makes our contents extend too far to the left. */
 }
 
+#file-list {
+    left: auto;
+    right: 0; /* Display file list menu to the left of the button to avoid extending outside the page */
+}
+
 /* ----- Toolbars ----- */
 
 .btn-toolbar {
