@@ -249,6 +249,10 @@
             $("#repl").click(focusREPL);
 
             cp.handle_query();
+
+            // Stop navigation to '#'
+            $('body')
+                .on('click.codeplay', '[href="#"]', function (e) { e.preventDefault(); });
         });
 
         function checkBrowserFeatures() {
