@@ -163,15 +163,15 @@ cp.handle_query = function () {
         cp.replay_command_index = 0;
 
         setTimeout(function () { cp.replay(1); }, 100);
-    } else if (query && query.slice(0, 7) === "replay%25=") {
+    } else if (query && query.slice(0, 10) === "replay%25=") {
 
-        cp.replay_command = decodeURIComponent(query.slice(7));
+        cp.replay_command = decodeURIComponent(query.slice(10));
         cp.replay_command_index = 0;
 
         setTimeout(function () { cp.replay(2); }, 100);
-    } else if (query && query.slice(0, 7) === "replay%=") {
+    } else if (query && query.slice(0, 8) === "replay%=") {
 
-        cp.replay_command = query.slice(7);
+        cp.replay_command = query.slice(8);
         cp.replay_command_index = 0;
 
         setTimeout(function () { cp.replay(2); }, 100);
