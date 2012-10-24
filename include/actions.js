@@ -46,18 +46,17 @@ cp.addLineToTranscript = function (text, cssClass) {
 
     cp.transcript.replaceRange(text, { line: line, ch: 0 });
 
-    if (cssClass !== null)
+    if (cssClass !== null) {
         cp.transcript.markText({ line: line, ch: 0 }, { line: line+1, ch: 0 }, cssClass);
-};
-
-cp.addLineToConsole = function (line, cssClass) {
-
-    if (cp.currentConsoleLine) {
-        cp.currentConsoleLine = undefined;
-        $(cp.console).append("\n");
+        if (cssClass === "transcript-input") {
+            if (cp.transcript.lineInfo(line).gutterMarkers) {
+                // Oops, CodeMirror moved the gutter down instead of appending a blank line
+                // We'll set the gutter back on the previous line (ugly!)
+                line = line - 1;
+            }
+            cp.transcript.setGutterMarker(line, "cp-prompt", document.createTextNode(">"));
+        }
     }
-    if (!cssClass) cssClass = "console-output";
-    $(cp.console).append($("<span/>").addClass(cssClass).text(line), "\n");
 };
 
 function position_to_line_ch(pos) {
@@ -186,7 +185,7 @@ cp.replay = function () {
         if (command.charAt(j) === "@") {
             if (command.charAt(j+1) === "P") {
                 if (str !== "") {
-                    set_input(cp.repl, default_prompt + str);
+                    set_input(cp.repl, str);
                     cp.repl.refresh();
                     cp.repl.focus();
                 } else {
@@ -195,7 +194,7 @@ cp.replay = function () {
                 }
             } else if (command.charAt(j+1) === "S") {
                 if (str !== "") {
-                    set_input(cp.repl, default_prompt + str);
+                    set_input(cp.repl, str);
                     cp.repl.refresh();
                     cp.repl.focus();
                 } else {
@@ -204,7 +203,7 @@ cp.replay = function () {
                 }
             } else if (command.charAt(j+1) === "A") {
                 if (str !== "") {
-                    set_input(cp.repl, default_prompt + str);
+                    set_input(cp.repl, str);
                     cp.repl.refresh();
                     cp.repl.focus();
                 } else {
@@ -226,7 +225,7 @@ cp.replay = function () {
             }
         } else {
             if (str !== "") {
-                set_input(cp.repl, default_prompt + str);
+                set_input(cp.repl, str);
             }
         }
 
@@ -563,7 +562,7 @@ cp.execute2 = function (single_step) {
             } else {
                 var result = js_eval_result(rte);
                 if (result !== void 0) {
-                    cp.addLineToTranscript(printed_repr(result), null);
+                    cp.addLineToTranscript(printed_repr(result), "transcript-result");
                 }
             }
 
@@ -611,7 +610,7 @@ cp.run = function(single_step) {
     }
 
     cp.repl.cp.history.add(str);
-    cp.addLineToTranscript(str, null);
+    cp.addLineToTranscript(str, "transcript-input");
 
     var code_gen = function ()
                    {
@@ -623,14 +622,13 @@ cp.run = function(single_step) {
 
 cp.load = function(filename, single_step) {
 
-    var source = "load(\"" + filename + "\")";
-    var str = "> " + source;
+    var src = "load(\"" + filename + "\")";
 
     set_prompt(cp.repl, "");
     cp.repl.refresh();
 
     cp.repl.cp.history.add(str);
-    cp.addLineToTranscript(str, null);
+    cp.addLineToTranscript(str, "transcript-input");
 
     var code_gen = function ()
                    {

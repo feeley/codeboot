@@ -165,6 +165,15 @@ div.tab-pane {
 
 /* ----- REPL ----- */
 
+.cp-prompt {
+    /* CodeMirror gutter class for the prompt */
+    width: 1em;
+}
+
+.CodeMirror-gutters {
+    border-right: 0;
+}
+
 #repl CodeMirror {
   height: 1.5em;
 }

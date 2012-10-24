@@ -128,6 +128,7 @@ function createTranscript(node) {
         indentUnit: 4,         // Indent by 4 spaces
         lineNumbers:  false,   // Show line numbers
         matchBrackets: true,
+        gutters: ["CodeMirror-linenumbers", "cp-prompt"],
         readOnly: "nocursor",
         lineWrapping: true
     };
@@ -138,9 +139,9 @@ function createTranscript(node) {
 var default_prompt = "> ";
 
 var set_prompt = function (cm, prompt) {
-    if (prompt === void 0)
-        prompt = default_prompt;
-    set_input(cm, prompt);
+//    if (prompt === void 0)
+//        prompt = default_prompt;
+    set_input(cm, "");
 };
 
 var set_input = function (cm, str) {
@@ -155,6 +156,7 @@ function createREPL(node) {
         indentUnit: 4,         // Indent by 4 spaces
         lineNumbers:  false,   // Show line numbers
         matchBrackets: true,
+        gutters: ["CodeMirror-linenumbers", "cp-prompt"],
         extraKeys: {
             "Ctrl-C": function (cm) { cp.clearREPL(); cm.cp.history.resetPos(); },
             "Ctrl-L": function (cm) { cp.clearAll(); cm.cp.history.resetPos(); },
@@ -172,12 +174,6 @@ function createREPL(node) {
             "Ctrl-\\": function (cm) { Mousetrap.trigger("ctrl+\\"); }
         },
         onKeyEvent: function (cm, event) {
-            if (event.keyCode == 8 && cm.getValue() === "> ") {
-                // Backspace
-                event.stopPropagation();
-                event.preventDefault();
-                return true;
-            }
             if (cm.busy) {
                 event.stopPropagation();
                 event.preventDefault();
@@ -191,5 +187,6 @@ function createREPL(node) {
     editor.busy = false;
     editor.focus();
     set_prompt(editor);
+    editor.setGutterMarker(0, "cp-prompt", document.createTextNode(">"));
     return editor;
 }
