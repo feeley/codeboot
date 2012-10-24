@@ -105,8 +105,9 @@ function js_compile(source, options)
 {
     var error = function (loc, kind, msg)
     {
-        if (kind !== "warning")
+        if (kind !== "warning") {
             print(loc.toString() + ": " + kind + " -- " + msg);
+        }
     };
 
     var opts = {

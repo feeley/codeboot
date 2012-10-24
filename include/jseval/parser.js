@@ -247,7 +247,6 @@ Parser.prototype.parse = function ()
             }
             else if (op === this.error_op)
             {
-print(autosemicolon_inserted);
                 if (this.token_cat(this.input) === this.eoi_cat)
                     this.syntax_error(this.input.loc,
                                       "unexpected end of input");

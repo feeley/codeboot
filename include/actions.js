@@ -766,7 +766,15 @@ cp.compile = function (source, container) {
                       });
 };
 
+var warnSemicolon = false;
+
 cp.syntax_error = function (loc, kind, msg) {
+
+    if (warnSemicolon && msg === "';' missing after this token") {
+        cp.show_error(loc);
+        cp.addLineToTranscript(kind + " -- " + msg, "error-message");
+        return;
+    }
 
     if (kind !== "warning") {
         cp.show_error(loc);
