@@ -161,24 +161,27 @@ cp.handle_query = function () {
 
         cp.replay_command = query.slice(7);
         cp.replay_command_index = 0;
+        cp.replay_syntax = 1;
 
-        setTimeout(function () { cp.replay(1); }, 100);
+        setTimeout(function () { cp.replay(); }, 100);
     } else if (query && query.slice(0, 10) === "replay%25=") {
 
         cp.replay_command = decodeURIComponent(query.slice(10));
         cp.replay_command_index = 0;
+        cp.replay_syntax = 2;
 
-        setTimeout(function () { cp.replay(2); }, 100);
+        setTimeout(function () { cp.replay(); }, 100);
     } else if (query && query.slice(0, 8) === "replay%=") {
 
         cp.replay_command = query.slice(8);
         cp.replay_command_index = 0;
+        cp.replay_syntax = 2;
 
-        setTimeout(function () { cp.replay(2); }, 100);
+        setTimeout(function () { cp.replay(); }, 100);
     }
 };
 
-cp.replay = function (syntax_version) {
+cp.replay = function () {
 
     var command = cp.replay_command;
     var i = cp.replay_command_index;
@@ -188,7 +191,7 @@ cp.replay = function (syntax_version) {
         while (j < command.length &&
                (command.charAt(j) !== "@" ||
                 (command.charAt(j+1) === "@" ||
-                 (syntax_version === 2 && command.charAt(j+1) === "N")))) {
+                 (cp.replay_syntax === 2 && command.charAt(j+1) === "N")))) {
             if (command.charAt(j) === "@") {
                 j += 2;
             } else {
@@ -198,7 +201,7 @@ cp.replay = function (syntax_version) {
 
         var str;
 
-        if (syntax_version === 2) {
+        if (cp.replay_syntax === 2) {
             str = command.slice(i, j).replace(/@N/g,"\n").replace(/@@/g,"@");
         } else {
             str = command.slice(i, j).replace(/@@/g,"\n");
