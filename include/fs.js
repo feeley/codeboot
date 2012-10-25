@@ -354,10 +354,6 @@ cp.makeEditorToolbar = function (file) {
     var controller = $toolbar.get(0);
     $toolbar.attr('data-cp-exec', 'controller');
 
-    var $stepCounterGroup = makeTBGroup();
-    $stepCounterGroup.append($('<span class="badge badge-info exec-lbl-count hide"/>'));
-    $stepCounterGroup.appendTo($toolbar);
-
     var $execControlsGroup = makeTBGroup();
     $execControlsGroup.appendTo($toolbar);
 

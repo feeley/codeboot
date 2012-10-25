@@ -67,7 +67,7 @@ CPTranscript.prototype.hide = function () {
     $("#transcript-sep").hide();
 };
 
-CPTranscript.prototype._addTextLine = function (text, cssClass) {
+CPTranscript.prototype.addTextLine = function (text, cssClass) {
     var editor = this.editor;
     text = removeTrailingNewline(text);
     // CodeMirror needs to be visible to the updates to the gutter to work...
@@ -93,7 +93,7 @@ CPTranscript.prototype._addTextLine = function (text, cssClass) {
     this.is_empty = false;
 };
 
-CPTranscript.prototype._addLineWidget = function (textOrNode, cssClass) {    
+CPTranscript.prototype.addLineWidget = function (textOrNode, cssClass) {    
     // CodeMirror needs to be visible to the updates to the gutter to work...
     if (this.is_empty) this.show();
     
@@ -109,22 +109,18 @@ CPTranscript.prototype._addLineWidget = function (textOrNode, cssClass) {
     }
     var w = this.editor.addLineWidget(this.editor.lineCount() - 1, widget);
     this.widgets.push(w);
+    
+    cp.scrollToEnd(this.editor);
 };
 
 CPTranscript.prototype.addLine = function (text, cssClass) {
     var line;
 
     if (cssClass === "transcript-input") {
-        this._addTextLine(text, cssClass);
+        this.addTextLine(text, cssClass);
     } else {
-        this._addLineWidget(text, cssClass);
+        this.addLineWidget(text, cssClass);
     }
-
-    cp.scrollToEnd(this.editor);
-};
-
-cp.addLineToTranscript = function (text, cssClass) {
-    return cp.transcript.addLine(text, cssClass); // TODO: transition only, remove
 };
 
 function position_to_line_ch(pos) {
@@ -314,6 +310,7 @@ var program_state = {
     step_delay: 0,
     mode: 'stopped',
     controller: null,
+    step_counter: null
 };
 
 function setControllerState(controller, enabled) {
@@ -378,7 +375,15 @@ cp.enterMode = function (newMode) {
 	$(".exec-icon-stepMode", control).toggle(newMode !== 'stepping');
 
     // Step counter
-    $(".exec-lbl-count", control).toggle(newMode !== 'stopped');
+    if (newMode === 'animating' || newMode === 'stepping') {
+        if (program_state.step_counter === null) {
+            program_state.step_counter = $('<span class="badge badge-info exec-lbl-count"/>');
+            program_state.step_counter.text("Step " + program_state.rte.step_count);
+            cp.transcript.addLineWidget(program_state.step_counter.get(0));
+        }
+    } else if (newMode === 'stopped' && program_state.step_counter != null) {
+        program_state.step_counter = null;
+    }
 
 	program_state.mode = newMode;
 };
@@ -600,7 +605,9 @@ cp.execute2 = function (single_step) {
             return;
         }
 
-        $(".exec-lbl-count", program_state.controller).text("Step " + rte.step_count);
+        if (program_state.step_counter !== null) {
+            program_state.step_counter.text("Step " + rte.step_count);
+        }
 
         if (program_state.mode === 'stepping') {
             single_step = true;
@@ -648,10 +655,11 @@ cp.run = function(single_step) {
     cp.repl.refresh();
 
     var line;
-    if (!cp.is_empty)
-        line = cp.transcript.editor.lineCount();
-    else
+    if (cp.transcript.is_empty) {
         line = 0;
+    } else {
+        line = cp.transcript.editor.lineCount();
+    }
 
     var ch = 0;
 

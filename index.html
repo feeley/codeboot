@@ -106,10 +106,6 @@
       <div id="console-row" class="row">
         <div id="repl-controls" class="btn-toolbar pull-right" data-cp-exec="controller">
           <div class="btn-group">
-            <span class="badge badge-info exec-lbl-count hide">0</span>
-          </div>
-
-          <div class="btn-group">
             <button id="step-button" title="Step" class="btn" onclick="if (cp.setController('repl-controls')) cp.animate(0);"><i class="icon-play"></i><img id="step-mode-icon" src="icons/exp_pause.png"><img id="single-step-icon" class="hide" src="icons/exp_1.png"></button>
             <button id="play-button" title="Execute" class="btn" onclick="if (cp.setController('repl-controls')) cp.play();"><i class="icon-play"></i><img src="icons/exp_inf.png"></button>
             <button id="animate-button" title="Animate" class="btn" onclick="if (cp.setController('repl-controls')) cp.animate(cp.stepDelay);"><i class="icon-play"></i></button>
