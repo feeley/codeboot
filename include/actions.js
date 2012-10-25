@@ -27,36 +27,53 @@ cp.reportWarning = function (text, title) {
     cp.addAlert(text, title);
 };
 
+cp.scrollToEnd = function (editor) {
+    var info = cp.transcript.getScrollInfo();
+    editor.scrollTo(null, info.height - info.clientHeight);
+};
+
 cp.addLineToTranscript = function (text, cssClass) {
     var line;
+    var editor = cp.transcript;
 
     text = String(text);
     if (text.charAt(text.length - 1) === "\n")
         text = text.slice(0,text.length-1);
 
-    if (cp.non_empty) {
-        line = cp.transcript.lineCount();
-        text = "\n" + text;
-    } else {
-        line = 0;
+    if (!cp.non_empty) {
+        // CodeMirror needs to be visible to the updates to the gutter to work...
         $("#transcript").show();
         $("#transcript-sep").show();
-        cp.non_empty = true;
     }
 
-    cp.transcript.replaceRange(text, { line: line, ch: 0 });
-
-    if (cssClass !== null) {
-        cp.transcript.markText({ line: line, ch: 0 }, { line: line+1, ch: 0 }, cssClass);
-        if (cssClass === "transcript-input") {
-            if (cp.transcript.lineInfo(line).gutterMarkers) {
-                // Oops, CodeMirror moved the gutter down instead of appending a blank line
-                // We'll set the gutter back on the previous line (ugly!)
-                line = line - 1;
-            }
-            cp.transcript.setGutterMarker(line, "cp-prompt", document.createTextNode(">"));
+    if (cssClass === "transcript-input") {
+        var line;
+        if (cp.non_empty) {
+            text = "\n" + text;
+            line = editor.lineCount();
+        } else {
+            line = 0;
         }
+
+        editor.replaceRange(text, { line: line, ch: 0 });
+        editor.markText({ line: line, ch: 0 }, { line: line+1, ch: 0 }, cssClass);
+
+        if (editor.lineInfo(line).gutterMarkers) {
+            // Oops, CodeMirror moved the gutter down instead of appending a blank line
+            // We'll set the gutter back on the previous line (ugly!)
+            line -= 1;
+        }
+        editor.setGutterMarker(line, "cp-prompt", document.createTextNode(">"));
+        cp.non_empty = true;
+    } else {
+        // Use a line widget instead
+        var $widget = $("<div/>");
+        if (cssClass !== null) $widget.addClass(cssClass);
+        $widget.text(text);
+        editor.addLineWidget(editor.lineCount() - 1, $widget.get(0));
     }
+
+    cp.scrollToEnd(editor);
 };
 
 function position_to_line_ch(pos) {
