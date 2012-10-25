@@ -727,8 +727,8 @@ cp.load = function(filename, single_step) {
     set_prompt(cp.repl, "");
     cp.repl.refresh();
 
-    cp.repl.cp.history.add(str);
-    cp.transcript.addLine(str, "transcript-input");
+    cp.repl.cp.history.add(src);
+    cp.transcript.addLine(src, "transcript-input");
 
     var code_gen = function ()
                    {
