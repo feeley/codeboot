@@ -28,52 +28,103 @@ cp.reportWarning = function (text, title) {
 };
 
 cp.scrollToEnd = function (editor) {
-    var info = cp.transcript.getScrollInfo();
+    var info = editor.getScrollInfo();
     editor.scrollTo(null, info.height - info.clientHeight);
 };
 
-cp.addLineToTranscript = function (text, cssClass) {
-    var line;
-    var editor = cp.transcript;
-
-    text = String(text);
-    if (text.charAt(text.length - 1) === "\n")
-        text = text.slice(0,text.length-1);
-
-    if (!cp.non_empty) {
-        // CodeMirror needs to be visible to the updates to the gutter to work...
-        $("#transcript").show();
-        $("#transcript-sep").show();
+function removeTrailingNewline(text) {
+    var s = String(text);
+    if (s.charAt(text.length - 1) === "\n") {
+        s = s.slice(0, s.length-1);
     }
+    return s;
+}
+
+function CPTranscript(editor) {
+    this.editor = editor;
+    this.is_empty = true;
+    
+    this.widgets = [];
+}
+
+CPTranscript.prototype.clear = function () {
+    for (var i = 0; i < this.widgets.length; i++) {
+        this.editor.removeLineWidget(this.widgets[i]);
+    }
+    this.editor.setValue("");
+    this.editor.refresh();
+    this.is_empty = true;
+    this.hide();
+};
+
+CPTranscript.prototype.show = function () {
+    $("#transcript").show();
+    $("#transcript-sep").show();
+};
+
+CPTranscript.prototype.hide = function () {
+    $("#transcript").hide();
+    $("#transcript-sep").hide();
+};
+
+CPTranscript.prototype._addTextLine = function (text, cssClass) {
+    var editor = this.editor;
+    text = removeTrailingNewline(text);
+    // CodeMirror needs to be visible to the updates to the gutter to work...
+    if (this.is_empty) this.show();
+    
+    var line;
+    if (this.is_empty) {
+        line = 0;
+    } else {
+        text = "\n" + text;
+        line = editor.lineCount();
+    }
+
+    editor.replaceRange(text, { line: line, ch: 0 });
+    editor.markText({ line: line, ch: 0 }, { line: line+1, ch: 0 }, cssClass);
+
+    if (editor.lineInfo(line).gutterMarkers) {
+        // Oops, CodeMirror moved the gutter down instead of appending a blank line
+        // We'll set the gutter back on the previous line (ugly!)
+        line -= 1;
+    }
+    editor.setGutterMarker(line, "cp-prompt", document.createTextNode(">"));
+    this.is_empty = false;
+};
+
+CPTranscript.prototype._addLineWidget = function (textOrNode, cssClass) {    
+    // CodeMirror needs to be visible to the updates to the gutter to work...
+    if (this.is_empty) this.show();
+    
+    var widget;
+    if (typeof textOrNode === "string") {
+        var text = removeTrailingNewline(textOrNode);
+        var $widget = $("<div/>");
+        if (cssClass) $widget.addClass(cssClass);
+        $widget.text(text);
+        widget = $widget.get(0);
+    } else {
+        widget = textOrNode;
+    }
+    var w = this.editor.addLineWidget(this.editor.lineCount() - 1, widget);
+    this.widgets.push(w);
+};
+
+CPTranscript.prototype.addLine = function (text, cssClass) {
+    var line;
 
     if (cssClass === "transcript-input") {
-        var line;
-        if (cp.non_empty) {
-            text = "\n" + text;
-            line = editor.lineCount();
-        } else {
-            line = 0;
-        }
-
-        editor.replaceRange(text, { line: line, ch: 0 });
-        editor.markText({ line: line, ch: 0 }, { line: line+1, ch: 0 }, cssClass);
-
-        if (editor.lineInfo(line).gutterMarkers) {
-            // Oops, CodeMirror moved the gutter down instead of appending a blank line
-            // We'll set the gutter back on the previous line (ugly!)
-            line -= 1;
-        }
-        editor.setGutterMarker(line, "cp-prompt", document.createTextNode(">"));
-        cp.non_empty = true;
+        this._addTextLine(text, cssClass);
     } else {
-        // Use a line widget instead
-        var $widget = $("<div/>");
-        if (cssClass !== null) $widget.addClass(cssClass);
-        $widget.text(text);
-        editor.addLineWidget(editor.lineCount() - 1, $widget.get(0));
+        this._addLineWidget(text, cssClass);
     }
 
-    cp.scrollToEnd(editor);
+    cp.scrollToEnd(this.editor);
+};
+
+cp.addLineToTranscript = function (text, cssClass) {
+    return cp.transcript.addLine(text, cssClass); // TODO: transition only, remove
 };
 
 function position_to_line_ch(pos) {
@@ -99,7 +150,7 @@ function code_highlight(loc, cssClass) {
         cp.openFile(filename);
         editor = cp.fs.getEditor(filename);
     } else if (container instanceof SourceContainer) {
-        editor = cp.transcript;
+        editor = cp.transcript.editor;
     } else {
         // unknown source container
         return null;
@@ -544,7 +595,7 @@ cp.execute2 = function (single_step) {
         }
         catch (e) {
             if (e !== false)
-                cp.addLineToTranscript(String(e), "error-message");
+                cp.transcript.addLine(String(e), "error-message");
             cp.cancel();
             return;
         }
@@ -575,11 +626,11 @@ cp.execute2 = function (single_step) {
 
             if (rte.error !== null) {
                 cp.show_error(program_state.rte.ast.loc);
-                cp.addLineToTranscript(rte.error, "error-message");
+                cp.transcript.addLine(rte.error, "error-message");
             } else {
                 var result = js_eval_result(rte);
                 if (result !== void 0) {
-                    cp.addLineToTranscript(printed_repr(result), "transcript-result");
+                    cp.transcript.addLine(printed_repr(result), "transcript-result");
                 }
             }
 
@@ -597,8 +648,8 @@ cp.run = function(single_step) {
     cp.repl.refresh();
 
     var line;
-    if (cp.non_empty !== void 0)
-        line = cp.transcript.lineCount();
+    if (!cp.is_empty)
+        line = cp.transcript.editor.lineCount();
     else
         line = 0;
 
@@ -627,7 +678,7 @@ cp.run = function(single_step) {
     }
 
     cp.repl.cp.history.add(str);
-    cp.addLineToTranscript(str, "transcript-input");
+    cp.transcript.addLine(str, "transcript-input");
 
     var code_gen = function ()
                    {
@@ -645,7 +696,7 @@ cp.load = function(filename, single_step) {
     cp.repl.refresh();
 
     cp.repl.cp.history.add(str);
-    cp.addLineToTranscript(str, "transcript-input");
+    cp.transcript.addLine(str, "transcript-input");
 
     var code_gen = function ()
                    {
@@ -667,7 +718,7 @@ cp.run_setup_and_execute = function (code_gen, single_step) {
     }
     catch (e) {
         if (e !== false)
-            cp.addLineToTranscript(String(e), "error-message");
+            cp.transcript.addLine(String(e), "error-message");
         cp.cancel();
         return;
     }
@@ -761,7 +812,7 @@ cp.syntax_error = function (loc, kind, msg) {
 
     if (kind !== "warning") {
         cp.show_error(loc);
-        cp.addLineToTranscript(kind + " -- " + msg, "error-message");
+        cp.transcript.addLine(kind + " -- " + msg, "error-message");
         throw false;
     }
 };
@@ -772,18 +823,10 @@ cp.clearREPL = function () {
     cp.repl.focus();
 };
 
-cp.clearTranscript = function () {
-    cp.transcript.setValue("");
-    cp.transcript.refresh();
-    cp.non_empty = false;
-    $("#transcript").hide();
-    $("#transcript-sep").hide();
-};
-
 cp.clearAll = function () {
     cp.cancel();
     cp.clearREPL();
-    cp.clearTranscript();
+    cp.transcript.clear();
 }
 
 cp.undo = function (cm) {

@@ -1,5 +1,5 @@
 function print() {
-    cp.addLineToTranscript(Array.prototype.slice.call(arguments).join(""), "transcript-output");
+    cp.transcript.addLine(Array.prototype.slice.call(arguments).join(""), "transcript-output");
 }
 
 print.toString = function () {
@@ -7,7 +7,7 @@ print.toString = function () {
 };
 
 function println() {
-    cp.addLineToTranscript(Array.prototype.slice.call(arguments).join(""), "transcript-output");
+    cp.transcript.addLine(Array.prototype.slice.call(arguments).join(""), "transcript-output");
 }
 
 println.toString = function () {

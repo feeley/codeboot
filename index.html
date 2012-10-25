@@ -237,7 +237,7 @@
 
             cp.alerts = document.getElementById("alerts");
             cp.repl   = createREPL(document.getElementById("repl"));
-            cp.transcript = createTranscript(document.getElementById("transcript"));
+            cp.transcript = new CPTranscript(createTranscript(document.getElementById("transcript")));
             cp.console = document.getElementById("console");
             cp.devMode = false;
 
