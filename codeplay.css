@@ -245,3 +245,7 @@ div.tab-pane {
   font-family: times;
   font-style: italic;
 }
+
+.exec-lbl-count {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
