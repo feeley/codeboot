@@ -161,6 +161,21 @@ cp.handle_query = function () {
 
         cp.replay_command = query.slice(7);
         cp.replay_command_index = 0;
+        cp.replay_syntax = 1;
+
+        setTimeout(function () { cp.replay(); }, 100);
+    } else if (query && query.slice(0, 10) === "replay%25=") {
+
+        cp.replay_command = decodeURIComponent(query.slice(10));
+        cp.replay_command_index = 0;
+        cp.replay_syntax = 2;
+
+        setTimeout(function () { cp.replay(); }, 100);
+    } else if (query && query.slice(0, 8) === "replay%=") {
+
+        cp.replay_command = query.slice(8);
+        cp.replay_command_index = 0;
+        cp.replay_syntax = 2;
 
         setTimeout(function () { cp.replay(); }, 100);
     }
@@ -175,14 +190,23 @@ cp.replay = function () {
         var j = i;
         while (j < command.length &&
                (command.charAt(j) !== "@" ||
-                command.charAt(j+1) === "@")) {
+                (command.charAt(j+1) === "@" ||
+                 (cp.replay_syntax === 2 && command.charAt(j+1) === "N")))) {
             if (command.charAt(j) === "@") {
                 j += 2;
             } else {
                 j += 1;
             }
         }
-        var str = command.slice(i, j).replace(/@@/g,"\n");
+
+        var str;
+
+        if (cp.replay_syntax === 2) {
+            str = command.slice(i, j).replace(/@N/g,"\n").replace(/@@/g,"@");
+        } else {
+            str = command.slice(i, j).replace(/@@/g,"\n");
+        }
+
         if (command.charAt(j) === "@") {
             if (command.charAt(j+1) === "P") {
                 if (str !== "") {
@@ -742,7 +766,15 @@ cp.compile = function (source, container) {
                       });
 };
 
+var warnSemicolon = false;
+
 cp.syntax_error = function (loc, kind, msg) {
+
+    if (warnSemicolon && msg === "';' missing after this token") {
+        cp.show_error(loc);
+        cp.addLineToTranscript(kind + " -- " + msg, "error-message");
+        return;
+    }
 
     if (kind !== "warning") {
         cp.show_error(loc);
