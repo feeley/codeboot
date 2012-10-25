@@ -60,7 +60,7 @@
     <div id="navbar" class="navbar navbar-fixed-top navbar-inverse">
       <div class="navbar-inner">
         <div class="container">
-          <a class="brand" href="#">codePlay v0.8.1<span id="devModeTitle"></span></a>
+          <a class="brand" href="#">codePlay v0.8.2<span id="devModeTitle"></span></a>
 
           <ul class="nav">
             <li><a href="#" onclick="cp_tutorial();">Help</a></li>
@@ -106,11 +106,11 @@
       <div id="console-row" class="row">
         <div id="repl-controls" class="btn-toolbar pull-right" data-cp-exec="controller">
           <div class="btn-group">
-            <button id="step-button" title="Step" class="btn" onclick="if (cp.setController('repl-controls')) cp.animate(0);"><i class="icon-play"></i><img id="step-mode-icon" src="icons/exp_pause.png"><img id="single-step-icon" class="hide" src="icons/exp_1.png"></button>
+            <button id="step-button" title="Step" class="btn exec-btn-step" onclick="if (cp.setController('repl-controls')) cp.animate(0);"><i class="icon-play"></i><img id="step-mode-icon" class="exec-icon-stepMode" src="icons/exp_pause.png"><img id="single-step-icon" class="exec-icon-singleStep hide" src="icons/exp_1.png"></button>
             <button id="play-button" title="Execute" class="btn" onclick="if (cp.setController('repl-controls')) cp.play();"><i class="icon-play"></i><img src="icons/exp_inf.png"></button>
             <button id="animate-button" title="Animate" class="btn" onclick="if (cp.setController('repl-controls')) cp.animate(cp.stepDelay);"><i class="icon-play"></i></button>
-            <button id="pause-button" title="Pause" class="btn disabled" onclick="if (cp.setController('repl-controls')) cp.animate(0);"><i class="icon-pause"></i></button>
-            <button id="cancel-button" title="Stop" class="btn disabled" onclick="if (cp.setController('repl-controls')) cp.cancel();"><i class="icon-stop"></i></button>
+            <button id="pause-button" title="Pause" class="btn exec-btn-pause disabled" onclick="if (cp.setController('repl-controls')) cp.animate(0);"><i class="icon-pause"></i></button>
+            <button id="cancel-button" title="Stop" class="btn exec-btn-cancel disabled" onclick="if (cp.setController('repl-controls')) cp.cancel();"><i class="icon-stop"></i></button>
           </div>        
         </div>
 
