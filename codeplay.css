@@ -163,6 +163,10 @@ div.tab-pane {
     border-bottom: 1px solid #c5c5c5;
 }
 
+#transcript .CodeMirror-linewidget {
+    padding: 0 4px;
+}
+
 /* ----- REPL ----- */
 
 .cp-prompt {
