@@ -169,6 +169,10 @@ div.tab-pane {
 
 /* ----- REPL ----- */
 
+#repl.busy .CodeMirror-cursor {
+    display: none !important;
+}
+
 .cp-prompt {
     /* CodeMirror gutter class for the prompt */
     width: 1em;

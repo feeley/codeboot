@@ -403,9 +403,16 @@ cp.enterMode = function (newMode) {
         if (program_state.step_counter === null) {
             program_state.step_counter = $('<span class="badge badge-info exec-lbl-count"/>');
             program_state.step_counter.text("Step " + program_state.rte.step_count);
-            cp.transcript.addLineWidget(program_state.step_counter.get(0));
+            cp.repl.addWidget({line: 0, ch: 0}, program_state.step_counter.get(0), false);
         }
     } else if (newMode === 'stopped' && program_state.step_counter != null) {
+        // Clone the widget rather than attempt to reset its positioning for now
+        // TODO: move the widget rather the clone it
+        var $newWidget = $('<span class="badge badge-info exec-lbl-count"/>');
+        $oldWidget = $(program_state.step_counter);
+        $newWidget.text($oldWidget.text());
+        $oldWidget.remove();
+        cp.transcript.addLineWidget($newWidget.get(0));
         program_state.step_counter = null;
     }
 

@@ -141,8 +141,10 @@ var default_prompt = ">";
 var set_prompt = function (cm, prompt) {
    if (prompt === void 0) {
        cm.setGutterMarker(0, "cp-prompt", document.createTextNode(default_prompt));
+       $("#repl").removeClass("busy");
    } else {
        cm.setGutterMarker(0, "cp-prompt", null);
+       $("#repl").addClass("busy");
    }
 
    set_input(cm, "");
