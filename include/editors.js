@@ -136,12 +136,16 @@ function createTranscript(node) {
     return editor;
 }
 
-var default_prompt = "> ";
+var default_prompt = ">";
 
 var set_prompt = function (cm, prompt) {
-//    if (prompt === void 0)
-//        prompt = default_prompt;
-    set_input(cm, "");
+   if (prompt === void 0) {
+       cm.setGutterMarker(0, "cp-prompt", document.createTextNode(default_prompt));
+   } else {
+       cm.setGutterMarker(0, "cp-prompt", null);
+   }
+
+   set_input(cm, "");
 };
 
 var set_input = function (cm, str) {
