@@ -11,7 +11,7 @@ function makeMenuSeparator() {
     return $('<li class="divider"></li>');
 }
 
-function scrollTo(elementOrSelector) {
+cp.scrollTo = function (elementOrSelector) {
     var elementOffset = $(elementOrSelector).offset().top - NAVBAR_HEIGHT - EDITOR_SPACING;
     $("body").animate({scrollTop: elementOffset}, 400);
 }
@@ -315,7 +315,7 @@ cp.getContainerFor = function (fileOrFilename) {
 cp.openFile = function (filename) {
     var container = cp.getContainerFor(filename);
     if (container) {
-        scrollTo(container);
+        cp.scrollTo(container);
     } else {
         cp.newTab(filename);
     }
@@ -543,7 +543,7 @@ cp.newTab = function (fileOrFilename) {
 
 	var editor = createFileEditor($pre.get(0), file);
 
-	scrollTo($row);
+	cp.scrollTo($row);
 
     // Make editor resizable
     $(".CodeMirror", $row).resizable({
