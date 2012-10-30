@@ -891,7 +891,7 @@ cp.syntax_error = function (loc, kind, msg) {
 
     if (warnSemicolon && msg === "';' missing after this token") {
         cp.show_error(loc);
-        cp.addLineToTranscript(kind + " -- " + msg, "error-message");
+        cp.transcript.addLine(kind + " -- " + msg, "error-message");
         throw false;
     }
 
