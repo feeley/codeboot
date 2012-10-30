@@ -890,6 +890,7 @@ var warnSemicolon = true;
 cp.syntax_error = function (loc, kind, msg) {
 
     if (warnSemicolon && msg === "';' missing after this token") {
+        kind = "syntax error";
         cp.show_error(loc);
         cp.transcript.addLine(kind + " -- " + msg, "error-message");
         throw false;
