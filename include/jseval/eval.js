@@ -6,59 +6,63 @@
 
 //=============================================================================
 
-function js_run(code)
-{
+function js_eval(source, options) {
+
+    var code = js_compile(source, options);
+
+    return js_run(code);
+}
+
+function js_run(code) {
+
     var rte = js_run_setup(code);
 
     return js_eval_exec(rte);
 }
 
-function js_run_setup(code)
-{
+function js_run_setup(code) {
+
     var rte = new_global_rte();
 
-    rte.resume = function (rte)
-                 {
-                     return code(rte,
-                                 function (rte, result)
-                                 {
-                                     rte.result = result;
-                                     rte.resume = null;
-                                     return null; // exit trampoline
-                                 });
-                 };
+    rte.resume = function (rte) {
+        return code(rte,
+                    function (rte, result) {
+                        rte.result = result;
+                        rte.resume = null;
+                        return null; // exit trampoline
+                    });
+    };
 
     return rte;
 }
 
-function js_eval_exec(rte)
-{
-    while (!js_eval_finished(rte))
-        js_eval_step(rte);
+function js_eval_exec(rte) {
 
-    if (rte.error !== null)
+    while (!js_eval_finished(rte)) {
+        js_eval_step(rte);
+    }
+
+    if (rte.error !== null) {
         throw rte.ast.loc.toString() + ": " + rte.error;
+    }
 
     return js_eval_result(rte);
 }
 
-function js_eval_finished(rte)
-{
+function js_eval_finished(rte) {
     return rte.resume === null;
 }
 
-function js_eval_result(rte)
-{
+function js_eval_result(rte) {
     return rte.result;
 }
 
-function js_eval_error(rte)
-{
+function js_eval_error(rte) {
     return rte.error;
 }
 
-function js_eval_step(rte, nb_steps)
-{
+function js_eval_step(rte, nb_steps) {
+
     if (nb_steps === void 0)
         nb_steps = 999999999999;
 
@@ -68,43 +72,41 @@ function js_eval_step(rte, nb_steps)
 
     // trampoline
 
-    while (resume !== null)
-    {
+    while (resume !== null) {
         resume = resume(rte);
     }
 }
 
-function SourceContainerInternalFile(source, tostr, start_line, start_column, stamp)
-{
+function SourceContainerInternalFile(source, tostr, start_line, start_column, stamp) {
+
     this.source = source;
     this.tostr = tostr;
     this.start_line = start_line;
     this.start_column = start_column;
     this.stamp = stamp;
+
 }
 
-SourceContainerInternalFile.prototype.toString = function ()
-{
+SourceContainerInternalFile.prototype.toString = function () {
     return this.tostr;
 };
 
-function SourceContainer(source, tostr, start_line, start_column)
-{
+function SourceContainer(source, tostr, start_line, start_column) {
+
     this.source = source;
     this.tostr = tostr;
     this.start_line = start_line;
     this.start_column = start_column;
+
 }
 
-SourceContainer.prototype.toString = function ()
-{
+SourceContainer.prototype.toString = function () {
     return this.tostr;
 };
 
-function js_compile(source, options)
-{
-    var error = function (loc, kind, msg)
-    {
+function js_compile(source, options) {
+
+    var error = function (loc, kind, msg) {
         if (kind !== "warning") {
             print(loc.toString() + ": " + kind + " -- " + msg);
         }
@@ -155,18 +157,19 @@ function js_compile(source, options)
     return comp_statement(cte, ast_normalize(ast, options));
 }
 
-function new_global_cte(options)
-{
+function new_global_cte(options) {
+
     return new CTE(null,
                    {},
                    {},
                    null,
                    null,
                    options);
+
 }
 
-function new_global_rte()
-{
+function new_global_rte() {
+
     var global_obj = (function () { return this; })();
 
     return new RTE(global_obj,
@@ -176,22 +179,24 @@ function new_global_rte()
                                [],
                                [],
                                null,
-                               [],
+                               null,
                                null));
+
 }
 
-function CTE(callee, params, locals, labels, parent, options)
-{
+function CTE(callee, params, locals, label_stack, parent, options) {
+
     this.callee = callee;
     this.params = params;
     this.locals = locals;
-    this.labels = labels;
+    this.label_stack = label_stack;
     this.parent = parent;
     this.options = options;
+
 }
 
-function RTE(glo, stack, frame)
-{
+function RTE(glo, stack, frame) {
+
     this.glo = glo;
     this.stack = stack;
     this.frame = frame;
@@ -201,10 +206,11 @@ function RTE(glo, stack, frame)
     this.ast = null;
     this.result = null;
     this.error = null;
+
 }
 
-function RTFrame(this_, callee, params, locals, parent, ctrl_stack, cte)
-{
+function RTFrame(this_, callee, params, locals, parent, ctrl_stack, cte) {
+
     this.this_ = this_;
     this.callee = callee;
     this.params = params;
@@ -212,6 +218,7 @@ function RTFrame(this_, callee, params, locals, parent, ctrl_stack, cte)
     this.parent = parent;
     this.ctrl_stack = ctrl_stack;
     this.cte = cte;
+
 }
 
 function comp_statement(cte, ast) {
@@ -227,13 +234,19 @@ function comp_statement(cte, ast) {
 
     } else if (ast instanceof FunctionDeclaration) {
 
-        throw "function declarations are not implemented";
+        // TODO: this does not quite respect the semantics
 
-        ///ast.funct = ctx.walk_expr(ast.funct);
+        var id_str = ast.id.toString();
+        var access = cte_access(cte, id_str);
+        var code_value = comp_expr(cte, ast.funct);
+
+        return gen_op2_assign(ast, sem_var_x_equal_y, access, code_value);
 
     } else if (ast instanceof BlockStatement) {
 
-        return comp_statements(cte, ast, ast.statements);
+        var code = comp_statements(cte, ast, ast.statements);
+
+        return gen_break_handler(cte, ast, code);
 
     } else if (ast instanceof VariableStatement) {
 
@@ -261,7 +274,7 @@ function comp_statement(cte, ast) {
 
         if (ast.statements.length === 1) {
 
-            return function (rte, cont) {
+            var code = function (rte, cont) {
 
                 var subcont1 = function (rte, value1) {
                     if (value1) {
@@ -273,11 +286,14 @@ function comp_statement(cte, ast) {
 
                 return code_expr(rte, subcont1);
             };
+
+            return gen_break_handler(cte, ast, code);
+            
         } else {
 
             var code_stat1 = comp_statement(cte, ast.statements[1]);
 
-            return function (rte, cont) {
+            var code = function (rte, cont) {
 
                 var subcont1 = function (rte, value1) {
                     if (value1) {
@@ -289,118 +305,116 @@ function comp_statement(cte, ast) {
 
                 return code_expr(rte, subcont1);
             };
+
+            return gen_break_handler(cte, ast, code);
+
         }
 
     } else if (ast instanceof DoWhileStatement) {
 
+        cte = break_continue_context(cte, ast, true);
+
         var code_stat = comp_statement(cte, ast.statement);
         var code_expr = comp_expr(cte, ast.expr);
 
-        if (cte.labels !== null && cte.labels.statement === ast) {
-            //print("labelled do-while!");
-        }
-
         return function (rte, cont) {
 
-            var loop = function (rte) {
-
-                var subcont1 = function (rte, value1) {
-
-                    var subcont2 = function (rte, value2) {
-                        if (value2) {
-                            return loop(rte);
-                        } else {
-                            var ctrl = rte.frame.ctrl_stack.pop();
-                            return ctrl.exit(rte, void 0);
-                        }
-                    };
-
-                    return code_expr(rte, subcont2);
-                };
-
+            var subcont0 = function (rte, value0) {
                 return code_stat(rte, subcont1);
             };
 
-            rte.frame.ctrl_stack.push({ exit: cont });
+            var subcont1 = function (rte, value1) {
+                return code_expr(rte, subcont2);
+            };
 
-            return loop(rte);
+            var subcont2 = function (rte, value2) {
+                if (value2) {
+                    return subcont0(rte, void 0);
+                } else {
+                    var ctrl = rte.frame.ctrl_stack;
+                    rte.frame.ctrl_stack = ctrl.next;
+                    return ctrl.break_cont(rte, void 0);
+                }
+            };
+
+            rte.frame.ctrl_stack = {
+                break_cont: cont,
+                continue_cont: subcont1,
+                next: rte.frame.ctrl_stack
+            };
+
+            return subcont0(rte, void 0);
         };
 
     } else if (ast instanceof WhileStatement) {
 
+        cte = break_continue_context(cte, ast, true);
+
         var code_expr = comp_expr(cte, ast.expr);
         var code_stat = comp_statement(cte, ast.statement);
 
-        if (cte.labels !== null && cte.labels.statement === ast) {
-            //print("labelled while!");
-        }
-
         return function (rte, cont) {
 
-            var loop = function (rte) {
+            var subcont0 = function (rte, value0) {
+                return code_expr(rte, subcont1);
+            };
 
-                var subcont1 = function (rte, value1) {
-                    if (value1) {
+            var subcont1 = function (rte, value1) {
+                if (value1) {
+                    return code_stat(rte, subcont2);
+                } else {
+                    var ctrl = rte.frame.ctrl_stack;
+                    rte.frame.ctrl_stack = ctrl.next;
+                    return ctrl.break_cont(rte, void 0);
+                }
+            };
 
-                        var subcont2 = function (rte, value2) {
-                            return loop(rte);
-                        }
+            var subcont2 = function (rte, value2) {
+                return subcont0(rte, void 0);
+            };
 
-                        return code_stat(rte, subcont2);
-                    } else {
-                        var ctrl = rte.frame.ctrl_stack.pop();
-                        return ctrl.exit(rte, void 0);
-                    }
-                };
+            rte.frame.ctrl_stack = {
+                break_cont: cont,
+                continue_cont: subcont0,
+                next: rte.frame.ctrl_stack
+            };
 
-                       return code_expr(rte, subcont1);
-                   };
-
-                   rte.frame.ctrl_stack.push({ exit: cont });
-
-                   return loop(rte);
-               };
+            return subcont0(rte, void 0);
+        };
 
     } else if (ast instanceof ForStatement) {
+
+        cte = break_continue_context(cte, ast, true);
 
         var code_expr1 = comp_expr(cte, ast.expr1);
         var code_expr2 = comp_expr(cte, ast.expr2);
         var code_expr3 = comp_expr(cte, ast.expr3);
         var code_stat = comp_statement(cte, ast.statement);
 
-        if (cte.labels !== null && cte.labels.statement === ast) {
-            //print("labelled for!");
-        }
-
         return function (rte, cont) {
 
             var subcont1 = function (rte, value1) {
+                return code_expr2(rte, subcont2);
+            };
 
-                var loop = function (rte) {
+            var subcont2 = function (rte, value2) {
+                if (value2) {
+                    return code_stat(rte, subcont3);
+                } else {
+                    var ctrl = rte.frame.ctrl_stack;
+                    rte.frame.ctrl_stack = ctrl.next;
+                    return ctrl.break_cont(rte, void 0);
+                }
+            };
 
-                    var subcont2 = function (rte, value2) {
-                        if (value2) {
-                            var subcont3 = function (rte, value3) {
-                                var subcont4 = function (rte, value4) {
-                                    return loop(rte);
-                                };
+            var subcont3 = function (rte, value3) {
+                return code_expr3(rte, subcont1);
+            };
 
-                                return code_expr3(rte, subcont4);
-                            };
-
-                            return code_stat(rte, subcont3);
-                        } else {
-                            var ctrl = rte.frame.ctrl_stack.pop();
-                            return ctrl.exit(rte, void 0);
-                        }
-                    };
-
-                    return code_expr2(rte, subcont2);
-                };
-
-                rte.frame.ctrl_stack.push({ exit: cont });
-
-                return loop(rte);
+            rte.frame.ctrl_stack = {
+                break_cont: cont,
+                continue_cont: subcont3,
+                next: rte.frame.ctrl_stack
             };
 
             return code_expr1(rte, subcont1);
@@ -408,9 +422,7 @@ function comp_statement(cte, ast) {
 
     } else if (ast instanceof ForVarStatement) {
 
-        if (cte.labels !== null && cte.labels.statement === ast) {
-            //print("labelled for var!");
-        }
+        cte = break_continue_context(cte, ast, true);
 
         throw "for var statements are not implemented";
 
@@ -427,23 +439,73 @@ function comp_statement(cte, ast) {
 
     } else if (ast instanceof ForInStatement) {
 
-        if (cte.labels !== null && cte.labels.statement === ast) {
-            //print("labelled for in!");
-        }
+        cte = break_continue_context(cte, ast, true);
 
-        throw "for in statements are not implemented";
+        var code_assign = comp_op2_assign(cte,
+                                          null,
+                                          "x = y",
+                                          ast.lhs_expr,
+                                          function () {
+                                              return function (rte, cont) {
+                                                  var ctrl = rte.frame.ctrl_stack;
+                                                  var prop = ctrl.props[ctrl.index-1];
+                                                  return cont(rte, prop);
+                                              };
+                                          });
 
-        /*
-        ast.lhs_expr = ctx.walk_expr(ast.lhs_expr);
-        ast.set_expr = ctx.walk_expr(ast.set_expr);
-        ast.statement = ctx.walk_statement(ast.statement);
-        */
+        var code_set_expr = comp_expr(cte, ast.set_expr);
+        var code_stat = comp_statement(cte, ast.statement);
+
+        return function (rte, cont) {
+
+            var subcont1 = function (rte, value1) {
+                var props = [];
+                for (var p in value1) {
+                    props.push(p);
+                }
+                var ctrl = rte.frame.ctrl_stack;
+                ctrl.obj = value1;
+                ctrl.props = props;
+                ctrl.index = 0;
+                return subcont2(rte, void 0);
+            };
+
+            var subcont2 = function (rte, value2) {
+                var ctrl = rte.frame.ctrl_stack;
+                if (ctrl.index < ctrl.props.length) {
+                    var prop = ctrl.props[ctrl.index++];
+                    if (prop in ctrl.obj) {
+                        return code_assign(rte, subcont3);
+                    } else {
+                        return subcont2(rte, void 0);
+                    }
+                } else {
+                    return subcont4(rte, void 0);
+                }
+            };
+
+            var subcont3 = function (rte, value3) {
+                return code_stat(rte, subcont2);
+            };
+
+            var subcont4 = function (rte, value4) {
+                var ctrl = rte.frame.ctrl_stack;
+                rte.frame.ctrl_stack = ctrl.next;
+                return ctrl.break_cont(rte, void 0);
+            };
+
+            rte.frame.ctrl_stack = {
+                break_cont: cont,
+                continue_cont: subcont2,
+                next: rte.frame.ctrl_stack
+            };
+
+            return code_set_expr(rte, subcont1);
+        };
 
     } else if (ast instanceof ForVarInStatement) {
 
-        if (cte.labels !== null && cte.labels.statement === ast) {
-            //print("labelled for var in!");
-        }
+        cte = break_continue_context(cte, ast, true);
 
         throw "for var in statements are not implemented";
 
@@ -455,48 +517,75 @@ function comp_statement(cte, ast) {
 
     } else if (ast instanceof ContinueStatement) {
 
-        if (ast.label !== null) {
-            throw "continue with label is not implemented";
+        var depth_ast = label_lookup(cte,
+                                     (ast.label === null)
+                                     ? "continue point"
+                                     : ast.label.toString());
+
+        if (depth_ast === null) {
+            if (ast.label === null) {
+                cte.options.error(ast.loc, "syntax error", "illegal continue statement");
+            } else {
+                cte.options.error(ast.label.loc, "syntax error", "undefined label '" + ast.label.toString() + "'");
+            }
+        } else {
+            if (!(depth_ast.ast instanceof DoWhileStatement ||
+                  depth_ast.ast instanceof WhileStatement ||
+                  depth_ast.ast instanceof ForStatement ||
+                  depth_ast.ast instanceof ForVarStatement ||
+                  depth_ast.ast instanceof ForInStatement ||
+                  depth_ast.ast instanceof ForVarInStatement)) {
+                // Note: V8 gives an "undefined label" error
+                cte.options.error(ast.loc, "syntax error", "illegal continue statement");
+            }
         }
 
+        var depth = depth_ast.depth;
+
         return function (rte, cont) {
-            if (rte.frame.ctrl_stack.length > 0) {
-                return step_error(rte,
-                                  cont,
-                                  ast,
-                                  "continue statement is not implemented");
-            } else {
-                return step_error(rte,
-                                  cont,
-                                  ast,
-                                  "continue statement is not properly nested");
-            }
+            var ctrl = rte.frame.ctrl_stack;
+            for (var i=depth; i>0; i--) ctrl = ctrl.next;
+            rte.frame.ctrl_stack = ctrl; // keep continue frame
+            return step_end(rte,
+                            ctrl.continue_cont,
+                            ast,
+                            void 0);
         };
 
     } else if (ast instanceof BreakStatement) {
 
-        if (ast.label !== null) {
-            throw "break with label is not implemented";
+        var depth_ast = label_lookup(cte,
+                                     (ast.label === null)
+                                     ? "break point"
+                                     : ast.label.toString());
+
+        if (depth_ast === null) {
+            if (ast.label === null) {
+                cte.options.error(ast.loc, "syntax error", "illegal break statement");
+            } else {
+                cte.options.error(ast.label.loc, "syntax error", "undefined label '" + ast.label.toString() + "'");
+            }
         }
 
+        var depth = depth_ast.depth;
+
         return function (rte, cont) {
-            if (rte.frame.ctrl_stack.length > 0) {
-                var ctrl = rte.frame.ctrl_stack.pop();
-                return step_end(rte,
-                                ctrl.exit,
-                                ast,
-                                void 0);
-            } else {
-                return step_error(rte,
-                                  cont,
-                                  ast,
-                                  "break statement is not properly nested");
-            }
+            var ctrl = rte.frame.ctrl_stack;
+            for (var i=depth; i>0; i--) ctrl = ctrl.next;
+            rte.frame.ctrl_stack = ctrl.next; // remove break frame
+            return step_end(rte,
+                            ctrl.break_cont,
+                            ast,
+                            void 0);
         };
 
     } else if (ast instanceof ReturnStatement) {
 
-        // TODO: check that the return is nested in a function
+        var depth_ast = label_lookup(cte, "return point");
+
+        if (depth_ast === null) {
+            cte.options.error(ast.loc, "syntax error", "illegal return statement");
+        }
 
         if (ast.expr === null) {
             return function (rte, cont) {
@@ -528,6 +617,8 @@ function comp_statement(cte, ast) {
 
     } else if (ast instanceof SwitchStatement) {
 
+        cte = break_continue_context(cte, ast, false);
+
         throw "switch statements are not implemented";
 
         /*
@@ -543,16 +634,12 @@ function comp_statement(cte, ast) {
 
         var ids = {};
 
-        var labels = {
-            ids: ids,
-            statement: ast,
-            next: cte.labels
-        };
+        var label_stack = new CtrlLabel(ids, ast, cte.label_stack);
 
         var new_cte = new CTE(cte.callee,
                               cte.params,
                               cte.locals,
-                              labels,
+                              label_stack,
                               cte.parent,
                               cte.options);
 
@@ -567,7 +654,7 @@ function comp_statement(cte, ast) {
             statement = statement.statement;
         }
 
-        labels.statement = statement;
+        label_stack.ast = statement;
 
         return comp_statement(new_cte, statement);
 
@@ -586,6 +673,8 @@ function comp_statement(cte, ast) {
     } else if (ast instanceof TryStatement) {
 
         throw "try statements are not implemented";
+
+        //return gen_break_handler(cte, ast, code);
 
         /*
         ast.statement = ctx.walk_statement(ast.statement);
@@ -608,232 +697,144 @@ function comp_statement(cte, ast) {
     }
 }
 
-function label_lookup(cte, id_str) {
-    var labels = cte.labels;
-    while (labels !== null) {
-        if (labels.ids[id_str] !== void 0) {
-            return labels.statement;
-        }
-        labels = labels.next;
+function gen_break_handler(cte, ast, code) {
+
+    var label_stack = cte.label_stack;
+
+    if (label_stack === null || label_stack.ast !== ast) {
+
+        return code;
+
+    } else {
+
+        return function (rte, cont) {
+
+            var subcont1 = function (rte, value1) {
+                var ctrl = rte.frame.ctrl_stack;
+                rte.frame.ctrl_stack = ctrl.next;
+                return ctrl.break_cont(rte, value1);
+            };
+
+            rte.frame.ctrl_stack = {
+                break_cont: cont,
+                continue_cont: null,
+                next: rte.frame.ctrl_stack
+            };
+
+            return code(rte, subcont1);
+        };
+
     }
+}
+
+function CtrlLabel(ids, ast, next) {
+    this.ids = ids;
+    this.ast = ast;
+    this.next = next;
+}
+
+function break_continue_context(cte, ast, is_loop) {
+
+    var label_stack = cte.label_stack;
+
+    if (label_stack === null || label_stack.ast !== ast) {
+
+        label_stack = new CtrlLabel({}, ast, label_stack);
+
+        cte = new CTE(cte.callee,
+                      cte.params,
+                      cte.locals,
+                      label_stack,
+                      cte.parent,
+                      cte.options);
+
+    }
+
+    label_stack.ids["break point"] = true;
+
+    if (is_loop) {
+        label_stack.ids["continue point"] = true;
+    }
+
+    return cte;
+}
+
+function label_lookup(cte, id_str) {
+
+    var label_stack = cte.label_stack;
+    var depth = 0;
+
+    while (label_stack !== null) {
+        if (label_stack.ids[id_str] !== void 0) {
+            return {depth: depth, ast: label_stack.ast};
+        }
+        label_stack = label_stack.next;
+        depth++;
+    }
+
     return null;
 }
 
-function comp_statements(cte, ast, asts)
-{
-    if (asts.length === 0)
-    {
-        return function (rte, cont)
-               {
+function comp_statements(cte, ast, asts) {
+    if (asts.length === 0) {
+        return function (rte, cont) {
                    return step_end(rte,
                                    cont,
                                    ast,
                                    void 0);
                };
-    }
-    else
-    {
+    } else {
         return comp_statements_loop(cte, asts, 0);
     }
 }
 
-function comp_statements_loop(cte, asts, i)
-{
-    if (i < asts.length-1)
-    {
+function comp_statements_loop(cte, asts, i) {
+    if (i < asts.length-1) {
         var code0 = comp_statement(cte, asts[i]);
         var code1 = comp_statements_loop(cte, asts, i+1);
 
-        return function (rte, cont)
-               {
+        return function (rte, cont) {
                    return code0(rte,
-                                function (rte, value)
-                                {
+                                function (rte, value) {
                                     return code1(rte, cont);
                                 });
                };
-    }
-    else
+    } else {
         return comp_statement(cte, asts[i]);
+    }
 }
 
-function comp_expr(cte, ast)
-{
-    if (ast instanceof OpExpr)
-    {
-        //print("OpExpr");
+function comp_expr(cte, ast) {
 
-        if (is_assign_op1(ast.op))
-        {
-            var op = assign_op1_to_semfn(ast.op);
+    if (ast instanceof OpExpr) {
 
-            if (is_prop_access(ast.exprs[0]))
-            {
-                var code_obj = comp_expr(cte, ast.exprs[0].exprs[0]);
-                var code_prop = comp_expr(cte, ast.exprs[0].exprs[1]);
+        if (is_assign_op1(ast.op)) {
 
-                return gen_op_dyn_dyn(ast,
-                                      op,
-                                      code_obj,
-                                      code_prop);
-            }
-            else
-            {
-                var id_str = ast.exprs[0].id.toString();
-                var access = cte_access(cte, id_str);
+            return comp_op1_assign(cte,
+                                   ast,
+                                   ast.op,
+                                   ast.exprs[0]);
 
-                if (access instanceof LocalAccess)
-                {
-                    var up = access.up;
-                    var over = access.over;
-                    var code_obj = function (rte, cont)
-                                   {
-                                       var f = rte.frame;
-                                       for (var i=up; i>0; i--) f = f.parent;
-                                       return cont(rte, f.locals);
-                                   };
+        } else if (is_assign_op2(ast.op)) {
 
-                    return gen_op_dyn_cst(ast,
-                                          op,
-                                          code_obj,
-                                          over);
-                }
-                else if (access instanceof ParamAccess)
-                {
-                    var up = access.up;
-                    var over = access.over;
-                    var code_obj = function (rte, cont)
-                                   {
-                                       var f = rte.frame;
-                                       for (var i=up; i>0; i--) f = f.parent;
-                                       return cont(rte, f.params);
-                                   };
+            return comp_op2_assign(cte,
+                                   ast,
+                                   ast.op,
+                                   ast.exprs[0],
+                                   function () {
+                                       return comp_expr(cte, ast.exprs[1]);
+                                   });
 
-                    return gen_op_dyn_cst(ast,
-                                          op,
-                                          code_obj,
-                                          over);
-                }
-                else if (access instanceof CalleeAccess)
-                {
-                    var code_obj = function (rte, cont)
-                                   {
-                                       return cont(rte, [void 0]); // ignore assignment
-                                   };
+        } else if (is_pure_op1(ast.op)) {
 
-                    return gen_op_dyn_cst(ast,
-                                          op,
-                                          code_obj,
-                                          0);
-                }
-                else if (access instanceof GlobalAccess)
-                {
-                    var name = access.name;
-
-                    return gen_op_glo_cst(ast,
-                                          op,
-                                          name);
-                }
-                else
-                {
-                    throw "unknown access";
-                }
-            }
-        }
-        else if (is_assign_op2(ast.op))
-        {
-            var op = assign_op2_to_semfn(ast.op);
-
-            if (is_prop_access(ast.exprs[0]))
-            {
-                var code_obj = comp_expr(cte, ast.exprs[0].exprs[0]);
-                var code_prop = comp_expr(cte, ast.exprs[0].exprs[1]);
-                var code_value = comp_expr(cte, ast.exprs[1]);
-
-                return gen_op_dyn_dyn_dyn(ast,
-                                          op,
-                                          code_obj,
-                                          code_prop,
-                                          code_value);
-            }
-            else
-            {
-                var id_str = ast.exprs[0].id.toString();
-                var access = cte_access(cte, id_str);
-                var code_value = comp_expr(cte, ast.exprs[1]);
-
-                if (access instanceof LocalAccess)
-                {
-                    var up = access.up;
-                    var over = access.over;
-                    var code_obj = function (rte, cont)
-                                   {
-                                       var f = rte.frame;
-                                       for (var i=up; i>0; i--) f = f.parent;
-                                       return cont(rte, f.locals);
-                                   };
-
-                    return gen_op_dyn_cst_dyn(ast,
-                                              op,
-                                              code_obj,
-                                              over,
-                                              code_value);
-                }
-                else if (access instanceof ParamAccess)
-                {
-                    var up = access.up;
-                    var over = access.over;
-                    var code_obj = function (rte, cont)
-                                   {
-                                       var f = rte.frame;
-                                       for (var i=up; i>0; i--) f = f.parent;
-                                       return cont(rte, f.params);
-                                   };
-
-                    return gen_op_dyn_cst_dyn(ast,
-                                              op,
-                                              code_obj,
-                                              over,
-                                              code_value);
-                }
-                else if (access instanceof CalleeAccess)
-                {
-                    var code_obj = function (rte, cont)
-                                   {
-                                       return cont(rte, [void 0]); // ignore assignment
-                                   };
-
-                    return gen_op_dyn_cst_dyn(ast,
-                                              op,
-                                              code_obj,
-                                              0,
-                                              code_value);
-                }
-                else if (access instanceof GlobalAccess)
-                {
-                    var name = access.name;
-
-                    return gen_op_glo_cst_dyn(ast,
-                                              op,
-                                              name,
-                                              code_value);
-                }
-                else
-                {
-                    throw "unknown access";
-                }
-            }
-        }
-        else if (is_pure_op1(ast.op))
-        {
             var code_expr0 = comp_expr(cte, ast.exprs[0]);
 
             return gen_op_dyn(ast,
                               pure_op1_to_semfn(ast.op),
                               code_expr0);
-        }
-        else // if (is_pure_op2(ast.op))
-        {
+
+        } else { // if (is_pure_op2(ast.op))
+
             var code_expr0 = comp_expr(cte, ast.exprs[0]);
             var code_expr1 = comp_expr(cte, ast.exprs[1]);
 
@@ -878,10 +879,8 @@ function comp_expr(cte, ast)
                                       code_expr1);
             }
         }
-    }
-    else if (ast instanceof NewExpr)
-    {
-        //print("NewExpr");
+
+    } else if (ast instanceof NewExpr) {
 
         var code_cons = comp_expr(cte, ast.expr);
         var code_args = comp_exprs(cte, ast.args);
@@ -889,19 +888,18 @@ function comp_expr(cte, ast)
 
         var op = function (rte, cont, ast, cons, args)
         {
-            if (typeof cons !== "function")
-            {
+            if (typeof cons !== "function") {
+
                 return step_error(rte,
                                   cont,
                                   ast,
                                   "constructor is not a function");
-            }
-            else if ("_apply_" in cons)
-            {
+
+            } else if ("_apply_" in cons) {
+
                 var obj = Object.create(cons.prototype);
                 return cons._apply_(rte,
-                                    function (rte, result)
-                                    {
+                                    function (rte, result) {
                                         return step_end(rte,
                                                         cont,
                                                         ast,
@@ -909,61 +907,53 @@ function comp_expr(cte, ast)
                                     },
                                     obj,
                                     args);
-            }
-            else
-            {
+
+            } else {
+
                 var result = new_semfn(cons, args);
+
                 return step_end(rte,
                                 cont,
                                 ast,
                                 result);
+
             }
         };
 
         return gen_op_dyn_dyn(ast, op, code_cons, code_args);
-    }
-    else if (ast instanceof CallExpr)
-    {
-        //print("CallExpr");
 
-        if (is_prop_access(ast.fn))
-        {
+    } else if (ast instanceof CallExpr) {
+
+        if (is_prop_access(ast.fn)) {
+
             // method call
 
             var code_obj = comp_expr(cte, ast.fn.exprs[0]);
             var code_prop = comp_expr(cte, ast.fn.exprs[1]);
             var code_args = comp_exprs(cte, ast.args);
 
-            var op = function (rte, cont, ast, obj, prop)
-            {
-                if (obj === void 0)
-                {
+            var op = function (rte, cont, ast, obj, prop) {
+                if (obj === void 0) {
                     return step_error(rte,
                                       cont,
                                       ast,
                                       "cannot read property of undefined");
-                }
-                else
-                {
+                } else {
+
                     var fn = obj[prop];
 
-                    var cont2 = function (rte, fn)
-                                {
+                    var cont2 = function (rte, fn) {
+
                                     return code_args(rte,
-                                                     function (rte, args)
-                                                     {
-                                                         if (typeof fn !== "function")
-                                                         {
+                                                     function (rte, args) {
+                                                         if (typeof fn !== "function") {
                                                              return step_error(rte,
                                                                                cont,
                                                                                ast,
                                                                                "cannot call a non function");
-                                                         }
-                                                         else if ("_apply_" in fn)
-                                                         {
+                                                         } else if ("_apply_" in fn) {
                                                              return fn._apply_(rte,
-                                                                               function (rte, result)
-                                                                               {
+                                                                               function (rte, result) {
                                                                                    return step_end(rte,
                                                                                                    cont,
                                                                                                    ast,
@@ -971,9 +961,7 @@ function comp_expr(cte, ast)
                                                                                },
                                                                                obj,
                                                                                args);
-                                                         }
-                                                         else
-                                                         {
+                                                         } else {
                                                              return step_end(rte,
                                                                              cont,
                                                                              ast,
@@ -990,25 +978,22 @@ function comp_expr(cte, ast)
             };
 
             return gen_op_dyn_dyn(ast, op, code_obj, code_prop);
-        }
-        else
-        {
+
+        } else {
+
             // non-method call
 
             var code_fn = comp_expr(cte, ast.fn);
             var code_args = comp_exprs(cte, ast.args);
 
-            var op = function (rte, cont, ast, fn, args)
-            {
-                if (typeof fn !== "function")
-                {
+            var op = function (rte, cont, ast, fn, args) {
+
+                if (typeof fn !== "function") {
                     return step_error(rte,
                                       cont,
                                       ast,
                                       "cannot call a non function");
-                }
-                else if ("_apply_" in fn)
-                {
+                } else if ("_apply_" in fn) {
                     return fn._apply_(rte,
                                       function (rte, result)
                                       {
@@ -1019,9 +1004,7 @@ function comp_expr(cte, ast)
                                       },
                                       rte.glo,
                                       args);
-                }
-                else
-                {
+                } else {
                     return step_end(rte,
                                     cont,
                                     ast,
@@ -1031,10 +1014,8 @@ function comp_expr(cte, ast)
 
             return gen_op_dyn_dyn(ast, op, code_fn, code_args);
         }
-    }
-    else if (ast instanceof FunctionExpr)
-    {
-        //print("FunctionExpr");
+
+    } else if (ast instanceof FunctionExpr) {
 
         var nb_params = ast.params.length;
         var nb_locals = 0;
@@ -1042,13 +1023,11 @@ function comp_expr(cte, ast)
         var locals = {};
         var i = 0;
 
-        for (var v in ast.vars)
-        {
+        for (var v in ast.vars) {
             var id_str = v.toString();
-            if (i < nb_params)
+            if (i < nb_params) {
                 params[id_str] = i;
-            else
-            {
+            } else {
                 locals[id_str] = i-nb_params;
                 nb_locals++;
             }
@@ -1058,7 +1037,7 @@ function comp_expr(cte, ast)
         var fn_cte = new CTE((ast.id !== null) ? ast.id.toString() : null,
                              params,
                              locals,
-                             null,
+                             new CtrlLabel({"return point": true}, ast, null),
                              cte,
                              cte.options);
 
@@ -1068,206 +1047,180 @@ function comp_expr(cte, ast)
         var start_char_offs = position_to_char_offset(loc, loc.start_pos);
         var end_char_offs = position_to_char_offset(loc, loc.end_pos);
 
-        return function (rte, cont)
-               {
-                   var parent = rte.frame;
+        return function (rte, cont) {
 
-                   var closure = function ()
-                   {
-                       throw "unimplemented";///////////////////////////
-                   };
+            var parent = rte.frame;
 
-                   closure.toString = function ()
-                   {
-                       var source = ast.loc.container.source;
-                       return source.slice(start_char_offs, end_char_offs);
-                   };
+            var closure = function () {
 
-                   closure._apply_ = function (rte, cont, this_, params)
-                   {
-                       return exec_fn_body(code_body,
-                                           closure,
-                                           rte,
-                                           cont,
-                                           this_,
-                                           params,
-                                           new Array(nb_locals),
-                                           parent,
-                                           fn_cte);
-                   };
+                var this_ = this;
+                var args = Array.prototype.slice.call(arguments);
 
-                   return step_end(rte,
-                                   cont,
-                                   ast,
-                                   closure);
-               };
-    }
-    else if (ast instanceof Literal)
-    {
-        //print("Literal");
+                var code = function (rte, cont) {
+                    return closure._apply_(rte, cont, this_, args);
+                };
 
-        return function (rte, cont)
-               {
-                   return step_end(rte,
-                                   cont,
-                                   ast,
-                                   ast.value);
-               };
-    }
-    else if (ast instanceof ArrayLiteral)
-    {
-        //print("ArrayLiteral");
+                return js_run(code);
+            };
+
+            closure.toString = function () {
+                //var source = ast.loc.container.source;
+                //return source.slice(start_char_offs, end_char_offs);
+                return "function (" + ast.params.join(",") + ") { ... }";
+            };
+
+            closure._apply_ = function (rte, cont, this_, params) {
+                return exec_fn_body(code_body,
+                                    closure,
+                                    rte,
+                                    cont,
+                                    this_,
+                                    params,
+                                    new Array(nb_locals),
+                                    parent,
+                                    fn_cte);
+            };
+
+            return step_end(rte,
+                            cont,
+                            ast,
+                            closure);
+        };
+
+    } else if (ast instanceof Literal) {
+
+        return function (rte, cont) {
+            return step_end(rte,
+                            cont,
+                            ast,
+                            ast.value);
+        };
+
+    } else if (ast instanceof ArrayLiteral) {
 
         var code_exprs = comp_exprs(cte, ast.exprs);
 
-        return function (rte, cont)
-               {
-                   return code_exprs(rte,
-                                     function (rte, values)
-                                     {
-                                         return step_end(rte,
-                                                         cont,
-                                                         ast,
-                                                         values);
-                                     });
-               };
-    }
-    else if (ast instanceof RegExpLiteral)
-    {
-        //print("RegExpLiteral");
+        return function (rte, cont) {
+            return code_exprs(rte,
+                              function (rte, values) {
+                                  return step_end(rte,
+                                                  cont,
+                                                  ast,
+                                                  values);
+                              });
+        };
+
+    } else if (ast instanceof RegExpLiteral) {
 
         throw "unimplemented"; /////////////////////////////////////////
-    }
-    else if (ast instanceof ObjectLiteral)
-    {
-        //print("ObjectLiteral");
 
-        return comp_props(cte, ast.properties);
-    }
-    else if (ast instanceof Ref)
-    {
-        //print("Ref");
+    } else if (ast instanceof ObjectLiteral) {
+
+        return comp_props(cte, ast, ast.properties);
+
+    } else if (ast instanceof Ref) {
 
         var id_str = ast.id.toString()
         var access = cte_access(cte, id_str);
         var error_msg = "cannot read the undefined variable " + id_str;
 
-        if (access instanceof LocalAccess)
-        {
+        if (access instanceof LocalAccess) {
+
             var up = access.up;
             var over = access.over;
 
-            return function (rte, cont)
-                   {
-                       var f = rte.frame;
-                       for (var i=up; i>0; i--) f = f.parent;
-                       var result = f.locals[over];
-                       if (result === void 0)
-                       {
-                           return step_error(rte,
-                                             cont,
-                                             ast,
-                                             error_msg);
-                       }
-                       else
-                       {
-                           return step_end(rte,
-                                           cont,
-                                           ast,
-                                           result);
-                       }
-                   };
-        }
-        else if (access instanceof ParamAccess)
-        {
+            return function (rte, cont) {
+                var f = rte.frame;
+                for (var i=up; i>0; i--) f = f.parent;
+                var result = f.locals[over];
+                if (result === void 0) {
+                    return step_error(rte,
+                                      cont,
+                                      ast,
+                                      error_msg);
+                } else {
+                    return step_end(rte,
+                                    cont,
+                                    ast,
+                                    result);
+                }
+            };
+
+        } else if (access instanceof ParamAccess) {
+
             var up = access.up;
             var over = access.over;
 
-            return function (rte, cont)
-                   {
-                       var f = rte.frame;
-                       for (var i=up; i>0; i--) f = f.parent;
-                       var result = f.params[over];
-                       if (result === void 0)
-                       {
-                           return step_error(rte,
-                                             cont,
-                                             ast,
-                                             error_msg);
-                       }
-                       else
-                       {
-                           return step_end(rte,
-                                           cont,
-                                           ast,
-                                           result);
-                       }
-                   };
-        }
-        else if (access instanceof CalleeAccess)
-        {
+            return function (rte, cont) {
+                var f = rte.frame;
+                for (var i=up; i>0; i--) f = f.parent;
+                var result = f.params[over];
+                if (result === void 0) {
+                    return step_error(rte,
+                                      cont,
+                                      ast,
+                                      error_msg);
+                } else {
+                    return step_end(rte,
+                                    cont,
+                                    ast,
+                                    result);
+                }
+            };
+
+        } else if (access instanceof CalleeAccess) {
+
             var up = access.up;
 
-            return function (rte, cont)
-                   {
-                       var f = rte.frame;
-                       for (var i=up; i>0; i--) f = f.parent;
-                       var result = f.callee;
-                       return step_end(rte,
-                                       cont,
-                                       ast,
-                                       result);
-                   };
-        }
-        else if (access instanceof GlobalAccess)
-        {
+            return function (rte, cont) {
+                var f = rte.frame;
+                for (var i=up; i>0; i--) f = f.parent;
+                var result = f.callee;
+                return step_end(rte,
+                                cont,
+                                ast,
+                                result);
+            };
+
+        } else if (access instanceof GlobalAccess) {
+
             var name = access.name;
 
-            return function (rte, cont)
-                   {
-                       var result = rte.glo[name];
-                       if (result === void 0)
-                       {
-                           return step_error(rte,
-                                             cont,
-                                             ast,
-                                             error_msg);
-                       }
-                       else
-                       {
-                           return step_end(rte,
-                                           cont,
-                                           ast,
-                                           result);
-                       }
-                   };
-        }
-        else
-        {
+            return function (rte, cont) {
+                var result = rte.glo[name];
+                if (result === void 0) {
+                    return step_error(rte,
+                                      cont,
+                                      ast,
+                                      error_msg);
+                } else {
+                    return step_end(rte,
+                                    cont,
+                                    ast,
+                                    result);
+                }
+            };
+
+        } else {
             throw "unknown access";
         }
-    }
-    else if (ast instanceof This)
-    {
-        //print("This");
 
-        return function (rte, cont)
-               {
-                   return step_end(rte,
-                                   cont,
-                                   ast,
-                                   rte.frame.this_);
-               };
-    }
-    else if (ast === null)
-    {
-        return function (rte, cont)
-               {
-                   return cont(rte, true); // useful for the for (;;) statement
-               };
-    }
-    else
-    {
+    } else if (ast instanceof This) {
+
+        return function (rte, cont) {
+            return step_end(rte,
+                            cont,
+                            ast,
+                            rte.frame.this_);
+        };
+
+    } else if (ast === null) {
+
+        return function (rte, cont) {
+            return cont(rte, true); // useful for the for (;;) statement
+        };
+
+    } else {
         throw "unknown ast";
     }
 }
@@ -1298,18 +1251,13 @@ function cte_access(cte, id_str)
 {
     var up = 0;
 
-    while (cte.parent !== null)
-    {
-        if (id_str in cte.locals)
-        {
+    while (cte.parent !== null) {
+
+        if (id_str in cte.locals) {
             return new LocalAccess(up, cte.locals[id_str]);
-        }
-        else if (id_str in cte.params)
-        {
+        } else if (id_str in cte.params) {
             return new ParamAccess(up, cte.params[id_str]);
-        }
-        else if (id_str === cte.callee)
-        {
+        } else if (id_str === cte.callee) {
             return new CalleeAccess(up);
         }
         cte = cte.parent;
@@ -1318,12 +1266,178 @@ function cte_access(cte, id_str)
 
     var ga = cte.locals[id_str];
 
-    if (ga === void 0)
-    {
+    if (ga === void 0) {
         ga = (cte.locals[id_str] = new GlobalAccess(id_str));
     }
 
     return ga;
+}
+
+function comp_op1_assign(cte, ast, op1, lhs) {
+
+    var op = assign_op1_to_semfn(op1);
+
+    if (is_prop_access(lhs)) {
+
+        var code_obj = comp_expr(cte, lhs.exprs[0]);
+        var code_prop = comp_expr(cte, lhs.exprs[1]);
+
+        return gen_op_dyn_dyn(ast,
+                              op,
+                              code_obj,
+                              code_prop);
+
+    } else {
+
+        var id_str = lhs.id.toString();
+        var access = cte_access(cte, id_str);
+
+        return gen_op1_assign(ast, op, access);
+
+    }
+}
+
+function comp_op2_assign(cte, ast, op2, lhs, get_code_value) {
+
+    var op = assign_op2_to_semfn(op2);
+
+    if (is_prop_access(lhs)) {
+
+        var code_obj = comp_expr(cte, lhs.exprs[0]);
+        var code_prop = comp_expr(cte, lhs.exprs[1]);
+        var code_value = get_code_value();
+
+        return gen_op_dyn_dyn_dyn(ast,
+                                  op,
+                                  code_obj,
+                                  code_prop,
+                                  code_value);
+
+    } else {
+
+        var id_str = lhs.id.toString();
+        var access = cte_access(cte, id_str);
+        var code_value = get_code_value();
+
+        return gen_op2_assign(ast, op, access, code_value);
+
+    }
+}
+
+function gen_op1_assign(ast, op, access) {
+
+    if (access instanceof LocalAccess) {
+
+        var up = access.up;
+        var over = access.over;
+        var code_obj = function (rte, cont) {
+            var f = rte.frame;
+            for (var i=up; i>0; i--) f = f.parent;
+            return cont(rte, f.locals);
+        };
+
+        return gen_op_dyn_cst(ast,
+                              op,
+                              code_obj,
+                              over);
+
+    } else if (access instanceof ParamAccess) {
+
+        var up = access.up;
+        var over = access.over;
+        var code_obj = function (rte, cont) {
+            var f = rte.frame;
+            for (var i=up; i>0; i--) f = f.parent;
+            return cont(rte, f.params);
+        };
+
+        return gen_op_dyn_cst(ast,
+                              op,
+                              code_obj,
+                              over);
+
+    } else if (access instanceof CalleeAccess) {
+
+        var code_obj = function (rte, cont) {
+            return cont(rte, [void 0]); // ignore assignment
+        };
+
+        return gen_op_dyn_cst(ast,
+                              op,
+                              code_obj,
+                              0);
+
+    } else if (access instanceof GlobalAccess) {
+
+        var name = access.name;
+
+        return gen_op_glo_cst(ast,
+                              op,
+                              name);
+
+    } else {
+        throw "unknown access";
+    }
+}
+
+function gen_op2_assign(ast, op, access, code_value) {
+
+    if (access instanceof LocalAccess) {
+
+        var up = access.up;
+        var over = access.over;
+        var code_obj = function (rte, cont) {
+            var f = rte.frame;
+            for (var i=up; i>0; i--) f = f.parent;
+            return cont(rte, f.locals);
+        };
+
+        return gen_op_dyn_cst_dyn(ast,
+                                  op,
+                                  code_obj,
+                                  over,
+                                  code_value);
+
+    } else if (access instanceof ParamAccess) {
+
+        var up = access.up;
+        var over = access.over;
+        var code_obj = function (rte, cont) {
+            var f = rte.frame;
+            for (var i=up; i>0; i--) f = f.parent;
+            return cont(rte, f.params);
+        };
+
+        return gen_op_dyn_cst_dyn(ast,
+                                  op,
+                                  code_obj,
+                                  over,
+                                  code_value);
+
+    } else if (access instanceof CalleeAccess) {
+
+        var code_obj = function (rte, cont) {
+            return cont(rte, [void 0]); // ignore assignment
+        };
+
+        return gen_op_dyn_cst_dyn(ast,
+                                  op,
+                                  code_obj,
+                                  0,
+                                  code_value);
+
+    } else if (access instanceof GlobalAccess) {
+
+        var name = access.name;
+
+        return gen_op_glo_cst_dyn(ast,
+                                  op,
+                                  name,
+                                  code_value);
+
+    } else {
+        throw "unknown access";
+    }
 }
 
 function exec_fn_body(code, callee, rte, cont, this_, params, locals, parent, cte)
@@ -1339,7 +1453,7 @@ function exec_fn_body(code, callee, rte, cont, this_, params, locals, parent, ct
                             params,
                             locals,
                             parent,
-                            [],
+                            null,//TODO................... put cont here?
                             cte);
 
     return code(rte,
@@ -1354,14 +1468,15 @@ function exec_fn_body(code, callee, rte, cont, this_, params, locals, parent, ct
 
 var get_new_semfn_cache = [];
 
-function get_new_semfn(n)
-{
-    if (get_new_semfn_cache[n] === void 0)
-    {
+function get_new_semfn(n) {
+
+    if (get_new_semfn_cache[n] === void 0) {
+
         var args = [];
         for (var i=0; i<n; i++) {
             args.push("a["+i+"]");
         }
+
         get_new_semfn_cache[n] =
             eval("(function (c, a) { return new c(" +
                  args.join(",") +
@@ -1371,73 +1486,76 @@ function get_new_semfn(n)
     return get_new_semfn_cache[n];
 }
 
-function comp_exprs(cte, asts)
-{
+function comp_exprs(cte, asts) {
+
     var code = comp_exprs_loop(cte, asts, 0);
 
-    return function (rte, cont)
-           {
-               return code(rte, cont, []);
-           };
+    return function (rte, cont) {
+        return code(rte, cont, []);
+    };
 }
 
-function comp_exprs_loop(cte, asts, i)
-{
-    if (i < asts.length)
-    {
+function comp_exprs_loop(cte, asts, i) {
+
+    if (i < asts.length) {
+
         var code0 = comp_expr(cte, asts[i]);
         var code1 = comp_exprs_loop(cte, asts, i+1);
 
-        return function (rte, cont, values)
-               {
+        return function (rte, cont, values) {
+
                    return code0(rte,
-                                function (rte, value)
-                                {
+                                function (rte, value) {
                                     values.push(value);
                                     return code1(rte, cont, values);
                                 });
                };
+    } else {
+
+        return function (rte, cont, values) {
+            return cont(rte, values);
+        };
+
     }
-    else
-        return function (rte, cont, values)
-               {
-                   return cont(rte, values);
-               };
 }
 
-function comp_props(cte, props)
-{
-    var code = comp_props_loop(cte, props, 0);
+function comp_props(cte, ast, props) {
 
-    return function (rte, cont)
-           {
-               return code(rte, cont, {});
-           };
+    var code = comp_props_loop(cte, ast, props, 0);
+
+    return function (rte, cont) {
+        return code(rte, cont, {});
+    };
 }
 
-function comp_props_loop(cte, props, i)
-{
-    if (i < props.length)
-    {
+function comp_props_loop(cte, ast, props, i) {
+
+    if (i < props.length) {
+
         var prop = props[i].name.value;
         var code0 = comp_expr(cte, props[i].value);
-        var code1 = comp_props_loop(cte, props, i+1);
+        var code1 = comp_props_loop(cte, ast, props, i+1);
 
-        return function (rte, cont, obj)
-               {
+        return function (rte, cont, obj) {
+
                    return code0(rte,
-                                function (rte, value)
-                                {
+                                function (rte, value) {
                                     obj[prop] = value;
                                     return code1(rte, cont, obj);
                                 });
+
                };
+
+    } else {
+
+        return function (rte, cont, obj) {
+            return step_end(rte,
+                            cont,
+                            ast,
+                            obj);
+        };
+
     }
-    else
-        return function (rte, cont, obj)
-               {
-                   return cont(rte, obj);
-               };
 }
 
 //-----------------------------------------------------------------------------
@@ -1924,24 +2042,28 @@ function sem_x_modequal_y(rte, cont, ast, obj, prop, y) // "x %= y"
 
 //-----------------------------------------------------------------------------
 
-function step_end(rte, cont, ast, result)
-{
-    rte.ast = ast;
-    rte.result = result;
+function step_end(rte, cont, ast, result) {
 
-    var resume = function ()
-    {
+    if (ast === null) {
+
         return cont(rte, result);
-    };
 
-    if (++rte.step_count < rte.step_limit)
-    {
-        return resume;
-    }
-    else
-    {
-        rte.resume = resume;
-        return null;
+    } else {
+
+        rte.ast = ast;
+        rte.result = result;
+
+        var resume = function () {
+            return cont(rte, result);
+        };
+
+        if (++rte.step_count < rte.step_limit) {
+            return resume;
+        } else {
+            rte.resume = resume;
+            return null;
+        }
+
     }
 }
 

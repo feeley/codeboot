@@ -176,7 +176,7 @@ function printed_repr(x) {
                 chars.push("\\n");
             } else {
                 var n = x.charCodeAt(i);
-                if (n <= 32 || n >= 127) {
+                if (n <= 31 || n >= 256) {
                     chars.push("\\u" + (n+65536).toString(16).slice(1));
                 } else {
                     chars.push(c);
@@ -599,6 +599,7 @@ uninteresting_global["alert"] = true;
 uninteresting_global["prompt"] = true;
 uninteresting_global["println"] = true;
 uninteresting_global["pause"] = true;
+uninteresting_global["assert"] = true;
 uninteresting_global["load"] = true;
 uninteresting_global["Math"] = true;
 uninteresting_global["Date"] = true;
@@ -784,6 +785,43 @@ builtin_pause._apply_ = function (rte, cont, this_, params)
 
     return exec_fn_body(code,
                         builtin_pause,
+                        rte,
+                        cont,
+                        this_,
+                        params,
+                        [],
+                        null,
+                        null);
+};
+
+function builtin_assert(condition)
+{
+    throw "unimplemented";///////////////////////////
+}
+
+builtin_assert._apply_ = function (rte, cont, this_, params)
+{
+    var code = function (rte, cont)
+               {
+                   if (params[0]) {
+                       return cont(rte, void 0);
+                   } else {
+                       cp.enterMode("stepping");
+                       if (params.length >= 2) {
+                           cp.transcript.addLine(params[1], "error-message");
+                       }
+                       program_state.step_delay = 0;
+                       rte.step_limit = rte.step_count; // exit trampoline
+
+                       var cont2 = rte.stack.cont;
+                       rte.frame = rte.stack.frame;
+                       rte.stack = rte.stack.stack;
+                       return cont2(rte, "THIS ASSERTION FAILED");
+                   }
+               };
+
+    return exec_fn_body(code,
+                        builtin_assert,
                         rte,
                         cont,
                         this_,

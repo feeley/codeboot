@@ -25,3 +25,9 @@ var pause = builtin_pause;
 pause.toString = function () {
     return "function pause() { [native code] }";
 };
+
+var assert = builtin_assert;
+
+assert.toString = function () {
+    return "function assert() { [native code] }";
+};
