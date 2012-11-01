@@ -1,5 +1,7 @@
 cp.output = {};
+
 (function (exports) {
+
     var defaults = {
         rows: 10,
         cols: 10,
@@ -12,7 +14,7 @@ cp.output = {};
 	    this.rows = opts.rows || defaults.rows;
 	    this.cols = opts.cols || defaults.cols;
 	    this.pixelSize = opts.pixelSize || defaults.pixelSize;
-	    this.borderWidth = opts.borderWidth || defaults.borderWidth;
+	    this.borderWidth = (opts.borderWidth !== void 0) ? opts.borderWidth : defaults.borderWidth;
 
 		this._draw();
 	}
@@ -61,14 +63,15 @@ cp.output = {};
 		});
 	}
 
-	PixelGrid.prototype.setPixel = function (row, col, color) {
+	PixelGrid.prototype.setPixel = function (col, row, color) {
         if (!color) color = "black";
 		this.$pixels[row][col].css('background-color', color);
 	};
 
-	PixelGrid.prototype.clearPixel = function (row, col, color) {
+	PixelGrid.prototype.clearPixel = function (col, row, color) {
 		this.$pixels[row][col].css('background-color', 'transparent');
 	};
 
     exports.PixelGrid = PixelGrid;
+
 })(cp.output);

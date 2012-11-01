@@ -157,7 +157,7 @@ function code_highlight(loc, cssClass) {
     return editor.markText(start, end, cssClass);
 }
 
-function printed_repr(x) {
+function printed_repr_old(x) {
 
     //TODO: avoid infinite loops for circular data!
     //TODO: avoid printing wider than page!
@@ -203,6 +203,150 @@ function printed_repr(x) {
         return "undefined";
     } else {
         return String(x);
+    }
+}
+
+function printed_repr(obj, format) {
+
+    if (format === void 0) {
+        format = "plain";
+    }
+
+    return object_repr(obj, format, 80).text;
+}
+
+function escape_HTML(text) {
+  return text.replace(/[&<>"'`]/g, function (chr) {
+    return '&#' + chr.charCodeAt(0) + ';';
+  });
+};
+
+function object_repr(obj, format, limit) {
+
+    var string_key_required = function (key) {
+
+        return !((Scanner.prototype.is_identifier(key) &&
+                  !Scanner.prototype.is_keyword(key)) ||
+                 (""+key === ""+(+key) &&
+                  +key >= 0));
+
+    };
+
+    var xform = function (str) {
+        var text;
+        if (format === "HTML") {
+            text = escape_HTML(str);
+        } else {
+            text = str;
+        }
+        return { text: text, len: str.length };
+    };
+
+    if (typeof obj === "object") {
+
+        if (obj === null) {
+
+            return xform("null");
+
+        } else if ("obj_repr" in obj) {
+
+            return obj.obj_repr(format, limit);
+
+        } else if (obj instanceof Array) {
+
+            var a = ["["];
+            var len = 1;
+
+            for (var i=0; i<obj.length; i++) {
+                if (i > 0) {
+                    a.push(", ");
+                    len += 2;
+                }
+                var r = object_repr(obj[i], format, limit-len-1);
+                if (len + r.len + 1 > limit) {
+                    a.push("...");
+                    len += 3;
+                    break;
+                } else {
+                    a.push(r.text);
+                    len += r.len;
+                }
+            }
+
+            a.push("]");
+            len += 1;
+
+            return { text: a.join(""), len: len };
+
+        } else {
+
+            var a = ["{"];
+            var len = 1;
+            var i = 0;
+
+            for (var p in obj) {
+                if (i++ > 0) {
+                    a.push(", ");
+                    len += 2;
+                }
+                var r1;
+                if (string_key_required(p)) {
+                    r1 = object_repr(p, format, limit);
+                } else {
+                    r1 = xform(""+p);
+                }
+                var r2 = object_repr(obj[p], format, limit-len-r1.len-3);
+                if (len + r1.len + r2.len + 3 > limit) {
+                    a.push("...");
+                    len += 3;
+                    break;
+                } else {
+                    a.push(r1.text);
+                    a.push(": ");
+                    a.push(r2.text);
+                    len += r1.len + 2 + r2.len;
+                }
+            }
+
+            a.push("}");
+            len += 1;
+
+            return { text: a.join(""), len: len };
+
+        }
+    } else if (typeof obj === "string") {
+
+        var chars = [];
+        chars.push("\"");
+        for (var i=0; i<obj.length; i++) {
+            var c = obj.charAt(i);
+            if (c === "\"") {
+                chars.push("\\\"");
+            } else if (c === "\\") {
+                chars.push("\\\\");
+            } else if (c === "\n") {
+                chars.push("\\n");
+            } else {
+                var n = obj.charCodeAt(i);
+                if (n <= 31 || n >= 256) {
+                    chars.push("\\u" + (n+65536).toString(16).slice(1));
+                } else {
+                    chars.push(c);
+                }
+            }
+        }
+        chars.push("\"");
+
+        return xform(chars.join(""));
+
+    } else if (typeof obj === "undefined") {
+
+        return xform("undefined");
+
+    } else {
+
+        return xform(String(obj));
+
     }
 }
 
@@ -524,7 +668,7 @@ cp.show_step = function () {
     scrollToMarker(program_state.step_mark);
 
     var value = program_state.rte.result;
-    var value_repr = (value === void 0) ? "NO VALUE" : printed_repr(value);
+    var value_repr = (value === void 0) ? "NO VALUE" : printed_repr(value, "HTML");
     program_state.step_popover = $(".exec-point-code").last();
     program_state.step_popover.last().popover({
 	animation: false,
@@ -554,7 +698,7 @@ cp.dump_context = function () {
         {
             if (val !== void 0) // don't show undefined variables
             {
-                result.push("<strong>" + id + ":</strong> " + printed_repr(val));
+                result.push("<strong>" + id + ":</strong> " + printed_repr(val, "HTML"));
             }
             seen[id] = true;
         }

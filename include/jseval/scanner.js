@@ -1306,6 +1306,33 @@ Scanner.prototype.valued_token = function (cat, value, start_pos)
     return new Token(cat, value, loc);
 };
 
+// method is_identifier(str)
+
+Scanner.prototype.is_identifier = function (str)
+{
+    if (str.length === 0) {
+        return false;
+    }
+
+    for (var i=0; i<str.length; i++) {
+        var c = str.charCodeAt(i);
+        if (!(Scanner.prototype.identifier_class(c) ||
+              (i>0 && Scanner.prototype.decimal_class(c)))) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+// method is_keyword(str)
+
+Scanner.prototype.is_keyword = function (str)
+{
+    var x = Scanner.prototype.get_keyword(str);
+    return x !== null && x.enabled === true;
+};
+
 function Token(cat, value, loc)
 {
     this.cat   = cat;
