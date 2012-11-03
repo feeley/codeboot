@@ -361,27 +361,23 @@ cp.handle_query = function () {
 
     var query = cp.saved_query;
 
-    if (query !== null) {
-        query = decodeURIComponent(query);
-    }
-
     if (query && query.slice(0, 7) === "replay=") {
 
-        cp.replay_command = query.slice(7);
+        cp.replay_command = decodeURIComponent(query.slice(7));
         cp.replay_command_index = 0;
         cp.replay_syntax = 1;
 
         setTimeout(function () { cp.replay(); }, 100);
     } else if (query && query.slice(0, 10) === "replay%25=") {
 
-        cp.replay_command = decodeURIComponent(query.slice(10));
+        cp.replay_command = decodeURIComponent(decodeURIComponent(query.slice(10)));
         cp.replay_command_index = 0;
         cp.replay_syntax = 2;
 
         setTimeout(function () { cp.replay(); }, 100);
     } else if (query && query.slice(0, 8) === "replay%=") {
 
-        cp.replay_command = query.slice(8);
+        cp.replay_command = decodeURIComponent(query.slice(8));
         cp.replay_command_index = 0;
         cp.replay_syntax = 2;
 
