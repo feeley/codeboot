@@ -572,12 +572,13 @@ cp.openFileExistingOrNew = function (filename) {
 
     if (cp.fs.hasFile(filename)) {
         cp.openFile(filename);
+        return true;
     } else {
         var file = new CPFile(filename);
         cp.fs.addFile(file);
 
         cp.addFileToMenu(file);
         cp.newTab(file);
-        return filename;
+        return false;
     }
 };

@@ -354,6 +354,7 @@ cp.query = function (query) {
     cp.saved_query = query;
     cp.replay_command = "";
     cp.replay_command_index = 0;
+    cp.replay_parameters = [];
 };
 
 cp.handle_query = function () {
@@ -415,7 +416,10 @@ cp.replay = function () {
         }
 
         if (command.charAt(j) === "@") {
-            if (command.charAt(j+1) === "P") {
+            if (command.charAt(j+1) >= "0" && command.charAt(j+1) <= "9") {
+                cp.replay_parameters[+command.charAt(j+1)] = str;
+                j += 2;
+            } else if (command.charAt(j+1) === "P") {
                 if (str !== "") {
                     set_input(cp.repl, str);
                     cp.repl.refresh();
@@ -443,10 +447,22 @@ cp.replay = function () {
                     j += 2;
                 }
             } else if (command.charAt(j+1) === "E") {
-                var filename = "sample";
-                cp.openFileExistingOrNew(filename);
+                var default_filename = "scratch";
+                var filename = "sample";///default_filename;
+                if (cp.replay_parameters[0] !== void 0) {
+                    filename = cp.replay_parameters[0];
+                    cp.replay_parameters[0] = void 0;
+                }
+                var existing = cp.openFileExistingOrNew(filename);
                 var editor = cp.fs.getEditor(filename);
-                editor.setValue(str);
+                if (existing &&
+                    filename !== default_filename &&
+                    this.editor.getValue() !== str) {
+                    existing = !confirm("You are about to replace the file '" + filename + "' with different content.  Are you sure you want to discard your local changes to that file?");
+                }
+                if (!existing) {
+                    editor.setValue(str);
+                }
                 j += 2;
             } else if (command.charAt(j+1) === "C") {
                 cp.closeAll();
