@@ -451,12 +451,13 @@ cp.replay = function () {
                 }
                 var existing = cp.openFileExistingOrNew(filename);
                 var editor = cp.fs.getEditor(filename);
+                var replace = true;
                 if (existing &&
                     filename !== default_filename &&
                     editor.getValue() !== str) {
-                    existing = !confirm("You are about to replace the file '" + filename + "' with different content.  Are you sure you want proceed with the replacement and lose your local changes to that file?");
+                    replace = confirm("You are about to replace the file '" + filename + "' with different content.  Are you sure you want proceed with the replacement and lose your local changes to that file?");
                 }
-                if (!existing) {
+                if (replace) {
                     editor.setValue(str);
                 }
                 j += 2;
