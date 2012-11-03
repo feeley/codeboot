@@ -444,7 +444,7 @@ cp.replay = function () {
                 }
             } else if (command.charAt(j+1) === "E") {
                 var default_filename = "scratch";
-                var filename = "sample";///default_filename;
+                var filename = default_filename;
                 if (cp.replay_parameters[0] !== void 0) {
                     filename = cp.replay_parameters[0];
                     cp.replay_parameters[0] = void 0;
@@ -454,7 +454,7 @@ cp.replay = function () {
                 if (existing &&
                     filename !== default_filename &&
                     editor.getValue() !== str) {
-                    existing = !confirm("You are about to replace the file '" + filename + "' with different content.  Are you sure you want to discard your local changes to that file?");
+                    existing = !confirm("You are about to replace the file '" + filename + "' with different content.  Are you sure you want proceed with the replacement and lose your local changes to that file?");
                 }
                 if (!existing) {
                     editor.setValue(str);
