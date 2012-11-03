@@ -221,6 +221,16 @@ function escape_HTML(text) {
   });
 };
 
+function editor_URL(content, filename) {
+
+    return document.location.origin +
+           document.location.pathname.replace(/\/[^/]*$/g,"") +
+           "/query.cgi?replay%=" +
+           encodeURIComponent(("@C" +
+                               (filename === void 0 ? "" : (filename + "@0")) +
+                               content + "@E").replace(/\n/g,"@N"));
+}
+
 function object_repr(obj, format, limit) {
 
     var string_key_required = function (key) {
