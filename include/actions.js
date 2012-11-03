@@ -453,7 +453,7 @@ cp.replay = function () {
                 var editor = cp.fs.getEditor(filename);
                 if (existing &&
                     filename !== default_filename &&
-                    this.editor.getValue() !== str) {
+                    editor.getValue() !== str) {
                     existing = !confirm("You are about to replace the file '" + filename + "' with different content.  Are you sure you want to discard your local changes to that file?");
                 }
                 if (!existing) {
