@@ -389,7 +389,7 @@ cp.makeEditorToolbar = function (file) {
     $animateButton.addClass('exec-btn-anim');
     $animateButton.click(function () {
         if (!cp.setController(controller)) return false;
-        
+
         if (program_state.mode === 'stopped') {
             program_state.step_delay = cp.stepDelay;
             cp.load(file.filename, true);
@@ -423,7 +423,7 @@ cp.makeLHSEditorToolbar = function (file) {
     var $group = makeTBGroup();
     $group.appendTo($toolbar);
 
-    $saveButton = makeTBButton($('<i class="icon-download-alt"/>'), {"title" : "Download"});
+    var $saveButton = makeTBButton($('<i class="icon-download-alt"/>'), {"title" : "Download"});
     $saveButton.click(function () {
         var name = basename(file.filename);
         if (!endsWith(name, ".js")) {
@@ -432,6 +432,10 @@ cp.makeLHSEditorToolbar = function (file) {
         saveAs(cp.fs.getContent(file), name);
     });
     $saveButton.appendTo($group);
+
+    var $btnContents = $('<span class="cp-zclip-target" data-zclip-role="copy-url"><i class="icon-link"/></span>');
+    var $copyURLButton = makeTBButton($btnContents, {"title" : "Copy URL"});
+    $copyURLButton.appendTo($group);
 
     return $toolbar;
 };
@@ -555,6 +559,15 @@ cp.newTab = function (fileOrFilename) {
             $(".CodeMirror-scroll", $row).width($(this).width());
             editor.refresh();
           }
+    });
+
+    var $btnCopyURL = $('[data-zclip-role="copy-url"]', $row);
+    $btnCopyURL.zclip({
+        path:'include/ZeroClipboard.swf',
+        copy: function() {
+            var content = cp.fs.getContent(file);
+            return editor_URL(content, file.filename);
+        }
     });
 };
 

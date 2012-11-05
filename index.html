@@ -111,7 +111,7 @@
             <button id="animate-button" title="Animate" class="btn" onclick="if (cp.setController('repl-controls')) cp.animate(cp.stepDelay);"><i class="icon-play"></i></button>
             <button id="pause-button" title="Pause" class="btn exec-btn-pause disabled" onclick="if (cp.setController('repl-controls')) cp.animate(0);"><i class="icon-pause"></i></button>
             <button id="cancel-button" title="Stop" class="btn exec-btn-cancel disabled" onclick="if (cp.setController('repl-controls')) cp.cancel();"><i class="icon-stop"></i></button>
-          </div>        
+          </div>
         </div>
 
         <ul class="nav nav-tabs">
@@ -129,7 +129,7 @@
       <div id="step-value-row" class="row">
         <pre id="step-value" class="step-value" style="display:none;"></pre>
       </div>
-      
+
       <div id="about-box" class="modal hide fade">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -192,7 +192,7 @@
             repl: undefined,
             console: undefined,
         };
-        
+
         function setStepDelay(delay) {
             cp.stepDelay = delay;
             program_state.step_delay = delay;
@@ -228,7 +228,7 @@
                 }
             };
             // checkBrowserFeatures();
-            
+
             $("#anim-norm-button").click();
 
             cp.alerts = document.getElementById("alerts");
@@ -299,9 +299,9 @@
             cp.saveInProgress = true;
             $("#form-download").submit();
         }
-        
+
         function cp_about() {
-            
+
         }
     </script>
     <script src="include/actions.js"></script>
@@ -312,6 +312,7 @@
     <script src="include/mousetrap.min.js"></script>
     <script src="include/tutorial.js"></script>
     <script src="include/output.js"></script>
+    <script src="include/jquery.zclip.min.js"></script>
     <script>cp.query(null);</script>
 
 	<form id="form-download" class="hide" action="download.php" method="post">
