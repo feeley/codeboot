@@ -16,6 +16,20 @@ cp.scrollTo = function (elementOrSelector) {
     $("body").animate({scrollTop: elementOffset}, 400);
 }
 
+cp.getShortURL = function (longURL) {
+	var shortURL;
+	$.ajax({
+            url: "shorten.php",
+            data: {url: longURL},
+            dataType: "json",
+            async: false,
+            success: function (data) {
+				shortURL = data.id;
+            }
+    });
+    return shortURL;
+};
+
 function makeToolbar() {
     var $toolbar = $('<div class="btn-toolbar pull-right"/>');
 
@@ -769,8 +783,14 @@ cp.makeLHSEditorToolbar = function (file) {
     $saveButton.appendTo($group);
 
     var $btnShare = makeDropdown($('<i class="icon-share"/>'), function ($menu) {
-        var $zclipItem = makeDropdownItem($('<span class="cp-zclip-target" data-zclip-role="copy-url">Copy URL</span>'));
-		$menu.append($zclipItem);
+//      var $zclipItem = makeDropdownItem($('<span class="cp-zclip-target" data-zclip-role="copy-url">Copy URL</span>'));
+// 		$menu.append($zclipItem);
+		$menu.append(makeDropdownItem("Generate URL").click(function () {
+			var content = cp.fs.getContent(file);
+			var url = editor_URL(content, file.filename);
+			$("#urlModal-body").text(url);
+			$("#urlModal").modal('show');
+		}));
 
 		$menu.append(makeDropdownItem("Email URL").click(function () {
 			var content = cp.fs.getContent(file);
@@ -785,12 +805,11 @@ cp.makeLHSEditorToolbar = function (file) {
 			var content = cp.fs.getContent(file);
 			var url = editor_URL(content, file.filename);
 
-			var request = gapi.client.urlshortener.url.get({
-			  'longUrl': url
-			});
-			request.execute(function(response) {
-			  appendResults(response.longUrl);
-			});
+			var shortURL = cp.getShortURL(url);
+			if (shortURL) {
+				$("#urlModal-body").text(shortURL);
+				$("#urlModal").modal('show');
+			}
 		}));
     }, {"title" : "Share contents"});
 

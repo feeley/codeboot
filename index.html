@@ -304,11 +304,6 @@
         function cp_about() {
 
         }
-
-        function googleInit() {
-        	gapi.client.setApiKey('AIzaSyCrDgOtGNcROe5LcBMOWFQ5orU65u7J82I');
-	        gapi.client.load('urlshortener', 'v1');
-        }
     </script>
     <script src="include/actions.js"></script>
     <script src="include/editors.js"></script>
@@ -320,12 +315,24 @@
     <script src="include/output.js"></script>
     <script src="include/jquery.zclip.min.js"></script>
     <script src="include/jquery.livequery.js"></script>
-    <script src="https://apis.google.com/js/client.js?onload=googleInit"></script>
     <script>cp.query(null);</script>
 
 	<form id="form-download" class="hide" action="download.php" method="post">
 	  <textarea id="form-download-content" name="content" style="width: 0; height: 0;"></textarea>
 	  <textarea id="form-download-filename" name="filename" style="width: 0; height: 0;"></textarea>
 	</form>
+
+	<div id="urlModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="urlModalLabel" aria-hidden="true">
+	  <div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+		<h3 id="urlModalLabel">Share URL</h3>
+	  </div>
+	  <div class="modal-body">
+		<pre id="urlModal-body"></pre>
+	  </div>
+	  <div class="modal-footer">
+		<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+	  </div>
+	</div>
   </body>
 </html>
