@@ -39,7 +39,7 @@ cp.output = {};
 			    $pixel.css("margin", "0");
 			    $pixel.css("width", this.pixelSize + "px");
 			    $pixel.css("height", this.pixelSize + "px");
-			    $pixel.css("border", this.borderWidth + "px solid #a0a0a0");
+			    $pixel.css("border", this.borderWidth + "px solid #c0c0c0");
 
 				$row.append($pixel);
 				this.$pixels[i].push($pixel);
@@ -57,19 +57,27 @@ cp.output = {};
 		}
 	};
 
-	PixelGrid.prototype.clear = function () {
-		this.each(function ($e) {
-			$e.css('background-color', 'transparent');
-		});
+	PixelGrid.prototype.clear = function (color) {
+            if (color === void 0) {
+                color = 'transparent';
+            }
+	    this.each(function ($e) {
+		$e.css('background-color', color);
+	    });
 	}
 
 	PixelGrid.prototype.setPixel = function (col, row, color) {
-        if (!color) color = "black";
-		this.$pixels[row][col].css('background-color', color);
+            if (color === void 0) {
+                color = 'black';
+            }
+	    this.$pixels[row][col].css('background-color', color);
 	};
 
 	PixelGrid.prototype.clearPixel = function (col, row, color) {
-		this.$pixels[row][col].css('background-color', 'transparent');
+            if (color === void 0) {
+                color = 'transparent';
+            }
+	    this.$pixels[row][col].css('background-color', color);
 	};
 
     exports.PixelGrid = PixelGrid;

@@ -721,6 +721,12 @@ function ast_to_js(ast, ctx)
             js_out(":", ctx);
             ast_to_js(ast.exprs[2], ctx);
         }
+        else if (ast.op === "x . y")
+        {
+            ast_to_js(ast.exprs[0], ctx);
+            js_out(".", ctx);
+            js_out(ast.exprs[1].value, ctx);
+        }
         else if (ast.op === "x [ y ]")
         {
             ast_to_js(ast.exprs[0], ctx);

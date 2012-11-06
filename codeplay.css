@@ -159,7 +159,7 @@ button .zclip, button .zclip embed {
 
 #transcript .CodeMirror-scroll {
     /* Fix size, use scroll bars on overflow */
-    max-height: 132px;
+    max-height: 150px;
     overflow: auto;
 }
 

@@ -227,8 +227,28 @@ function comp_statement(cte, ast) {
 
         var code = comp_statement(cte, ast.block);
 
+        var declared_global_vars = [];
+
+        for (var id_str in ast.vars) {
+            var v = ast.vars[id_str];
+            if (v.is_declared) {
+                declared_global_vars.push(id_str);
+            }
+        }
+
         return function (rte, cont) {
             rte.frame.cte = cte;
+
+            // Undefine all global variables that are declared in the
+            // program.  This is useful to avoid restarting a program
+            // in codePlay with the variables initialized to the value
+            // they had at the end of the previous run, which is
+            // confusing.
+
+            for (var i=0; i<declared_global_vars.length; i++) {
+                rte.glo[declared_global_vars[i]] = void 0;
+            }
+
             return code(rte, cont);
         };
 
@@ -836,7 +856,16 @@ function comp_expr(cte, ast) {
         } else { // if (is_pure_op2(ast.op))
 
             var code_expr0 = comp_expr(cte, ast.exprs[0]);
-            var code_expr1 = comp_expr(cte, ast.exprs[1]);
+            var code_expr1;
+
+            if (ast.op === "x . y") {
+                var value = ast.exprs[1].value;
+                code_expr1 = function (rte, cont) {
+                    return cont(rte, value);
+                };
+            } else {
+                code_expr1 = comp_expr(cte, ast.exprs[1]);
+            }
 
             switch (ast.op) {
 
@@ -929,7 +958,18 @@ function comp_expr(cte, ast) {
             // method call
 
             var code_obj = comp_expr(cte, ast.fn.exprs[0]);
-            var code_prop = comp_expr(cte, ast.fn.exprs[1]);
+
+            var code_prop;
+
+            if (ast.fn.op === "x . y") {
+                var value = ast.fn.exprs[1].value;
+                code_prop = function (rte, cont) {
+                    return cont(rte, value);
+                };
+            } else {
+                code_prop = comp_expr(cte, ast.fn.exprs[1]);
+            }
+
             var code_args = comp_exprs(cte, ast.args);
 
             var op = function (rte, cont, ast, obj, prop) {
@@ -1112,7 +1152,15 @@ function comp_expr(cte, ast) {
 
     } else if (ast instanceof RegExpLiteral) {
 
-        throw "unimplemented"; /////////////////////////////////////////
+        var pattern = ast.pattern;
+        var flags = ast.flags;
+
+        return function (rte, cont) {
+            return step_end(rte,
+                            cont,
+                            ast,
+                            new RegExp(pattern, flags));
+        };
 
     } else if (ast instanceof ObjectLiteral) {
 
@@ -1280,7 +1328,17 @@ function comp_op1_assign(cte, ast, op1, lhs) {
     if (is_prop_access(lhs)) {
 
         var code_obj = comp_expr(cte, lhs.exprs[0]);
-        var code_prop = comp_expr(cte, lhs.exprs[1]);
+
+        var code_prop;
+
+        if (lhs.op === "x . y") {
+            var value = lhs.exprs[1].value;
+            code_prop = function (rte, cont) {
+                return cont(rte, value);
+            };
+        } else {
+            code_prop = comp_expr(cte, lhs.exprs[1]);
+        }
 
         return gen_op_dyn_dyn(ast,
                               op,
@@ -1304,7 +1362,18 @@ function comp_op2_assign(cte, ast, op2, lhs, get_code_value) {
     if (is_prop_access(lhs)) {
 
         var code_obj = comp_expr(cte, lhs.exprs[0]);
-        var code_prop = comp_expr(cte, lhs.exprs[1]);
+
+        var code_prop;
+
+        if (lhs.op === "x . y") {
+            var value = lhs.exprs[1].value;
+            code_prop = function (rte, cont) {
+                return cont(rte, value);
+            };
+        } else {
+            code_prop = comp_expr(cte, lhs.exprs[1]);
+        }
+
         var code_value = get_code_value();
 
         return gen_op_dyn_dyn_dyn(ast,
@@ -1717,7 +1786,8 @@ function pure_op2_to_semfn(op)
 {
   switch (op)
   {
-  case "x [ y ]": return sem_prop_access;
+  case "x [ y ]": return sem_prop_index;
+  case "x . y": return sem_prop_access;
   case "x * y": return sem_x_mult_y;
   case "x / y": return sem_x_div_y;
   case "x % y": return sem_x_mod_y;
@@ -1830,7 +1900,13 @@ function sem_excl_x(rte, cont, ast, x) // "! x"
     return step_end(rte, cont, ast, result);
 }
 
-function sem_prop_access(rte, cont, ast, x, y) // "x [ y ]"
+function sem_prop_index(rte, cont, ast, x, y) // "x [ y ]"
+{
+    var result = (x [ y ]);
+    return step_end(rte, cont, ast, result);
+}
+
+function sem_prop_access(rte, cont, ast, x, y) // "x . y"
 {
     var result = (x [ y ]);
     return step_end(rte, cont, ast, result);

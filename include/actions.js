@@ -510,6 +510,12 @@ function setControllerState(controller, enabled) {
     $(".exec-btn-anim", controller).toggleClass('disabled', !enabled);
 }
 
+function setStepCounter(count) {
+    if (program_state.step_counter !== null) {
+        program_state.step_counter.text(count + " step" + (count>1 ? "s" : ""));
+    }
+}
+
 function disableOtherControllers(controller) {
     $('[data-cp-exec="controller"]').each(function () {
         if (this !== controller) {
@@ -569,7 +575,7 @@ cp.enterMode = function (newMode) {
     if (newMode === 'animating' || newMode === 'stepping') {
         if (program_state.step_counter === null) {
             program_state.step_counter = $('<span class="badge badge-info exec-lbl-count"/>');
-            program_state.step_counter.text("Step " + program_state.rte.step_count);
+            setStepCounter(program_state.rte.step_count);
             cp.repl.addWidget({line: 0, ch: 0}, program_state.step_counter.get(0), false);
         }
     } else if (newMode === 'stopped' && program_state.step_counter != null) {
@@ -773,6 +779,10 @@ uninteresting_global["Date"] = true;
 uninteresting_global["String"] = true;
 uninteresting_global["Array"] = true;
 uninteresting_global["Number"] = true;
+uninteresting_global["setScreenMode"] = true;
+uninteresting_global["getScreenWidth"] = true;
+uninteresting_global["getScreenHeight"] = true;
+uninteresting_global["setPixel"] = true;
 
 cp.execute = function (single_step) {
 
@@ -804,9 +814,7 @@ cp.execute2 = function (single_step) {
             return;
         }
 
-        if (program_state.step_counter !== null) {
-            program_state.step_counter.text("Step " + rte.step_count);
-        }
+        setStepCounter(rte.step_count);
 
         if (program_state.mode === 'stepping') {
             single_step = true;
@@ -935,20 +943,39 @@ cp.run_setup_and_execute = function (code_gen, single_step) {
     cp.repl.focus();
 };
 
-function builtin_pause(filename)
-{
+function abort_fn_body(rte, result, msg) {
+
+    cp.enterMode("stepping");
+
+    if (msg !== void 0) {
+        cp.transcript.addLine(msg, "error-message");
+    }
+
+    program_state.step_delay = 0;
+    rte.step_limit = rte.step_count; // exit trampoline
+
+    return return_fn_body(rte, result);
+}
+
+function return_fn_body(rte, result) {
+
+    var cont = rte.stack.cont;
+
+    rte.frame = rte.stack.frame;
+    rte.stack = rte.stack.stack;
+
+    return cont(rte, result);
+}
+
+function builtin_pause(filename) {
     throw "unimplemented";///////////////////////////
 }
 
-builtin_pause._apply_ = function (rte, cont, this_, params)
-{
-    var code = function (rte, cont)
-               {
-                   cp.enterMode("stepping");
-                   program_state.step_delay = 0;
-                   rte.step_limit = rte.step_count; // exit trampoline
-                   return cont(rte, void 0);
-               };
+builtin_pause._apply_ = function (rte, cont, this_, params) {
+
+    var code = function (rte, cont) {
+        return abort_fn_body(rte, void 0);
+    };
 
     return exec_fn_body(code,
                         builtin_pause,
@@ -961,31 +988,22 @@ builtin_pause._apply_ = function (rte, cont, this_, params)
                         null);
 };
 
-function builtin_assert(condition)
-{
+function builtin_assert(condition) {
     throw "unimplemented";///////////////////////////
 }
 
-builtin_assert._apply_ = function (rte, cont, this_, params)
-{
-    var code = function (rte, cont)
-               {
-                   if (params[0]) {
-                       return cont(rte, void 0);
-                   } else {
-                       cp.enterMode("stepping");
-                       if (params.length >= 2) {
-                           cp.transcript.addLine(params[1], "error-message");
-                       }
-                       program_state.step_delay = 0;
-                       rte.step_limit = rte.step_count; // exit trampoline
+builtin_assert._apply_ = function (rte, cont, this_, params) {
 
-                       var cont2 = rte.stack.cont;
-                       rte.frame = rte.stack.frame;
-                       rte.stack = rte.stack.stack;
-                       return cont2(rte, "THIS ASSERTION FAILED");
-                   }
-               };
+    var code = function (rte, cont) {
+
+        if (!params[0]) {
+            return abort_fn_body(rte,
+                                 "THIS ASSERTION FAILED",
+                                 params[1]);
+        }
+
+        return cont(rte, void 0);
+    };
 
     return exec_fn_body(code,
                         builtin_assert,
@@ -998,13 +1016,187 @@ builtin_assert._apply_ = function (rte, cont, this_, params)
                         null);
 };
 
-function builtin_load(filename)
-{
+function builtin_setScreenMode(width, height) {
     throw "unimplemented";///////////////////////////
 }
 
-builtin_load._apply_ = function (rte, cont, this_, params)
-{
+builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
+
+    var code = function (rte, cont) {
+
+        if (params.length !== 2) {
+            return abort_fn_body(rte, void 0, "setScreenMode expects 2 parameters");
+        }
+
+        var width = params[0];
+        var height = params[1];
+            
+        if (typeof width !== "number" ||
+            Math.floor(width) !== width ||
+            width < 1 ||
+            width > 300) {
+            return abort_fn_body(rte, void 0, "width parameter of setScreenMode must be a positive integer no greater than 300");
+        }
+
+        if (typeof height !== "number" ||
+            Math.floor(height) !== height ||
+            height < 1) {
+            return abort_fn_body(rte, void 0, "height parameter of setScreenMode must be a positive integer no greater than 200");
+        }
+
+        var pixSize = Math.min(10, Math.floor(450 / width + 1));
+
+        var divNode = document.createElement("div");
+
+        var pixels = new cp.output.PixelGrid(divNode, {
+            rows: height,
+            cols: width,
+            pixelSize: (pixSize >= 3) ? pixSize-1 : pixSize,
+            borderWidth: (pixSize >= 3) ? 1 : 0,
+        });
+
+        pixels.clear('black');
+
+        cp.transcript.addLineWidget(divNode);
+
+        cp.screenPixels = pixels;
+        cp.screenWidth = width;
+        cp.screenHeight = height;
+
+        return cont(rte, void 0);
+    };
+
+    return exec_fn_body(code,
+                        builtin_setScreenMode,
+                        rte,
+                        cont,
+                        this_,
+                        params,
+                        [],
+                        null,
+                        null);
+};
+
+cp.screenWidth = 0;
+
+function builtin_getScreenWidth() {
+    throw "unimplemented";///////////////////////////
+}
+
+builtin_getScreenWidth._apply_ = function (rte, cont, this_, params) {
+
+    var code = function (rte, cont) {
+        return return_fn_body(rte, cp.screenWidth);
+    };
+
+    return exec_fn_body(code,
+                        builtin_getScreenWidth,
+                        rte,
+                        cont,
+                        this_,
+                        params,
+                        [],
+                        null,
+                        null);
+};
+
+cp.screenHeight = 0;
+
+function builtin_getScreenHeight() {
+    throw "unimplemented";///////////////////////////
+}
+
+builtin_getScreenHeight._apply_ = function (rte, cont, this_, params) {
+
+    var code = function (rte, cont) {
+        return return_fn_body(rte, cp.screenHeight);
+    };
+
+    return exec_fn_body(code,
+                        builtin_getScreenHeight,
+                        rte,
+                        cont,
+                        this_,
+                        params,
+                        [],
+                        null,
+                        null);
+};
+
+function builtin_setPixel(x, y, color) {
+    throw "unimplemented";///////////////////////////
+}
+
+builtin_setPixel._apply_ = function (rte, cont, this_, params) {
+
+    var code = function (rte, cont) {
+
+        if (params.length !== 3) {
+            return abort_fn_body(rte, void 0, "setPixel expects 3 parameters");
+        }
+
+        var x = params[0];
+        var y = params[1];
+        var color = params[2];
+            
+        if (typeof x !== "number" ||
+            Math.floor(x) !== x ||
+            x < 0 ||
+            x >= cp.screenWidth) {
+            return abort_fn_body(rte, void 0, "x parameter of setPixel must be a positive integer less than " + cp.screenWidth);
+        }
+
+        if (typeof y !== "number" ||
+            Math.floor(y) !== y ||
+            y < 0 ||
+            y >= cp.screenHeight) {
+            return abort_fn_body(rte, void 0, "y parameter of setPixel must be a positive integer less than " + cp.screenHeight);
+        }
+
+        if (typeof color !== "object" ||
+            color === null ||
+            !("r" in color) ||
+            typeof color.r !== "number" ||
+            Math.floor(color.r) !== color.r ||
+            color.r < 0 || color.r > 255 ||
+            !("g" in color) ||
+            typeof color.g !== "number" ||
+            Math.floor(color.g) !== color.g ||
+            color.g < 0 || color.g > 255 ||
+            !("b" in color) ||
+            typeof color.b !== "number" ||
+            Math.floor(color.b) !== color.b ||
+            color.b < 0 || color.b > 255) {
+            return abort_fn_body(rte, void 0, "color parameter of setPixel must be a RGB structure");
+        }
+
+        cp.screenPixels.setPixel(x,
+                                 y,
+                                 "#" +
+                                 (256+color.r).toString(16).slice(1) +
+                                 (256+color.g).toString(16).slice(1) +
+                                 (256+color.b).toString(16).slice(1));
+
+        return cont(rte, void 0);
+    };
+
+    return exec_fn_body(code,
+                        builtin_setPixel,
+                        rte,
+                        cont,
+                        this_,
+                        params,
+                        [],
+                        null,
+                        null);
+};
+
+function builtin_load(filename) {
+    throw "unimplemented";///////////////////////////
+}
+
+builtin_load._apply_ = function (rte, cont, this_, params) {
+
     var filename = params[0];
     var code = cp.compile_internal_file(filename);
 
@@ -1019,14 +1211,13 @@ builtin_load._apply_ = function (rte, cont, this_, params)
                         null);
 };
 
-cp.compile_repl_expression = function (source, line, ch)
-{
+cp.compile_repl_expression = function (source, line, ch) {
     return cp.compile(source,
                       new SourceContainer(source, "<REPL>", line+1, ch+1));
 };
 
-cp.compile_internal_file = function (filename)
-{
+cp.compile_internal_file = function (filename) {
+
     var state = readFileInternal(filename);
     var source = state.content;
 
@@ -1034,8 +1225,8 @@ cp.compile_internal_file = function (filename)
                       new SourceContainerInternalFile(source, filename, 1, 1, state.stamp));
 };
 
-function readFileInternal(filename)
-{
+function readFileInternal(filename) {
+
     var file = cp.fs.getByName(filename);
 
     return {

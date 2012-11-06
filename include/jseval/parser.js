@@ -597,7 +597,8 @@ function is_prop_access(ast)
 
 function is_prop_access_op(op)
 {
-    return op === "x [ y ]";
+    return op === "x [ y ]" ||
+           op === "x . y";
 }
 
 function is_lvalue(ast)
@@ -1024,7 +1025,7 @@ function MemberExpr_3(p, MemberExpr, LBRACK, Expr, RBRACK)
 function MemberExpr_4(p, MemberExpr, PERIOD, IDENT)
 {
     return new OpExpr(MemberExpr.loc.join(IDENT.loc),
-                      "x [ y ]",
+                      "x . y",
                       [MemberExpr, new Literal(IDENT.loc, IDENT.value)]);
 }
 
@@ -1101,7 +1102,7 @@ function CallExpr_3(p, CallExpr, LBRACK, Expr, RBRACK)
 function CallExpr_4(p, CallExpr, PERIOD, IDENT)
 {
     return new OpExpr(CallExpr.loc.join(IDENT.loc),
-                      "x [ y ]",
+                      "x . y",
                       [CallExpr, new Literal(IDENT.loc, IDENT.value)]);
 }
 
