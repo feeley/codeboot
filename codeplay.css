@@ -107,11 +107,11 @@ div.tab-pane {
   padding-left: 3px;
 }
 
-button .zclip, button .zclip embed {
-  left: 0 !important;
-  top: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
+.nav-tabs .dropdown-toggle .caret,
+.nav-tabs .dropdown-toggle:hover .caret {
+  /* Restore caret colours for file editor toolbars */
+  border-top-color: black;
+  border-bottom-color: black;
 }
 
 /* ----- Editors ----- */

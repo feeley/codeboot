@@ -304,6 +304,11 @@
         function cp_about() {
 
         }
+
+        function googleInit() {
+        	gapi.client.setApiKey('AIzaSyCrDgOtGNcROe5LcBMOWFQ5orU65u7J82I');
+	        gapi.client.load('urlshortener', 'v1');
+        }
     </script>
     <script src="include/actions.js"></script>
     <script src="include/editors.js"></script>
@@ -314,6 +319,8 @@
     <script src="include/tutorial.js"></script>
     <script src="include/output.js"></script>
     <script src="include/jquery.zclip.min.js"></script>
+    <script src="include/jquery.livequery.js"></script>
+    <script src="https://apis.google.com/js/client.js?onload=googleInit"></script>
     <script>cp.query(null);</script>
 
 	<form id="form-download" class="hide" action="download.php" method="post">

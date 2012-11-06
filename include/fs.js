@@ -40,6 +40,26 @@ function makeTBButton($contents, props) {
     return $btn;
 }
 
+function makeDropdown($contents, populateFn, props) {
+    var $group = $('<div class="btn-group"/>');
+    var $dropdownBtn = $('<a class="btn dropdown-toggle" data-toggle="dropdown" href="#"/>');
+    $dropdownBtn.append($contents);
+    $dropdownBtn.append(document.createTextNode(" "));
+    $dropdownBtn.append($('<span class="caret"></span>'));
+
+    var $dropdownMenu = $('<ul class="dropdown-menu"/>');
+    if (populateFn) populateFn($dropdownMenu);
+
+    $group.append($dropdownBtn);
+    $group.append($dropdownMenu);
+
+    return $group;
+}
+
+function makeDropdownItem($contents) {
+	return $('<li/>').append($('<a href="#"/>').append($contents));
+}
+
 /* ----- Internal file system ----- */
 
 var BUILTIN_FILES = {
@@ -748,9 +768,65 @@ cp.makeLHSEditorToolbar = function (file) {
     });
     $saveButton.appendTo($group);
 
-    var $btnContents = $('<span class="cp-zclip-target" data-zclip-role="copy-url"><i class="icon-link"/></span>');
-    var $copyURLButton = makeTBButton($btnContents, {"title" : "Copy URL"});
-    $copyURLButton.appendTo($group);
+    var $btnShare = makeDropdown($('<i class="icon-share"/>'), function ($menu) {
+        var $zclipItem = makeDropdownItem($('<span class="cp-zclip-target" data-zclip-role="copy-url">Copy URL</span>'));
+		$menu.append($zclipItem);
+
+		$menu.append(makeDropdownItem("Email URL").click(function () {
+			var content = cp.fs.getContent(file);
+			var subject = encodeURIComponent("codePlay URL");
+			var body = encodeURIComponent(editor_URL(content, file.filename));
+		    var href = "mailto:?subject=" + subject + "&body=" + body;
+			var w = window.open(href, "_blank");
+			if (w) w.close();
+		}));
+
+		$menu.append(makeDropdownItem("Shorten URL").click(function () {
+			var content = cp.fs.getContent(file);
+			var url = editor_URL(content, file.filename);
+
+			var request = gapi.client.urlshortener.url.get({
+			  'longUrl': url
+			});
+			request.execute(function(response) {
+			  appendResults(response.longUrl);
+			});
+		}));
+    }, {"title" : "Share contents"});
+
+	// Wait for zclip to be visible, as this is required by the zclip library
+    $("[data-zclip-role]:visible", $btnShare).livequery(function() {
+        // Don't perform this initialization again
+        $("[data-zclip-role]:visible", $btnShare).expire();
+
+		// Initialize zclip
+		$(this).zclip({
+			path:'include/ZeroClipboard.swf',
+			copy: function() {
+				var content = cp.fs.getContent(file);
+				return editor_URL(content, file.filename);
+			},
+			setCSSEffects: false
+		});
+
+		// Stretch zclip to cover its entire parent
+		var $link = $(this).parent();
+		var $zclip = $(".zclip", $link);
+
+		$zclip.css("position", "absolute");
+		$zclip.css("left", "0");
+		$zclip.css("top", "0");
+		$zclip.css("width", $link.outerWidth());
+		$zclip.css("height", $link.outerHeight());
+
+		var $zclipFlash = $("embed", $link);
+		$zclipFlash.css("left", 0);
+		$zclipFlash.css("top", 0);
+		$zclipFlash.css("width", "100%");
+		$zclipFlash.css("height", "100%");
+	});
+
+    $btnShare.appendTo($group);
 
     return $toolbar;
 };
@@ -874,15 +950,6 @@ cp.newTab = function (fileOrFilename) {
             $(".CodeMirror-scroll", $row).width($(this).width());
             editor.refresh();
           }
-    });
-
-    var $btnCopyURL = $('[data-zclip-role="copy-url"]', $row);
-    $btnCopyURL.zclip({
-        path:'include/ZeroClipboard.swf',
-        copy: function() {
-            var content = cp.fs.getContent(file);
-            return editor_URL(content, file.filename);
-        }
     });
 };
 
