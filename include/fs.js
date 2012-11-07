@@ -814,6 +814,7 @@ cp.makeLHSEditorToolbar = function (file) {
     }, {"title" : "Share contents"});
 
 	// Wait for zclip to be visible, as this is required by the zclip library
+    /*
     $("[data-zclip-role]:visible", $btnShare).livequery(function() {
         // Don't perform this initialization again
         $("[data-zclip-role]:visible", $btnShare).expire();
@@ -844,6 +845,7 @@ cp.makeLHSEditorToolbar = function (file) {
 		$zclipFlash.css("width", "100%");
 		$zclipFlash.css("height", "100%");
 	});
+    */
 
     $btnShare.appendTo($group);
 
