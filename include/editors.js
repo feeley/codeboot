@@ -8,7 +8,8 @@ function createCodeEditor(node) {
         extraKeys: {
             "Enter": function(cm) { cm.autoInsertBraces(cm); },
             "Ctrl-Enter": function(cm) { cm.autoInsertBraces(cm); },
-            "Ctrl-\\": function (cm) { Mousetrap.trigger("ctrl+\\"); }
+            "Ctrl-\\": function (cm) { Mousetrap.trigger("ctrl+\\"); },
+            "Ctrl-I" : function (cm) { cm.autoFormatRange(cm.getCursor(true), cm.getCursor(false)); }
         },
 
         onDragEvent: function(cm, event) {
