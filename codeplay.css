@@ -276,3 +276,21 @@ i.icon-link {
   background-image: url("icons/link.png");
   background-position: 0;
 }
+
+[class^="icon-exp-"] {
+  background-position: 0;
+  width: 10px;
+  height: 16px;
+}
+
+i.icon-exp-one {
+  background-image: url("icons/exp_1.png");
+}
+
+i.icon-exp-infinity {
+  background-image: url("icons/exp_inf.png");
+}
+
+i.icon-exp-pause {
+  background-image: url("icons/exp_pause.png");
+}

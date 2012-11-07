@@ -548,8 +548,11 @@ cp.enterMode = function (newMode) {
 
     // Step button + icon
     $(".exec-btn-step", control).toggleClass("disabled", newMode === 'animating');
-	$('.exec-icon-singleStep', control).toggle(newMode === 'stepping');
-	$(".exec-icon-stepMode", control).toggle(newMode !== 'stepping');
+    if (newMode === 'stepping') {
+    	$("#step-mode-icon").removeClass("icon-exp-pause").addClass("icon-exp-one");
+    } else {
+        $("#step-mode-icon").removeClass("icon-exp-one").addClass("icon-exp-pause");
+    }
 
     // Step counter
     if (newMode === 'animating' || newMode === 'stepping') {

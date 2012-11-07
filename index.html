@@ -106,8 +106,8 @@
       <div id="console-row" class="row">
         <div id="repl-controls" class="btn-toolbar pull-right" data-cp-exec="controller">
           <div class="btn-group">
-            <button id="step-button" title="Step" class="btn exec-btn-step" onclick="cp.animate(0);"><i class="icon-play"></i><img id="step-mode-icon" class="exec-icon-stepMode" src="icons/exp_pause.png"><img id="single-step-icon" class="exec-icon-singleStep hide" src="icons/exp_1.png"></button>
-            <button id="play-button" title="Execute" class="btn" onclick="cp.play();"><i class="icon-play"></i><img src="icons/exp_inf.png"></button>
+            <button id="step-button" title="Step" class="btn exec-btn-step" onclick="cp.animate(0);"><i class="icon-play"></i><i id="step-mode-icon" class="icon-exp-pause"></i></button>
+            <button id="play-button" title="Execute" class="btn" onclick="cp.play();"><i class="icon-play"></i><i class="icon-exp-infinity"></i></button>
             <button id="animate-button" title="Animate" class="btn" onclick="cp.animate(cp.stepDelay);"><i class="icon-play"></i></button>
             <button id="pause-button" title="Pause" class="btn exec-btn-pause disabled" onclick="cp.animate(0);"><i class="icon-pause"></i></button>
             <button id="cancel-button" title="Stop" class="btn exec-btn-cancel disabled" onclick="cp.cancel();"><i class="icon-stop"></i></button>
