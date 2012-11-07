@@ -675,7 +675,14 @@ cp.closeFile = function (fileOrFilename) {
     file.save();
     file.editor = null;
 
-    $(cp.getContainerFor(file)).remove();
+	var $container = $(cp.getContainerFor(file));
+
+	if ($(".exec-point-code", $container).size() > 0) {
+		// Current file editor contains some highlighted code
+		cp.hide_step();
+	}
+
+    $container.remove();
 };
 
 cp.closeAll = function () {
