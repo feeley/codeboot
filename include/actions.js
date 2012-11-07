@@ -43,7 +43,7 @@ function removeTrailingNewline(text) {
 function CPTranscript(editor) {
     this.editor = editor;
     this.is_empty = true;
-    
+
     this.widgets = [];
 }
 
@@ -72,7 +72,7 @@ CPTranscript.prototype.addTextLine = function (text, cssClass) {
     text = removeTrailingNewline(text);
     // CodeMirror needs to be visible to the updates to the gutter to work...
     if (this.is_empty) this.show();
-    
+
     var line;
     if (this.is_empty) {
         line = 0;
@@ -93,10 +93,10 @@ CPTranscript.prototype.addTextLine = function (text, cssClass) {
     this.is_empty = false;
 };
 
-CPTranscript.prototype.addLineWidget = function (textOrNode, cssClass) {    
+CPTranscript.prototype.addLineWidget = function (textOrNode, cssClass) {
     // CodeMirror needs to be visible to the updates to the gutter to work...
     if (this.is_empty) this.show();
-    
+
     var widget;
     if (typeof textOrNode === "string") {
         var text = removeTrailingNewline(textOrNode);
@@ -109,7 +109,7 @@ CPTranscript.prototype.addLineWidget = function (textOrNode, cssClass) {
     }
     var w = this.editor.addLineWidget(this.editor.lineCount() - 1, widget);
     this.widgets.push(w);
-    
+
     cp.scrollToEnd(this.editor);
 };
 
@@ -162,7 +162,7 @@ function printed_repr_old(x) {
     //TODO: avoid infinite loops for circular data!
     //TODO: avoid printing wider than page!
     //TODO: emit HTML markup, so that objects with a toHTML method can be represented specially (such as images)
- 
+
     if (typeof x === "string") {
         var chars = [];
         chars.push("\"");
@@ -681,6 +681,12 @@ cp.hide_step = function () {
             program_state.step_popover = null;
         }
 
+		// Somehow, CodeMirror seems to hold on to the marked elements somewhere,
+		// causing problems when displaying the bubble. This kludge should at least
+		// prevent the problem from manifesting for the user.
+		// TODO: proper fix
+        $(".exec-point-code").removeClass("exec-point-code");
+
         return true;
     }
     else
@@ -1030,7 +1036,7 @@ builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
 
         var width = params[0];
         var height = params[1];
-            
+
         if (typeof width !== "number" ||
             Math.floor(width) !== width ||
             width < 1 ||
@@ -1138,7 +1144,7 @@ builtin_setPixel._apply_ = function (rte, cont, this_, params) {
         var x = params[0];
         var y = params[1];
         var color = params[2];
-            
+
         if (typeof x !== "number" ||
             Math.floor(x) !== x ||
             x < 0 ||

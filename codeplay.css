@@ -65,6 +65,11 @@
     margin-left: 5px;
 }
 
+.nav-tabs > li > .btn-toolbar,
+.row > .btn-toolbar.pull-right {
+    margin-top: 3px;
+}
+
 /* ----- Tabs ----- */
 
 .nav-tabs {
