@@ -700,7 +700,6 @@ function endsWith(str, suffix) {
 
 cp.makeEditorToolbar = function (file) {
     var $toolbar = makeToolbar();
-    var controller = $toolbar.get(0);
     $toolbar.attr('data-cp-exec', 'controller');
 
     var $execControlsGroup = makeTBGroup();
@@ -711,7 +710,6 @@ cp.makeEditorToolbar = function (file) {
     $stepButton.append($('<img class="exec-icon-stepMode" src="icons/exp_pause.png"/>'));
     $stepButton.append($('<img class="exec-icon-singleStep hide" src="icons/exp_1.png"/>'));
     $stepButton.click(function () {
-        if (!cp.setController(controller)) return false;
         if (program_state.mode === 'stopped') {
             program_state.step_delay = 0;
             cp.load(file.filename, true);
@@ -725,7 +723,6 @@ cp.makeEditorToolbar = function (file) {
     $loadButton.addClass('exec-btn-play');
     $loadButton.append($('<img src="icons/exp_inf.png"/>'));
     $loadButton.click(function () {
-        if (!cp.setController(controller)) return false;
         if (program_state.mode === 'stopped') {
             cp.load(file.filename, false);
         } else {
@@ -737,8 +734,6 @@ cp.makeEditorToolbar = function (file) {
     var $animateButton = makeTBButton($('<i class="icon-play"/>'), {"title" : "Load"});
     $animateButton.addClass('exec-btn-anim');
     $animateButton.click(function () {
-        if (!cp.setController(controller)) return false;
-
         if (program_state.mode === 'stopped') {
             program_state.step_delay = cp.stepDelay;
             cp.load(file.filename, true);
@@ -747,22 +742,6 @@ cp.makeEditorToolbar = function (file) {
         }
     });
     $animateButton.appendTo($execControlsGroup);
-
-    var $pauseButton = makeTBButton($('<i class="icon-pause"/>'), {"title" : "Pause"});
-    $pauseButton.addClass('exec-btn-pause disabled');
-    $pauseButton.click(function () {
-        if (!cp.setController(controller)) return false;
-        cp.animate(0);
-    });
-    $pauseButton.appendTo($execControlsGroup);
-
-    var $stopButton = makeTBButton($('<i class="icon-stop"/>'), {"title" : "Stop"});
-    $stopButton.addClass('exec-btn-cancel disabled');
-    $stopButton.click(function () {
-        if (!cp.setController(controller)) return false;
-        cp.cancel();
-    });
-    $stopButton.appendTo($execControlsGroup);
 
     return $toolbar;
 };

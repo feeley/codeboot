@@ -500,7 +500,6 @@ var program_state = {
     timeout_id: null,
     step_delay: 0,
     mode: 'stopped',
-    controller: null,
     step_counter: null
 };
 
@@ -516,49 +515,30 @@ function setStepCounter(count) {
     }
 }
 
-function disableOtherControllers(controller) {
+function disableAllControllers() {
     $('[data-cp-exec="controller"]').each(function () {
-        if (this !== controller) {
-            setControllerState(this, false);
-        }
+        setControllerState(this, false);
     });
 }
 
 function enableAllControllers() {
-    $('[data-cp-exec="controller"]').each(function () {
-        setControllerState(this, true);
-    });
+	$('[data-cp-exec="controller"]').each(function () {
+    	setControllerState(this, true);
+	});
 }
 
-cp.setController = function (idOrElement) {
-    var element;
-    if (typeof idOrElement === "string") {
-        element = document.getElementById(idOrElement);
-    } else {
-        element = idOrElement;
-    }
-
-    if (program_state.controller === null) {
-        program_state.controller = element;
-        disableOtherControllers(element);
-        return true;
-    }
-
-    if (program_state.controller === element) return true;
-
-    return false;
-};
-
 cp.enterMode = function (newMode) {
-    if (newMode === "stopped") {
-        program_state.controller = null;
-        enableAllControllers();
-    }
+    // newMode is one of 'stopped', 'animating', 'stepping'
+
 	if (program_state.mode === newMode) return;
 
-	// newMode is one of 'stopped', 'animating', 'stepping'
+	if (newMode === "stopped") {
+        enableAllControllers();
+    } else {
+    	disableAllControllers();
+    }
 
-	var control = program_state.controller;
+	var control = $("#repl-controls");
 
     // Cancel button
     $(".exec-btn-cancel", control).toggleClass("disabled", newMode === 'stopped');
