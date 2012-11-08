@@ -785,6 +785,7 @@ cp.makeEditorToolbar = function (file) {
 
     makeSplitDropdown(function ($btn, $menu) {
     	$menu.addClass("dropdown-align-right dropdown-btns-only");
+    	$btn.addClass("action-btn");
 
 		function changeButtonNature(nature) {
 			$btn.empty();
@@ -793,7 +794,9 @@ cp.makeEditorToolbar = function (file) {
 			});
 			$btn.attr('title', nature.title);
 			$btn.unbind('click');
-			$btn.click(nature.action);
+			$btn.click(function () {
+				if (!$btn.is(".disabled")) nature.action();
+			});
 		}
 
     	buttons.forEach(function (button) {

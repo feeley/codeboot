@@ -504,9 +504,8 @@ var program_state = {
 };
 
 function setControllerState(controller, enabled) {
-    $(".exec-btn-step", controller).toggleClass('disabled', !enabled);
-    $(".exec-btn-play", controller).toggleClass('disabled', !enabled);
-    $(".exec-btn-anim", controller).toggleClass('disabled', !enabled);
+    $(".dropdown-toggle", controller).toggleClass('disabled', !enabled);
+    $(".action-btn", controller).toggleClass('disabled', !enabled);
 }
 
 function setStepCounter(count) {
