@@ -838,27 +838,25 @@ cp.makeLHSEditorToolbar = function (file) {
     $saveButton.appendTo($group);
 
     var $btnShare = makeDropdown($('<i class="icon-share"/>'), function ($menu) {
-		$menu.append(makeDropdownItem("Generate URL").click(function () {
+		$menu.append(makeDropdownItem("Email public link").click(function () {
 			var content = cp.fs.getContent(file);
 			var url = editor_URL(content, file.filename);
-			$("#urlModal-body").text(url);
-            $("#urlModal-clippy").empty().clippy({clippy_path: "clippy.swf", text: url});
-			$("#urlModal").modal('show');
-		}));
+			var shortURL = cp.getShortURL(url);
+            if (!shortURL) {
+                alert("Failed to generate short URL");
+                return;
+            }
 
-		$menu.append(makeDropdownItem("Email URL").click(function () {
-			var content = cp.fs.getContent(file);
-			var subject = encodeURIComponent("codePlay URL");
-			var body = encodeURIComponent(editor_URL(content, file.filename));
+			var subject = encodeURIComponent("codePlay link");
+			var body = encodeURIComponent(shortURL);
 		    var href = "mailto:?subject=" + subject + "&body=" + body;
 			var w = window.open(href, "_blank");
 			if (w) w.close();
 		}));
 
-		$menu.append(makeDropdownItem("Shorten URL").click(function () {
+		$menu.append(makeDropdownItem("Generate public link").click(function () {
 			var content = cp.fs.getContent(file);
 			var url = editor_URL(content, file.filename);
-
 			var shortURL = cp.getShortURL(url);
 			if (shortURL) {
 				$("#urlModal-body").text(shortURL);
@@ -867,6 +865,14 @@ cp.makeLHSEditorToolbar = function (file) {
 			} else {
 			    alert("Failed to generate short URL");
 			}
+		}));
+
+		$menu.append(makeDropdownItem("Generate private link").click(function () {
+			var content = cp.fs.getContent(file);
+			var url = editor_URL(content, file.filename);
+			$("#urlModal-body").text(url);
+            $("#urlModal-clippy").empty().clippy({clippy_path: "clippy.swf", text: url});
+			$("#urlModal").modal('show');
 		}));
     }, {"title" : "Share contents"});
 
