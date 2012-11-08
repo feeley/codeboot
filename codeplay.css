@@ -281,20 +281,31 @@ i.icon-link {
   background-position: 0;
 }
 
-[class^="icon-exp-"] {
-  background-position: 0;
+[class^="icon-exp-"],
+[class*="icon-exp-"] {
+  background-image: url("icons/cp-exp.png");
   width: 10px;
   height: 16px;
 }
 
+.icon-white,
+.nav > .active > a > [class^="icon-exp-"],
+.nav > .active > a > [class*=" icon-exp-"],
+.dropdown-menu > li > a:hover > [class^="icon-exp-"],
+.dropdown-menu > li > a:hover > [class*=" icon-exp-"],
+.dropdown-menu > .active > a > [class^="icon-exp-"],
+.dropdown-menu > .active > a > [class*=" icon-exp-"] {
+  background-image: url("icons/cp-exp-white.png");
+}
+
 i.icon-exp-one {
-  background-image: url("icons/exp_1.png");
+  background-position: 0 0;
 }
 
 i.icon-exp-infinity {
-  background-image: url("icons/exp_inf.png");
+  background-position: -10px 0;
 }
 
 i.icon-exp-pause {
-  background-image: url("icons/exp_pause.png");
+  background-position: -20px 0;
 }
