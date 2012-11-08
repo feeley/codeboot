@@ -8,7 +8,7 @@
     $request = '{"longUrl": "' . $url . '"}';
 
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "https://www.googleapis.com/urlshortener/v1/url?key=AIzaSyCrDgOtGNcROe5LcBMOWFQ5orU65u7J82I");
+    curl_setopt($ch, CURLOPT_URL, "https://www.googleapis.com/urlshortener/v1/url?key=AIzaSyBgiTFwHKgxC9xmrVzBqG4JjG_MlT260T8");
     curl_setopt($ch, CURLOPT_HEADER, 0);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
