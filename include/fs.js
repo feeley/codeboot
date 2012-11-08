@@ -20,6 +20,7 @@ cp.getShortURL = function (longURL) {
 	var shortURL;
 	$.ajax({
             url: "shorten.php",
+            type: "POST",
             data: {url: longURL},
             dataType: "json",
             async: false,
