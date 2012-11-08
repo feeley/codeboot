@@ -74,6 +74,20 @@
     margin-top: 3px;
 }
 
+#repl-controls.affix {
+    top: 60px;
+    right: 55px;
+    left: auto;
+    z-index: 999;
+}
+
+#repl-controls .btn.disabled {
+    /* Disable opacity for floating buttons */
+    background-color: #efefef;
+    opacity: 1;
+    filter:alpha(opacity=100);
+}
+
 /* ----- Tabs ----- */
 
 .nav-tabs {
