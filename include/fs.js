@@ -54,7 +54,7 @@ function makeTBButton($contents, props) {
     return $btn;
 }
 
-function makeDropdown($contents, populateFn, props) {
+function makeDropdown($contents, populateFn) {
     var $group = $('<div class="btn-group"/>');
     var $dropdownBtn = $('<a class="btn dropdown-toggle" data-toggle="dropdown" href="#"/>');
     $dropdownBtn.append($contents);
@@ -70,8 +70,42 @@ function makeDropdown($contents, populateFn, props) {
     return $group;
 }
 
+function makeSplitDropdown($contents, populateFn) {
+	var $group = $('<div class="btn-group"/>');
+
+	var $btn = $('<button class="btn"/>').appendTo($group);
+
+	$('<a class="btn dropdown-toggle" data-toggle="dropdown"/>')
+		.append($('<span class="caret"/>'))
+		.appendTo($group);
+
+	var $dropdownMenu = $('<ul class="dropdown-menu"/>').appendTo($group);
+
+    if (typeof $contents === "function") {
+		if (populateFn === undefined) {
+			$contents($btn, $dropdownMenu);
+		} else {
+			$contents($btn);
+		}
+	} else {
+		$btn.append($contents);
+	}
+
+	if (populateFn) populateFn($dropdownMenu);
+
+    return $group;
+}
+
 function makeDropdownItem($contents) {
-	return $('<li/>').append($('<a href="#"/>').append($contents));
+	var $link = $('<a href="#"/>');
+	var $item = $('<li/>').append($link);
+	if (typeof $contents === "function") {
+		$contents($link);
+	} else {
+		$link.append($contents);
+	}
+
+	return $item;
 }
 
 /* ----- Internal file system ----- */
@@ -709,46 +743,77 @@ cp.makeEditorToolbar = function (file) {
     var $toolbar = makeToolbar();
     $toolbar.attr('data-cp-exec', 'controller');
 
-    var $execControlsGroup = makeTBGroup();
-    $execControlsGroup.appendTo($toolbar);
+    var buttons = [
+    	{
+    		title: "Step",
+    		icons: ["icon-play", "icon-exp-pause"],
+    		action: function () {
+				if (program_state.mode === 'stopped') {
+					program_state.step_delay = 0;
+					cp.load(file.filename, true);
+				} else {
+					cp.animate(0);
+				}
+			}
+    	},
 
-    var $stepButton = makeTBButton($('<i class="icon-play"/>'), {"title" : "Step"});
-    $stepButton.addClass('exec-btn-step');
-    $stepButton.append($('<img class="exec-icon-stepMode" src="icons/exp_pause.png"/>'));
-    $stepButton.append($('<img class="exec-icon-singleStep hide" src="icons/exp_1.png"/>'));
-    $stepButton.click(function () {
-        if (program_state.mode === 'stopped') {
-            program_state.step_delay = 0;
-            cp.load(file.filename, true);
-        } else {
-            cp.animate(0);
-        }
-    });
-    $stepButton.appendTo($execControlsGroup);
+    	{
+    		title: "Execute",
+    		icons: ["icon-play", "icon-exp-infinity"],
+    		action: function () {
+				if (program_state.mode === 'stopped') {
+					cp.load(file.filename, false);
+				} else {
+					cp.play();
+				}
+			}
+    	},
 
-    var $loadButton = makeTBButton($('<i class="icon-play"/>'), {"title" : "Load"});
-    $loadButton.addClass('exec-btn-play');
-    $loadButton.append($('<img src="icons/exp_inf.png"/>'));
-    $loadButton.click(function () {
-        if (program_state.mode === 'stopped') {
-            cp.load(file.filename, false);
-        } else {
-            cp.play();
-        }
-    });
-    $loadButton.appendTo($execControlsGroup);
+    	{
+			title: "Execute",
+    		icons: ["icon-play"],
+    		action: function () {
+				if (program_state.mode === 'stopped') {
+					program_state.step_delay = cp.stepDelay;
+					cp.load(file.filename, true);
+				} else {
+					cp.animate(cp.stepDelay);
+				}
+			}
+    	}
+    ];
 
-    var $animateButton = makeTBButton($('<i class="icon-play"/>'), {"title" : "Load"});
-    $animateButton.addClass('exec-btn-anim');
-    $animateButton.click(function () {
-        if (program_state.mode === 'stopped') {
-            program_state.step_delay = cp.stepDelay;
-            cp.load(file.filename, true);
-        } else {
-            cp.animate(cp.stepDelay);
-        }
-    });
-    $animateButton.appendTo($execControlsGroup);
+    makeSplitDropdown(function ($btn, $menu) {
+    	$menu.addClass("dropdown-align-right dropdown-btns-only");
+
+		function changeButtonNature(nature) {
+			$btn.empty();
+			nature.icons.forEach(function (cssClass) {
+				$btn.append($("<i/>").addClass(cssClass));
+			});
+			$btn.attr('title', nature.title);
+			$btn.unbind('click');
+			$btn.click(nature.action);
+		}
+
+    	buttons.forEach(function (button) {
+			makeDropdownItem(function ($link) {
+				button.icons.forEach(function (cssClass) {
+					$link.append($("<i/>").addClass(cssClass));
+				});
+				$link.attr('title', button.title);
+
+				$link.click(function () {
+					changeButtonNature(button);
+					button.action();
+				});
+			}).appendTo($menu);
+    	});
+
+    	changeButtonNature(buttons[0]);
+    }).appendTo($toolbar);
+
+
 
     return $toolbar;
 };
@@ -769,8 +834,6 @@ cp.makeLHSEditorToolbar = function (file) {
     $saveButton.appendTo($group);
 
     var $btnShare = makeDropdown($('<i class="icon-share"/>'), function ($menu) {
-//      var $zclipItem = makeDropdownItem($('<span class="cp-zclip-target" data-zclip-role="copy-url">Copy URL</span>'));
-// 		$menu.append($zclipItem);
 		$menu.append(makeDropdownItem("Generate URL").click(function () {
 			var content = cp.fs.getContent(file);
 			var url = editor_URL(content, file.filename);
@@ -798,40 +861,6 @@ cp.makeLHSEditorToolbar = function (file) {
 			}
 		}));
     }, {"title" : "Share contents"});
-
-	// Wait for zclip to be visible, as this is required by the zclip library
-    /*
-    $("[data-zclip-role]:visible", $btnShare).livequery(function() {
-        // Don't perform this initialization again
-        $("[data-zclip-role]:visible", $btnShare).expire();
-
-		// Initialize zclip
-		$(this).zclip({
-			path:'include/ZeroClipboard.swf',
-			copy: function() {
-				var content = cp.fs.getContent(file);
-				return editor_URL(content, file.filename);
-			},
-			setCSSEffects: false
-		});
-
-		// Stretch zclip to cover its entire parent
-		var $link = $(this).parent();
-		var $zclip = $(".zclip", $link);
-
-		$zclip.css("position", "absolute");
-		$zclip.css("left", "0");
-		$zclip.css("top", "0");
-		$zclip.css("width", $link.outerWidth());
-		$zclip.css("height", $link.outerHeight());
-
-		var $zclipFlash = $("embed", $link);
-		$zclipFlash.css("left", 0);
-		$zclipFlash.css("top", 0);
-		$zclipFlash.css("width", "100%");
-		$zclipFlash.css("height", "100%");
-	});
-    */
 
     $btnShare.appendTo($group);
 
