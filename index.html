@@ -314,8 +314,7 @@
     <script src="include/mousetrap.min.js"></script>
     <script src="include/tutorial.js"></script>
     <script src="include/output.js"></script>
-    <!-- <script src="include/jquery.zclip.min.js"></script> -->
-    <!-- <script src="include/jquery.livequery.js"></script> -->
+    <script src="include/jquery.clippy.min.js"></script>
     <script>cp.query(null);</script>
 
 	<form id="form-download" class="hide" action="download.php" method="post">
@@ -326,7 +325,7 @@
 	<div id="urlModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="urlModalLabel" aria-hidden="true">
 	  <div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-		<h3 id="urlModalLabel">Share URL</h3>
+		<h3 id="urlModalLabel">Share URL <span id="urlModal-clippy"></span></h3>
 	  </div>
 	  <div class="modal-body">
 		<pre id="urlModal-body"></pre>

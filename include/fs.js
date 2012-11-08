@@ -841,6 +841,7 @@ cp.makeLHSEditorToolbar = function (file) {
 			var content = cp.fs.getContent(file);
 			var url = editor_URL(content, file.filename);
 			$("#urlModal-body").text(url);
+            $("#urlModal-clippy").empty().clippy({clippy_path: "clippy.swf", text: url});
 			$("#urlModal").modal('show');
 		}));
 
@@ -860,7 +861,10 @@ cp.makeLHSEditorToolbar = function (file) {
 			var shortURL = cp.getShortURL(url);
 			if (shortURL) {
 				$("#urlModal-body").text(shortURL);
+                $("#urlModal-clippy").empty().clippy({clippy_path: "clippy.swf", text: shortURL});
 				$("#urlModal").modal('show');
+			} else {
+			    alert("Failed to generate short URL");
 			}
 		}));
     }, {"title" : "Share contents"});
