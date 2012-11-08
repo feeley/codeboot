@@ -770,7 +770,7 @@ cp.makeEditorToolbar = function (file) {
     	},
 
     	{
-			title: "Execute",
+			title: "Animate",
     		icons: ["icon-play"],
     		action: function () {
 				if (program_state.mode === 'stopped') {
