@@ -36,7 +36,6 @@ function createCodeEditor(node) {
     var editor = CodeMirror(node, options);
     editor.on("scroll", function () {
         if (!program_state.step_popover) return;
-        var popover = program_state.step_popover.data('popover');
 
         var marker = program_state.step_mark;
         if (!isMarkerVisible(marker)) {
