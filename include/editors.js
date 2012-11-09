@@ -9,7 +9,12 @@ function createCodeEditor(node) {
             "Enter": function(cm) { cm.autoInsertBraces(cm); },
             "Ctrl-Enter": function(cm) { cm.autoInsertBraces(cm); },
             "Ctrl-\\": function (cm) { Mousetrap.trigger("ctrl+\\"); },
-            "Ctrl-I" : function (cm) { cm.autoFormatRange(cm.getCursor(true), cm.getCursor(false)); }
+            "Ctrl-I" : function (cm) { cm.autoFormatRange(cm.getCursor(true), cm.getCursor(false)); },
+            "Ctrl-/" : function (cm) {
+                var tok = cm.getTokenAt(cm.getCursor(false));
+                var isComment = tok.className === "comment";
+                cm.commentRange(!isComment, cm.getCursor(true), cm.getCursor(false));
+             }
         },
 
         onDragEvent: function(cm, event) {
