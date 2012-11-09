@@ -718,6 +718,8 @@ cp.closeFile = function (fileOrFilename) {
 	}
 
     $container.remove();
+
+    cp_internal_updatePopupPos();
 };
 
 cp.closeAll = function () {
@@ -943,6 +945,17 @@ function cp_internal_onTabDblClick(event) {
     $inputBox.focus();
 }
 
+function cp_internal_updatePopupPos() {
+    if (program_state.step_popover) {
+        // Make sure any visible value bubble is moved after the new editor is opened
+        var marker = program_state.step_mark;
+        var isVisible = program_state.step_popover.data('popover').tip().hasClass('in');
+        if (isVisible) {
+            program_state.step_popover.popover('show');
+        }
+    }
+}
+
 cp.newTab = function (fileOrFilename) {
 	/*
      * <div class="row">
@@ -1001,6 +1014,8 @@ cp.newTab = function (fileOrFilename) {
             editor.refresh();
           }
     });
+
+    cp_internal_updatePopupPos();
 };
 
 cp.newFile = function () {

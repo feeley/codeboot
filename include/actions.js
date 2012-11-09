@@ -627,23 +627,35 @@ cp.hide_error = function () {
     }
 };
 
-function within(point, rect) {
-    if (point.left < rect.left) return false;
-    if (point.right > rect.left + rect.clientWidth) return false;
-    if (point.top < rect.top) return false;
-    if (point.top > rect.top + rect.clientHeight) return false;
+function within(rect, viewport) {
+    if (rect.left < viewport.left) return false;
+    if (rect.right > viewport.left + viewport.clientWidth) return false;
+    if (rect.top < viewport.top) return false;
+    if (rect.bottom > viewport.top + viewport.clientHeight) return false;
     return true;
 }
 
-function scrollToMarker(marker) {
+function isCharacterVisible(pos, cm) {
+    var point = cm.charCoords(pos, "local");
+    var scrollInfo = cm.getScrollInfo();
+    return within(point, scrollInfo);
+}
+
+function isMarkerVisible(marker, cm) {
+    if (!cm) cm = marker.cm; // TODO: non-documented, so brittle
     var range = marker.find();
-    var editor = marker.cm; // TODO: non-documented, so brittle
-    if (range) {
-        var pos = range.from;
-        var point = editor.charCoords(pos, "local");
-        var scrollInfo = editor.getScrollInfo();
-        if (!within(point, scrollInfo)) {
-            editor.scrollTo(point.left, point.top);
+    if (range) return isCharacterVisible(range.from, cm);
+
+    return false;
+}
+
+function scrollToMarker(marker, cm) {
+    if (!cm) cm = marker.cm; // TODO: non-documented, so brittle
+    if (!isMarkerVisible(marker, cm)) {
+        var range = marker.find();
+        if (range) {
+            var rect = cm.charCoords(range.from, "local");
+            cm.scrollTo(rect.left, rect.top);
         }
     }
 }
