@@ -103,32 +103,36 @@
       -->
 
       <!-- Console -->
-      <div id="console-row" class="row">
-        <div id="repl-controls" class="btn-toolbar pull-right" data-cp-exec="controller" data-spy="affix">
-          <div class="btn-group">
-            <button id="step-button" title="Step" class="btn exec-btn-step" onclick="cp.animate(0);"><i class="icon-play"></i><i id="step-mode-icon" class="icon-exp-pause"></i></button>
-            <button id="play-button" title="Execute" class="btn" onclick="cp.play();"><i class="icon-play"></i><i class="icon-exp-infinity"></i></button>
-            <button id="animate-button" title="Animate" class="btn" onclick="cp.animate(cp.stepDelay);"><i class="icon-play"></i></button>
-            <button id="pause-button" title="Pause" class="btn exec-btn-pause disabled" onclick="cp.animate(0);"><i class="icon-pause"></i></button>
-            <button id="cancel-button" title="Stop" class="btn exec-btn-cancel disabled" onclick="cp.cancel();"><i class="icon-stop"></i></button>
+      <div id="floating-console">
+        <div id="console-row" class="row">
+          <div id="repl-controls" class="btn-toolbar pull-right" data-cp-exec="controller">
+            <div class="btn-group">
+              <button id="step-button" title="Step" class="btn exec-btn-step" onclick="cp.animate(0);"><i class="icon-play"></i><i id="step-mode-icon" class="icon-exp-pause"></i></button>
+              <button id="play-button" title="Execute" class="btn" onclick="cp.play();"><i class="icon-play"></i><i class="icon-exp-infinity"></i></button>
+              <button id="animate-button" title="Animate" class="btn" onclick="cp.animate(cp.stepDelay);"><i class="icon-play"></i></button>
+              <button id="pause-button" title="Pause" class="btn exec-btn-pause disabled" onclick="cp.animate(0);"><i class="icon-pause"></i></button>
+              <button id="cancel-button" title="Stop" class="btn exec-btn-cancel disabled" onclick="cp.cancel();"><i class="icon-stop"></i></button>
+            </div>
           </div>
+
+          <ul class="nav nav-tabs">
+            <li class="active"><a href="#">Console</a></li>
+            <li><div class="btn-toolbar">
+                  <div class="btn-group">
+                     <button id="clear-button" title="Clear console" class="btn" onclick="cp.clearAll();"><i class="icon-trash"></i></button>
+                  </div>
+                </div>
+             </li>
+          </ul>
+          <pre id="repl" class="tab-content"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"></div></pre>
         </div>
 
-        <ul class="nav nav-tabs">
-          <li class="active"><a href="#">Console</a></li>
-          <li><div class="btn-toolbar">
-                <div class="btn-group">
-                   <button id="clear-button" title="Clear console" class="btn" onclick="cp.clearAll();"><i class="icon-trash"></i></button>
-                </div>
-              </div>
-           </li>
-        </ul>
-        <pre id="repl" class="tab-content"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"></div></pre>
+        <div id="step-value-row" class="row">
+          <pre id="step-value" class="step-value" style="display:none;"></pre>
+        </div>
       </div>
 
-      <div id="step-value-row" class="row">
-        <pre id="step-value" class="step-value" style="display:none;"></pre>
-      </div>
+      <div id="editors"></div>
 
       <div id="about-box" class="modal hide fade">
         <div class="modal-header">
@@ -238,6 +242,11 @@
             cp.transcript = new CPTranscript(createTranscript(document.getElementById("transcript")));
             cp.console = document.getElementById("console");
             cp.devMode = false;
+
+            $("#editors").on("scroll", function () {
+                var $firstEditor = $("#editors").children().first();
+                $("#console-row").toggleClass("shadow", $firstEditor.size() > 0 && $firstEditor.position().top < 0);
+            });
 
             document.getElementById("transcript").style.display='none';
             cp.initFS();

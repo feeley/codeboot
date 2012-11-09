@@ -47,6 +47,14 @@ function CPTranscript(editor) {
     this.widgets = [];
 }
 
+CPTranscript.prototype.onTranscriptChanged = function () {
+    // TODO: make this configurable
+    var $console = $("#console-row");
+    var top = $console.offset().top;
+    var height = $console.height();
+    $("#editors").css("top", top + height);
+}
+
 CPTranscript.prototype.clear = function () {
     for (var i = 0; i < this.widgets.length; i++) {
         this.editor.removeLineWidget(this.widgets[i]);
@@ -55,16 +63,19 @@ CPTranscript.prototype.clear = function () {
     this.editor.refresh();
     this.is_empty = true;
     this.hide();
+    this.onTranscriptChanged();
 };
 
 CPTranscript.prototype.show = function () {
     $("#transcript").show();
     $("#transcript-sep").show();
+    this.onTranscriptChanged();
 };
 
 CPTranscript.prototype.hide = function () {
     $("#transcript").hide();
     $("#transcript-sep").hide();
+    this.onTranscriptChanged();
 };
 
 CPTranscript.prototype.addTextLine = function (text, cssClass) {
@@ -91,6 +102,8 @@ CPTranscript.prototype.addTextLine = function (text, cssClass) {
     }
     editor.setGutterMarker(line, "cp-prompt", document.createTextNode(">"));
     this.is_empty = false;
+
+    this.onTranscriptChanged();
 };
 
 CPTranscript.prototype.addLineWidget = function (textOrNode, cssClass) {
@@ -111,6 +124,8 @@ CPTranscript.prototype.addLineWidget = function (textOrNode, cssClass) {
     this.widgets.push(w);
 
     cp.scrollToEnd(this.editor);
+
+    this.onTranscriptChanged();
 };
 
 CPTranscript.prototype.addLine = function (text, cssClass) {

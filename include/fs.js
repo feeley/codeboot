@@ -997,7 +997,7 @@ cp.newTab = function (fileOrFilename) {
 	var $pre = $('<pre class="tab-content file-editor"/>');
 	$row.append($pre);
 
-    $row.insertAfter($("#step-value-row"));
+    $("#editors").prepend($row);
 
 	var editor = createFileEditor($pre.get(0), file);
 

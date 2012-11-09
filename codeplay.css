@@ -74,20 +74,6 @@
     margin-top: 3px;
 }
 
-#repl-controls.affix {
-    top: 60px;
-    right: 55px;
-    left: auto;
-    z-index: 999;
-}
-
-#repl-controls .btn.disabled {
-    /* Disable opacity for floating buttons */
-    background-color: #efefef;
-    opacity: 1;
-    filter:alpha(opacity=100);
-}
-
 /* ----- Tabs ----- */
 
 .nav-tabs {
@@ -176,6 +162,31 @@ div.tab-pane {
     height: 7px;
     bottom: 0;
     background: transparent url('icons/resize_handle_corner.png') no-repeat top right;
+}
+
+#floating-console {
+    background-color: white;
+    z-index: 999;
+}
+
+.shadow {
+    -webkit-box-shadow: 0 5px 10px -4px rgba(0, 0, 0, 0.2);
+       -moz-box-shadow: 0 5px 10px -4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 5px 10px -px rgba(0, 0, 0, 0.2);
+
+    -webkit-background-clip: padding-box;
+       -moz-background-clip: padding;
+            background-clip: padding-box;
+}
+
+#editors {
+    z-index: -1;
+    position: absolute;
+    top: 160px;
+    left: 55px;
+    right: 55px;
+    bottom: 0;
+    overflow-y: auto;
 }
 
 /* ----- Transcript ----- */
