@@ -172,7 +172,7 @@ div.tab-pane {
 .shadow {
     -webkit-box-shadow: 0 5px 10px -4px rgba(0, 0, 0, 0.2);
        -moz-box-shadow: 0 5px 10px -4px rgba(0, 0, 0, 0.2);
-            box-shadow: 0 5px 10px -px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 5px 10px -4px rgba(0, 0, 0, 0.2);
 
     -webkit-background-clip: padding-box;
        -moz-background-clip: padding;
