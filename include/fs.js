@@ -12,8 +12,8 @@ function makeMenuSeparator() {
 }
 
 cp.scrollTo = function (elementOrSelector) {
-    var elementOffset = $(elementOrSelector).offset().top - NAVBAR_HEIGHT - EDITOR_SPACING;
-    $("body").animate({scrollTop: elementOffset}, 400);
+    var elementOffset = $(elementOrSelector).position().top; // - NAVBAR_HEIGHT - EDITOR_SPACING;
+    $("#editors").animate({scrollTop: elementOffset}, 400);
 }
 
 cp.getShortURL = function (longURL) {

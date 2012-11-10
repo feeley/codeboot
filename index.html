@@ -246,6 +246,7 @@
             $("#editors").on("scroll", function () {
                 var $firstEditor = $("#editors").children().first();
                 $("#console-row").toggleClass("shadow", $firstEditor.size() > 0 && $firstEditor.position().top < 0);
+                cp_internal_updatePopupPos();
             });
 
             document.getElementById("transcript").style.display='none';
