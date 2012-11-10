@@ -266,10 +266,19 @@
                 var marker = program_state.step_mark;
                 var range = marker.find();
                 if (range) {
+                    var editorsViewport = cp_internal_getBounds($("#editors"));
                     var pos = marker.cm.charCoords(range.from, "page");
-                    if (!within(pos, cp_internal_getBounds($("#editors")))) {
+                    if (!within(pos, editorsViewport)) {
                         program_state.step_popover.popover('hide');
                     } else {
+                        var popover = program_state.step_popover.data('popover');
+                        var $element = $(popover.tip());
+                        var arrow_height = 10;
+                        if (pos.bottom + $element.height() + arrow_height >= editorsViewport.top + editorsViewport.clientHeight) {
+                            popover.options.placement = "top";
+                        } else {
+                            popover.options.placement = "bottom";
+                        }
                         program_state.step_popover.popover('show');
                     }
                 }
