@@ -273,7 +273,7 @@
                     } else {
                         var popover = program_state.step_popover.data('popover');
                         var $element = $(popover.tip());
-                        var arrow_height = 10;
+                        var arrow_height = 10 + 5; // Extra padding for safety
                         if (pos.bottom + $element.height() + arrow_height >= editorsViewport.top + editorsViewport.clientHeight) {
                             popover.options.placement = "top";
                         } else {
