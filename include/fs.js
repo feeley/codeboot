@@ -1001,7 +1001,7 @@ cp.newTab = function (fileOrFilename) {
 
 	var editor = createFileEditor($pre.get(0), file);
 
-	cp.scrollTo($row);
+	cp.scrollTo($row.get(0));
 
     // Make editor resizable
     $(".CodeMirror", $row).resizable({
