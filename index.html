@@ -130,6 +130,8 @@
         <div id="step-value-row" class="row">
           <pre id="step-value" class="step-value" style="display:none;"></pre>
         </div>
+
+        <div id="editors-shadow" class="hide"></div>
       </div>
 
       <div id="editors"></div>
@@ -259,7 +261,7 @@
 
             $("#editors").on("scroll", function () {
                 var $firstEditor = $("#editors").children().first();
-                $("#console-row").toggleClass("shadow", $firstEditor.size() > 0 && $firstEditor.position().top < 0);
+                $("#editors-shadow").toggle($firstEditor.size() > 0 && $firstEditor.position().top < 0);
 
                 if (!program_state.step_popover) return;
 

@@ -165,22 +165,22 @@ div.tab-pane {
 }
 
 #floating-console {
-    background-color: white;
-    z-index: 999;
+    background-color: transparent;
+    position: relative;
+    z-index: 200;
 }
 
-.shadow {
-    -webkit-box-shadow: 0 5px 10px -4px rgba(0, 0, 0, 0.2);
-       -moz-box-shadow: 0 5px 10px -4px rgba(0, 0, 0, 0.2);
-            box-shadow: 0 5px 10px -4px rgba(0, 0, 0, 0.2);
+#editors-shadow {
+    width: 100%;
+    height: 10px;
+    background: transparent url("icons/shadow.png") repeat-x top left;
+}
 
-    -webkit-background-clip: padding-box;
-       -moz-background-clip: padding;
-            background-clip: padding-box;
+#console-row {
+    background: white;
 }
 
 #editors {
-    z-index: -1;
     position: absolute;
     top: 160px;
     left: 55px;
