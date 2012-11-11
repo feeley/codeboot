@@ -285,7 +285,12 @@
                 // cp_internal_updatePopupPos();
             });
 
+
+
             document.getElementById("transcript").style.display='none';
+            $(window).resize(cp_internal_resizeEditors);
+            cp_internal_resizeEditors();
+
             cp.initFS();
 
             cp.loadSession();
@@ -298,6 +303,15 @@
             $('body')
                 .on('click.codeplay', '[href="#"]', function (e) { e.preventDefault(); });
         });
+
+        function cp_internal_resizeEditors() {
+            var $console = $("#console-row");
+            var consoleOffset = $console.offset();
+            $("#editors")
+                .css("left", consoleOffset.left)
+                .css("right", consoleOffset.left)
+                .css("top", consoleOffset.top + $console.height());
+        }
 
         function checkBrowserFeatures() {
             var MISSING = 0, EMULATED = 1, SUPPORTED = 2;
