@@ -172,7 +172,8 @@ div.tab-pane {
 }
 
 #editors-shadow {
-    width: 100%;
+    width: auto;
+    margin: 0 10px;
     height: 10px;
     background: transparent url("icons/shadow.png") repeat-x top left;
 }
