@@ -272,6 +272,13 @@ div.tab-pane {
     color: white;
 }
 
+/* ----- Value bubbles ----- */
+
+.popover {
+    width: auto !important;
+    min-width: 150px;
+}
+
 /* ----- Source code highlighting ----- */
 
 .exec-point-code {
