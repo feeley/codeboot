@@ -8,6 +8,7 @@
 
 .row {
     margin-left: 0; /* Somehow, Bootstrap uses a negative margin for rows that makes our contents extend too far to the left. */
+    padding: 0 10px;
 }
 
 .dropdown-align-right {
