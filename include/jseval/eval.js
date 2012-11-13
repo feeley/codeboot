@@ -28,19 +28,75 @@ jev.newGlobalRTE = function () {
 
     return new jev.RTE(global_obj,
                        null,
-                       new RTFrame(global_obj,
-                                   null,
-                                   [],
-                                   [],
-                                   null,
-                                   null,
-                                   null));
+                       new jev.RTFrame(global_obj,
+                                       null,
+                                       [],
+                                       [],
+                                       null,
+                                       null,
+                                       null));
 
+};
+
+jev.RTE.prototype.runUntilFinished = function () {
+
+    var rte = this;
+
+    while (!rte.finished()) {
+        rte.step();
+    }
+
+    if (rte.getError() !== null) {
+        throw rte.ast.loc.toString() + ": " + rte.getError();
+    }
+
+    return rte.getResult();
+};
+
+jev.evalFinished = function (rte) { // DEPRECATED... REMOVE ME!
+    return rte.finished();
+};
+
+jev.RTE.prototype.finished = function () {
+    return this.resume === null;
+};
+
+jev.evalResult = function (rte) { // DEPRECATED... REMOVE ME!
+    return rte.getResult();
+};
+
+jev.RTE.prototype.getResult = function () {
+    return this.result;
+};
+
+jev.RTE.prototype.getError = function () {
+    return this.error;
+};
+
+jev.evalStep = function (rte, nb_steps) { // DEPRECATED... REMOVE ME!
+    return rte.step(nb_steps);
+};
+
+jev.RTE.prototype.step = function (nb_steps) {
+
+    if (nb_steps === void 0)
+        nb_steps = 999999999999;
+
+    var rte = this;
+    var resume = rte.resume;
+
+    rte.step_limit = rte.step_count + nb_steps;
+
+    // trampoline
+
+    while (resume !== null) {
+        resume = resume(rte);
+    }
 };
 
 jev.eval = function (source, options) {
 
-    var code = js_compile(source, options);
+    var code = jev.compile(source, options);
 
     return jev.run(code);
 };
@@ -49,7 +105,7 @@ jev.run = function (code) {
 
     var rte = jev.runSetup(code);
 
-    return jev.evalExec(rte);
+    return rte.runUntilFinished();
 };
 
 jev.runSetup = function (code) {
@@ -66,47 +122,6 @@ jev.runSetup = function (code) {
     };
 
     return rte;
-};
-
-jev.evalExec = function (rte) {
-
-    while (!jev.evalFinished(rte)) {
-        jev.evalStep(rte);
-    }
-
-    if (rte.error !== null) {
-        throw rte.ast.loc.toString() + ": " + rte.error;
-    }
-
-    return jev.evalResult(rte);
-};
-
-jev.evalFinished = function (rte) {
-    return rte.resume === null;
-};
-
-jev.evalResult = function (rte) {
-    return rte.result;
-};
-
-jev.evalError = function (rte) {
-    return rte.error;
-};
-
-jev.evalStep = function (rte, nb_steps) {
-
-    if (nb_steps === void 0)
-        nb_steps = 999999999999;
-
-    var resume = rte.resume;
-
-    rte.step_limit = rte.step_count + nb_steps;
-
-    // trampoline
-
-    while (resume !== null) {
-        resume = resume(rte);
-    }
 };
 
 function SourceContainerInternalFile(source, tostr, start_line, start_column, stamp) {
@@ -136,7 +151,11 @@ SourceContainer.prototype.toString = function () {
     return this.tostr;
 };
 
-function js_compile(source, options) {
+function js_compile(source, options) { // DEPRECATED... REMOVE ME!
+    return jev.compile(source, options);
+}
+
+jev.compile = function (source, options) {
 
     var error = function (loc, kind, msg) {
 //        if (kind !== "warning") {
@@ -181,35 +200,36 @@ function js_compile(source, options) {
     var s = new Scanner(port, opts.error, opts.container.start_line, opts.container.start_column);
     var p = new Parser(s, opts.warnings);
     var ast = p.parse();
-    var cte = new_global_cte(opts);
+    var cte = jev.newGlobalCTE(opts);
 
-    var options = { profile: false,
-                    namespace: false,
-                    exports: {},
-                    report: false,
-                    debug: false,
-                    warn: false,
-                    ast: false,
-                    nojs: false,
-                    simplify: true,
-                    languageLevel: languageLevel
-                  };
+    var options = {
+        profile: false,
+        namespace: false,
+        exports: {},
+        report: false,
+        debug: false,
+        warn: false,
+        ast: false,
+        nojs: false,
+        simplify: true,
+        languageLevel: languageLevel
+    };
 
-    return comp_statement(cte, ast_normalize(ast, options));
-}
+    return jev.compStatement(cte, ast_normalize(ast, options));
+};
 
-function new_global_cte(options) {
+jev.newGlobalCTE = function (options) {
 
-    return new CTE(null,
-                   {},
-                   {},
-                   null,
-                   null,
-                   options);
+    return new jev.CTE(null,
+                       {},
+                       {},
+                       null,
+                       null,
+                       options);
 
-}
+};
 
-function CTE(callee, params, locals, label_stack, parent, options) {
+jev.CTE = function (callee, params, locals, label_stack, parent, options) {
 
     this.callee = callee;
     this.params = params;
@@ -218,9 +238,9 @@ function CTE(callee, params, locals, label_stack, parent, options) {
     this.parent = parent;
     this.options = options;
 
-}
+};
 
-function RTFrame(this_, callee, params, locals, parent, ctrl_stack, cte) {
+jev.RTFrame = function (this_, callee, params, locals, parent, ctrl_stack, cte) {
 
     this.this_ = this_;
     this.callee = callee;
@@ -230,13 +250,13 @@ function RTFrame(this_, callee, params, locals, parent, ctrl_stack, cte) {
     this.ctrl_stack = ctrl_stack;
     this.cte = cte;
 
-}
+};
 
-function comp_statement(cte, ast) {
+jev.compStatement = function (cte, ast) {
 
     if (ast instanceof Program) {
 
-        var code = comp_statement(cte, ast.block);
+        var code = jev.compStatement(cte, ast.block);
 
         var declared_global_vars = [];
 
@@ -269,13 +289,13 @@ function comp_statement(cte, ast) {
 
         var id_str = ast.id.toString();
         var access = cte_access(cte, id_str);
-        var code_value = comp_expr(cte, ast.funct);
+        var code_value = jev.compExpr(cte, ast.funct);
 
         return gen_op2_assign(ast, sem_var_x_equal_y, access, code_value);
 
     } else if (ast instanceof BlockStatement) {
 
-        var code = comp_statements(cte, ast, ast.statements);
+        var code = jev.compStatements(cte, ast, ast.statements);
 
         return gen_break_handler(cte, ast, code);
 
@@ -296,12 +316,12 @@ function comp_statement(cte, ast) {
 
     } else if (ast instanceof ExprStatement) {
 
-        return comp_expr(cte, ast.expr);
+        return jev.compExpr(cte, ast.expr);
 
     } else if (ast instanceof IfStatement) {
 
-        var code_expr = comp_expr(cte, ast.expr);
-        var code_stat0 = comp_statement(cte, ast.statements[0]);
+        var code_expr = jev.compExpr(cte, ast.expr);
+        var code_stat0 = jev.compStatement(cte, ast.statements[0]);
 
         if (ast.statements.length === 1) {
 
@@ -322,7 +342,7 @@ function comp_statement(cte, ast) {
             
         } else {
 
-            var code_stat1 = comp_statement(cte, ast.statements[1]);
+            var code_stat1 = jev.compStatement(cte, ast.statements[1]);
 
             var code = function (rte, cont) {
 
@@ -345,8 +365,8 @@ function comp_statement(cte, ast) {
 
         cte = break_continue_context(cte, ast, true);
 
-        var code_stat = comp_statement(cte, ast.statement);
-        var code_expr = comp_expr(cte, ast.expr);
+        var code_stat = jev.compStatement(cte, ast.statement);
+        var code_expr = jev.compExpr(cte, ast.expr);
 
         return function (rte, cont) {
 
@@ -381,8 +401,8 @@ function comp_statement(cte, ast) {
 
         cte = break_continue_context(cte, ast, true);
 
-        var code_expr = comp_expr(cte, ast.expr);
-        var code_stat = comp_statement(cte, ast.statement);
+        var code_expr = jev.compExpr(cte, ast.expr);
+        var code_stat = jev.compStatement(cte, ast.statement);
 
         return function (rte, cont) {
 
@@ -417,10 +437,10 @@ function comp_statement(cte, ast) {
 
         cte = break_continue_context(cte, ast, true);
 
-        var code_expr1 = comp_expr(cte, ast.expr1);
-        var code_expr2 = comp_expr(cte, ast.expr2);
-        var code_expr3 = comp_expr(cte, ast.expr3);
-        var code_stat = comp_statement(cte, ast.statement);
+        var code_expr1 = jev.compExpr(cte, ast.expr1);
+        var code_expr2 = jev.compExpr(cte, ast.expr2);
+        var code_expr3 = jev.compExpr(cte, ast.expr3);
+        var code_stat = jev.compStatement(cte, ast.statement);
 
         return function (rte, cont) {
 
@@ -472,20 +492,20 @@ function comp_statement(cte, ast) {
 
         cte = break_continue_context(cte, ast, true);
 
-        var code_assign = comp_op2_assign(cte,
-                                          null,
-                                          "x = y",
-                                          ast.lhs_expr,
-                                          function () {
-                                              return function (rte, cont) {
-                                                  var ctrl = rte.frame.ctrl_stack;
-                                                  var prop = ctrl.props[ctrl.index-1];
-                                                  return cont(rte, prop);
-                                              };
-                                          });
+        var code_assign = jev.compOp2Assign(cte,
+                                            null,
+                                            "x = y",
+                                            ast.lhs_expr,
+                                            function () {
+                                                return function (rte, cont) {
+                                                    var ctrl = rte.frame.ctrl_stack;
+                                                    var prop = ctrl.props[ctrl.index-1];
+                                                    return cont(rte, prop);
+                                                };
+                                            });
 
-        var code_set_expr = comp_expr(cte, ast.set_expr);
-        var code_stat = comp_statement(cte, ast.statement);
+        var code_set_expr = jev.compExpr(cte, ast.set_expr);
+        var code_stat = jev.compStatement(cte, ast.statement);
 
         return function (rte, cont) {
 
@@ -626,7 +646,7 @@ function comp_statement(cte, ast) {
                 return cont(rte, void 0);
             };
         } else {
-            var code_expr = comp_expr(cte, ast.expr);
+            var code_expr = jev.compExpr(cte, ast.expr);
 
             return function (rte, cont) {
                 return code_expr(rte,
@@ -657,7 +677,7 @@ function comp_statement(cte, ast) {
         ast.clauses.forEach(function (c, i, asts)
                             {
                                 c.expr = ctx.walk_expr(c.expr);
-                                c.statements = comp_statements(c, c.statements, ctx);
+                                c.statements = jev.compStatements(c, c.statements, ctx);
                             });
         */
 
@@ -667,12 +687,12 @@ function comp_statement(cte, ast) {
 
         var label_stack = new CtrlLabel(ids, ast, cte.label_stack);
 
-        var new_cte = new CTE(cte.callee,
-                              cte.params,
-                              cte.locals,
-                              label_stack,
-                              cte.parent,
-                              cte.options);
+        var new_cte = new jev.CTE(cte.callee,
+                                  cte.params,
+                                  cte.locals,
+                                  label_stack,
+                                  cte.parent,
+                                  cte.options);
 
         var statement = ast;
 
@@ -687,11 +707,11 @@ function comp_statement(cte, ast) {
 
         label_stack.ast = statement;
 
-        return comp_statement(new_cte, statement);
+        return jev.compStatement(new_cte, statement);
 
     } else if (ast instanceof ThrowStatement) {
 
-        var code_expr = comp_expr(cte, ast.expr);
+        var code_expr = jev.compExpr(cte, ast.expr);
 
         return function (rte, cont) {
             return code_expr(rte,
@@ -705,7 +725,7 @@ function comp_statement(cte, ast) {
 
         //throw "try statements are not implemented";
 
-        var code = comp_statement(cte, ast.statement);
+        var code = jev.compStatement(cte, ast.statement);
 
         return gen_break_handler(cte, ast, code);
 
@@ -730,7 +750,7 @@ function comp_statement(cte, ast) {
     } else {
         throw "unknown ast";
     }
-}
+};
 
 function gen_break_handler(cte, ast, code) {
 
@@ -776,12 +796,12 @@ function break_continue_context(cte, ast, is_loop) {
 
         label_stack = new CtrlLabel({}, ast, label_stack);
 
-        cte = new CTE(cte.callee,
-                      cte.params,
-                      cte.locals,
-                      label_stack,
-                      cte.parent,
-                      cte.options);
+        cte = new jev.CTE(cte.callee,
+                          cte.params,
+                          cte.locals,
+                          label_stack,
+                          cte.parent,
+                          cte.options);
 
     }
 
@@ -810,7 +830,7 @@ function label_lookup(cte, id_str) {
     return null;
 }
 
-function comp_statements(cte, ast, asts) {
+jev.compStatements = function (cte, ast, asts) {
     if (asts.length === 0) {
         return function (rte, cont) {
                    return step_end(rte,
@@ -819,14 +839,14 @@ function comp_statements(cte, ast, asts) {
                                    void 0);
                };
     } else {
-        return comp_statements_loop(cte, asts, 0);
+        return jev.compStatementsLoop(cte, asts, 0);
     }
-}
+};
 
-function comp_statements_loop(cte, asts, i) {
+jev.compStatementsLoop = function (cte, asts, i) {
     if (i < asts.length-1) {
-        var code0 = comp_statement(cte, asts[i]);
-        var code1 = comp_statements_loop(cte, asts, i+1);
+        var code0 = jev.compStatement(cte, asts[i]);
+        var code1 = jev.compStatementsLoop(cte, asts, i+1);
 
         return function (rte, cont) {
                    return code0(rte,
@@ -835,34 +855,34 @@ function comp_statements_loop(cte, asts, i) {
                                 });
                };
     } else {
-        return comp_statement(cte, asts[i]);
+        return jev.compStatement(cte, asts[i]);
     }
-}
+};
 
-function comp_expr(cte, ast) {
+jev.compExpr = function (cte, ast) {
 
     if (ast instanceof OpExpr) {
 
         if (is_assign_op1(ast.op)) {
 
-            return comp_op1_assign(cte,
-                                   ast,
-                                   ast.op,
-                                   ast.exprs[0]);
+            return jev.compOp1Assign(cte,
+                                     ast,
+                                     ast.op,
+                                     ast.exprs[0]);
 
         } else if (is_assign_op2(ast.op)) {
 
-            return comp_op2_assign(cte,
-                                   ast,
-                                   ast.op,
-                                   ast.exprs[0],
-                                   function () {
-                                       return comp_expr(cte, ast.exprs[1]);
-                                   });
+            return jev.compOp2Assign(cte,
+                                     ast,
+                                     ast.op,
+                                     ast.exprs[0],
+                                     function () {
+                                         return jev.compExpr(cte, ast.exprs[1]);
+                                     });
 
         } else if (is_pure_op1(ast.op)) {
 
-            var code_expr0 = comp_expr(cte, ast.exprs[0]);
+            var code_expr0 = jev.compExpr(cte, ast.exprs[0]);
 
             return gen_op_dyn(ast,
                               pure_op1_to_semfn(ast.op),
@@ -870,9 +890,9 @@ function comp_expr(cte, ast) {
 
         } else if (ast.op === "x ? y : z") {
 
-            var code_expr0 = comp_expr(cte, ast.exprs[0]);
-            var code_expr1 = comp_expr(cte, ast.exprs[1]);
-            var code_expr2 = comp_expr(cte, ast.exprs[2]);
+            var code_expr0 = jev.compExpr(cte, ast.exprs[0]);
+            var code_expr1 = jev.compExpr(cte, ast.exprs[1]);
+            var code_expr2 = jev.compExpr(cte, ast.exprs[2]);
 
             return function (rte, cont) {
                 return code_expr0(rte,
@@ -887,7 +907,7 @@ function comp_expr(cte, ast) {
 
         } else {
 
-            var code_expr0 = comp_expr(cte, ast.exprs[0]);
+            var code_expr0 = jev.compExpr(cte, ast.exprs[0]);
             var code_expr1;
 
             if (ast.op === "x . y") {
@@ -896,7 +916,7 @@ function comp_expr(cte, ast) {
                     return cont(rte, value);
                 };
             } else {
-                code_expr1 = comp_expr(cte, ast.exprs[1]);
+                code_expr1 = jev.compExpr(cte, ast.exprs[1]);
             }
 
             switch (ast.op) {
@@ -944,8 +964,8 @@ function comp_expr(cte, ast) {
 
     } else if (ast instanceof NewExpr) {
 
-        var code_cons = comp_expr(cte, ast.expr);
-        var code_args = comp_exprs(cte, ast.args);
+        var code_cons = jev.compExpr(cte, ast.expr);
+        var code_args = jev.compExprs(cte, ast.args);
         var new_semfn = get_new_semfn(ast.args.length);
 
         var op = function (rte, cont, ast, cons, args)
@@ -990,7 +1010,7 @@ function comp_expr(cte, ast) {
 
             // method call
 
-            var code_obj = comp_expr(cte, ast.fn.exprs[0]);
+            var code_obj = jev.compExpr(cte, ast.fn.exprs[0]);
 
             var code_prop;
 
@@ -1000,10 +1020,10 @@ function comp_expr(cte, ast) {
                     return cont(rte, value);
                 };
             } else {
-                code_prop = comp_expr(cte, ast.fn.exprs[1]);
+                code_prop = jev.compExpr(cte, ast.fn.exprs[1]);
             }
 
-            var code_args = comp_exprs(cte, ast.args);
+            var code_args = jev.compExprs(cte, ast.args);
 
             var op = function (rte, cont, ast, obj, prop) {
                 if (obj === void 0) {
@@ -1056,8 +1076,8 @@ function comp_expr(cte, ast) {
 
             // non-method call
 
-            var code_fn = comp_expr(cte, ast.fn);
-            var code_args = comp_exprs(cte, ast.args);
+            var code_fn = jev.compExpr(cte, ast.fn);
+            var code_args = jev.compExprs(cte, ast.args);
 
             var op = function (rte, cont, ast, fn, args) {
 
@@ -1107,14 +1127,14 @@ function comp_expr(cte, ast) {
             i++;
         }
 
-        var fn_cte = new CTE((ast.id !== null) ? ast.id.toString() : null,
-                             params,
-                             locals,
-                             new CtrlLabel({"return point": true}, ast, null),
-                             cte,
-                             cte.options);
+        var fn_cte = new jev.CTE((ast.id !== null) ? ast.id.toString() : null,
+                                 params,
+                                 locals,
+                                 new CtrlLabel({"return point": true}, ast, null),
+                                 cte,
+                                 cte.options);
 
-        var code_body = comp_statements(fn_cte, ast, ast.body);
+        var code_body = jev.compStatements(fn_cte, ast, ast.body);
 
         var loc = ast.loc;
         var start_char_offs = position_to_char_offset(loc, loc.start_pos);
@@ -1133,7 +1153,7 @@ function comp_expr(cte, ast) {
                     return closure._apply_(rte, cont, this_, args);
                 };
 
-                return js_run(code);
+                return jev.run(code);
             };
 
             closure.toString = function () {
@@ -1171,7 +1191,7 @@ function comp_expr(cte, ast) {
 
     } else if (ast instanceof ArrayLiteral) {
 
-        var code_exprs = comp_exprs(cte, ast.exprs);
+        var code_exprs = jev.compExprs(cte, ast.exprs);
 
         return function (rte, cont) {
             return code_exprs(rte,
@@ -1197,7 +1217,7 @@ function comp_expr(cte, ast) {
 
     } else if (ast instanceof ObjectLiteral) {
 
-        return comp_props(cte, ast, ast.properties);
+        return jev.compProps(cte, ast, ast.properties);
 
     } else if (ast instanceof Ref) {
 
@@ -1306,7 +1326,7 @@ function comp_expr(cte, ast) {
     } else {
         throw "unknown ast";
     }
-}
+};
 
 function GlobalAccess(name)
 {
@@ -1356,13 +1376,13 @@ function cte_access(cte, id_str)
     return ga;
 }
 
-function comp_op1_assign(cte, ast, op1, lhs) {
+jev.compOp1Assign = function (cte, ast, op1, lhs) {
 
     var op = assign_op1_to_semfn(op1);
 
     if (is_prop_access(lhs)) {
 
-        var code_obj = comp_expr(cte, lhs.exprs[0]);
+        var code_obj = jev.compExpr(cte, lhs.exprs[0]);
 
         var code_prop;
 
@@ -1372,7 +1392,7 @@ function comp_op1_assign(cte, ast, op1, lhs) {
                 return cont(rte, value);
             };
         } else {
-            code_prop = comp_expr(cte, lhs.exprs[1]);
+            code_prop = jev.compExpr(cte, lhs.exprs[1]);
         }
 
         return gen_op_dyn_dyn(ast,
@@ -1388,15 +1408,15 @@ function comp_op1_assign(cte, ast, op1, lhs) {
         return gen_op1_assign(ast, op, access);
 
     }
-}
+};
 
-function comp_op2_assign(cte, ast, op2, lhs, get_code_value) {
+jev.compOp2Assign = function (cte, ast, op2, lhs, get_code_value) {
 
     var op = assign_op2_to_semfn(op2);
 
     if (is_prop_access(lhs)) {
 
-        var code_obj = comp_expr(cte, lhs.exprs[0]);
+        var code_obj = jev.compExpr(cte, lhs.exprs[0]);
 
         var code_prop;
 
@@ -1406,7 +1426,7 @@ function comp_op2_assign(cte, ast, op2, lhs, get_code_value) {
                 return cont(rte, value);
             };
         } else {
-            code_prop = comp_expr(cte, lhs.exprs[1]);
+            code_prop = jev.compExpr(cte, lhs.exprs[1]);
         }
 
         var code_value = get_code_value();
@@ -1426,7 +1446,7 @@ function comp_op2_assign(cte, ast, op2, lhs, get_code_value) {
         return gen_op2_assign(ast, op, access, code_value);
 
     }
-}
+};
 
 function gen_op1_assign(ast, op, access) {
 
@@ -1552,13 +1572,13 @@ function exec_fn_body(code, callee, rte, cont, this_, params, locals, parent, ct
                   stack: rte.stack
                 };
 
-    rte.frame = new RTFrame(this_,
-                            callee,
-                            params,
-                            locals,
-                            parent,
-                            null,//TODO................... put cont here?
-                            cte);
+    rte.frame = new jev.RTFrame(this_,
+                                callee,
+                                params,
+                                locals,
+                                parent,
+                                null,//TODO................... put cont here?
+                                cte);
 
     return code(rte,
                 function (rte, result)
@@ -1590,21 +1610,21 @@ function get_new_semfn(n) {
     return get_new_semfn_cache[n];
 }
 
-function comp_exprs(cte, asts) {
+jev.compExprs = function (cte, asts) {
 
-    var code = comp_exprs_loop(cte, asts, 0);
+    var code = jev.compExprsLoop(cte, asts, 0);
 
     return function (rte, cont) {
         return code(rte, cont, []);
     };
-}
+};
 
-function comp_exprs_loop(cte, asts, i) {
+jev.compExprsLoop = function (cte, asts, i) {
 
     if (i < asts.length) {
 
-        var code0 = comp_expr(cte, asts[i]);
-        var code1 = comp_exprs_loop(cte, asts, i+1);
+        var code0 = jev.compExpr(cte, asts[i]);
+        var code1 = jev.compExprsLoop(cte, asts, i+1);
 
         return function (rte, cont, values) {
 
@@ -1621,24 +1641,24 @@ function comp_exprs_loop(cte, asts, i) {
         };
 
     }
-}
+};
 
-function comp_props(cte, ast, props) {
+jev.compProps = function (cte, ast, props) {
 
-    var code = comp_props_loop(cte, ast, props, 0);
+    var code = jev.compPropsLoop(cte, ast, props, 0);
 
     return function (rte, cont) {
         return code(rte, cont, {});
     };
-}
+};
 
-function comp_props_loop(cte, ast, props, i) {
+jev.compPropsLoop = function (cte, ast, props, i) {
 
     if (i < props.length) {
 
         var prop = props[i].name.value;
-        var code0 = comp_expr(cte, props[i].value);
-        var code1 = comp_props_loop(cte, ast, props, i+1);
+        var code0 = jev.compExpr(cte, props[i].value);
+        var code1 = jev.compPropsLoop(cte, ast, props, i+1);
 
         return function (rte, cont, obj) {
 
@@ -1660,7 +1680,7 @@ function comp_props_loop(cte, ast, props, i) {
         };
 
     }
-}
+};
 
 //-----------------------------------------------------------------------------
 
