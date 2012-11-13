@@ -8,6 +8,7 @@
 
 .row {
     margin-left: 0; /* Somehow, Bootstrap uses a negative margin for rows that makes our contents extend too far to the left. */
+    padding: 0 10px;
 }
 
 .dropdown-align-right {
@@ -171,7 +172,8 @@ div.tab-pane {
 }
 
 #editors-shadow {
-    width: 100%;
+    width: auto;
+    margin: 0 10px;
     height: 10px;
     background: transparent url("icons/shadow.png") repeat-x top left;
 }
