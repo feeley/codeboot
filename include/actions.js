@@ -536,23 +536,23 @@ function disableAllControllers() {
 }
 
 function enableAllControllers() {
-	$('[data-cp-exec="controller"]').each(function () {
-    	setControllerState(this, true);
-	});
+    $('[data-cp-exec="controller"]').each(function () {
+        setControllerState(this, true);
+    });
 }
 
 cp.enterMode = function (newMode) {
     // newMode is one of 'stopped', 'animating', 'stepping'
 
-	if (program_state.mode === newMode) return;
+    if (program_state.mode === newMode) return;
 
-	if (newMode === "stopped") {
+    if (newMode === "stopped") {
         enableAllControllers();
     } else {
-    	disableAllControllers();
+        disableAllControllers();
     }
 
-	var control = $("#repl-controls");
+    var control = $("#repl-controls");
 
     // Cancel button
     $(".exec-btn-cancel", control).toggleClass("disabled", newMode === 'stopped');
@@ -563,7 +563,7 @@ cp.enterMode = function (newMode) {
     // Step button + icon
     $(".exec-btn-step", control).toggleClass("disabled", newMode === 'animating');
     if (newMode === 'stepping') {
-    	$("#step-mode-icon").removeClass("icon-exp-pause").addClass("icon-exp-one");
+        $("#step-mode-icon").removeClass("icon-exp-pause").addClass("icon-exp-one");
     } else {
         $("#step-mode-icon").removeClass("icon-exp-one").addClass("icon-exp-pause");
     }
@@ -586,7 +586,7 @@ cp.enterMode = function (newMode) {
         program_state.step_counter = null;
     }
 
-	program_state.mode = newMode;
+    program_state.mode = newMode;
 };
 
 cp.animate = function (new_step_delay) {
@@ -690,10 +690,10 @@ cp.hide_step = function () {
             program_state.step_popover = null;
         }
 
-		// Somehow, CodeMirror seems to hold on to the marked elements somewhere,
-		// causing problems when displaying the bubble. This kludge should at least
-		// prevent the problem from manifesting for the user.
-		// TODO: proper fix
+        // Somehow, CodeMirror seems to hold on to the marked elements somewhere,
+        // causing problems when displaying the bubble. This kludge should at least
+        // prevent the problem from manifesting for the user.
+        // TODO: proper fix
         $(".exec-point-code").removeClass("exec-point-code");
 
         return true;
@@ -715,12 +715,12 @@ cp.show_step = function () {
     var value_repr = (value === void 0) ? "NO VALUE" : printed_repr(value, "HTML");
     program_state.step_popover = $(".exec-point-code").last();
     program_state.step_popover.last().popover({
-	animation: false,
-	placement: "bottom",
-	trigger: "manual",
-	title: value_repr,
-	content: cp.dump_context(),
-	html: true,
+        animation: false,
+        placement: "bottom",
+        trigger: "manual",
+        title: value_repr,
+        content: cp.dump_context(),
+        html: true,
     });
 
     program_state.step_popover.popover('show');
@@ -817,10 +817,10 @@ cp.execute2 = function (single_step) {
 
     var rte = program_state.rte;
 
-    if (rte !== null && !js_eval_finished(rte)) {
+    if (rte !== null && !jev.evalFinished(rte)) {
 
         try {
-            js_eval_step(rte, single_step ? 1 : 257);
+            jev.evalStep(rte, single_step ? 1 : 257);
         }
         catch (e) {
             if (e !== false)
@@ -831,11 +831,11 @@ cp.execute2 = function (single_step) {
 
         setStepCounter(rte.step_count);
 
-        if (program_state.mode === 'stepping') {
-            single_step = true;
-        }
+//        if (program_state.mode === 'stepping') {
+//            single_step = true;
+//        }
 
-        if (!js_eval_finished(rte)) {
+        if (!jev.evalFinished(rte)) {
             newMode = 'stepping';
             if (single_step) {
                 cp.show_step();
@@ -857,7 +857,7 @@ cp.execute2 = function (single_step) {
                 cp.show_error(program_state.rte.ast.loc);
                 cp.transcript.addLine(rte.error, "error-message");
             } else {
-                var result = js_eval_result(rte);
+                var result = jev.evalResult(rte);
                 if (result !== void 0) {
                     cp.transcript.addLine(printed_repr(result), "transcript-result");
                 }
@@ -944,7 +944,7 @@ cp.run_setup_and_execute = function (code_gen, single_step) {
 
     try {
         var code = code_gen();
-        program_state.rte = js_run_setup(code);
+        program_state.rte = jev.runSetup(code);
     }
     catch (e) {
         if (e !== false)

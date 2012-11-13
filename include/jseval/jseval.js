@@ -18,16 +18,23 @@ function main() {
 
         try {
 
-            js_eval(str,
-                    {
-                        container: new SourceContainer(str, filename, 1, 1)
-                    });
+            jev.eval(str,
+                     {
+                         container: new SourceContainer(str, filename, 1, 1),
+                         languageLevel: "standard"
+                     });
 
         } catch (e) {
             print(e);
         }
     }
+
+    jsevalExit();
 }
+
+var jsevalExit = function () {
+    // noop, but can be redefined
+};
 
 main();
 

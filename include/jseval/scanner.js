@@ -178,7 +178,7 @@ Scanner.prototype.get_token = function (include_comments)
     {
         if (c === EOF)
             return this.simple_token(EOI_CAT, 0);
-        else if (c === SPACE_CH || c === EOL_CH || c === TAB_CH)
+        else if (c <= SPACE_CH || c === NBSPACE_CH) // if (c === SPACE_CH || c === EOL_CH || c === TAB_CH)
         {
             if (c === EOL_CH)
                 this.crossed_eol = true;
@@ -1480,6 +1480,7 @@ var LBRACE_CH      = 123;
 var VBAR_CH        = 124;
 var RBRACE_CH      = 125;
 var TILDE_CH       = 126;
+var NBSPACE_CH     = 160;
 
 
 //-----------------------------------------------------------------------------

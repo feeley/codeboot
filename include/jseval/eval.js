@@ -6,23 +6,55 @@
 
 //=============================================================================
 
-function js_eval(source, options) {
+var jev = {};
+
+jev.RTE = function (glo, stack, frame) {
+
+    this.glo = glo;
+    this.stack = stack;
+    this.frame = frame;
+    this.step_count = 0;
+    this.step_limit = 0;
+    this.resume = null;
+    this.ast = null;
+    this.result = null;
+    this.error = null;
+
+};
+
+jev.newGlobalRTE = function () {
+
+    var global_obj = (function () { return this; })();
+
+    return new jev.RTE(global_obj,
+                       null,
+                       new RTFrame(global_obj,
+                                   null,
+                                   [],
+                                   [],
+                                   null,
+                                   null,
+                                   null));
+
+};
+
+jev.eval = function (source, options) {
 
     var code = js_compile(source, options);
 
-    return js_run(code);
-}
+    return jev.run(code);
+};
 
-function js_run(code) {
+jev.run = function (code) {
 
-    var rte = js_run_setup(code);
+    var rte = jev.runSetup(code);
 
-    return js_eval_exec(rte);
-}
+    return jev.evalExec(rte);
+};
 
-function js_run_setup(code) {
+jev.runSetup = function (code) {
 
-    var rte = new_global_rte();
+    var rte = jev.newGlobalRTE();
 
     rte.resume = function (rte) {
         return code(rte,
@@ -34,34 +66,34 @@ function js_run_setup(code) {
     };
 
     return rte;
-}
+};
 
-function js_eval_exec(rte) {
+jev.evalExec = function (rte) {
 
-    while (!js_eval_finished(rte)) {
-        js_eval_step(rte);
+    while (!jev.evalFinished(rte)) {
+        jev.evalStep(rte);
     }
 
     if (rte.error !== null) {
         throw rte.ast.loc.toString() + ": " + rte.error;
     }
 
-    return js_eval_result(rte);
-}
+    return jev.evalResult(rte);
+};
 
-function js_eval_finished(rte) {
+jev.evalFinished = function (rte) {
     return rte.resume === null;
-}
+};
 
-function js_eval_result(rte) {
+jev.evalResult = function (rte) {
     return rte.result;
-}
+};
 
-function js_eval_error(rte) {
+jev.evalError = function (rte) {
     return rte.error;
-}
+};
 
-function js_eval_step(rte, nb_steps) {
+jev.evalStep = function (rte, nb_steps) {
 
     if (nb_steps === void 0)
         nb_steps = 999999999999;
@@ -75,7 +107,7 @@ function js_eval_step(rte, nb_steps) {
     while (resume !== null) {
         resume = resume(rte);
     }
-}
+};
 
 function SourceContainerInternalFile(source, tostr, start_line, start_column, stamp) {
 
@@ -107,10 +139,15 @@ SourceContainer.prototype.toString = function () {
 function js_compile(source, options) {
 
     var error = function (loc, kind, msg) {
-        if (kind !== "warning") {
+//        if (kind !== "warning") {
             print(loc.toString() + ": " + kind + " -- " + msg);
-        }
+//        }
     };
+
+    var languageLevel = (typeof options === "object" &&
+                         options.languageLevel !== void 0)
+                        ? options.languageLevel
+                        : "novice";
 
     var opts = {
                  container:
@@ -130,11 +167,14 @@ function js_compile(source, options) {
                     options.warnings !== void 0)
                    ? options.warnings
                    : {
-                       autosemicolon: true,
-                       non_integer: true,
-                       division: true,
-                       equality: true
-                     }
+                       autosemicolon: languageLevel === "novice",
+                       non_integer: false,
+                       division: false,
+                       equality: false
+                     },
+
+                 languageLevel:
+                   languageLevel
                };
 
     var port = new String_input_port(source, opts.container);
@@ -151,7 +191,8 @@ function js_compile(source, options) {
                     warn: false,
                     ast: false,
                     nojs: false,
-                    simplify: true
+                    simplify: true,
+                    languageLevel: languageLevel
                   };
 
     return comp_statement(cte, ast_normalize(ast, options));
@@ -168,22 +209,6 @@ function new_global_cte(options) {
 
 }
 
-function new_global_rte() {
-
-    var global_obj = (function () { return this; })();
-
-    return new RTE(global_obj,
-                   null,
-                   new RTFrame(global_obj,
-                               null,
-                               [],
-                               [],
-                               null,
-                               null,
-                               null));
-
-}
-
 function CTE(callee, params, locals, label_stack, parent, options) {
 
     this.callee = callee;
@@ -192,20 +217,6 @@ function CTE(callee, params, locals, label_stack, parent, options) {
     this.label_stack = label_stack;
     this.parent = parent;
     this.options = options;
-
-}
-
-function RTE(glo, stack, frame) {
-
-    this.glo = glo;
-    this.stack = stack;
-    this.frame = frame;
-    this.step_count = 0;
-    this.step_limit = 0;
-    this.resume = null;
-    this.ast = null;
-    this.result = null;
-    this.error = null;
 
 }
 
@@ -692,7 +703,11 @@ function comp_statement(cte, ast) {
 
     } else if (ast instanceof TryStatement) {
 
-        throw "try statements are not implemented";
+        //throw "try statements are not implemented";
+
+        var code = comp_statement(cte, ast.statement);
+
+        return gen_break_handler(cte, ast, code);
 
         //return gen_break_handler(cte, ast, code);
 
@@ -853,7 +868,24 @@ function comp_expr(cte, ast) {
                               pure_op1_to_semfn(ast.op),
                               code_expr0);
 
-        } else { // if (is_pure_op2(ast.op))
+        } else if (ast.op === "x ? y : z") {
+
+            var code_expr0 = comp_expr(cte, ast.exprs[0]);
+            var code_expr1 = comp_expr(cte, ast.exprs[1]);
+            var code_expr2 = comp_expr(cte, ast.exprs[2]);
+
+            return function (rte, cont) {
+                return code_expr0(rte,
+                                  function (rte, res0) {
+                                      if (res0) {
+                                          return code_expr1(rte, cont);
+                                      } else {
+                                          return code_expr2(rte, cont);
+                                      }
+                                  });
+            }
+
+        } else {
 
             var code_expr0 = comp_expr(cte, ast.exprs[0]);
             var code_expr1;
@@ -906,6 +938,7 @@ function comp_expr(cte, ast) {
                                       pure_op2_to_semfn(ast.op),
                                       code_expr0,
                                       code_expr1);
+
             }
         }
 
@@ -1170,7 +1203,9 @@ function comp_expr(cte, ast) {
 
         var id_str = ast.id.toString()
         var access = cte_access(cte, id_str);
-        var error_msg = "cannot read the undefined variable " + id_str;
+        var error_msg = (cte.options.languageLevel === "novice")
+                        ? "cannot read the undefined variable " + id_str
+                        : false;
 
         if (access instanceof LocalAccess) {
 
@@ -1181,7 +1216,7 @@ function comp_expr(cte, ast) {
                 var f = rte.frame;
                 for (var i=up; i>0; i--) f = f.parent;
                 var result = f.locals[over];
-                if (result === void 0) {
+                if (error_msg !== false && result === void 0) {
                     return step_error(rte,
                                       cont,
                                       ast,
@@ -1203,7 +1238,7 @@ function comp_expr(cte, ast) {
                 var f = rte.frame;
                 for (var i=up; i>0; i--) f = f.parent;
                 var result = f.params[over];
-                if (result === void 0) {
+                if (error_msg !== false && result === void 0) {
                     return step_error(rte,
                                       cont,
                                       ast,
@@ -1236,7 +1271,7 @@ function comp_expr(cte, ast) {
 
             return function (rte, cont) {
                 var result = rte.glo[name];
-                if (result === void 0) {
+                if (error_msg !== false && result === void 0) {
                     return step_error(rte,
                                       cont,
                                       ast,
