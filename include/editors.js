@@ -34,17 +34,7 @@ function createCodeEditor(node) {
     };
 
     var editor = CodeMirror(node, options);
-    editor.on("scroll", function () {
-        if (!program_state.step_popover) return;
-
-        var marker = program_state.step_mark;
-        if (!isMarkerVisible(marker)) {
-            program_state.step_popover.popover('hide');
-        } else {
-            program_state.step_popover.popover('show');
-        }
-    });
-    // editor.save = cp.save; // TODO
+    editor.on("scroll", cp_internal_updatePopupPos);
     return editor;
 }
 
@@ -149,6 +139,7 @@ function createTranscript(node) {
         lineWrapping: true
     };
     var editor = CodeMirror(node, options);
+    editor.on("scroll", cp_internal_updatePopupPos);
     return editor;
 }
 

@@ -263,28 +263,7 @@
                 var $firstEditor = $("#editors").children().first();
                 $("#editors-shadow").toggle($firstEditor.size() > 0 && $firstEditor.position().top < 0);
 
-                if (!program_state.step_popover) return;
-
-                var marker = program_state.step_mark;
-                var range = marker.find();
-                if (range) {
-                    var editorsViewport = cp_internal_getBounds($("#editors"));
-                    var pos = marker.cm.charCoords(range.from, "page");
-                    if (!within(pos, editorsViewport)) {
-                        program_state.step_popover.popover('hide');
-                    } else {
-                        var popover = program_state.step_popover.data('popover');
-                        var $element = $(popover.tip());
-                        var arrow_height = 10 + 5; // Extra padding for safety
-                        if (pos.bottom + $element.height() + arrow_height >= editorsViewport.top + editorsViewport.clientHeight) {
-                            popover.options.placement = "top";
-                        } else {
-                            popover.options.placement = "bottom";
-                        }
-                        program_state.step_popover.popover('show');
-                    }
-                }
-                // cp_internal_updatePopupPos();
+                cp_internal_updatePopupPos();
             });
 
 
@@ -377,6 +356,7 @@
     <script src="include/tutorial.js"></script>
     <script src="include/output.js"></script>
     <script src="include/jquery.clippy.min.js"></script>
+    <script src="include/jquery.visibility.js"></script>
     <script>cp.query(null);</script>
 
 	<form id="form-download" class="hide" action="download.php" method="post">

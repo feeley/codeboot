@@ -698,9 +698,7 @@ cp.getContainerFor = function (fileOrFilename) {
 
 cp.openFile = function (filename) {
     var container = cp.getContainerFor(filename);
-    if (container) {
-        cp.scrollTo(container);
-    } else {
+    if (!container) {
         cp.newTab(filename);
     }
 };
@@ -946,13 +944,8 @@ function cp_internal_onTabDblClick(event) {
 }
 
 function cp_internal_updatePopupPos() {
-    if (program_state.step_popover) {
-        // Make sure any visible value bubble is moved after the new editor is opened
-        var marker = program_state.step_mark;
-        var isVisible = program_state.step_popover.data('popover').tip().hasClass('in');
-        if (isVisible) {
-            program_state.step_popover.popover('show');
-        }
+    if (program_state.value_bubble) {
+        program_state.value_bubble.update();
     }
 }
 

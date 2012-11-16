@@ -511,7 +511,7 @@ var program_state = {
     rte: null,
     error_mark: null,
     step_mark: null,
-    step_popover: null,
+    value_bubble: null,
     timeout_id: null,
     step_delay: 0,
     mode: 'stopped',
@@ -675,19 +675,126 @@ function scrollToMarker(marker, cm) {
     }
 }
 
+function CPValueBubble(opts) {
+    this.opts = {};
+    $.extend(this.opts, {
+        value : program_state.rte.result,
+        context : cp.dump_context(),
+        $anchor : function () { return $(".exec-point-code").last(); },
+        $container: null,
+    }, opts);
+
+    this.$last_anchor = null;
+    this.init(this.anchor())
+}
+
+CPValueBubble.prototype.init = function ($anchor) {
+    if (this._popover) this._popover.destroy();
+    $anchor.popover({
+        animation: false,
+        placement: "bottom",
+        trigger: "manual",
+        title: this._valueRepr(this.opts.value),
+        content: this.opts.context,
+        html: true
+    });
+    this._popover = $anchor.data('popover');
+};
+
+CPValueBubble.prototype.anchor = function () {
+    var $anchor = this.opts.$anchor;
+    if (typeof $anchor === "function") {
+        this.$last_anchor = $anchor();
+        if (this._popover && !this.$last_anchor.data('popover')) {
+            // We lost the popover, most likely because the anchor
+            // changed under our feet. This seems to happen when e.g. the window
+            // is resized (observed on Chrome)
+            this.init(this.$last_anchor);
+        }
+        return this.$last_anchor;
+    } else {
+        return $anchor;
+    }
+};
+
+CPValueBubble.prototype._valueRepr = function (val) {
+    if (val === void 0) return "NO VALUE";
+    return printed_repr(val, "HTML");
+};
+
+CPValueBubble.prototype.show = function () {
+    if (this.anchor().isInView(this.opts.$container)) {
+        // The proper height for the tooltip will only be available after
+        // we show it. So, we first display it with visibility:hidden,
+        // compute the placement, and finally display it to the user.
+        this._popover.tip().css("visibility", "hidden");
+        this.anchor().popover('show');
+        this.setPlacement(this._calculatePlacement());
+        this.anchor().popover('show');
+        this._popover.tip().css("visibility", "visible");
+    }
+};
+
+CPValueBubble.prototype._calculatePlacement = function () {
+    if (!this.opts.$container) {
+        return "bottom";
+    }
+
+    var $bubble = this._popover.tip();
+    var extra_padding = 5; // Extra padding for safety
+    var editorsRect = this.opts.$container.getBounds();
+    var anchorRect = this.anchor().getBounds();
+    if (anchorRect.bottom + this.height() + extra_padding >= editorsRect.bottom) {
+        return "top";
+    } else {
+        return "bottom";
+    }
+};
+
+CPValueBubble.prototype.update = function () {
+    if (this.anchor().isInView(this.opts.$container)) {
+        this.setPlacement(this._calculatePlacement());
+        this.anchor().popover('show');
+    } else {
+        this.hide();
+    }
+};
+
+CPValueBubble.prototype.hide = function () {
+    this.$last_anchor.popover('hide');
+};
+
+CPValueBubble.prototype.destroy = function () {
+    this.$last_anchor.popover('destroy');
+    this._popover = null;
+};
+
+CPValueBubble.prototype.isVisible = function (args) {
+    return this._popover.tip().hasClass('in');
+};
+
+CPValueBubble.prototype.setPlacement = function (placement) {
+    this._popover.options.placement = placement;
+};
+
+CPValueBubble.prototype.height = function () {
+    var arrow_height = 10;
+    return this._popover.tip().height() + arrow_height;
+}
+
 cp.hide_step = function () {
 
     if (program_state.step_mark !== null ||
-        program_state.step_popover !== null) {
+        program_state.value_bubble !== null) {
+
+        if (program_state.value_bubble !== null) {
+            program_state.value_bubble.destroy();
+            program_state.value_bubble = null;
+        }
 
         if (program_state.step_mark !== null) {
             program_state.step_mark.clear();
             program_state.step_mark = null;
-        }
-
-        if (program_state.step_popover !== null) {
-            program_state.step_popover.popover('destroy');
-            program_state.step_popover = null;
         }
 
         // Somehow, CodeMirror seems to hold on to the marked elements somewhere,
@@ -708,22 +815,27 @@ cp.show_step = function () {
 
     cp.hide_step();
 
-    program_state.step_mark = code_highlight(program_state.rte.ast.loc, "exec-point-code");
+    var loc = program_state.rte.ast.loc;
+    program_state.step_mark = code_highlight(loc, "exec-point-code");
     scrollToMarker(program_state.step_mark);
 
     var value = program_state.rte.result;
-    var value_repr = (value === void 0) ? "NO VALUE" : printed_repr(value, "HTML");
-    program_state.step_popover = $(".exec-point-code").last();
-    program_state.step_popover.last().popover({
-        animation: false,
-        placement: "bottom",
-        trigger: "manual",
-        title: value_repr,
-        content: cp.dump_context(),
-        html: true,
-    });
+    var $container;
+    if (loc.container instanceof SourceContainerInternalFile) {
+        $container = $("#editors");
+    } else {
+        $container = $("#transcript");
+    }
 
-    program_state.step_popover.popover('show');
+    if (!$(".exec-point-code").last().isInView($container)) {
+        var filename = loc.container.toString();
+        cp.scrollTo(cp.getContainerFor(filename));
+    }
+
+    program_state.value_bubble = new CPValueBubble({
+        $container: $container
+    });
+    program_state.value_bubble.show();
 };
 
 cp.dump_context = function () {
