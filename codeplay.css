@@ -126,6 +126,10 @@ div.tab-pane {
   border-bottom-color: black;
 }
 
+.navbar .btn.disabled {
+    opacity: 1;
+}
+
 /* ----- Editors ----- */
 
 .CodeMirror {

@@ -68,6 +68,14 @@
           </ul>
 
           <div class="btn-toolbar pull-right">
+              <div id="repl-controls" class="btn-group" data-cp-exec="controller">
+                  <button id="step-button" title="Step" class="btn exec-btn-step" onclick="cp.animate(0);"><i class="icon-play"></i><i id="step-mode-icon" class="icon-exp-pause"></i></button>
+                  <button id="play-button" title="Execute" class="btn" onclick="cp.play();"><i class="icon-play"></i><i class="icon-exp-infinity"></i></button>
+                  <button id="animate-button" title="Animate" class="btn" onclick="cp.animate(cp.stepDelay);"><i class="icon-play"></i></button>
+                  <button id="pause-button" title="Pause" class="btn exec-btn-pause disabled" onclick="cp.animate(0);"><i class="icon-pause"></i></button>
+                  <button id="cancel-button" title="Stop" class="btn exec-btn-cancel disabled" onclick="cp.cancel();"><i class="icon-stop"></i></button>
+              </div>
+
               <div class="btn-group" data-toggle="buttons-radio">
                   <button id="anim-slow-button" type="button" class="btn" onclick="setStepDelay(2000);"><img src="icons/snail.png" alt="slow" title="Slow animation"></img></button>
                   <button id="anim-norm-button" type="button" class="btn" onclick="setStepDelay(500);"><img src="icons/turtle.png" alt="normal" title="Normal animation"></img></button>
@@ -119,16 +127,6 @@
       <!-- Console -->
       <div id="floating-console">
         <div id="console-row" class="row">
-          <div id="repl-controls" class="btn-toolbar pull-right" data-cp-exec="controller">
-            <div class="btn-group">
-              <button id="step-button" title="Step" class="btn exec-btn-step" onclick="cp.animate(0);"><i class="icon-play"></i><i id="step-mode-icon" class="icon-exp-pause"></i></button>
-              <button id="play-button" title="Execute" class="btn" onclick="cp.play();"><i class="icon-play"></i><i class="icon-exp-infinity"></i></button>
-              <button id="animate-button" title="Animate" class="btn" onclick="cp.animate(cp.stepDelay);"><i class="icon-play"></i></button>
-              <button id="pause-button" title="Pause" class="btn exec-btn-pause disabled" onclick="cp.animate(0);"><i class="icon-pause"></i></button>
-              <button id="cancel-button" title="Stop" class="btn exec-btn-cancel disabled" onclick="cp.cancel();"><i class="icon-stop"></i></button>
-            </div>
-          </div>
-
           <ul class="nav nav-tabs">
             <li class="active"><a href="#">Console</a></li>
             <li><div class="btn-toolbar">
