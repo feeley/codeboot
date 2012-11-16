@@ -11,6 +11,8 @@
     padding: 0 10px;
 }
 
+/* ----- Menus ----- */
+
 .dropdown-align-right {
     left: auto;
     right: 0; /* Display file list menu to the left of the button to avoid extending outside the page */
@@ -502,7 +504,7 @@ i.icon-exp-pause {
 
 /* -- Turquoise navbar -- */
 
-.navbar-color-turq .navbar-inner {
+.navbar-color-turquoise .navbar-inner {
   background-color: #49afcd; /* fallback color */
 
   /* Gradients for modern browsers */

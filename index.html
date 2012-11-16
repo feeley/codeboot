@@ -83,6 +83,20 @@
                       <!-- This menu will be populated dynamically -->
                   </ul>
               </div>
+
+              <div class="btn-group">
+                <button id="settings-button" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                    <i class="icon-wrench"></i>
+                    <span class="caret"></span>
+                </button>
+                <ul id="settings-menu" class="dropdown-menu dropdown-align-right" data-toggle="radio-groups">
+                    <li class="nav-header">Language level</li>
+                    <li><a id="setting-lang-novice" href="#" data-radio-group="lang"
+                       onclick="cp.setLanguageLevel('novice');"><i class="icon-ok"></i> Novice</a></li>
+                    <li><a id="setting-lang-standard" href="#" data-radio-group="lang"
+                       onclick="cp.setLanguageLevel('standard');"><i class="icon-none"></i> Standard</a></li>
+                </ul>
+              </div>
           </div>
         </div>
       </div>
@@ -199,6 +213,8 @@
             alerts: undefined,
             repl: undefined,
             console: undefined,
+            languageLevel: "novice",
+            navbarColor: "default"
         };
 
         function setStepDelay(delay) {
@@ -206,15 +222,42 @@
             program_state.step_delay = delay;
         }
 
+        function navbarColorClass(color) {
+            if (color === "default") {
+                return "navbar-inverse";
+            } else if (color === "white") {
+                return "";
+            } else {
+                return "navbar-color-" + color;
+            }
+        }
+
+        function setNavbarColor(color) {
+            $("#navbar")
+                .removeClass(navbarColorClass(cp.navbarColor))
+                .addClass(navbarColorClass(color));
+                cp.navbarColor = color;
+        }
+
         cp.setDevMode = function (devMode) {
             cp.devMode = devMode;
             if (cp.devMode) {
-                $("#navbar").removeClass("navbar-inverse");
+                setNavbarColor("white");
                 $("#devModeTitle").text(" (dev mode)");
             } else {
-                $("#navbar").addClass("navbar-inverse");
+                cp.setLanguageLevel(cp.languageLevel);
                 $("#devModeTitle").text("");
             }
+        };
+
+        cp.setLanguageLevel = function (lang) {
+            cp.languageLevel = lang;
+            if (lang === "novice") {
+                setNavbarColor("blue");
+            } else {
+                setNavbarColor("red");
+            }
+            $("#setting-lang-" + lang).checkItem();
         };
 
         function cp_internal_getBounds($element) {
@@ -257,7 +300,7 @@
             cp.repl   = createREPL(document.getElementById("repl"));
             cp.transcript = new CPTranscript(createTranscript(document.getElementById("transcript")));
             cp.console = document.getElementById("console");
-            cp.devMode = false;
+            cp.setDevMode(false);
 
             $("#editors").on("scroll", function () {
                 var $firstEditor = $("#editors").children().first();
@@ -358,6 +401,41 @@
     <script src="include/jquery.clippy.min.js"></script>
     <script src="include/jquery.visibility.js"></script>
     <script>cp.query(null);</script>
+
+    <script>
+        (function ($) {
+            // Enable menu toggles
+
+            function getGroup($item) {
+                return $item.closest('[data-toggle="radio-groups"]');
+            }
+
+            function getGroupName($item) {
+                return $item.attr('data-radio-group');
+            }
+
+            function getGroupItems($group, groupName) {
+                return $group
+                    .closest('[data-toggle="radio-groups"]')
+                    .find('[data-radio-group="' + groupName + '"]');
+            }
+
+            $.fn.checkItem = function () {
+                var $group = getGroup(this);
+                var $items = getGroupItems(this, getGroupName(this));
+
+                $items.children("i").removeClass("icon-ok").addClass("icon-none");
+                this.children("i").removeClass("icon-none").addClass("icon-ok");
+            };
+
+            $(function () {
+                $('body').on('click.cp.toggles', '[data-radio-group]', function ( e ) {
+                    var $item = $(e.target);
+                    $item.checkItem();
+                });
+            });
+        })(jQuery);
+    </script>
 
 	<form id="form-download" class="hide" action="download.php" method="post">
 	  <textarea id="form-download-content" name="content" style="width: 0; height: 0;"></textarea>

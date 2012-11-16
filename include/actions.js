@@ -1363,10 +1363,11 @@ function readFileInternal(filename) {
 }
 
 cp.compile = function (source, container) {
-    return js_compile(source,
+    return jev.compile(source,
                       {
                           container: container,
-                          error: cp.syntax_error
+                          error: cp.syntax_error,
+                          languageLevel: cp.languageLevel
                       });
 };
 

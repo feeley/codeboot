@@ -21,7 +21,8 @@ cp.serializeState = function () {
         repl: {
             history: undefined
         },
-        devMode: cp.devMode
+        devMode: cp.devMode,
+        languageLevel: cp.languageLevel
     };
 
     state.repl.history = cp.repl.cp.history.serializeState();
@@ -35,25 +36,47 @@ cp.serializeState = function () {
     return state;
 };
 
+function cp_internal_attempt(operation) {
+    try {
+        operation();
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
 cp.restoreState = function (state) {
     if (state === undefined) return;
+    var failed = false;
 
-    try {
-        // Restore history
+    failed = cp_internal_attempt(function () {
         cp.repl.cp.history.restoreState(state.repl.history);
-        cp.setDevMode(!!state.devMode);
+    }) || failed;
 
-        if (state.files) {
+    failed = cp_internal_attempt(function () {
+        cp.setLanguageLevel(state.languageLevel || "novice");
+    }) || failed;
+
+    failed = cp_internal_attempt(function () {
+        cp.setDevMode(!!state.devMode);
+    }) || failed;
+
+    if (state.files) {
+        failed = cp_internal_attempt(function () {
             cp.fs.restore(state.files);
             cp.rebuildFileMenu();
-        }
+        }) || failed;
+    }
 
-        if (state.openEditors) {
+    if (state.openEditors) {
+        failed = cp_internal_attempt(function () {
             for (var i = state.openEditors.length - 1; i >= 0; i--) {
                 cp.openFile(state.openEditors[i]);
             }
-        }
-    } catch (e) {
-        cp.reportError("Unable to restore state: " + e);
+        }) || failed;
+    }
+
+    if (failed) {
+        cp.reportError("Failed to restore state");
     }
 };
