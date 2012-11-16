@@ -53,16 +53,8 @@ jev.RTE.prototype.runUntilFinished = function () {
     return rte.getResult();
 };
 
-jev.evalFinished = function (rte) { // DEPRECATED... REMOVE ME!
-    return rte.finished();
-};
-
 jev.RTE.prototype.finished = function () {
     return this.resume === null;
-};
-
-jev.evalResult = function (rte) { // DEPRECATED... REMOVE ME!
-    return rte.getResult();
 };
 
 jev.RTE.prototype.getResult = function () {
@@ -73,16 +65,13 @@ jev.RTE.prototype.getError = function () {
     return this.error;
 };
 
-jev.evalStep = function (rte, nb_steps) { // DEPRECATED... REMOVE ME!
-    return rte.step(nb_steps);
-};
-
 jev.RTE.prototype.step = function (nb_steps) {
+
+    var rte = this;
 
     if (nb_steps === void 0)
         nb_steps = 999999999999;
 
-    var rte = this;
     var resume = rte.resume;
 
     rte.step_limit = rte.step_count + nb_steps;
@@ -151,16 +140,12 @@ SourceContainer.prototype.toString = function () {
     return this.tostr;
 };
 
-function js_compile(source, options) { // DEPRECATED... REMOVE ME!
-    return jev.compile(source, options);
-}
-
 jev.compile = function (source, options) {
 
     var error = function (loc, kind, msg) {
-//        if (kind !== "warning") {
+        if (kind !== "warning") {
             print(loc.toString() + ": " + kind + " -- " + msg);
-//        }
+        }
     };
 
     var languageLevel = (typeof options === "object" &&
@@ -723,7 +708,7 @@ jev.compStatement = function (cte, ast) {
 
     } else if (ast instanceof TryStatement) {
 
-        //throw "try statements are not implemented";
+        throw "try statements are not implemented";
 
         var code = jev.compStatement(cte, ast.statement);
 

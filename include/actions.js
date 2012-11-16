@@ -929,10 +929,10 @@ cp.execute2 = function (single_step) {
 
     var rte = program_state.rte;
 
-    if (rte !== null && !jev.evalFinished(rte)) {
+    if (rte !== null && !rte.finished()) {
 
         try {
-            jev.evalStep(rte, single_step ? 1 : 257);
+            rte.step(single_step ? 1 : 257);
         }
         catch (e) {
             if (e !== false)
@@ -943,11 +943,11 @@ cp.execute2 = function (single_step) {
 
         setStepCounter(rte.step_count);
 
-//        if (program_state.mode === 'stepping') {
-//            single_step = true;
-//        }
+        if (program_state.mode === 'stepping') {
+            single_step = true;
+        }
 
-        if (!jev.evalFinished(rte)) {
+        if (!rte.finished()) {
             newMode = 'stepping';
             if (single_step) {
                 cp.show_step();
@@ -969,7 +969,7 @@ cp.execute2 = function (single_step) {
                 cp.show_error(program_state.rte.ast.loc);
                 cp.transcript.addLine(rte.error, "error-message");
             } else {
-                var result = jev.evalResult(rte);
+                var result = rte.getResult();
                 if (result !== void 0) {
                     cp.transcript.addLine(printed_repr(result), "transcript-result");
                 }
@@ -1364,11 +1364,11 @@ function readFileInternal(filename) {
 
 cp.compile = function (source, container) {
     return jev.compile(source,
-                      {
-                          container: container,
-                          error: cp.syntax_error,
-                          languageLevel: cp.languageLevel
-                      });
+                       {
+                           container: container,
+                           error: cp.syntax_error,
+                           languageLevel: cp.languageLevel
+                       });
 };
 
 var warnSemicolon = true;
