@@ -262,7 +262,7 @@ body[data-lang-level="novice"] pre#repl .CodeMirror-gutters {
 
 body[data-lang-level="standard"] pre#repl,
 body[data-lang-level="standard"] pre#repl .CodeMirror-gutters {
-    background-color: #FBEDED;
+    background-color: #FDF6F6;
 }
 
 #repl CodeMirror {
