@@ -824,7 +824,7 @@ cp.show_step = function () {
     if (loc.container instanceof SourceContainerInternalFile) {
         $container = $("#editors");
     } else {
-        $container = $("#transcript");
+        $container = null; /* use whole document */
     }
 
     if (!$(".exec-point-code").last().isInView($container)) {
