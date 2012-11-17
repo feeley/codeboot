@@ -236,11 +236,11 @@ div.tab-pane {
 
 .CodeMirror-gutters {
     border-right: 0;
-    background-color: #E8FFFF;
+    background-color: #EDF7FA;
 }
 
-pre#repl.tab-content {
-    background-color: #E8FFFF;
+pre#repl {
+    background-color: #EDF7FA;
 }
 
 #repl CodeMirror {
@@ -284,12 +284,6 @@ pre#repl.tab-content {
   margin-top: 3px;
   margin-bottom: 3px;
   margin-left: 14px;
-}
-
-#console-row li.active > a {
-    /* background-color: #3272c0; */
-    background-color: #006dcc;
-    color: white;
 }
 
 /* ----- Value bubbles ----- */
