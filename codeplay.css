@@ -236,6 +236,11 @@ div.tab-pane {
 
 .CodeMirror-gutters {
     border-right: 0;
+    background-color: #E8FFFF;
+}
+
+pre#repl.tab-content {
+    background-color: #E8FFFF;
 }
 
 #repl CodeMirror {
