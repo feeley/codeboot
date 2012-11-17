@@ -603,6 +603,7 @@ cp.play_or_step = function (single_step) {
 };
 
 cp.play = function () {
+    program_state.mode = "animating";
     cp.play_or_step(false);
 };
 
