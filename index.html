@@ -68,9 +68,6 @@
           </ul>
 
           <div class="btn-toolbar pull-right">
-              <div class="btn-group">
-                 <button id="clear-button" title="Clear console" class="btn" onclick="cp.clearAll();"><i class="icon-trash"></i></button>
-              </div>
               <div id="repl-controls" class="btn-group" data-cp-exec="controller">
                   <button id="step-button" title="Step" class="btn exec-btn-step" onclick="cp.animate(0);"><i class="icon-play"></i><i id="step-mode-icon" class="icon-exp-pause"></i></button>
                   <button id="play-button" title="Execute" class="btn" onclick="cp.play();"><i class="icon-play"></i><i class="icon-exp-infinity"></i></button>
@@ -128,7 +125,7 @@
       <!-- Console -->
       <div id="floating-console">
         <div id="console-row" class="row">
-          <pre id="repl"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"></div></pre>
+          <pre id="repl"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"><div id="transcript-clear-btn"><a title="Clear console" href="#" onclick="cp.clearAll();"><i class="icon-trash"></i></a></div></div></pre>
         </div>
 
         <div id="step-value-row" class="row">

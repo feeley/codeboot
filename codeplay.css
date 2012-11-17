@@ -224,6 +224,22 @@ div.tab-pane {
     padding: 0 4px;
 }
 
+#transcript-clear-btn {
+    /*
+    position: absolute;
+    bottom: 5px;
+    right: 30px;
+    */
+    float: right;
+    opacity: 0.4;
+    z-index: 99;
+    padding-top: 2px;
+}
+
+#transcript-clear-btn:hover {
+    opacity: 1;
+}
+
 /* ----- REPL ----- */
 
 #repl.busy .CodeMirror-cursor {
