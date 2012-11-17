@@ -237,11 +237,16 @@ div.tab-pane {
 
 .CodeMirror-gutters {
     border-right: 0;
+}
+
+body[data-lang-level="novice"] pre#repl,
+body[data-lang-level="novice"] pre#repl .CodeMirror-gutters {
     background-color: #EDF7FA;
 }
 
-pre#repl {
-    background-color: #EDF7FA;
+body[data-lang-level="standard"] pre#repl,
+body[data-lang-level="standard"] pre#repl .CodeMirror-gutters {
+    background-color: #FBEDED;
 }
 
 #repl CodeMirror {
@@ -308,9 +313,13 @@ pre#repl {
   background-color: yellow;
 }
 
-.error-code {
+body[data-lang-level="novice"] .error-code {
 /*  border: 1px solid #aaa;*/
   background-color: pink;
+}
+
+body[data-lang-level="standard"] .error-code {
+  background-color: #EB9E9B;
 }
 
 .error-message {

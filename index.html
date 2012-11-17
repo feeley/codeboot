@@ -250,6 +250,7 @@
                 setNavbarColor("red");
             }
             $("#setting-lang-" + lang).checkItem();
+            $("body").attr("data-lang-level", lang);
         };
 
         function cp_internal_getBounds($element) {
