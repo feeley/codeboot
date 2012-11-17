@@ -79,12 +79,6 @@
                   <button id="cancel-button" title="Stop" class="btn exec-btn-cancel disabled" onclick="cp.cancel();"><i class="icon-stop"></i></button>
               </div>
 
-              <div class="btn-group" data-toggle="buttons-radio">
-                  <button id="anim-slow-button" type="button" class="btn" onclick="setStepDelay(2000);"><img src="icons/snail.png" alt="slow" title="Slow animation"></img></button>
-                  <button id="anim-norm-button" type="button" class="btn" onclick="setStepDelay(500);"><img src="icons/turtle.png" alt="normal" title="Normal animation"></img></button>
-                  <button id="anim-fast-button" type="button" class="btn" onclick="setStepDelay(125);"><img src="icons/hare.png" alt="fast" title="Fast animation"></img></button>
-              </div>
-
               <div class="btn-group">
                   <button id="new-file-button" title="New file" class="btn" onclick="cp.newFile();"><i class="icon-plus"></i><i class="icon-file"></i></button>
                   <button class="btn dropdown-toggle" data-toggle="dropdown">
@@ -106,6 +100,10 @@
                        onclick="cp.setLanguageLevel('novice');"><i class="icon-ok"></i> Novice</a></li>
                     <li><a id="setting-lang-standard" href="#" data-radio-group="lang"
                        onclick="cp.setLanguageLevel('standard');"><i class="icon-none"></i> Standard</a></li>
+                    <li class="nav-header">Animation speed</li>
+                    <li><a id="setting-speed-slow" href="#" data-radio-group="speed" onclick="setStepDelay(2000);"><i class="icon-none"></i> Slow</a></li>
+                    <li><a id="setting-speed-normal" href="#" data-radio-group="speed" onclick="setStepDelay(500);"><i class="icon-ok"></i> Normal</a></li>
+                    <li><a id="setting-speed-fast" href="#" data-radio-group="speed" onclick="setStepDelay(125);"><i class="icon-none"></i> Fast</a></li>
                 </ul>
               </div>
           </div>
@@ -287,7 +285,7 @@
             };
             // checkBrowserFeatures();
 
-            $("#anim-norm-button").click();
+            $("#setting-speed-normal").click();
 
             cp.alerts = document.getElementById("alerts");
             cp.repl   = createREPL(document.getElementById("repl"));
