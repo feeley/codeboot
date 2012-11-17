@@ -694,11 +694,27 @@ CPValueBubble.prototype.init = function ($anchor) {
         animation: false,
         placement: "bottom",
         trigger: "manual",
-        title: this._valueRepr(this.opts.value),
+        title: this._valueRepr(this.opts.value) + '<button class="close">&times;</button>',
         content: this.opts.context,
         html: true
     });
     this._popover = $anchor.data('popover');
+
+    // Add close button handler
+    // Popovers / tooltips are created lazily, so intercept their creation to install the handler
+    var oldShow = this._popover.show;
+    var self = this;
+    this._popover.show = function () {
+        oldShow.apply(this, arguments);
+        $("button.close", this.tip()).on("click", function() {
+            self.hide();
+            $(".exec-point-code").one("mouseover", function () {
+                if (!self.isOpen()) {
+                    self.show();
+                }
+            });
+        });
+    }
 };
 
 CPValueBubble.prototype.anchor = function () {
@@ -769,7 +785,7 @@ CPValueBubble.prototype.destroy = function () {
     this._popover = null;
 };
 
-CPValueBubble.prototype.isVisible = function (args) {
+CPValueBubble.prototype.isOpen = function (args) {
     return this._popover.tip().hasClass('in');
 };
 

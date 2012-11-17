@@ -114,7 +114,8 @@ div.tab-pane {
 	padding: 10px;
 }
 
-.nav-tabs button.close {
+.nav-tabs button.close,
+.popover-title > button.close {
   margin: -3px 0 0 3px;
   padding-left: 3px;
 }
