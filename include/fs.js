@@ -814,7 +814,7 @@ cp.makeEditorToolbar = function (file) {
 			}).appendTo($menu);
     	});
 
-    	changeButtonNature(buttons[0]);
+        changeButtonNature(buttons[1]);
     }).appendTo($toolbar);
 
 
