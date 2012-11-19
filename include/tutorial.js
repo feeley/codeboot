@@ -22,7 +22,7 @@ function cp_tutorial1() {
 		         '<a class="btn btn-primary" onclick="cp_tutorial2();">Next</a></p>',
 		html: true,
 	});
-	
+
 	$("#repl").popover('show');
     focusREPL();
 }
@@ -35,11 +35,11 @@ function cp_tutorial2() {
 		trigger: "manual",
 		title: "Play button",
 		content: '<p>Use this button to evaluate the code entered at the Console, or simply press the Enter key.</p>' +
-		    '<p><a class="btn btn-primary" onclick="cp_tutorial_setREPLExpression();' + "$('#play-button').click();" + '">Show me</a> ' +
+		    '<p><a class="btn btn-primary" onclick="cp_tutorial_setREPLExpression();' + "setTimeout(function () { $('#play-button').click(); }, 100);" + '">Show me</a> ' +
 			'<a class="btn btn-primary" onclick="cp_tutorial3();">Next</a></p>',
 		html: true,
 	});
-	
+
 	$("#play-button").popover('show');
     focusREPL();
 }
@@ -52,11 +52,11 @@ function cp_tutorial3() {
 		trigger: "manual",
 		title: "Step button",
 		content: '<p>Use this button to execute one step of the code.</p>' +
-		         '<p><a class="btn btn-primary" onclick="cp_tutorial_setREPLExpression();' + "$('#step-button').click(); cp_tutorial4();" + '">Show me</a>  ' +
+		         '<p><a class="btn btn-primary" onclick="cp_tutorial_setREPLExpression();' + "setTimeout(function () { $('#step-button').click(); }, 100); cp_tutorial4();" + '">Show me</a>  ' +
 		         '<a class="btn btn-primary" onclick="cp_tutorial_end();">Done</a></p>',
 		html: true,
 	});
-	
+
 	$("#step-button").popover('show');
     focusREPL();
 }
@@ -72,7 +72,7 @@ function cp_tutorial4() {
 		         '<p><a class="btn btn-primary" onclick="cp_tutorial_end();">Done</a></p>',
 		html: true,
 	});
-	
+
 	$("#step-button").popover('show');
     focusREPL();
 }
