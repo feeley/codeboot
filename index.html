@@ -62,7 +62,7 @@
         <div class="container">
           <a class="brand" href="#">codePlay v0.9.3<span id="devModeTitle"></span></a>
 
-          <ul class="nav" data-cp-focus="restore">
+          <ul class="nav">
             <li><a href="#" onclick="cp_tutorial();">Help</a></li>
             <li><a href="#" role="button" data-toggle="modal" data-target="#about-box">About</a></li>
           </ul>
@@ -310,13 +310,15 @@
 
             $("#repl").click(focusREPL);
 
+            $('#about-box').on('hidden', function () {
+              cp_restoreFocus();
+            });
+
             cp.handle_query();
 
             // Stop navigation to '#'
             $('body').on('click.codeplay.restoreFocus', '[data-cp-focus="restore"]', function (e) {
-              if (cp.lastEditor) {
-                  cp.lastEditor.focus();
-              }
+              cp_restoreFocus();
             });
             $('body').on('click.codeplay.nonav', '[href="#"]', function (e) {
                 e.preventDefault();
@@ -372,6 +374,12 @@
 
         function focusREPL() {
             cp.repl.focus();
+        }
+
+        function cp_restoreFocus() {
+            if (cp.lastEditor) {
+                cp.lastEditor.focus();
+            }
         }
 
         function saveAs(content, filename) {

@@ -458,6 +458,7 @@ var NEW_FILE_DEFAULT_CONTENT = "// Enter JavaScript code here";
 function CPFile(filename, content, opts) {
     this.filename = filename;
     this.content = (content !== (void 0)) ? content : NEW_FILE_DEFAULT_CONTENT;
+    this.cursor = null;
     this.stamp = 0;
     this.editor = undefined;
 
@@ -491,6 +492,9 @@ CPFile.prototype.serialize = function () {
     var json = {
         filename: this.filename,
         content: this.getContent(),
+        cursor: this.cursor === null ?
+                {line: 0, ch: 0} :
+                {line: this.cursor.line, ch: this.cursor.ch},
         stamp: this.stamp
     };
     return json;
@@ -716,6 +720,7 @@ cp.closeFile = function (fileOrFilename) {
 	}
 
     $container.remove();
+    focusREPL();
 
     cp_internal_updatePopupPos();
 };
@@ -888,6 +893,9 @@ function createFileEditor(node, file) {
 
     file.editor = editor;
     editor.setValue(file.content);
+    if (file.cursor) {
+        editor.setCursor(file.cursor);
+    }
     var saveHandler = function () {
         file.save();
         editor.currentSaveTimeout = (void 0);
@@ -898,6 +906,9 @@ function createFileEditor(node, file) {
             clearTimeout(editor.currentSaveTimeout);
         }
         editor.currentSaveTimeout = setTimeout(saveHandler, SAVE_DELAY);
+    });
+    editor.on("cursorActivity", function () {
+        file.cursor = editor.getCursor();
     });
     return editor;
 }
@@ -1007,6 +1018,8 @@ cp.newTab = function (fileOrFilename) {
             editor.refresh();
           }
     });
+
+    editor.focus();
 
     cp_internal_updatePopupPos();
 };
