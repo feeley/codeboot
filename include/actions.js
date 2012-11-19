@@ -685,6 +685,7 @@ function CPValueBubble(opts) {
         $container: null,
     }, opts);
 
+    this.closed = false;
     this.$last_anchor = null;
     this.init(this.anchor())
 }
@@ -708,6 +709,7 @@ CPValueBubble.prototype.init = function ($anchor) {
     this._popover.show = function () {
         oldShow.apply(this, arguments);
         $("button.close", this.tip()).on("click", function() {
+            self.closed = true;
             self.hide();
             $(".exec-point-code").one("mouseover", function () {
                 if (!self.isOpen()) {
@@ -740,6 +742,7 @@ CPValueBubble.prototype._valueRepr = function (val) {
 };
 
 CPValueBubble.prototype.show = function () {
+    this.closed = false;
     if (this.anchor().isInView(this.opts.$container)) {
         // The proper height for the tooltip will only be available after
         // we show it. So, we first display it with visibility:hidden,
@@ -769,6 +772,8 @@ CPValueBubble.prototype._calculatePlacement = function () {
 };
 
 CPValueBubble.prototype.update = function () {
+    if (this.closed) return;
+
     if (this.anchor().isInView(this.opts.$container)) {
         this.setPlacement(this._calculatePlacement());
         this.anchor().popover('show');
