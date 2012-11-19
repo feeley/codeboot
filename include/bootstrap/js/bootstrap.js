@@ -1087,8 +1087,8 @@
 
         pos = this.getPosition(inside)
 
-        actualWidth = $tip[0].offsetWidth
-        actualHeight = $tip[0].offsetHeight
+        actualWidth = $tip[0].offsetWidth;
+        actualHeight = $tip[0].offsetHeight + 10; // account for arrow size
 
         var padding = 3;
 
