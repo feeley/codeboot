@@ -1011,7 +1011,10 @@ bc.newTab = function (fileOrFilename) {
     $(".CodeMirror", $row).resizable({
           handles: "s",
           minHeight: 100,
-          stop: function() { editor.refresh(); },
+          stop: function() {
+            $(".CodeMirror", $row).css("width", "auto");
+            editor.refresh();
+          },
           resize: function() {
             $(".CodeMirror-scroll", $row).height($(this).height());
             $(".CodeMirror-scroll", $row).width($(this).width());
