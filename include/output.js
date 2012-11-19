@@ -1,4 +1,4 @@
-cp.output = {};
+bc.output = {};
 
 (function (exports) {
 
@@ -82,4 +82,4 @@ cp.output = {};
 
     exports.PixelGrid = PixelGrid;
 
-})(cp.output);
+})(bc.output);

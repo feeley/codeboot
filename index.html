@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>codePlay</title>
+    <title>bootCode</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -19,7 +19,7 @@
     <link href="include/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
     <link rel="stylesheet" href="include/codemirror3/lib/codemirror.css">
     <link rel="stylesheet" href="include/codemirror3/theme/eclipse.css">
-    <link href="codeplay.css" rel="stylesheet">
+    <link href="bootcode.css" rel="stylesheet">
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -55,29 +55,29 @@
     </script>
   </head>
 
-  <body onunload="cp.saveSession();">
+  <body onunload="bc.saveSession();">
     <!-- Navbar -->
     <div id="navbar" class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
-          <a class="brand" href="#">codePlay v0.9.3<span id="devModeTitle"></span></a>
+          <a class="brand" href="#">bootCode v0.9.3<span id="devModeTitle"></span></a>
 
           <ul class="nav">
-            <li><a href="#" onclick="cp_tutorial();">Help</a></li>
+            <li><a href="#" onclick="bc_tutorial();">Help</a></li>
             <li><a href="#" role="button" data-toggle="modal" data-target="#about-box">About</a></li>
           </ul>
 
           <div class="btn-toolbar pull-right">
-              <div id="repl-controls" class="btn-group" data-cp-exec="controller">
-                  <button id="step-button" title="Step" class="btn exec-btn-step" onclick="cp.animate(0);"><i class="icon-play"></i><i id="step-mode-icon" class="icon-exp-pause"></i></button>
-                  <button id="play-button" title="Execute" class="btn" onclick="cp.play();"><i class="icon-play"></i><i class="icon-exp-infinity"></i></button>
-                  <button id="animate-button" title="Animate" class="btn" onclick="cp.animate(cp.stepDelay);"><i class="icon-play"></i></button>
-                  <button id="pause-button" title="Pause" class="btn exec-btn-pause disabled" onclick="if (!$('#pause-button').is('.disabled')) cp.animate(0);"><i class="icon-pause"></i></button>
-                  <button id="cancel-button" title="Stop" class="btn exec-btn-cancel disabled" onclick="if (!$('#cancel-button').is('.disabled')) cp.cancel();"><i class="icon-stop"></i></button>
+              <div id="repl-controls" class="btn-group" data-bc-exec="controller">
+                  <button id="step-button" title="Step" class="btn exec-btn-step" onclick="bc.animate(0);"><i class="icon-play"></i><i id="step-mode-icon" class="icon-exp-pause"></i></button>
+                  <button id="play-button" title="Execute" class="btn" onclick="bc.play();"><i class="icon-play"></i><i class="icon-exp-infinity"></i></button>
+                  <button id="animate-button" title="Animate" class="btn" onclick="bc.animate(bc.stepDelay);"><i class="icon-play"></i></button>
+                  <button id="pause-button" title="Pause" class="btn exec-btn-pause disabled" onclick="if (!$('#pause-button').is('.disabled')) bc.animate(0);"><i class="icon-pause"></i></button>
+                  <button id="cancel-button" title="Stop" class="btn exec-btn-cancel disabled" onclick="if (!$('#cancel-button').is('.disabled')) bc.cancel();"><i class="icon-stop"></i></button>
               </div>
 
               <div class="btn-group">
-                  <button id="new-file-button" title="New file" class="btn" onclick="cp.newFile();"><i class="icon-plus"></i><i class="icon-file"></i></button>
+                  <button id="new-file-button" title="New file" class="btn" onclick="bc.newFile();"><i class="icon-plus"></i><i class="icon-file"></i></button>
                   <button class="btn dropdown-toggle" data-toggle="dropdown">
                       <span class="caret"></span>
                   </button>
@@ -86,7 +86,7 @@
                   </ul>
               </div>
 
-              <div class="btn-group" data-cp-focus="restore">
+              <div class="btn-group" data-bc-focus="restore">
                 <button id="settings-button" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
                     <i class="icon-wrench"></i>
                     <span class="caret"></span>
@@ -94,9 +94,9 @@
                 <ul id="settings-menu" class="dropdown-menu dropdown-align-right" data-toggle="radio-groups">
                     <li class="nav-header">Language level</li>
                     <li><a id="setting-lang-novice" href="#" data-radio-group="lang"
-                       onclick="cp.setLanguageLevel('novice');"><i class="icon-ok"></i> Novice</a></li>
+                       onclick="bc.setLanguageLevel('novice');"><i class="icon-ok"></i> Novice</a></li>
                     <li><a id="setting-lang-standard" href="#" data-radio-group="lang"
-                       onclick="cp.setLanguageLevel('standard');"><i class="icon-none"></i> Standard</a></li>
+                       onclick="bc.setLanguageLevel('standard');"><i class="icon-none"></i> Standard</a></li>
                     <li class="nav-header">Animation speed</li>
                     <li><a id="setting-speed-slow" href="#" data-radio-group="speed" onclick="setStepDelay(2000);"><i class="icon-none"></i> Slow</a></li>
                     <li><a id="setting-speed-normal" href="#" data-radio-group="speed" onclick="setStepDelay(500);"><i class="icon-ok"></i> Normal</a></li>
@@ -125,7 +125,7 @@
       <!-- Console -->
       <div id="floating-console">
         <div id="console-row" class="row">
-          <pre id="repl"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"><div id="transcript-clear-btn"><a title="Clear console" href="#" onclick="cp.clearAll();" data-cp-focus="restore"><i class="icon-trash"></i></a></div></div></pre>
+          <pre id="repl"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"><div id="transcript-clear-btn"><a title="Clear console" href="#" onclick="bc.clearAll();" data-bc-focus="restore"><i class="icon-trash"></i></a></div></div></pre>
         </div>
 
         <div id="step-value-row" class="row">
@@ -140,10 +140,10 @@
       <div id="about-box" class="modal hide fade">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h3>About codePlay</h3>
+          <h3>About bootCode</h3>
         </div>
         <div class="modal-body">
-          <p>codePlay is developped by Marc Feeley and Bruno Dufour using the following components:</p>
+          <p>bootCode is developped by Marc Feeley and Bruno Dufour using the following components:</p>
           <ul>
             <li><a href="http://twitter.github.com/bootstrap/" target="_blank">Twitter Bootstrap</a></li>
             <li><a href="http://jquery.com/" target="_blank">jQuery</a></li>
@@ -155,8 +155,8 @@
             <li><a href="http://thenounproject.com/noun/rabbit/#icon-No5354" target="_blank">Rabbit icon</a> by Samuel Fine from The Noun Project</li>
             <li><a href="http://gentleface.com/">Gentleface icons</a></li>
           </ul>
-          <p>The code is freely <a href="https://github.com/feeley/codeplay" target="_blank">available on Github</a>. Feel free
-             to <a href="https://github.com/feeley/codeplay/issues/new" target="_blank">report issues</a> or contribute.</p>
+          <p>The code is freely <a href="https://github.com/feeley/bootcode" target="_blank">available on Github</a>. Feel free
+             to <a href="https://github.com/feeley/bootcode/issues/new" target="_blank">report issues</a> or contribute.</p>
         </div>
         <div class="modal-footer">
           <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
@@ -164,7 +164,7 @@
       </div>
     </div>
 
-    <div id="codeplay-footer">
+    <div id="bootcode-footer">
     </div>
 
     <!-- Imports (importing at the end makes the page load faster) -->
@@ -189,7 +189,7 @@
     <script src="include/jseval/eval.js"></script>
 
     <script type="text/javascript">
-        window.cp = {
+        window.bc = {
             builtins: {},
 
             // state
@@ -206,7 +206,7 @@
         };
 
         function setStepDelay(delay) {
-            cp.stepDelay = delay;
+            bc.stepDelay = delay;
             program_state.step_delay = delay;
         }
 
@@ -222,24 +222,24 @@
 
         function setNavbarColor(color) {
             $("#navbar")
-                .removeClass(navbarColorClass(cp.navbarColor))
+                .removeClass(navbarColorClass(bc.navbarColor))
                 .addClass(navbarColorClass(color));
-                cp.navbarColor = color;
+                bc.navbarColor = color;
         }
 
-        cp.setDevMode = function (devMode) {
-            cp.devMode = devMode;
-            if (cp.devMode) {
+        bc.setDevMode = function (devMode) {
+            bc.devMode = devMode;
+            if (bc.devMode) {
                 setNavbarColor("white");
                 $("#devModeTitle").text(" (dev mode)");
             } else {
-                cp.setLanguageLevel(cp.languageLevel);
+                bc.setLanguageLevel(bc.languageLevel);
                 $("#devModeTitle").text("");
             }
         };
 
-        cp.setLanguageLevel = function (lang) {
-            cp.languageLevel = lang;
+        bc.setLanguageLevel = function (lang) {
+            bc.languageLevel = lang;
             if (lang === "novice") {
                 setNavbarColor("turquoise");
             } else {
@@ -249,7 +249,7 @@
             $("body").attr("data-lang-level", lang);
         };
 
-        function cp_internal_getBounds($element) {
+        function bc_internal_getBounds($element) {
             var offset = $element.offset();
             var w = $element.width();
             var h = $element.height();
@@ -265,18 +265,18 @@
 
         $(document).ready(function() {
             Mousetrap.bind('ctrl+\\', function () {
-                cp.setDevMode(!cp.devMode);
+                bc.setDevMode(!bc.devMode);
             });
             Mousetrap.bind('ctrl+shift+c', function () {
-                cp.closeAll();
+                bc.closeAll();
             });
             window.onbeforeunload = function () {
-                if (cp.saveInProgress) {
-                    cp.saveInProgress = false;
+                if (bc.saveInProgress) {
+                    bc.saveInProgress = false;
                     return undefined;
                 }
-                if (!cp.devMode) {
-                    return "You codePlay session will be lost."
+                if (!bc.devMode) {
+                    return "You bootCode session will be lost."
                 } else {
                     return undefined;
                 }
@@ -285,47 +285,47 @@
 
             $("#setting-speed-normal").click();
 
-            cp.alerts = document.getElementById("alerts");
-            cp.repl   = createREPL(document.getElementById("repl"));
-            cp.transcript = new CPTranscript(createTranscript(document.getElementById("transcript")));
-            cp.console = document.getElementById("console");
-            cp.setDevMode(false);
+            bc.alerts = document.getElementById("alerts");
+            bc.repl   = createREPL(document.getElementById("repl"));
+            bc.transcript = new CPTranscript(createTranscript(document.getElementById("transcript")));
+            bc.console = document.getElementById("console");
+            bc.setDevMode(false);
 
             $("#editors").on("scroll", function () {
                 var $firstEditor = $("#editors").children().first();
                 $("#editors-shadow").toggle($firstEditor.size() > 0 && $firstEditor.position().top < 0);
 
-                cp_internal_updatePopupPos();
+                bc_internal_updatePopupPos();
             });
 
 
 
             document.getElementById("transcript").style.display='none';
-            $(window).resize(cp_internal_resizeEditors);
-            cp_internal_resizeEditors();
+            $(window).resize(bc_internal_resizeEditors);
+            bc_internal_resizeEditors();
 
-            cp.initFS();
+            bc.initFS();
 
-            cp.loadSession();
+            bc.loadSession();
 
             $("#repl").click(focusREPL);
 
             $('#about-box').add("#urlModal").on('hidden', function () {
-              cp_restoreFocus();
+              bc_restoreFocus();
             });
 
-            cp.handle_query();
+            bc.handle_query();
 
             // Stop navigation to '#'
-            $('body').on('click.codeplay.restoreFocus', '[data-cp-focus="restore"]', function (e) {
-              cp_restoreFocus();
+            $('body').on('click.bootcode.restoreFocus', '[data-bc-focus="restore"]', function (e) {
+              bc_restoreFocus();
             });
-            $('body').on('click.codeplay.nonav', '[href="#"]', function (e) {
+            $('body').on('click.bootcode.nonav', '[href="#"]', function (e) {
                 e.preventDefault();
             });
         });
 
-        function cp_internal_resizeEditors() {
+        function bc_internal_resizeEditors() {
             var $console = $("#console-row");
             var consoleOffset = $console.offset();
             $("#editors")
@@ -373,23 +373,23 @@
         }
 
         function focusREPL() {
-            cp.repl.focus();
+            bc.repl.focus();
         }
 
-        function cp_restoreFocus() {
-            if (cp.lastEditor) {
-                cp.lastEditor.focus();
+        function bc_restoreFocus() {
+            if (bc.lastEditor) {
+                bc.lastEditor.focus();
             }
         }
 
         function saveAs(content, filename) {
             $("#form-download-content").val(content);
             $("#form-download-filename").val(filename);
-            cp.saveInProgress = true;
+            bc.saveInProgress = true;
             $("#form-download").submit();
         }
 
-        function cp_about() {
+        function bc_about() {
 
         }
     </script>
@@ -403,7 +403,7 @@
     <script src="include/output.js"></script>
     <script src="include/jquery.clippy.min.js"></script>
     <script src="include/jquery.visibility.js"></script>
-    <script>cp.query(null);</script>
+    <script>bc.query(null);</script>
 
     <script>
         (function ($) {
@@ -432,7 +432,7 @@
             };
 
             $(function () {
-                $('body').on('click.cp.toggles', '[data-radio-group]', function ( e ) {
+                $('body').on('click.bootcode.toggles', '[data-radio-group]', function ( e ) {
                     var $item = $(e.target);
                     $item.checkItem();
                 });

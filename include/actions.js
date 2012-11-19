@@ -6,7 +6,7 @@ $(document).ready(function() {
     }
 });
 
-cp.addAlert = function (text, title, kind) {
+bc.addAlert = function (text, title, kind) {
     var alertDiv = $("<div/>").addClass("alert");
     if (kind) alertDiv.addClass("alert-" + kind);
     alertDiv.text(text);
@@ -14,20 +14,20 @@ cp.addAlert = function (text, title, kind) {
         alertDiv.prepend($("<strong/>").text(title), " ");
     }
     alertDiv.prepend('<button class="close" data-dismiss="alert">&times;</button>');
-    $(cp.alerts).append(alertDiv);
+    $(bc.alerts).append(alertDiv);
 };
 
-cp.reportError = function (text, title) {
+bc.reportError = function (text, title) {
     if (title === undefined) title = "Error!";
-    cp.addAlert(text, title, "error");
+    bc.addAlert(text, title, "error");
 };
 
-cp.reportWarning = function (text, title) {
+bc.reportWarning = function (text, title) {
     if (title === undefined) title = "Warning!";
-    cp.addAlert(text, title);
+    bc.addAlert(text, title);
 };
 
-cp.scrollToEnd = function (editor) {
+bc.scrollToEnd = function (editor) {
     var info = editor.getScrollInfo();
     editor.scrollTo(null, info.height - info.clientHeight);
 };
@@ -100,7 +100,7 @@ CPTranscript.prototype.addTextLine = function (text, cssClass) {
         // We'll set the gutter back on the previous line (ugly!)
         line -= 1;
     }
-    editor.setGutterMarker(line, "cp-prompt", document.createTextNode(">"));
+    editor.setGutterMarker(line, "bc-prompt", document.createTextNode(">"));
     this.is_empty = false;
 
     this.onTranscriptChanged();
@@ -123,7 +123,7 @@ CPTranscript.prototype.addLineWidget = function (textOrNode, cssClass) {
     var w = this.editor.addLineWidget(this.editor.lineCount() - 1, widget);
     this.widgets.push(w);
 
-    cp.scrollToEnd(this.editor);
+    bc.scrollToEnd(this.editor);
 
     this.onTranscriptChanged();
 };
@@ -151,17 +151,17 @@ function code_highlight(loc, cssClass) {
 
     if (container instanceof SourceContainerInternalFile) {
         var filename = container.toString();
-        if (!cp.fs.hasFile(filename)) {
+        if (!bc.fs.hasFile(filename)) {
             return null; // the file is not known
         }
         var state = readFileInternal(filename);
         if (container.stamp !== state.stamp) {
             return null; // the content of the editor has changed so can't highlight
         }
-        cp.openFile(filename);
-        editor = cp.fs.getEditor(filename);
+        bc.openFile(filename);
+        editor = bc.fs.getEditor(filename);
     } else if (container instanceof SourceContainer) {
-        editor = cp.transcript.editor;
+        editor = bc.transcript.editor;
     } else {
         // unknown source container
         return null;
@@ -375,52 +375,52 @@ function object_repr(obj, format, limit) {
     }
 }
 
-cp.query = function (query) {
-    cp.saved_query = query;
-    cp.replay_command = "";
-    cp.replay_command_index = 0;
-    cp.replay_parameters = [];
+bc.query = function (query) {
+    bc.saved_query = query;
+    bc.replay_command = "";
+    bc.replay_command_index = 0;
+    bc.replay_parameters = [];
 };
 
-cp.handle_query = function () {
+bc.handle_query = function () {
 
-    var query = cp.saved_query;
+    var query = bc.saved_query;
 
     if (query && query.slice(0, 7) === "replay=") {
 
-        cp.replay_command = decodeURIComponent(query.slice(7));
-        cp.replay_command_index = 0;
-        cp.replay_syntax = 1;
+        bc.replay_command = decodeURIComponent(query.slice(7));
+        bc.replay_command_index = 0;
+        bc.replay_syntax = 1;
 
-        setTimeout(function () { cp.replay(); }, 100);
+        setTimeout(function () { bc.replay(); }, 100);
     } else if (query && query.slice(0, 10) === "replay%25=") {
 
-        cp.replay_command = decodeURIComponent(decodeURIComponent(query.slice(10)));
-        cp.replay_command_index = 0;
-        cp.replay_syntax = 2;
+        bc.replay_command = decodeURIComponent(decodeURIComponent(query.slice(10)));
+        bc.replay_command_index = 0;
+        bc.replay_syntax = 2;
 
-        setTimeout(function () { cp.replay(); }, 100);
+        setTimeout(function () { bc.replay(); }, 100);
     } else if (query && query.slice(0, 8) === "replay%=") {
 
-        cp.replay_command = decodeURIComponent(query.slice(8));
-        cp.replay_command_index = 0;
-        cp.replay_syntax = 2;
+        bc.replay_command = decodeURIComponent(query.slice(8));
+        bc.replay_command_index = 0;
+        bc.replay_syntax = 2;
 
-        setTimeout(function () { cp.replay(); }, 100);
+        setTimeout(function () { bc.replay(); }, 100);
     }
 };
 
-cp.replay = function () {
+bc.replay = function () {
 
-    var command = cp.replay_command;
-    var i = cp.replay_command_index;
+    var command = bc.replay_command;
+    var i = bc.replay_command_index;
 
     if (i < command.length) {
         var j = i;
         while (j < command.length &&
                (command.charAt(j) !== "@" ||
                 (command.charAt(j+1) === "@" ||
-                 (cp.replay_syntax === 2 && command.charAt(j+1) === "N")))) {
+                 (bc.replay_syntax === 2 && command.charAt(j+1) === "N")))) {
             if (command.charAt(j) === "@") {
                 j += 2;
             } else {
@@ -430,7 +430,7 @@ cp.replay = function () {
 
         var str;
 
-        if (cp.replay_syntax === 2) {
+        if (bc.replay_syntax === 2) {
             str = command.slice(i, j).replace(/@N/g,"\n").replace(/@@/g,"@");
         } else {
             str = command.slice(i, j).replace(/@@/g,"\n");
@@ -438,44 +438,44 @@ cp.replay = function () {
 
         if (command.charAt(j) === "@") {
             if (command.charAt(j+1) >= "0" && command.charAt(j+1) <= "9") {
-                cp.replay_parameters[+command.charAt(j+1)] = str;
+                bc.replay_parameters[+command.charAt(j+1)] = str;
                 j += 2;
             } else if (command.charAt(j+1) === "P") {
                 if (str !== "") {
-                    set_input(cp.repl, str);
-                    cp.repl.refresh();
-                    cp.repl.focus();
+                    set_input(bc.repl, str);
+                    bc.repl.refresh();
+                    bc.repl.focus();
                 } else {
-                    cp.run(false);
+                    bc.run(false);
                     j += 2;
                 }
             } else if (command.charAt(j+1) === "S") {
                 if (str !== "") {
-                    set_input(cp.repl, str);
-                    cp.repl.refresh();
-                    cp.repl.focus();
+                    set_input(bc.repl, str);
+                    bc.repl.refresh();
+                    bc.repl.focus();
                 } else {
-                    cp.animate(0);
+                    bc.animate(0);
                     j += 2;
                 }
             } else if (command.charAt(j+1) === "A") {
                 if (str !== "") {
-                    set_input(cp.repl, str);
-                    cp.repl.refresh();
-                    cp.repl.focus();
+                    set_input(bc.repl, str);
+                    bc.repl.refresh();
+                    bc.repl.focus();
                 } else {
-                    cp.animate(500);
+                    bc.animate(500);
                     j += 2;
                 }
             } else if (command.charAt(j+1) === "E") {
                 var default_filename = "scratch";
                 var filename = default_filename;
-                if (cp.replay_parameters[0] !== void 0) {
-                    filename = cp.replay_parameters[0];
-                    cp.replay_parameters[0] = void 0;
+                if (bc.replay_parameters[0] !== void 0) {
+                    filename = bc.replay_parameters[0];
+                    bc.replay_parameters[0] = void 0;
                 }
-                var existing = cp.openFileExistingOrNew(filename);
-                var editor = cp.fs.getEditor(filename);
+                var existing = bc.openFileExistingOrNew(filename);
+                var editor = bc.fs.getEditor(filename);
                 var replace = true;
                 if (existing &&
                     filename !== default_filename &&
@@ -487,7 +487,7 @@ cp.replay = function () {
                 }
                 j += 2;
             } else if (command.charAt(j+1) === "C") {
-                cp.closeAll();
+                bc.closeAll();
                 j += 2;
             } else {
                 // unknown command
@@ -495,14 +495,14 @@ cp.replay = function () {
             }
         } else {
             if (str !== "") {
-                set_input(cp.repl, str);
+                set_input(bc.repl, str);
             }
         }
 
-        cp.replay_command_index = j;
+        bc.replay_command_index = j;
 
         if (j < command.length) {
-            setTimeout(function () { cp.replay(); }, 1);
+            setTimeout(function () { bc.replay(); }, 1);
         }
     }
 };
@@ -530,18 +530,18 @@ function setStepCounter(count) {
 }
 
 function disableAllControllers() {
-    $('[data-cp-exec="controller"]').each(function () {
+    $('[data-bc-exec="controller"]').each(function () {
         setControllerState(this, false);
     });
 }
 
 function enableAllControllers() {
-    $('[data-cp-exec="controller"]').each(function () {
+    $('[data-bc-exec="controller"]').each(function () {
         setControllerState(this, true);
     });
 }
 
-cp.enterMode = function (newMode) {
+bc.enterMode = function (newMode) {
     // newMode is one of 'stopped', 'animating', 'stepping'
 
     if (program_state.mode === newMode) return;
@@ -573,7 +573,7 @@ cp.enterMode = function (newMode) {
         if (program_state.step_counter === null) {
             program_state.step_counter = $('<span class="badge badge-info exec-lbl-count"/>');
             setStepCounter(program_state.rte.step_count);
-            cp.repl.addWidget({line: 0, ch: 0}, program_state.step_counter.get(0), false);
+            bc.repl.addWidget({line: 0, ch: 0}, program_state.step_counter.get(0), false);
         }
     } else if (newMode === 'stopped' && program_state.step_counter != null) {
         // Clone the widget rather than attempt to reset its positioning for now
@@ -582,61 +582,61 @@ cp.enterMode = function (newMode) {
         $oldWidget = $(program_state.step_counter);
         $newWidget.text($oldWidget.text());
         $oldWidget.remove();
-        cp.transcript.addLineWidget($newWidget.get(0));
+        bc.transcript.addLineWidget($newWidget.get(0));
         program_state.step_counter = null;
     }
 
     program_state.mode = newMode;
 };
 
-cp.animate = function (new_step_delay) {
+bc.animate = function (new_step_delay) {
     program_state.step_delay = new_step_delay;
-    cp.step();
+    bc.step();
 };
 
-cp.play_or_step = function (single_step) {
-    cp.repl.focus();
+bc.play_or_step = function (single_step) {
+    bc.repl.focus();
     if (program_state.rte !== null)
-        cp.execute(single_step);
+        bc.execute(single_step);
     else
-        cp.run(single_step);
+        bc.run(single_step);
 };
 
-cp.play = function () {
+bc.play = function () {
     program_state.mode = "animating";
-    cp.play_or_step(false);
+    bc.play_or_step(false);
 };
 
-cp.step = function () {
-    cp.play_or_step(true);
+bc.step = function () {
+    bc.play_or_step(true);
 };
 
-cp.cancel_animation = function () {
+bc.cancel_animation = function () {
     if (program_state.timeout_id !== null) {
         clearTimeout(program_state.timeout_id);
         program_state.timeout_id = null;
     }
 };
 
-cp.cancel = function () {
-    cp.cancel_animation();
-    cp.hide_step();
-    cp.enterMode('stopped');
+bc.cancel = function () {
+    bc.cancel_animation();
+    bc.hide_step();
+    bc.enterMode('stopped');
     program_state.rte = null;
-    cp.repl.busy = false;
-    set_prompt(cp.repl);
-    cp.repl.refresh();
-    cp.repl.focus();
+    bc.repl.busy = false;
+    set_prompt(bc.repl);
+    bc.repl.refresh();
+    bc.repl.focus();
 };
 
-cp.show_error = function (loc) {
+bc.show_error = function (loc) {
 
-    cp.hide_error();
+    bc.hide_error();
 
     program_state.error_mark = code_highlight(loc, "error-code");
 };
 
-cp.hide_error = function () {
+bc.hide_error = function () {
     if (program_state.error_mark !== null) {
         program_state.error_mark.clear();
         program_state.error_mark = null;
@@ -680,7 +680,7 @@ function CPValueBubble(opts) {
     this.opts = {};
     $.extend(this.opts, {
         value : program_state.rte.result,
-        context : cp.dump_context(),
+        context : bc.dump_context(),
         $anchor : function () { return $(".exec-point-code").last(); },
         $container: null,
     }, opts);
@@ -810,7 +810,7 @@ CPValueBubble.prototype.height = function () {
     return h + arrow_height;
 }
 
-cp.hide_step = function () {
+bc.hide_step = function () {
 
     if (program_state.step_mark !== null ||
         program_state.value_bubble !== null) {
@@ -839,9 +839,9 @@ cp.hide_step = function () {
     }
 };
 
-cp.show_step = function () {
+bc.show_step = function () {
 
-    cp.hide_step();
+    bc.hide_step();
 
     var loc = program_state.rte.ast.loc;
     program_state.step_mark = code_highlight(loc, "exec-point-code");
@@ -857,7 +857,7 @@ cp.show_step = function () {
 
     if (!$(".exec-point-code").last().isInView($container)) {
         var filename = loc.container.toString();
-        cp.scrollTo(cp.getContainerFor(filename));
+        bc.scrollTo(bc.getContainerFor(filename));
     }
 
     program_state.value_bubble = new CPValueBubble({
@@ -866,7 +866,7 @@ cp.show_step = function () {
     program_state.value_bubble.show();
 };
 
-cp.dump_context = function () {
+bc.dump_context = function () {
 
     //return ""; // don't dump context yet
 
@@ -939,21 +939,21 @@ uninteresting_global["getScreenWidth"] = true;
 uninteresting_global["getScreenHeight"] = true;
 uninteresting_global["setPixel"] = true;
 
-cp.execute = function (single_step) {
+bc.execute = function (single_step) {
 
-    if (false && cp.hide_step()) { //TODO: find a better way... this causes too much flicker
+    if (false && bc.hide_step()) { //TODO: find a better way... this causes too much flicker
         // give some time for the browser to refresh the page
-        setTimeout(function () { cp.execute2(single_step); }, 10);
+        setTimeout(function () { bc.execute2(single_step); }, 10);
     } else {
         // step was not shown, so no need to wait
-        cp.execute2(single_step);
+        bc.execute2(single_step);
     }
 };
 
-cp.execute2 = function (single_step) {
+bc.execute2 = function (single_step) {
 
     var newMode = 'stopped';
-    cp.cancel_animation();
+    bc.cancel_animation();
 
     var rte = program_state.rte;
 
@@ -964,8 +964,8 @@ cp.execute2 = function (single_step) {
         }
         catch (e) {
             if (e !== false)
-                cp.transcript.addLine(String(e), "error-message");
-            cp.cancel();
+                bc.transcript.addLine(String(e), "error-message");
+            bc.cancel();
             return;
         }
 
@@ -978,49 +978,49 @@ cp.execute2 = function (single_step) {
         if (!rte.finished()) {
             newMode = 'stepping';
             if (single_step) {
-                cp.show_step();
+                bc.show_step();
                 if (program_state.step_delay > 0) {
                     newMode = 'animating';
                     program_state.timeout_id = setTimeout(function ()
-                                                          { cp.execute(true); },
+                                                          { bc.execute(true); },
                                                           program_state.step_delay);
                 }
             } else {
                 newMode = 'animating';
                 program_state.timeout_id = setTimeout(function ()
-                                                      { cp.execute(false); },
+                                                      { bc.execute(false); },
                                                       1);
             }
         } else {
 
             if (rte.error !== null) {
-                cp.show_error(program_state.rte.ast.loc);
-                cp.transcript.addLine(rte.error, "error-message");
+                bc.show_error(program_state.rte.ast.loc);
+                bc.transcript.addLine(rte.error, "error-message");
             } else {
                 var result = rte.getResult();
                 if (result !== void 0) {
-                    cp.transcript.addLine(printed_repr(result), "transcript-result");
+                    bc.transcript.addLine(printed_repr(result), "transcript-result");
                 }
             }
 
-            cp.cancel();
+            bc.cancel();
         }
     }
 
-    cp.enterMode(newMode);
+    bc.enterMode(newMode);
 };
 
-cp.run = function(single_step) {
+bc.run = function(single_step) {
 
-    var str = cp.repl.getValue();
-    set_prompt(cp.repl, "");
-    cp.repl.refresh();
+    var str = bc.repl.getValue();
+    set_prompt(bc.repl, "");
+    bc.repl.refresh();
 
     var line;
-    if (cp.transcript.is_empty) {
+    if (bc.transcript.is_empty) {
         line = 0;
     } else {
-        line = cp.transcript.editor.lineCount();
+        line = bc.transcript.editor.lineCount();
     }
 
     var ch = 0;
@@ -1036,51 +1036,51 @@ cp.run = function(single_step) {
 
     if (source === "") {
         if (program_state.rte !== null) {
-            cp.execute(true);
+            bc.execute(true);
             return;
         }
         if (single_step) {
-            set_prompt(cp.repl);
-            cp.repl.refresh();
-            cp.enterMode('stopped');
+            set_prompt(bc.repl);
+            bc.repl.refresh();
+            bc.enterMode('stopped');
             return;
         }
     }
 
-    cp.repl.cp.history.add(str);
-    cp.transcript.addLine(str, "transcript-input");
+    bc.repl.bc.history.add(str);
+    bc.transcript.addLine(str, "transcript-input");
 
     var code_gen = function ()
                    {
-                       return cp.compile_repl_expression(source, line, ch);
+                       return bc.compile_repl_expression(source, line, ch);
                    };
 
-    cp.run_setup_and_execute(code_gen, single_step);
+    bc.run_setup_and_execute(code_gen, single_step);
 };
 
-cp.load = function(filename, single_step) {
+bc.load = function(filename, single_step) {
 
     var src = "load(\"" + filename + "\")";
 
-    set_prompt(cp.repl, "");
-    cp.repl.refresh();
+    set_prompt(bc.repl, "");
+    bc.repl.refresh();
 
-    cp.repl.cp.history.add(src);
-    cp.transcript.addLine(src, "transcript-input");
+    bc.repl.bc.history.add(src);
+    bc.transcript.addLine(src, "transcript-input");
 
     var code_gen = function ()
                    {
-                       return cp.compile_internal_file(filename);
+                       return bc.compile_internal_file(filename);
                    };
 
-    cp.run_setup_and_execute(code_gen, single_step);
+    bc.run_setup_and_execute(code_gen, single_step);
 };
 
-cp.run_setup_and_execute = function (code_gen, single_step) {
+bc.run_setup_and_execute = function (code_gen, single_step) {
 
-    cp.hide_error();
+    bc.hide_error();
 
-    cp.repl.busy = true;
+    bc.repl.busy = true;
 
     try {
         var code = code_gen();
@@ -1088,22 +1088,22 @@ cp.run_setup_and_execute = function (code_gen, single_step) {
     }
     catch (e) {
         if (e !== false)
-            cp.transcript.addLine(String(e), "error-message");
-        cp.cancel();
+            bc.transcript.addLine(String(e), "error-message");
+        bc.cancel();
         return;
     }
 
-    cp.execute(single_step);
+    bc.execute(single_step);
 
-    cp.repl.focus();
+    bc.repl.focus();
 };
 
 function abort_fn_body(rte, result, msg) {
 
-    cp.enterMode("stepping");
+    bc.enterMode("stepping");
 
     if (msg !== void 0) {
-        cp.transcript.addLine(msg, "error-message");
+        bc.transcript.addLine(msg, "error-message");
     }
 
     program_state.step_delay = 0;
@@ -1203,7 +1203,7 @@ builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
 
         var divNode = document.createElement("div");
 
-        var pixels = new cp.output.PixelGrid(divNode, {
+        var pixels = new bc.output.PixelGrid(divNode, {
             rows: height,
             cols: width,
             pixelSize: (pixSize >= 3) ? pixSize-1 : pixSize,
@@ -1212,11 +1212,11 @@ builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
 
         pixels.clear('black');
 
-        cp.transcript.addLineWidget(divNode);
+        bc.transcript.addLineWidget(divNode);
 
-        cp.screenPixels = pixels;
-        cp.screenWidth = width;
-        cp.screenHeight = height;
+        bc.screenPixels = pixels;
+        bc.screenWidth = width;
+        bc.screenHeight = height;
 
         return cont(rte, void 0);
     };
@@ -1232,7 +1232,7 @@ builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
                         null);
 };
 
-cp.screenWidth = 0;
+bc.screenWidth = 0;
 
 function builtin_getScreenWidth() {
     throw "unimplemented";///////////////////////////
@@ -1241,7 +1241,7 @@ function builtin_getScreenWidth() {
 builtin_getScreenWidth._apply_ = function (rte, cont, this_, params) {
 
     var code = function (rte, cont) {
-        return return_fn_body(rte, cp.screenWidth);
+        return return_fn_body(rte, bc.screenWidth);
     };
 
     return exec_fn_body(code,
@@ -1255,7 +1255,7 @@ builtin_getScreenWidth._apply_ = function (rte, cont, this_, params) {
                         null);
 };
 
-cp.screenHeight = 0;
+bc.screenHeight = 0;
 
 function builtin_getScreenHeight() {
     throw "unimplemented";///////////////////////////
@@ -1264,7 +1264,7 @@ function builtin_getScreenHeight() {
 builtin_getScreenHeight._apply_ = function (rte, cont, this_, params) {
 
     var code = function (rte, cont) {
-        return return_fn_body(rte, cp.screenHeight);
+        return return_fn_body(rte, bc.screenHeight);
     };
 
     return exec_fn_body(code,
@@ -1297,15 +1297,15 @@ builtin_setPixel._apply_ = function (rte, cont, this_, params) {
         if (typeof x !== "number" ||
             Math.floor(x) !== x ||
             x < 0 ||
-            x >= cp.screenWidth) {
-            return abort_fn_body(rte, void 0, "x parameter of setPixel must be a positive integer less than " + cp.screenWidth);
+            x >= bc.screenWidth) {
+            return abort_fn_body(rte, void 0, "x parameter of setPixel must be a positive integer less than " + bc.screenWidth);
         }
 
         if (typeof y !== "number" ||
             Math.floor(y) !== y ||
             y < 0 ||
-            y >= cp.screenHeight) {
-            return abort_fn_body(rte, void 0, "y parameter of setPixel must be a positive integer less than " + cp.screenHeight);
+            y >= bc.screenHeight) {
+            return abort_fn_body(rte, void 0, "y parameter of setPixel must be a positive integer less than " + bc.screenHeight);
         }
 
         if (typeof color !== "object" ||
@@ -1325,7 +1325,7 @@ builtin_setPixel._apply_ = function (rte, cont, this_, params) {
             return abort_fn_body(rte, void 0, "color parameter of setPixel must be a RGB structure");
         }
 
-        cp.screenPixels.setPixel(x,
+        bc.screenPixels.setPixel(x,
                                  y,
                                  "#" +
                                  (256+color.r).toString(16).slice(1) +
@@ -1353,7 +1353,7 @@ function builtin_load(filename) {
 builtin_load._apply_ = function (rte, cont, this_, params) {
 
     var filename = params[0];
-    var code = cp.compile_internal_file(filename);
+    var code = bc.compile_internal_file(filename);
 
     return exec_fn_body(code,
                         builtin_load,
@@ -1366,23 +1366,23 @@ builtin_load._apply_ = function (rte, cont, this_, params) {
                         null);
 };
 
-cp.compile_repl_expression = function (source, line, ch) {
-    return cp.compile(source,
+bc.compile_repl_expression = function (source, line, ch) {
+    return bc.compile(source,
                       new SourceContainer(source, "<REPL>", line+1, ch+1));
 };
 
-cp.compile_internal_file = function (filename) {
+bc.compile_internal_file = function (filename) {
 
     var state = readFileInternal(filename);
     var source = state.content;
 
-    return cp.compile(source,
+    return bc.compile(source,
                       new SourceContainerInternalFile(source, filename, 1, 1, state.stamp));
 };
 
 function readFileInternal(filename) {
 
-    var file = cp.fs.getByName(filename);
+    var file = bc.fs.getByName(filename);
 
     return {
         stamp: file.stamp,
@@ -1390,49 +1390,49 @@ function readFileInternal(filename) {
     };
 }
 
-cp.compile = function (source, container) {
+bc.compile = function (source, container) {
     return jev.compile(source,
                        {
                            container: container,
-                           error: cp.syntax_error,
-                           languageLevel: cp.languageLevel
+                           error: bc.syntax_error,
+                           languageLevel: bc.languageLevel
                        });
 };
 
 var warnSemicolon = true;
 
-cp.syntax_error = function (loc, kind, msg) {
+bc.syntax_error = function (loc, kind, msg) {
 
     if (warnSemicolon && msg === "';' missing after this token") {
         kind = "syntax error";
-        cp.show_error(loc);
-        cp.transcript.addLine(kind + " -- " + msg, "error-message");
+        bc.show_error(loc);
+        bc.transcript.addLine(kind + " -- " + msg, "error-message");
         throw false;
     }
 
     if (kind !== "warning") {
-        cp.show_error(loc);
-        cp.transcript.addLine(kind + " -- " + msg, "error-message");
+        bc.show_error(loc);
+        bc.transcript.addLine(kind + " -- " + msg, "error-message");
         throw false;
     }
 };
 
-cp.clearREPL = function () {
-    set_prompt(cp.repl);
-    cp.repl.refresh();
-    cp.repl.focus();
+bc.clearREPL = function () {
+    set_prompt(bc.repl);
+    bc.repl.refresh();
+    bc.repl.focus();
 };
 
-cp.clearAll = function () {
-    cp.cancel();
-    cp.clearREPL();
-    cp.transcript.clear();
+bc.clearAll = function () {
+    bc.cancel();
+    bc.clearREPL();
+    bc.transcript.clear();
 }
 
-cp.undo = function (cm) {
+bc.undo = function (cm) {
     cm.undo();
 };
 
-cp.redo = function (cm) {
+bc.redo = function (cm) {
     cm.redo();
 };
