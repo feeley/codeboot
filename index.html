@@ -62,7 +62,7 @@
         <div class="container">
           <a class="brand" href="#">codePlay v0.9.3<span id="devModeTitle"></span></a>
 
-          <ul class="nav">
+          <ul class="nav" data-cp-focus="restore">
             <li><a href="#" onclick="cp_tutorial();">Help</a></li>
             <li><a href="#" role="button" data-toggle="modal" data-target="#about-box">About</a></li>
           </ul>
@@ -86,7 +86,7 @@
                   </ul>
               </div>
 
-              <div class="btn-group">
+              <div class="btn-group" data-cp-focus="restore">
                 <button id="settings-button" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
                     <i class="icon-wrench"></i>
                     <span class="caret"></span>
@@ -125,7 +125,7 @@
       <!-- Console -->
       <div id="floating-console">
         <div id="console-row" class="row">
-          <pre id="repl"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"><div id="transcript-clear-btn"><a title="Clear console" href="#" onclick="cp.clearAll();"><i class="icon-trash"></i></a></div></div></pre>
+          <pre id="repl"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"><div id="transcript-clear-btn"><a title="Clear console" href="#" onclick="cp.clearAll();" data-cp-focus="restore"><i class="icon-trash"></i></a></div></div></pre>
         </div>
 
         <div id="step-value-row" class="row">
@@ -195,13 +195,14 @@
             // state
             currentConsoleLine: undefined,
             saveInProgress: false,
+            lastEditor: null,
+            languageLevel: "novice",
+            navbarColor: "default",
 
             // Elements
             alerts: undefined,
             repl: undefined,
-            console: undefined,
-            languageLevel: "novice",
-            navbarColor: "default"
+            console: undefined
         };
 
         function setStepDelay(delay) {
@@ -312,8 +313,14 @@
             cp.handle_query();
 
             // Stop navigation to '#'
-            $('body')
-                .on('click.codeplay', '[href="#"]', function (e) { e.preventDefault(); });
+            $('body').on('click.codeplay.restoreFocus', '[data-cp-focus="restore"]', function (e) {
+              if (cp.lastEditor) {
+                  cp.lastEditor.focus();
+              }
+            });
+            $('body').on('click.codeplay.nonav', '[href="#"]', function (e) {
+                e.preventDefault();
+            });
         });
 
         function cp_internal_resizeEditors() {

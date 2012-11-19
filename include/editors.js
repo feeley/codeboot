@@ -35,6 +35,7 @@ function createCodeEditor(node) {
 
     var editor = CodeMirror(node, options);
     editor.on("scroll", cp_internal_updatePopupPos);
+    editor.on("focus", function () { cp.lastEditor = editor; });
     return editor;
 }
 
@@ -140,6 +141,7 @@ function createTranscript(node) {
     };
     var editor = CodeMirror(node, options);
     editor.on("scroll", cp_internal_updatePopupPos);
+    editor.on("focus", function () { cp.lastEditor = editor; });
     return editor;
 }
 
@@ -195,6 +197,7 @@ function createREPL(node) {
         lineWrapping: true
     };
     var editor = CodeMirror(node, options);
+    editor.on("focus", function () { cp.lastEditor = editor; });
     editor.cp = {};
     editor.cp.history = new REPLHistoryManager(editor);
     editor.busy = false;
