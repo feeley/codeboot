@@ -179,6 +179,10 @@ div.tab-pane {
     background: transparent url('icons/resize_handle_corner.png') no-repeat top right;
 }
 
+.ui-resizable-handle {
+    z-index: 1009; /* Just below bubbles */
+}
+
 #floating-console {
     background-color: transparent;
     position: relative;
