@@ -52,7 +52,7 @@ function cp_tutorial3() {
 		trigger: "manual",
 		title: "Step button",
 		content: '<p>Use this button to execute one step of the code.</p>' +
-		         '<p><a class="btn btn-primary" onclick="cp_tutorial_setREPLExpression();' + "setTimeout(function () { $('#step-button').click(); }, 100); cp_tutorial4();" + '">Show me</a>  ' +
+		         '<p><a class="btn btn-primary" onclick="cp_tutorial_setREPLExpression();' + "setTimeout(function () { $('#step-button').click(); }, 100);gu cp_tutorial4();" + '">Show me</a>  ' +
 		         '<a class="btn btn-primary" onclick="cp_tutorial_end();">Done</a></p>',
 		html: true,
 	});
