@@ -796,7 +796,13 @@ CPValueBubble.prototype.setPlacement = function (placement) {
 
 CPValueBubble.prototype.height = function () {
     var arrow_height = 10;
-    return this._popover.tip().height() + arrow_height;
+    var h = this._popover.tip().height();
+    if (h === 0) {
+        // Popover hasn't been created yet, so create it
+        this._popover.setContent();
+        h = this._popover.tip().height();
+    }
+    return h + arrow_height;
 }
 
 cp.hide_step = function () {
