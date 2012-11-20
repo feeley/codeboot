@@ -1,25 +1,25 @@
-function bc_tutorial() {
-    if (bc.inTutorial) return;
-    bc.inTutorial = true;
-    bc_tutorial1();
+function cb_tutorial() {
+    if (cb.inTutorial) return;
+    cb.inTutorial = true;
+    cb_tutorial1();
 }
 
-function bc_tutorial_setREPLExpression() {
-    bc.cancel();
-    bc.query("replay=1+2*3");
-    bc.handle_query();
+function cb_tutorial_setREPLExpression() {
+    cb.cancel();
+    cb.query("replay=1+2*3");
+    cb.handle_query();
     focusREPL();
 }
 
-function bc_tutorial1() {
+function cb_tutorial1() {
 	$("#repl").popover({
 		animation: true,
 		placement: "bottom",
 		trigger: "manual",
 		title: "Console",
 		content: '<p>This is the Console.  After the prompt, enter the JavaScript code you wish to execute.</p> ' +
-		         '<p><a class="btn btn-primary" onclick="bc_tutorial_setREPLExpression();">Show me</a> ' +
-		         '<a class="btn btn-primary" onclick="bc_tutorial2();">Next</a></p>',
+		         '<p><a class="btn btn-primary" onclick="cb_tutorial_setREPLExpression();">Show me</a> ' +
+		         '<a class="btn btn-primary" onclick="cb_tutorial2();">Next</a></p>',
 		html: true,
 	});
 
@@ -27,7 +27,7 @@ function bc_tutorial1() {
     focusREPL();
 }
 
-function bc_tutorial2() {
+function cb_tutorial2() {
     $("#repl").popover('destroy');
 	$("#play-button").popover({
 		animation: true,
@@ -35,8 +35,8 @@ function bc_tutorial2() {
 		trigger: "manual",
 		title: "Play button",
 		content: '<p>Use this button to evaluate the code entered at the Console, or simply press the Enter key.</p>' +
-		    '<p><a class="btn btn-primary" onclick="bc_tutorial_setREPLExpression();' + "setTimeout(function () { $('#play-button').click(); }, 100);" + '">Show me</a> ' +
-			'<a class="btn btn-primary" onclick="bc_tutorial3();">Next</a></p>',
+		    '<p><a class="btn btn-primary" onclick="cb_tutorial_setREPLExpression();' + "setTimeout(function () { $('#play-button').click(); }, 100);" + '">Show me</a> ' +
+			'<a class="btn btn-primary" onclick="cb_tutorial3();">Next</a></p>',
 		html: true,
 	});
 
@@ -44,7 +44,7 @@ function bc_tutorial2() {
     focusREPL();
 }
 
-function bc_tutorial3() {
+function cb_tutorial3() {
     $("#play-button").popover('destroy');
 	$("#step-button").popover({
 		animation: true,
@@ -52,8 +52,8 @@ function bc_tutorial3() {
 		trigger: "manual",
 		title: "Step button",
 		content: '<p>Use this button to execute one step of the code.</p>' +
-		         '<p><a class="btn btn-primary" onclick="bc_tutorial_setREPLExpression();' + "setTimeout(function () { $('#step-button').click(); }, 100); bc_tutorial4();" + '">Show me</a>  ' +
-		         '<a class="btn btn-primary" onclick="bc_tutorial_end();">Done</a></p>',
+		         '<p><a class="btn btn-primary" onclick="cb_tutorial_setREPLExpression();' + "setTimeout(function () { $('#step-button').click(); }, 100); cb_tutorial4();" + '">Show me</a>  ' +
+		         '<a class="btn btn-primary" onclick="cb_tutorial_end();">Done</a></p>',
 		html: true,
 	});
 
@@ -61,7 +61,7 @@ function bc_tutorial3() {
     focusREPL();
 }
 
-function bc_tutorial4() {
+function cb_tutorial4() {
     $("#step-button").popover('destroy');
 	$("#step-button").popover({
 		animation: false,
@@ -69,7 +69,7 @@ function bc_tutorial4() {
 		trigger: "manual",
 		title: "Step button",
 		content: '<p>Press the button again to execute the next step. Repeat until the code is fully evaluated, or press the Play button.</p>' +
-		         '<p><a class="btn btn-primary" onclick="bc_tutorial_end();">Done</a></p>',
+		         '<p><a class="btn btn-primary" onclick="cb_tutorial_end();">Done</a></p>',
 		html: true,
 	});
 
@@ -77,8 +77,8 @@ function bc_tutorial4() {
     focusREPL();
 }
 
-function bc_tutorial_end() {
+function cb_tutorial_end() {
 	$("#step-button").popover('destroy');
     focusREPL();
-    bc.inTutorial = false;
+    cb.inTutorial = false;
 }

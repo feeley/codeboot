@@ -1,11 +1,14 @@
-var x = 111;
+var f = function () { print(888); return Math.sqrt(9); };
 
-var y = function () { print(x); }
+for (var i=0; i<4; i++) {
+switch (i) {
+case 9-8: print(1); //continue;
+default:
+case 8/4: print(2); break;
+case f(): print(3);
+    case 4: print(444);
+}
+    print(333);
+}
 
-var z = function x() { print(x); x = 999; print(x); }
-
-y(222);
-z(222);
-y(222);
-z(222);
-y(222);
+print(999);

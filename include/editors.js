@@ -23,7 +23,7 @@ function createCodeEditor(node) {
                 event.preventDefault();
                 var dt = event.dataTransfer;
                 var files = dt.files;
-                bc.loadFile(cm, files[0]);
+                cb.loadFile(cm, files[0]);
                 return true;
             } else if (event.type === "dragover") {
                 event.stopPropagation();
@@ -34,26 +34,26 @@ function createCodeEditor(node) {
     };
 
     var editor = CodeMirror(node, options);
-    editor.on("scroll", bc_internal_updatePopupPos);
-    editor.on("focus", function () { bc.lastEditor = editor; });
+    editor.on("scroll", cb_internal_updatePopupPos);
+    editor.on("focus", function () { cb.lastEditor = editor; });
     return editor;
 }
 
-bc.loadFile = function (cm, f) {
+cb.loadFile = function (cm, f) {
     if (!cm) return;
 
-    bc_internal_readTextFile(f, function(contents) {
+    cb_internal_readTextFile(f, function(contents) {
         cm.setValue(contents);
     });
 };
 
-function bc_internal_readTextFile(f, callback) {
+function cb_internal_readTextFile(f, callback) {
     if (!Modernizr.filereader) {
-        bc.reportError("File is reader not supported by the browser");
+        cb.reportError("File is reader not supported by the browser");
     } else {
         var reader = new FileReader();
         reader.onerror = function (e) {
-            bc.reportError("File read failed");
+            cb.reportError("File read failed");
         };
         reader.onload = function(e) {
             callback(e.target.result);
@@ -135,13 +135,13 @@ function createTranscript(node) {
         indentUnit: 4,         // Indent by 4 spaces
         lineNumbers:  false,   // Show line numbers
         matchBrackets: true,
-        gutters: ["CodeMirror-linenumbers", "bc-prompt"],
+        gutters: ["CodeMirror-linenumbers", "cb-prompt"],
         readOnly: "nocursor",
         lineWrapping: true
     };
     var editor = CodeMirror(node, options);
-    editor.on("scroll", bc_internal_updatePopupPos);
-    editor.on("focus", function () { bc.lastEditor = editor; });
+    editor.on("scroll", cb_internal_updatePopupPos);
+    editor.on("focus", function () { cb.lastEditor = editor; });
     return editor;
 }
 
@@ -149,10 +149,10 @@ var default_prompt = ">";
 
 var set_prompt = function (cm, prompt) {
    if (prompt === void 0) {
-       cm.setGutterMarker(0, "bc-prompt", document.createTextNode(default_prompt));
+       cm.setGutterMarker(0, "cb-prompt", document.createTextNode(default_prompt));
        $("#repl").removeClass("busy");
    } else {
-       cm.setGutterMarker(0, "bc-prompt", null);
+       cm.setGutterMarker(0, "cb-prompt", null);
        $("#repl").addClass("busy");
    }
 
@@ -171,19 +171,19 @@ function createREPL(node) {
         indentUnit: 4,         // Indent by 4 spaces
         lineNumbers:  false,   // Show line numbers
         matchBrackets: true,
-        gutters: ["CodeMirror-linenumbers", "bc-prompt"],
+        gutters: ["CodeMirror-linenumbers", "cb-prompt"],
         extraKeys: {
-            "Ctrl-C": function (cm) { bc.clearREPL(); cm.bc.history.resetPos(); },
-            "Ctrl-L": function (cm) { bc.clearAll(); cm.bc.history.resetPos(); },
+            "Ctrl-C": function (cm) { cb.clearREPL(); cm.cb.history.resetPos(); },
+            "Ctrl-L": function (cm) { cb.clearAll(); cm.cb.history.resetPos(); },
             "Ctrl-Enter": function(cm) { cm.autoInsertBraces(cm); },
-            "Shift-Enter": function(cm) { bc.run(true); },
-            "Enter": function(cm) { bc.run(false); },
+            "Shift-Enter": function(cm) { cb.run(true); },
+            "Enter": function(cm) { cb.run(false); },
             "Up": function (cm) {
-                cm.bc.history.previous();
+                cm.cb.history.previous();
                 return true;
             },
             "Down": function (cm) {
-                cm.bc.history.next();
+                cm.cb.history.next();
                 return true;
             },
             "Ctrl-\\": function (cm) { Mousetrap.trigger("ctrl+\\"); }
@@ -197,12 +197,12 @@ function createREPL(node) {
         lineWrapping: true
     };
     var editor = CodeMirror(node, options);
-    editor.on("focus", function () { bc.lastEditor = editor; });
-    editor.bc = {};
-    editor.bc.history = new REPLHistoryManager(editor);
+    editor.on("focus", function () { cb.lastEditor = editor; });
+    editor.cb = {};
+    editor.cb.history = new REPLHistoryManager(editor);
     editor.busy = false;
     editor.focus();
     set_prompt(editor);
-    editor.setGutterMarker(0, "bc-prompt", document.createTextNode(">"));
+    editor.setGutterMarker(0, "cb-prompt", document.createTextNode(">"));
     return editor;
 }

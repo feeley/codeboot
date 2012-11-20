@@ -1,5 +1,5 @@
 function print() {
-    bc.transcript.addLine(Array.prototype.slice.call(arguments).join(""), "transcript-output");
+    cb.transcript.addLine(Array.prototype.slice.call(arguments).join(""), "transcript-output");
 }
 
 print.toString = function () {
@@ -7,7 +7,7 @@ print.toString = function () {
 };
 
 function println() {
-    bc.transcript.addLine(Array.prototype.slice.call(arguments).join(""), "transcript-output");
+    cb.transcript.addLine(Array.prototype.slice.call(arguments).join(""), "transcript-output");
 }
 
 println.toString = function () {

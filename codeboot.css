@@ -250,7 +250,7 @@ div.tab-pane {
     display: none !important;
 }
 
-.bc-prompt {
+.cb-prompt {
     /* CodeMirror gutter class for the prompt */
     width: 1em;
 }
@@ -360,7 +360,7 @@ i.icon-link {
 
 [class^="icon-exp-"],
 [class*="icon-exp-"] {
-  background-image: url("icons/bc-exp.png");
+  background-image: url("icons/cb-exp.png");
   width: 10px;
   height: 16px;
 }
@@ -372,7 +372,7 @@ i.icon-link {
 .dropdown-menu > li > a:hover > [class*=" icon-exp-"],
 .dropdown-menu > .active > a > [class^="icon-exp-"],
 .dropdown-menu > .active > a > [class*=" icon-exp-"] {
-  background-image: url("icons/bc-exp-white.png");
+  background-image: url("icons/cb-exp-white.png");
 }
 
 i.icon-exp-one {

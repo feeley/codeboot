@@ -1,47 +1,47 @@
-bc.clearSession = function () {
-    localStorage.removeItem("bootcode");
+cb.clearSession = function () {
+    localStorage.removeItem("codeboot");
 };
 
-bc.saveSession = function () {
-    var state = bc.serializeState();
-    localStorage["bootcode"] = JSON.stringify(state);
+cb.saveSession = function () {
+    var state = cb.serializeState();
+    localStorage["codeboot"] = JSON.stringify(state);
 };
 
-bc.loadSession = function () {
+cb.loadSession = function () {
     // Restore tabs
-    var state = localStorage["bootcode"];
+    var state = localStorage["codeboot"];
     if (!state) {
         // For the transition period
         state = localStorage["codeplay"];
         localStorage.removeItem("codeplay");
     }
     if (state) {
-        bc.restoreState(JSON.parse(state));
+        cb.restoreState(JSON.parse(state));
     }
 };
 
-bc.serializeState = function () {
+cb.serializeState = function () {
     var state = {
         tabs: [],
         repl: {
             history: undefined
         },
-        devMode: bc.devMode,
-        languageLevel: bc.languageLevel
+        devMode: cb.devMode,
+        languageLevel: cb.languageLevel
     };
 
-    state.repl.history = bc.repl.bc.history.serializeState();
+    state.repl.history = cb.repl.cb.history.serializeState();
 
-    state.files = bc.fs.serialize();
+    state.files = cb.fs.serialize();
     state.openEditors = [];
-    $(".row[data-bc-filename]").each(function () {
-        state.openEditors.push($(this).attr("data-bc-filename"));
+    $(".row[data-cb-filename]").each(function () {
+        state.openEditors.push($(this).attr("data-cb-filename"));
     });
 
     return state;
 };
 
-function bc_internal_attempt(operation) {
+function cb_internal_attempt(operation) {
     try {
         operation();
         return true;
@@ -50,38 +50,38 @@ function bc_internal_attempt(operation) {
     }
 }
 
-bc.restoreState = function (state) {
+cb.restoreState = function (state) {
     if (state === undefined) return;
     var failed = false;
 
-    failed = bc_internal_attempt(function () {
-        bc.repl.bc.history.restoreState(state.repl.history);
+    failed = cb_internal_attempt(function () {
+        cb.repl.cb.history.restoreState(state.repl.history);
     }) || failed;
 
-    failed = bc_internal_attempt(function () {
-        bc.setLanguageLevel(state.languageLevel || "novice");
+    failed = cb_internal_attempt(function () {
+        cb.setLanguageLevel(state.languageLevel || "novice");
     }) || failed;
 
-    failed = bc_internal_attempt(function () {
-        bc.setDevMode(!!state.devMode);
+    failed = cb_internal_attempt(function () {
+        cb.setDevMode(!!state.devMode);
     }) || failed;
 
     if (state.files) {
-        failed = bc_internal_attempt(function () {
-            bc.fs.restore(state.files);
-            bc.rebuildFileMenu();
+        failed = cb_internal_attempt(function () {
+            cb.fs.restore(state.files);
+            cb.rebuildFileMenu();
         }) || failed;
     }
 
     if (state.openEditors) {
-        failed = bc_internal_attempt(function () {
+        failed = cb_internal_attempt(function () {
             for (var i = state.openEditors.length - 1; i >= 0; i--) {
-                bc.openFile(state.openEditors[i]);
+                cb.openFile(state.openEditors[i]);
             }
         }) || failed;
     }
 
     if (failed) {
-        bc.reportError("Failed to restore state");
+        cb.reportError("Failed to restore state");
     }
 };

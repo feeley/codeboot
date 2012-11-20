@@ -11,12 +11,12 @@ function makeMenuSeparator() {
     return $('<li class="divider"></li>');
 }
 
-bc.scrollTo = function (elementOrSelector) {
+cb.scrollTo = function (elementOrSelector) {
     var elementOffset = $(elementOrSelector).position().top; // - NAVBAR_HEIGHT - EDITOR_SPACING;
     $("#editors").animate({scrollTop: elementOffset}, 400);
 }
 
-bc.getShortURL = function (longURL) {
+cb.getShortURL = function (longURL) {
 	var shortURL;
 	$.ajax({
             url: "shorten.php",
@@ -631,24 +631,24 @@ CPFileManager.prototype.restore = function (json) {
 
 // ----------------------------------------------------------------------
 
-bc.addFileToMenu = function (fileOrFilename) {
-    var file = bc.fs._asFile(fileOrFilename);
+cb.addFileToMenu = function (fileOrFilename) {
+    var file = cb.fs._asFile(fileOrFilename);
     var filename = file.filename;
 
     var $file_item = $('<li/>');
-    $file_item.attr("data-bc-filename", filename);
+    $file_item.attr("data-cb-filename", filename);
     var $file_link = $('<a href="#"/>');
     $file_link.click(function () {
-        bc.openFile(filename);
+        cb.openFile(filename);
     });
 
-    if (!bc.fs.isBuiltin(file)) {
+    if (!cb.fs.isBuiltin(file)) {
         var $deleteButton = $('<i class="icon-trash pull-right"/>');
         $file_link.append($deleteButton);
         $deleteButton.click(function (event) {
             var reallyDelete = confirm("Delete file '" + filename + "'? This cannot be undone.");
             if (reallyDelete) {
-                bc.deleteFile(filename);
+                cb.deleteFile(filename);
             } else {
                 event.preventDefault();
                 event.stopPropagation();
@@ -663,7 +663,7 @@ bc.addFileToMenu = function (fileOrFilename) {
     var $children = $("#file-list").children();
     for (var i = 0; i < $children.size(); i++) {
         var $element = $($children.get(i));
-        var element_filename = $element.attr('data-bc-filename');
+        var element_filename = $element.attr('data-cb-filename');
         if (filename < element_filename) {
             $file_item.insertBefore($element);
             return;
@@ -673,68 +673,68 @@ bc.addFileToMenu = function (fileOrFilename) {
     $("#file-list").append($file_item);
 };
 
-bc.rebuildFileMenu = function () {
+cb.rebuildFileMenu = function () {
     $("#file-list").empty();
-    bc.fs.each(function (file) {
-        bc.addFileToMenu(file);
+    cb.fs.each(function (file) {
+        cb.addFileToMenu(file);
     });
 };
 
-bc.initFS = function () {
-    bc.fs = new CPFileManager();
-    bc.rebuildFileMenu();
+cb.initFS = function () {
+    cb.fs = new CPFileManager();
+    cb.rebuildFileMenu();
 };
 
-bc.generateUniqueFilename = function () {
+cb.generateUniqueFilename = function () {
     var prefix = "script";
     for (var index = 1; ; index++) {
         var candidateName = prefix + index;
-        if (!bc.fs.hasFile(candidateName)) {
+        if (!cb.fs.hasFile(candidateName)) {
             return candidateName;
         }
     }
 };
 
-bc.getContainerFor = function (fileOrFilename) {
-    var filename = bc.fs._asFilename(fileOrFilename);
-    return $('.row[data-bc-filename="' + filename + '"]').get(0);
+cb.getContainerFor = function (fileOrFilename) {
+    var filename = cb.fs._asFilename(fileOrFilename);
+    return $('.row[data-cb-filename="' + filename + '"]').get(0);
 };
 
-bc.openFile = function (filename) {
-    var container = bc.getContainerFor(filename);
+cb.openFile = function (filename) {
+    var container = cb.getContainerFor(filename);
     if (!container) {
-        bc.newTab(filename);
+        cb.newTab(filename);
     }
 };
 
-bc.closeFile = function (fileOrFilename) {
-    var file = bc.fs._asFile(fileOrFilename);
+cb.closeFile = function (fileOrFilename) {
+    var file = cb.fs._asFile(fileOrFilename);
     file.save();
     file.editor = null;
 
-	var $container = $(bc.getContainerFor(file));
+	var $container = $(cb.getContainerFor(file));
 
 	if ($(".exec-point-code", $container).size() > 0) {
 		// Current file editor contains some highlighted code
-		bc.hide_step();
+		cb.hide_step();
 	}
 
     $container.remove();
     focusREPL();
 
-    bc_internal_updatePopupPos();
+    cb_internal_updatePopupPos();
 };
 
-bc.closeAll = function () {
-    $("[data-bc-filename]").each(function () {
-        var filename = $(this).attr('data-bc-filename');
-        bc.closeFile(filename);
+cb.closeAll = function () {
+    $("[data-cb-filename]").each(function () {
+        var filename = $(this).attr('data-cb-filename');
+        cb.closeFile(filename);
     });
 };
 
-bc.deleteFile = function (filename) {
-    $('[data-bc-filename="' + filename + '"]').remove();
-    bc.fs.deleteFile(filename);
+cb.deleteFile = function (filename) {
+    $('[data-cb-filename="' + filename + '"]').remove();
+    cb.fs.deleteFile(filename);
 };
 
 function basename(filename) {
@@ -745,9 +745,9 @@ function endsWith(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }
 
-bc.makeEditorToolbar = function (file) {
+cb.makeEditorToolbar = function (file) {
     var $toolbar = makeToolbar();
-    $toolbar.attr('data-bc-exec', 'controller');
+    $toolbar.attr('data-cb-exec', 'controller');
 
     var buttons = [
     	{
@@ -756,9 +756,9 @@ bc.makeEditorToolbar = function (file) {
     		action: function () {
 				if (program_state.mode === 'stopped') {
 					program_state.step_delay = 0;
-					bc.load(file.filename, true);
+					cb.load(file.filename, true);
 				} else {
-					bc.animate(0);
+					cb.animate(0);
 				}
 			}
     	},
@@ -768,9 +768,9 @@ bc.makeEditorToolbar = function (file) {
     		icons: ["icon-play", "icon-exp-infinity"],
     		action: function () {
 				if (program_state.mode === 'stopped') {
-					bc.load(file.filename, false);
+					cb.load(file.filename, false);
 				} else {
-					bc.play();
+					cb.play();
 				}
 			}
     	},
@@ -780,10 +780,10 @@ bc.makeEditorToolbar = function (file) {
     		icons: ["icon-play"],
     		action: function () {
 				if (program_state.mode === 'stopped') {
-					program_state.step_delay = bc.stepDelay;
-					bc.load(file.filename, true);
+					program_state.step_delay = cb.stepDelay;
+					cb.load(file.filename, true);
 				} else {
-					bc.animate(bc.stepDelay);
+					cb.animate(cb.stepDelay);
 				}
 			}
     	}
@@ -827,7 +827,7 @@ bc.makeEditorToolbar = function (file) {
     return $toolbar;
 };
 
-bc.makeLHSEditorToolbar = function (file) {
+cb.makeLHSEditorToolbar = function (file) {
     var $toolbar = makeToolbar();
     var $group = makeTBGroup();
     $group.appendTo($toolbar);
@@ -838,21 +838,21 @@ bc.makeLHSEditorToolbar = function (file) {
         if (!endsWith(name, ".js")) {
             name = name + ".js";
         }
-        saveAs(bc.fs.getContent(file), name);
+        saveAs(cb.fs.getContent(file), name);
     });
     $saveButton.appendTo($group);
 
     var $btnShare = makeDropdown($('<i class="icon-share"/>'), function ($menu) {
 		$menu.append(makeDropdownItem("Email public link").click(function () {
-			var content = bc.fs.getContent(file);
+			var content = cb.fs.getContent(file);
 			var url = editor_URL(content, file.filename);
-			var shortURL = bc.getShortURL(url);
+			var shortURL = cb.getShortURL(url);
             if (!shortURL) {
                 alert("Failed to generate short URL");
                 return;
             }
 
-			var subject = encodeURIComponent("bootCode link");
+			var subject = encodeURIComponent("codeBoot link");
 			var body = encodeURIComponent(shortURL);
 		    var href = "mailto:?subject=" + subject + "&body=" + body;
 			var w = window.open(href, "_blank");
@@ -860,9 +860,9 @@ bc.makeLHSEditorToolbar = function (file) {
 		}));
 
 		$menu.append(makeDropdownItem("Generate public link").click(function () {
-			var content = bc.fs.getContent(file);
+			var content = cb.fs.getContent(file);
 			var url = editor_URL(content, file.filename);
-			var shortURL = bc.getShortURL(url);
+			var shortURL = cb.getShortURL(url);
 			if (shortURL) {
 				$("#urlModal-body").text(shortURL);
                 $("#urlModal-clippy").empty().clippy({clippy_path: "clippy.swf", text: shortURL});
@@ -873,7 +873,7 @@ bc.makeLHSEditorToolbar = function (file) {
 		}));
 
 		$menu.append(makeDropdownItem("Generate private link").click(function () {
-			var content = bc.fs.getContent(file);
+			var content = cb.fs.getContent(file);
 			var url = editor_URL(content, file.filename);
 			$("#urlModal-body").text(url);
             $("#urlModal-clippy").empty().clippy({clippy_path: "clippy.swf", text: url});
@@ -913,7 +913,7 @@ function createFileEditor(node, file) {
     return editor;
 }
 
-function bc_internal_onTabDblClick(event) {
+function cb_internal_onTabDblClick(event) {
     var $element = $(event.target);
 
     var oldFilename = $element.text();
@@ -933,18 +933,18 @@ function bc_internal_onTabDblClick(event) {
         if (event.keyCode == 13) {
             // Enter pressed, perform renaming
             var newFilename = $inputBox.val();
-            if (bc.fs.hasFile(newFilename)) {
+            if (cb.fs.hasFile(newFilename)) {
                 alert("Filename already in use");
                 resetTab();
                 return;
             }
 
-            bc.fs.renameFile(oldFilename, newFilename);
+            cb.fs.renameFile(oldFilename, newFilename);
             $inputBox.remove();
             $element.text(newFilename);
-            $('[data-bc-filename="' + oldFilename + '"]').attr("data-bc-filename", newFilename);
+            $('[data-cb-filename="' + oldFilename + '"]').attr("data-cb-filename", newFilename);
 
-            bc.rebuildFileMenu(); // TODO: inefficient
+            cb.rebuildFileMenu(); // TODO: inefficient
         } else if (event.keyCode == 27) {
             // Escape pressed, reset
             resetTab();
@@ -954,13 +954,13 @@ function bc_internal_onTabDblClick(event) {
     $inputBox.focus();
 }
 
-function bc_internal_updatePopupPos() {
+function cb_internal_updatePopupPos() {
     if (program_state.value_bubble) {
         program_state.value_bubble.update();
     }
 }
 
-bc.newTab = function (fileOrFilename) {
+cb.newTab = function (fileOrFilename) {
 	/*
      * <div class="row">
      *   <ul class="nav nav-tabs">
@@ -970,13 +970,13 @@ bc.newTab = function (fileOrFilename) {
      * </div>
     */
 
-    var file = bc.fs._asFile(fileOrFilename);
+    var file = cb.fs._asFile(fileOrFilename);
     var filename = file.filename;
 
 	var $row = $('<div class="row"/>');
-	$row.attr("data-bc-filename", filename);
+	$row.attr("data-cb-filename", filename);
 
-	var $toolbar = bc.makeEditorToolbar(file);
+	var $toolbar = cb.makeEditorToolbar(file);
 	$row.append($toolbar);
 
 	if (program_state.mode !== "stopped") {
@@ -987,16 +987,16 @@ bc.newTab = function (fileOrFilename) {
 
 	var $closeButton = makeCloseButton();
 	$closeButton.click(function () {
-	    bc.closeFile(file);
+	    cb.closeFile(file);
 	});
 	$tab_text_container = $('<span class="tab-label"/>').text(filename);
 	$tab_label = $('<a href="#"/>').append($tab_text_container).append($closeButton);
 	$nav.append($('<li class="active"/>').append($tab_label));
-    $nav.append($('<li/>').append(bc.makeLHSEditorToolbar(file)));
+    $nav.append($('<li/>').append(cb.makeLHSEditorToolbar(file)));
 	$row.append($nav);
 
 	// Support renaming
-	$tab_text_container.dblclick(bc_internal_onTabDblClick);
+	$tab_text_container.dblclick(cb_internal_onTabDblClick);
 
 	var $pre = $('<pre class="tab-content file-editor"/>');
 	$row.append($pre);
@@ -1005,7 +1005,7 @@ bc.newTab = function (fileOrFilename) {
 
 	var editor = createFileEditor($pre.get(0), file);
 
-	bc.scrollTo($row.get(0));
+	cb.scrollTo($row.get(0));
 
     // Make editor resizable
     $(".CodeMirror", $row).resizable({
@@ -1024,30 +1024,30 @@ bc.newTab = function (fileOrFilename) {
 
     editor.focus();
 
-    bc_internal_updatePopupPos();
+    cb_internal_updatePopupPos();
 };
 
-bc.newFile = function () {
-    var filename = bc.generateUniqueFilename();
+cb.newFile = function () {
+    var filename = cb.generateUniqueFilename();
     var file = new CPFile(filename);
-    bc.fs.addFile(file);
+    cb.fs.addFile(file);
 
-    bc.addFileToMenu(file);
-    bc.newTab(file);
+    cb.addFileToMenu(file);
+    cb.newTab(file);
     return filename;
 };
 
-bc.openFileExistingOrNew = function (filename) {
+cb.openFileExistingOrNew = function (filename) {
 
-    if (bc.fs.hasFile(filename)) {
-        bc.openFile(filename);
+    if (cb.fs.hasFile(filename)) {
+        cb.openFile(filename);
         return true;
     } else {
         var file = new CPFile(filename);
-        bc.fs.addFile(file);
+        cb.fs.addFile(file);
 
-        bc.addFileToMenu(file);
-        bc.newTab(file);
+        cb.addFileToMenu(file);
+        cb.newTab(file);
         return false;
     }
 };
