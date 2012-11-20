@@ -232,6 +232,10 @@ div.tab-pane {
     bottom: 10px;
     height: auto !important;
     z-index: 9999;
+
+    -webkit-border-radius: 4px;
+       -moz-border-radius: 4px;
+            border-radius: 4px;
 }
 
 /* ----- Transcript ----- */
