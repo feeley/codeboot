@@ -497,6 +497,9 @@ cb.replay = function () {
         } else {
             if (str !== "") {
                 set_input(cb.repl, str);
+                if (j === command.length) {
+                    showTryMeOnButton($("#step-button"));
+                }
             }
         }
 
@@ -511,6 +514,10 @@ cb.replay = function () {
 function showTryMeTooltip(filename) {
     var $row = $('.row[data-cp-filename="' + filename + '"]');
     var $btn = $(".action-btn", $row.get(0));
+};
+
+function showTryMeOnButton($btn) {
+
     $btn.tooltip({
         trigger: "manual",
         placement: "left",
