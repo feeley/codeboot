@@ -513,14 +513,16 @@ function showTryMeTooltip(filename) {
     var $btn = $(".action-btn", $row.get(0));
     $btn.tooltip({
         trigger: "manual",
-        placement: "bottom"
+        placement: "left",
+        html: true,
+        template: '<div class="tooltip tryme"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'
     });
 
     var tooltip = $btn.data('tooltip');
     if (tooltip) {
         tooltip.getTitle = function () {
             // Bootstrap insists on using the title attribute for tooltips, so override
-            return "Try me!";
+            return 'Try me!';
         };
         $btn.tooltip('show');
 
@@ -725,7 +727,8 @@ CPValueBubble.prototype.init = function ($anchor) {
         trigger: "manual",
         title: this._valueRepr(this.opts.value) + '<button class="close">&times;</button>',
         content: this.opts.context,
-        html: true
+        html: true,
+        padding: 2
     });
     this._popover = $anchor.data('popover');
 

@@ -1091,25 +1091,25 @@
         var count = 0;
 
         while (changed) {
+            var options = this.options;
             actualWidth = $tip[0].offsetWidth;
-            actualHeight = $tip[0].offsetHeight + 10; // account for arrow size
-
-            var padding = 2;
+            actualHeight = $tip[0].offsetHeight;
+            var arrowHeight = $(".arrow", $tip[0]).outerHeight(); // account for arrow size
 
             switch (inside ? placement.split(' ')[1] : placement) {
                 case 'bottom':
                 //tp = {top: pos.top + pos.height, left: pos.left + pos.width / 2 - actualWidth / 2}
-                tp = {top: pos.top + pos.height + padding, left: pos.left + pos.width / 2 - 20}
+                tp = {top: pos.top + pos.height + options.padding, left: pos.left + pos.width / 2 - 20}
                 break
                 case 'top':
                 // tp = {top: pos.top - actualHeight, left: pos.left + pos.width / 2 - actualWidth / 2}
-                tp = {top: pos.top - actualHeight - padding, left: pos.left + pos.width / 2 - 20}
+                tp = {top: pos.top - actualHeight - options.padding - arrowHeight, left: pos.left + pos.width / 2 - 20}
                 break
                 case 'left':
-                tp = {top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left - actualWidth - padding}
+                tp = {top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left - actualWidth - options.padding}
                 break
                 case 'right':
-                tp = {top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left + pos.width + padding}
+                tp = {top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left + pos.width + options.padding}
                 break
             }
 
@@ -1244,6 +1244,7 @@
   , title: ''
   , delay: 0
   , html: true
+  , padding: 0
   }
 
 }(window.jQuery);

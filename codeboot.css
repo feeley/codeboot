@@ -11,6 +11,18 @@
     padding: 0 10px;
 }
 
+.tooltip.tryme .tooltip-inner {
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    background-color: #f89406;
+}
+
+.tooltip.tryme .tooltip-arrow {
+    /* We know only the left placement is used, so don't bother making this more general right now */
+    border-left-color: #f89406;
+}
+
 /* ----- Menus ----- */
 
 .dropdown-align-right {
