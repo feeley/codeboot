@@ -17,8 +17,8 @@ function setFullScreen(cm, full) {
     cb.makeEditorResizable(cm, !full);
     cm.refresh();
 
-    $("#editors").attr("visibility", full ? "hidden" : "visible");
-    $("#floating-console").attr("visibility", full ? "hidden" : "visible");
+    // $("#editors").css("visibility", full ? "hidden" : "visible");
+    $("#floating-console").css("visibility", full ? "hidden" : "visible");
 }
 
 function createCodeEditor(node) {
