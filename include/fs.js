@@ -689,24 +689,9 @@ cb.newTab = function (fileOrFilename) {
     $("#editors").prepend($row);
 
 	var editor = createFileEditor($pre.get(0), file);
-
 	cb.scrollTo($row.get(0));
 
-    // Make editor resizable
-    $(".CodeMirror", $row).resizable({
-          handles: "s",
-          minHeight: 100,
-          stop: function() {
-            $(".CodeMirror", $row).css("width", "auto");
-            editor.refresh();
-          },
-          resize: function() {
-            $(".CodeMirror-scroll", $row).height($(this).height());
-            $(".CodeMirror-scroll", $row).width($(this).width());
-            editor.refresh();
-          }
-    });
-
+    cb.makeEditorResizable(editor);
     editor.focus();
 
     cb_internal_updatePopupPos();

@@ -1,26 +1,16 @@
-function isFullScreen(cm) {
-  return $(cm.getWrapperElement()).parent().hasClass("CodeMirror-fullscreen");
+function getFullScreenWrapper(cm) {
+    return $(cm.getWrapperElement()).parent();
 }
-// function winHeight() {
-//   return window.innerHeight || (document.documentElement || document.body).clientHeight;
-// }
+
+function isFullScreen(cm) {
+  return getFullScreenWrapper(cm).hasClass("CodeMirror-fullscreen");
+}
 
 function setFullScreen(cm, full) {
-    var $wrap = $(cm.getWrapperElement()).parent();
-    $wrap.toggleClass("CodeMirror-fullscreen", full);
-    if (full) {
-        document.documentElement.style.overflow = "hidden";
-    } else {
-        document.documentElement.style.overflow = "";
-    }
+    getFullScreenWrapper(cm).toggleClass("CodeMirror-fullscreen", full);
+    cb.makeEditorResizable(cm, !full);
     cm.refresh();
 }
-
-/*
-CodeMirror.on(window, "resize", function() {
-  var showing = document.body.getElementsByClassName("CodeMirror-fullscreen")[0];
-});
-*/
 
 function createCodeEditor(node) {
     var options = {
@@ -67,6 +57,30 @@ function createCodeEditor(node) {
     editor.on("scroll", cb_internal_updatePopupPos);
     editor.on("focus", function () { cb.lastEditor = editor; });
     return editor;
+}
+
+cb.makeEditorResizable = function (editor, enable) {
+    // Make editor resizable
+    var $wrapper = $(editor.getWrapperElement());
+
+    if (enable === (void 0) || enable === true) {
+        $wrapper.resizable({
+              handles: "s",
+              minHeight: 100,
+              stop: function() {
+                $wrapper.css("width", "auto");
+                editor.refresh();
+              },
+              resize: function() {
+                  var $scroller = $(editor.getScrollerElement());
+                  $scroller.height($(this).height());
+                  $scroller.width($(this).width());
+                  editor.refresh();
+              }
+        });
+    } else {
+        $wrapper.resizable("destroy");
+    }
 }
 
 cb.loadFile = function (cm, f) {

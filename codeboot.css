@@ -230,7 +230,7 @@ div.tab-pane {
     left: 64px;
     right: 64px;
     bottom: 10px;
-    height: auto;
+    height: auto !important;
     z-index: 9999;
 }
 
