@@ -9,3 +9,5 @@ Its main features are:
 - single-step mode with step counter
 - code highlighting for stepping and error messages
 - "novice" setting restricts the language for pedagogical reasons
+- code editors can be saved to short URLs (useful for embedding executable
+  code samples in web pages and PDF documents)
