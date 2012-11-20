@@ -514,6 +514,7 @@ cb.replay = function () {
 function showTryMeTooltip(filename) {
     var $row = $('.row[data-cp-filename="' + filename + '"]');
     var $btn = $(".action-btn", $row.get(0));
+    showTryMeOnButton($btn);
 };
 
 function showTryMeOnButton($btn) {
