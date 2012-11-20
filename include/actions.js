@@ -93,7 +93,7 @@ CPTranscript.prototype.addTextLine = function (text, cssClass) {
     }
 
     editor.replaceRange(text, { line: line, ch: 0 });
-    editor.markText({ line: line, ch: 0 }, { line: line+1, ch: 0 }, cssClass);
+    editor.markText({ line: line, ch: 0 }, { line: line+1, ch: 0 }, {"className" : cssClass});
 
     if (editor.lineInfo(line).gutterMarkers) {
         // Oops, CodeMirror moved the gutter down instead of appending a blank line
@@ -169,7 +169,7 @@ function code_highlight(loc, cssClass) {
 
     var start = position_to_line_ch(loc.start_pos);
     var end = position_to_line_ch(loc.end_pos);
-    return editor.markText(start, end, cssClass);
+    return editor.markText(start, end, {"className": cssClass});
 }
 
 function printed_repr_old(x) {
