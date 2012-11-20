@@ -33,6 +33,18 @@ function setFullScreen(cm, full) {
             $(".btn-toolbar", $row.get(0)).show();
         }
     });
+
+    if (full) {
+        $restoreBtn = $('<div class="editor-restore-btn"/>')
+            .append($('<a title="Restore editor" href="#" data-cb-focus="restore"/>')
+                    .append($('<i class="icon-resize-small"/>'))
+                    .on("click", function () {
+                        setFullScreen(cm, false);
+                    }))
+            .appendTo($wrapper);
+    } else {
+        $(".editor-restore-btn", $wrapper.get(0)).remove();
+    }
 }
 
 function createCodeEditor(node) {

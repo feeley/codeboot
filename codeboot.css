@@ -238,6 +238,18 @@ div.tab-pane {
             border-radius: 4px;
 }
 
+.editor-restore-btn {
+    position: absolute;
+    top: 5px;
+    right: 15px;
+    opacity: 0.4;
+    z-index: 99;
+}
+
+.editor-restore-btn:hover {
+    opacity: 1;
+}
+
 /* ----- Transcript ----- */
 
 #transcript .CodeMirror-scroll {
