@@ -17,8 +17,22 @@ function setFullScreen(cm, full) {
     cb.makeEditorResizable(cm, !full);
     cm.refresh();
 
-    // $("#editors").css("visibility", full ? "hidden" : "visible");
     $("#floating-console").css("visibility", full ? "hidden" : "visible");
+    $(".row", document.getElementById("editors")).each(function () {
+        var $row = $(this);
+        if (full) {
+            if ($row.find(".CodeMirror-fullscreen").size() > 0) {
+                $(".nav", $row.get(0)).hide();
+                $(".btn-toolbar", $row.get(0)).hide();
+            } else {
+                $row.hide();
+            }
+        } else {
+            $row.show();
+            $(".nav", $row.get(0)).show();
+            $(".btn-toolbar", $row.get(0)).show();
+        }
+    });
 }
 
 function createCodeEditor(node) {
