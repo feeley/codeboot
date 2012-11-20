@@ -7,9 +7,18 @@ function isFullScreen(cm) {
 }
 
 function setFullScreen(cm, full) {
-    getFullScreenWrapper(cm).toggleClass("CodeMirror-fullscreen", full);
+    var $wrapper = getFullScreenWrapper(cm);
+    var consoleOffset = $("#floating-console").offset()
+    $wrapper
+        .toggleClass("CodeMirror-fullscreen", full)
+        .css("top", full ? consoleOffset.top : 0)
+        .css("left", full ? consoleOffset.left : 0)
+        .css("right", full ? consoleOffset.left : 0);
     cb.makeEditorResizable(cm, !full);
     cm.refresh();
+
+    $("#editors").attr("visibility", full ? "hidden" : "visible");
+    $("#floating-console").attr("visibility", full ? "hidden" : "visible");
 }
 
 function createCodeEditor(node) {

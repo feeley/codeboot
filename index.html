@@ -347,6 +347,10 @@
                 .css("left", consoleOffset.left)
                 .css("right", consoleOffset.left)
                 .css("top", consoleOffset.top + $console.height());
+            $(".CodeMirror-fullscreen")
+                .css("left", consoleOffset.left)
+                .css("right", consoleOffset.left)
+                .css("top", $("#floating-console").offset().top);
         }
 
         function checkBrowserFeatures() {
