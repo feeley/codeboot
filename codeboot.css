@@ -223,6 +223,17 @@ div.tab-pane {
     overflow-y: auto;
 }
 
+.CodeMirror-fullscreen {
+    display: block;
+    position: fixed;
+    top: 50px;
+    left: 64px;
+    right: 64px;
+    bottom: 10px;
+    height: auto;
+    z-index: 9999;
+}
+
 /* ----- Transcript ----- */
 
 #transcript .CodeMirror-scroll {

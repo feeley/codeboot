@@ -1,3 +1,27 @@
+function isFullScreen(cm) {
+  return $(cm.getWrapperElement()).parent().hasClass("CodeMirror-fullscreen");
+}
+// function winHeight() {
+//   return window.innerHeight || (document.documentElement || document.body).clientHeight;
+// }
+
+function setFullScreen(cm, full) {
+    var $wrap = $(cm.getWrapperElement()).parent();
+    $wrap.toggleClass("CodeMirror-fullscreen", full);
+    if (full) {
+        document.documentElement.style.overflow = "hidden";
+    } else {
+        document.documentElement.style.overflow = "";
+    }
+    cm.refresh();
+}
+
+/*
+CodeMirror.on(window, "resize", function() {
+  var showing = document.body.getElementsByClassName("CodeMirror-fullscreen")[0];
+});
+*/
+
 function createCodeEditor(node) {
     var options = {
         value: "",
@@ -14,6 +38,12 @@ function createCodeEditor(node) {
                 var tok = cm.getTokenAt(cm.getCursor(false));
                 var isComment = tok.className === "comment";
                 cm.commentRange(!isComment, cm.getCursor(true), cm.getCursor(false));
+             },
+             "F11": function(cm) {
+                setFullScreen(cm, !isFullScreen(cm));
+             },
+             "Esc": function(cm) {
+                if (isFullScreen(cm)) setFullScreen(cm, false);
              }
         },
 
