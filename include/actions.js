@@ -725,7 +725,10 @@ CPValueBubble.prototype.init = function ($anchor) {
         animation: false,
         placement: "bottom",
         trigger: "manual",
-        title: this._valueRepr(this.opts.value) + '<button class="close">&times;</button>',
+        title: '<span class="exec-point-value">'
+                 + this._valueRepr(this.opts.value)
+                 + '</span>'
+                 + '<button class="close">&times;</button>',
         content: this.opts.context,
         html: true,
         padding: 2

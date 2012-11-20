@@ -339,6 +339,10 @@ body[data-lang-level="standard"] pre#repl .CodeMirror-gutters {
   background-color: yellow;
 }
 
+.exec-point-value {
+    background-color: yellow;
+}
+
 .step-value {
 /*  border: 1px solid #aaa;*/
   font-size: 20px;
