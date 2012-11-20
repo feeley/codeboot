@@ -484,6 +484,7 @@ cb.replay = function () {
                 }
                 if (replace) {
                     editor.setValue(str);
+                    showTryMeTooltip(filename);
                 }
                 j += 2;
             } else if (command.charAt(j+1) === "C") {
@@ -506,6 +507,32 @@ cb.replay = function () {
         }
     }
 };
+
+function showTryMeTooltip(filename) {
+    var $row = $('.row[data-cp-filename="' + filename + '"]');
+    var $btn = $(".action-btn", $row.get(0));
+    $btn.tooltip({
+        trigger: "manual",
+        placement: "bottom"
+    });
+
+    var tooltip = $btn.data('tooltip');
+    if (tooltip) {
+        tooltip.getTitle = function () {
+            // Bootstrap insists on using the title attribute for tooltips, so override
+            return "Try me!";
+        };
+        $btn.tooltip('show');
+
+        // Auto hide the tooltip after 5 secs
+        setTimeout(function () { $btn.tooltip('hide'); }, 5000);
+
+        // Hide the tooltip if the user clicks on the button before 5 secs
+        $btn.on("click.codeboot.tryMe", function () {
+            $btn.tooltip('hide');
+        });
+    }
+}
 
 var program_state = {
     rte: null,
