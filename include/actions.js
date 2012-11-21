@@ -514,6 +514,7 @@ cb.replay = function () {
 function showTryMeTooltip(filename) {
     var $row = $('.row[data-cp-filename="' + filename + '"]');
     var $btn = $(".action-btn", $row.get(0));
+    showTryMeOnButton($btn);
 };
 
 function showTryMeOnButton($btn) {
@@ -747,8 +748,10 @@ CPValueBubble.prototype.init = function ($anchor) {
     var oldShow = this._popover.show;
     var self = this;
     this._popover.show = function () {
+        var $tip = this.tip();
+        $tip.addClass("value-bubble");
         oldShow.apply(this, arguments);
-        $("button.close", this.tip()).on("click", function() {
+        $("button.close", $tip).on("click", function() {
             self.closed = true;
             self.hide();
             $(".exec-point-code").one("mouseover", function () {

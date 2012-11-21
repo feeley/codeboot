@@ -340,8 +340,16 @@ body[data-lang-level="standard"] pre#repl .CodeMirror-gutters {
   background-color: yellow;
 }
 
-.exec-point-value {
+.value-bubble .popover-title {
     background-color: yellow;
+}
+
+.value-bubble .arrow {
+    border-bottom-color: yellow !important; /* Override bootstrap.js settings */
+}
+
+.value-bubble {
+    padding: 0 0 1px 0;
 }
 
 .step-value {
