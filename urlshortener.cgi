@@ -1,6 +1,6 @@
 #!/bin/sh
 
-KEY="AIzaSyD8hbgcobWvBNlOAO3QlC-NSfFcJrATfS8"
+KEY="AIzaSyBFOepEVKQTdNPXAWWmFyc0qjNJUhbJLm8"
 
 LOG="/Users/codeboot/codeboot-urlshortener.log"
 
@@ -12,6 +12,7 @@ if [ "$REQUEST_METHOD" = "POST" ] ; then
 
   echo `sed -e '1! d' -e 's/%/\\\\x/g' -e 's/^longUrl=/{"longUrl":"/' -e 's/$/"}/'` | curl --header "Content-Type: application/json" --data @- "https://www.googleapis.com/urlshortener/v1/url?key=$KEY" > $TEMP
 
+  echo "// `date`" >> $LOG
   tr -d '\n' < $TEMP | sed -e 's/$//' >> $LOG
 
   echo "Content-Type: application/json"
