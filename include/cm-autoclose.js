@@ -17,7 +17,7 @@
                 if (tok.string === "{") {
                     var marks = cm.findMarksAt(pos);
                     for (var i = 0; i < marks.length; i++) {
-                        if (marks[i].style === "cm-autoinsert-performed") {
+                        if (marks[i].className === "cm-autoinsert-performed") {
                             cm.replaceSelection("\n");
                             cm.indentLine(pos.line + 1);
                             cm.setCursor({line: pos.line + 1, ch: cm.getLine(pos.line + 1).length});
@@ -27,7 +27,9 @@
                     
                     var from = {line: pos.line, ch: tok.start};
                     var to = {line: pos.line, ch: tok.end};
-                    cm.markText(from, to, "cm-autoinsert-performed");
+                    cm.markText(from, to, {
+                        className: "cm-autoinsert-performed"
+                    });
                     cm.replaceSelection("\n\n}");
                     cm.indentLine(pos.line + 1);
                     cm.indentLine(pos.line + 2);
