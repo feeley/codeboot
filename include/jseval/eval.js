@@ -261,6 +261,7 @@ jev.compStatement = function (cte, ast) {
         }
 
         return function (rte, cont) {
+
             rte.frame.cte = cte;
 
             // Undefine all global variables that are declared in the
@@ -375,15 +376,19 @@ jev.compStatement = function (cte, ast) {
                 if (value2) {
                     return subcont0(rte, void 0);
                 } else {
-                    var ctrl = rte.frame.ctrl_env;
-                    rte.frame.ctrl_env = ctrl.next;
-                    return ctrl.break_cont(rte, void 0);
+                    var frame = rte.frame;
+                    var ctrl_env = frame.ctrl_env;
+                    var break_cont = ctrl_env.break_cont;
+                    frame.ctrl_env = ctrl_env.next;
+                    return break_cont(rte, void 0);
                 }
             };
 
-            rte.frame.ctrl_env = new jev.RTCtrlLabel(rte.frame.ctrl_env,
-                                                     cont,
-                                                     subcont1);
+            var frame = rte.frame;
+
+            frame.ctrl_env = new jev.RTCtrlLabel(frame.ctrl_env,
+                                                 cont,
+                                                 subcont1);
 
             return subcont0(rte, void 0);
         };
@@ -405,9 +410,11 @@ jev.compStatement = function (cte, ast) {
                 if (value1) {
                     return code_stat(rte, subcont2);
                 } else {
-                    var ctrl = rte.frame.ctrl_env;
-                    rte.frame.ctrl_env = ctrl.next;
-                    return ctrl.break_cont(rte, void 0);
+                    var frame = rte.frame;
+                    var ctrl_env = frame.ctrl_env;
+                    var break_cont = ctrl_env.break_cont;
+                    frame.ctrl_env = ctrl_env.next;
+                    return break_cont(rte, void 0);
                 }
             };
 
@@ -415,9 +422,11 @@ jev.compStatement = function (cte, ast) {
                 return subcont0(rte, void 0);
             };
 
-            rte.frame.ctrl_env = new jev.RTCtrlLabel(rte.frame.ctrl_env,
-                                                     cont,
-                                                     subcont0);
+            var frame = rte.frame;
+
+            frame.ctrl_env = new jev.RTCtrlLabel(frame.ctrl_env,
+                                                 cont,
+                                                 subcont0);
 
             return subcont0(rte, void 0);
         };
@@ -441,9 +450,11 @@ jev.compStatement = function (cte, ast) {
                 if (value2) {
                     return code_stat(rte, subcont3);
                 } else {
-                    var ctrl = rte.frame.ctrl_env;
-                    rte.frame.ctrl_env = ctrl.next;
-                    return ctrl.break_cont(rte, void 0);
+                    var frame = rte.frame;
+                    var ctrl_env = frame.ctrl_env;
+                    var break_cont = ctrl_env.break_cont;
+                    frame.ctrl_env = ctrl_env.next;
+                    return break_cont(rte, void 0);
                 }
             };
 
@@ -451,9 +462,11 @@ jev.compStatement = function (cte, ast) {
                 return code_expr3(rte, subcont1);
             };
 
-            rte.frame.ctrl_env = new jev.RTCtrlLabel(rte.frame.ctrl_env,
-                                                     cont,
-                                                     subcont3);
+            var frame = rte.frame;
+
+            frame.ctrl_env = new jev.RTCtrlLabel(frame.ctrl_env,
+                                                 cont,
+                                                 subcont3);
 
             return code_expr1(rte, subcont1);
         };
@@ -485,8 +498,9 @@ jev.compStatement = function (cte, ast) {
                                             ast.lhs_expr,
                                             function () {
                                                 return function (rte, cont) {
-                                                    var ctrl = rte.frame.ctrl_env;
-                                                    var prop = ctrl.props[ctrl.index-1];
+                                                    var frame = rte.frame;
+                                                    var ctrl_env = frame.ctrl_env;
+                                                    var prop = ctrl_env.props[ctrl_env.index-1];
                                                     return cont(rte, prop);
                                                 };
                                             });
@@ -501,18 +515,20 @@ jev.compStatement = function (cte, ast) {
                 for (var p in value1) {
                     props.push(p);
                 }
-                var ctrl = rte.frame.ctrl_env;
-                ctrl.obj = value1;
-                ctrl.props = props;
-                ctrl.index = 0;
+                var frame = rte.frame;
+                var ctrl_env = frame.ctrl_env;
+                ctrl_env.obj = value1;
+                ctrl_env.props = props;
+                ctrl_env.index = 0;
                 return subcont2(rte, void 0);
             };
 
             var subcont2 = function (rte, value2) {
-                var ctrl = rte.frame.ctrl_env;
-                if (ctrl.index < ctrl.props.length) {
-                    var prop = ctrl.props[ctrl.index++];
-                    if (prop in ctrl.obj) {
+                var frame = rte.frame;
+                var ctrl_env = frame.ctrl_env;
+                if (ctrl_env.index < ctrl_env.props.length) {
+                    var prop = ctrl_env.props[ctrl_env.index++];
+                    if (prop in ctrl_env.obj) {
                         return code_assign(rte, subcont3);
                     } else {
                         return subcont2(rte, void 0);
@@ -527,14 +543,18 @@ jev.compStatement = function (cte, ast) {
             };
 
             var subcont4 = function (rte, value4) {
-                var ctrl = rte.frame.ctrl_env;
-                rte.frame.ctrl_env = ctrl.next;
-                return ctrl.break_cont(rte, void 0);
+                var frame = rte.frame;
+                var ctrl_env = frame.ctrl_env;
+                var break_cont = ctrl_env.break_cont;
+                frame.ctrl_env = ctrl_env.next;
+                return break_cont(rte, void 0);
             };
 
-            rte.frame.ctrl_env = new jev.RTCtrlLabel(rte.frame.ctrl_env,
-                                                     cont,
-                                                     subcont2);
+            var frame = rte.frame;
+
+            frame.ctrl_env = new jev.RTCtrlLabel(frame.ctrl_env,
+                                                 cont,
+                                                 subcont2);
 
             return code_set_expr(rte, subcont1);
         };
@@ -579,31 +599,9 @@ jev.compStatement = function (cte, ast) {
         var depth = depth_ast.depth;
 
         return function (rte, cont) {
-
-            var i = depth;
-
-            var loopcont = function (rte, cont) {
-                var ctrl = rte.frame.ctrl_env;
-                while (i > 0) {
-                    i--;
-                    if (ctrl instanceof jev.RTCtrlCatch) {
-                        rte.frame.lex_env = ctrl.lex_env;
-                    } else if (ctrl instanceof jev.RTCtrlFinally) {
-                        rte.frame.ctrl_env = ctrl.next;
-                        return ctrl.code_finally(rte,
-                                                 function (rte, value) {
-                                                     return loopcont(rte, cont);
-                                                 });
-                    }
-                    ctrl = ctrl.next;
-                }
-                rte.frame.ctrl_env = ctrl; // keep continue frame
-                return ctrl.continue_cont(rte, void 0);
-            };
-
             return jev.step_end(rte,
                                 function (rte, value) {
-                                    return loopcont(rte, cont);
+                                    return jev.unwindContinue(rte, depth);
                                 },
                                 ast,
                                 void 0);
@@ -627,31 +625,9 @@ jev.compStatement = function (cte, ast) {
         var depth = depth_ast.depth;
 
         return function (rte, cont) {
-
-            var i = depth;
-
-            var loopcont = function (rte, cont) {
-                var ctrl = rte.frame.ctrl_env;
-                while (i > 0) {
-                    i--;
-                    if (ctrl instanceof jev.RTCtrlCatch) {
-                        rte.frame.lex_env = ctrl.lex_env;
-                    } else if (ctrl instanceof jev.RTCtrlFinally) {
-                        rte.frame.ctrl_env = ctrl.next;
-                        return ctrl.code_finally(rte,
-                                                 function (rte, value) {
-                                                     return loopcont(rte, cont);
-                                                 });
-                    }
-                    ctrl = ctrl.next;
-                }
-                rte.frame.ctrl_env = ctrl.next; // remove break frame
-                return ctrl.break_cont(rte, void 0);
-            };
-
             return jev.step_end(rte,
                                 function (rte, value) {
-                                    return loopcont(rte, cont);
+                                    return jev.unwindBreak(rte, depth);
                                 },
                                 ast,
                                 void 0);
@@ -665,37 +641,31 @@ jev.compStatement = function (cte, ast) {
             cte.options.error(ast.loc, "syntax error", "illegal return statement");
         }
 
-        var depth = depth_ast.depth;
-
-        //////////////////TODO: pop ctrl_env, executing code_finally for each jev.RTCtrlFinally
-
         if (ast.expr === null) {
+
             return function (rte, cont) {
-                var cont = rte.stack.cont;
-                rte.frame = rte.stack.frame;
-                rte.stack = rte.stack.stack;
-                return cont(rte, void 0);
+                return jev.unwindReturn(rte, void 0);
             };
+
         } else {
+
             var code_expr = jev.compExpr(cte, ast.expr);
 
             return function (rte, cont) {
                 return code_expr(rte,
                                  function (rte, value) {
-                                     var cont = rte.stack.cont;
-                                     rte.frame = rte.stack.frame;
-                                     rte.stack = rte.stack.stack;
-                                     return cont(rte, value);
+                                     return jev.unwindReturn(rte, value);
                                  });
             };
+
         };
 
     } else if (ast instanceof WithStatement) {
 
         throw "with statements are not implemented";
 
-        //ast.expr = ctx.walk_expr(ast.expr);
-        //ast.statement = ctx.walk_statement(ast.statement);
+        //ast.expr
+        //ast.statement
 
     } else if (ast instanceof SwitchStatement) {
 
@@ -707,8 +677,8 @@ jev.compStatement = function (cte, ast) {
 
         var default_index = ast.clauses.length;
 
-        ast.clauses.forEach(function (c, i, asts)
-                            {
+        ast.clauses.forEach(function (c, i, asts) {
+
                                 var code_case_expr = null;
                                 if (c.expr === null) {
                                     default_index = i;
@@ -732,9 +702,11 @@ jev.compStatement = function (cte, ast) {
                             });
 
         var code_end = function (rte, cont) {
-            var ctrl = rte.frame.ctrl_env;
-            rte.frame.ctrl_env = ctrl.next;
-            return ctrl.break_cont(rte, void 0);
+            var frame = rte.frame;
+            var ctrl_env = frame.ctrl_env;
+            var break_cont = ctrl_env.break_cont;
+            frame.ctrl_env = ctrl_env.next;
+            return break_cont(rte, void 0);
         };
 
         code_clauses.push({
@@ -786,9 +758,11 @@ jev.compStatement = function (cte, ast) {
 
         return function (rte, cont) {
 
-            rte.frame.ctrl_env = new jev.RTCtrlLabel(rte.frame.ctrl_env,
-                                                     cont,
-                                                     null);
+            var frame = rte.frame;
+
+            frame.ctrl_env = new jev.RTCtrlLabel(frame.ctrl_env,
+                                                 cont,
+                                                 null);
 
             return code_expr(rte,
                              code_expr_chain);
@@ -830,14 +804,12 @@ jev.compStatement = function (cte, ast) {
         return function (rte, cont) {
             return code_expr(rte,
                              function (rte, value) {
-                                 throw value;
-                                 // does not return
+                                 return jev.unwindThrow(rte,
+                                                        new jev.Exception(value));
                              });
         };
 
     } else if (ast instanceof TryStatement) {
-
-        //throw "try statements are not implemented";
 
         var ctrl_env_catch = new jev.CTCtrlFinally(cte.ctrl_env);
         var ctrl_env_try = new jev.CTCtrlCatch(ctrl_env_catch);
@@ -852,11 +824,9 @@ jev.compStatement = function (cte, ast) {
 
         var code_stat = jev.compStatement(new_cte_try, ast.statement);
 
-        var code_catch;
+        var code_catch = null;
 
-        if (ast.catch_part === null) {
-            code_catch = jev.gen_noop();
-        } else {
+        if (ast.catch_part !== null) {
             var id_str = ast.catch_part.id.toString();
             var new_cte_catch = new jev.CTE(cte.callee,
                                             cte.params,
@@ -880,20 +850,32 @@ jev.compStatement = function (cte, ast) {
 
         var code = function (rte, cont) {
 
-            var ctrl = rte.frame.ctrl_env;
+            var frame = rte.frame;
+            var ctrl_env = frame.ctrl_env;
 
-            rte.frame.ctrl_env =
-                new jev.RTCtrlCatch(new jev.RTCtrlFinally(ctrl,
-                                                          code_finally),
-                                    code_catch,
-                                    rte.frame.lex_env);
+            ctrl_env = new jev.RTCtrlFinally(ctrl_env,
+                                             code_finally,
+                                             cont);
+
+            if (code_catch !== null) {
+                ctrl_env = new jev.RTCtrlCatch(ctrl_env,
+                                               code_catch,
+                                               frame.lex_env);
+            }
+
+            frame.ctrl_env = ctrl_env;
 
             return code_stat(rte,
                              function (rte, value) {
                                  var frame = rte.frame;
-                                 var ctrl = rte.frame.ctrl_env;
-                                 rte.frame.ctrl_env = ctrl.next.next;
-                                 return ctrl.next.code_finally(rte, cont);
+                                 var ctrl_env = frame.ctrl_env;
+                                 if (ctrl_env instanceof jev.RTCtrlCatch) {
+                                     ctrl_env = ctrl_env.next;
+                                 }
+                                 var code_finally = ctrl_env.code_finally;
+                                 var cont = ctrl_env.cont;
+                                 frame.ctrl_env = ctrl_env.next;
+                                 return code_finally(rte, cont);
                              });
         };
 
@@ -914,6 +896,149 @@ jev.gen_noop = function () {
     };
 };
 
+jev.Exception = function (value) {
+
+    this.value = value;
+
+};
+
+jev.unwindThrow = function (rte, exc) {
+
+    var loop = function (rte) {
+
+        for (;;) {
+
+            var frame = rte.frame;
+            var ctrl_env = frame.ctrl_env;
+
+            while (ctrl_env !== null) {
+
+                if (ctrl_env instanceof jev.RTCtrlCatch) {
+
+                    var lex_env = ctrl_env.lex_env;
+                    var code_catch = ctrl_env.code_catch;
+                    frame.lex_env = {value: exc.value, next: lex_env};
+                    frame.ctrl_env = ctrl_env.next;
+                    return code_catch(rte,
+                                      function (rte, value) {
+                                          var frame = rte.frame;
+                                          var ctrl_env = frame.ctrl_env;
+                                          var code_finally = ctrl_env.code_finally;
+                                          var cont = ctrl_env.cont;
+                                          frame.lex_env = frame.lex_env.next;
+                                          frame.ctrl_env = ctrl_env.next;
+                                          return code_finally(rte, cont);
+                                      });
+
+                } else if (ctrl_env instanceof jev.RTCtrlFinally) {
+
+                    var code_finally = ctrl_env.code_finally;
+                    frame.ctrl_env = ctrl_env.next;
+                    return code_finally(rte,
+                                        function (rte, value) {
+                                            return loop(rte);
+                                        });
+
+                }
+
+                ctrl_env = ctrl_env.next;
+            }
+
+            if (rte.stack === null) {
+                // nothing left to unwind and exception not caught
+                throw exc.value; // throw the exception normally
+            }
+
+            // propagate exception to caller
+
+            var cont = rte.stack.cont;
+            rte.frame = rte.stack.frame;
+            rte.stack = rte.stack.stack;
+        }
+
+    };
+
+    return loop(rte);
+};
+
+jev.unwindContinueBreakReturn = function (rte, depth, cont) {
+
+    var loop = function (rte) {
+
+        var frame = rte.frame;
+        var ctrl_env = frame.ctrl_env;
+
+        while (depth !== 0 && ctrl_env !== null) {
+
+            depth--;
+
+            if (ctrl_env instanceof jev.RTCtrlCatch) {
+
+                var lex_env = ctrl_env.lex_env;
+                frame.lex_env = lex_env;
+
+            } else if (ctrl_env instanceof jev.RTCtrlFinally) {
+
+                var code_finally = ctrl_env.code_finally;
+                frame.ctrl_env = ctrl_env.next;
+                return code_finally(rte,
+                                    function (rte, value) {
+                                        return loop(rte);
+                                    });
+
+            }
+
+            ctrl_env = ctrl_env.next;
+        }
+
+        frame.ctrl_env = ctrl_env;
+
+        return cont(rte);
+    };
+
+    return loop(rte);
+};
+
+jev.unwindContinue = function (rte, depth) {
+
+    return jev.unwindContinueBreakReturn(
+        rte,
+        depth,
+        function (rte) {
+            var frame = rte.frame;
+            var ctrl_env = frame.ctrl_env;
+            var continue_cont = ctrl_env.continue_cont;
+            return continue_cont(rte, void 0);
+        });
+};
+
+jev.unwindBreak = function (rte, depth) {
+
+    return jev.unwindContinueBreakReturn(
+        rte,
+        depth,
+        function (rte) {
+            var frame = rte.frame;
+            var ctrl_env = frame.ctrl_env;
+            var break_cont = ctrl_env.break_cont;
+            frame.ctrl_env = ctrl_env.next; // remove break frame
+            return break_cont(rte, void 0);
+        });
+};
+
+jev.unwindReturn = function (rte, value) {
+
+    return jev.unwindContinueBreakReturn(
+        rte,
+        -1,
+        function (rte) {
+            var cont = rte.stack.cont;
+            rte.frame = rte.stack.frame;
+            rte.stack = rte.stack.stack;
+            return cont(rte, value);
+        });
+};
+
 jev.gen_break_handler = function (cte, ast, code) {
 
     var ctrl_env = cte.ctrl_env;
@@ -928,15 +1053,19 @@ jev.gen_break_handler = function (cte, ast, code) {
 
         return function (rte, cont) {
 
-            var subcont1 = function (rte, value1) {
-                var ctrl = rte.frame.ctrl_env;
-                rte.frame.ctrl_env = ctrl.next;
-                return ctrl.break_cont(rte, value1);
+            var subcont1 = function (rte, value) {
+                var frame = rte.frame;
+                var ctrl_env = frame.ctrl_env;
+                var break_cont = ctrl_env.break_cont;
+                frame.ctrl_env = ctrl_env.next; // remove break frame
+                return break_cont(rte, void 0);
             };
 
-            rte.frame.ctrl_env = new jev.RTCtrlLabel(rte.frame.ctrl_env,
-                                                     cont,
-                                                     null);
+            var frame = rte.frame;
+
+            frame.ctrl_env = new jev.RTCtrlLabel(frame.ctrl_env,
+                                                 cont,
+                                                 null);
 
             return code(rte, subcont1);
         };
@@ -970,9 +1099,10 @@ jev.CTCtrlFinally = function (next) {
     this.next = next;
 };
 
-jev.RTCtrlFinally = function (next, code_finally) {
+jev.RTCtrlFinally = function (next, code_finally, cont) {
     this.next = next;
     this.code_finally = code_finally;
+    this.cont = cont;
 };
 
 jev.controlContext = function (cte, ast, kind) {
@@ -1157,8 +1287,8 @@ jev.compExpr = function (cte, ast) {
         var code_args = jev.compExprs(cte, ast.args);
         var new_semfn = jev.get_new_semfn(ast.args.length);
 
-        var op = function (rte, cont, ast, cons, args)
-        {
+        var op = function (rte, cont, ast, cons, args) {
+
             if (typeof cons !== "function") {
 
                 return jev.step_error(rte,
@@ -1277,8 +1407,7 @@ jev.compExpr = function (cte, ast) {
                                           "cannot call a non function");
                 } else if ("_apply_" in fn) {
                     return fn._apply_(rte,
-                                      function (rte, result)
-                                      {
+                                      function (rte, result) {
                                           return jev.step_end(rte,
                                                               cont,
                                                               ast,
@@ -1354,14 +1483,14 @@ jev.compExpr = function (cte, ast) {
 
             closure._apply_ = function (rte, cont, this_, params) {
                 return jev.exec_fn_body(code_body,
-                                    closure,
-                                    rte,
-                                    cont,
-                                    this_,
-                                    params,
-                                    new Array(nb_locals),
-                                    parent,
-                                    fn_cte);
+                                        closure,
+                                        rte,
+                                        cont,
+                                        this_,
+                                        params,
+                                        new Array(nb_locals),
+                                        parent,
+                                        fn_cte);
             };
 
             return jev.step_end(rte,
@@ -1948,11 +2077,9 @@ jev.compPropsLoop = function (cte, ast, props, i) {
 
 jev.gen_op_dyn = function (ast, semfn, code0) {
 
-    return function (rte, cont)
-           {
+    return function (rte, cont) {
                return code0(rte,
-                            function (rte, res0)
-                            {
+                            function (rte, res0) {
                                 return semfn(rte,
                                              cont,
                                              ast,
@@ -1963,14 +2090,11 @@ jev.gen_op_dyn = function (ast, semfn, code0) {
 
 jev.gen_op_dyn_dyn = function (ast, semfn, code0, code1) {
 
-    return function (rte, cont)
-           {
+    return function (rte, cont) {
                return code0(rte,
-                            function (rte, res0)
-                            {
+                            function (rte, res0) {
                                 return code1(rte,
-                                             function (rte, res1)
-                                             {
+                                             function (rte, res1) {
                                                  return semfn(rte,
                                                               cont,
                                                               ast,
@@ -1983,11 +2107,9 @@ jev.gen_op_dyn_dyn = function (ast, semfn, code0, code1) {
 
 jev.gen_op_dyn_cst = function (ast, semfn, code0, res1) {
 
-    return function (rte, cont)
-           {
+    return function (rte, cont) {
                return code0(rte,
-                            function (rte, res0)
-                            {
+                            function (rte, res0) {
                                 return semfn(rte,
                                              cont,
                                              ast,
@@ -1999,17 +2121,13 @@ jev.gen_op_dyn_cst = function (ast, semfn, code0, res1) {
 
 jev.gen_op_dyn_dyn_dyn = function (ast, semfn, code0, code1, code2) {
 
-    return function (rte, cont)
-           {
+    return function (rte, cont) {
                return code0(rte,
-                            function (rte, res0)
-                            {
+                            function (rte, res0) {
                                 return code1(rte,
-                                             function (rte, res1)
-                                             {
+                                             function (rte, res1) {
                                                  return code2(rte,
-                                                              function (rte, res2)
-                                                              {
+                                                              function (rte, res2) {
                                                                   return semfn(rte,
                                                                                cont,
                                                                                ast,
@@ -2024,14 +2142,11 @@ jev.gen_op_dyn_dyn_dyn = function (ast, semfn, code0, code1, code2) {
 
 jev.gen_op_dyn_cst_dyn = function (ast, semfn, code0, res1, code2) {
 
-    return function (rte, cont)
-           {
+    return function (rte, cont) {
                return code0(rte,
-                            function (rte, res0)
-                            {
+                            function (rte, res0) {
                                 return code2(rte,
-                                             function (rte, res2)
-                                             {
+                                             function (rte, res2) {
                                                  return semfn(rte,
                                                               cont,
                                                               ast,
@@ -2045,8 +2160,7 @@ jev.gen_op_dyn_cst_dyn = function (ast, semfn, code0, res1, code2) {
 
 jev.gen_op_glo_cst = function (ast, semfn, res1) {
 
-    return function (rte, cont)
-           {
+    return function (rte, cont) {
                return semfn(rte,
                             cont,
                             ast,
@@ -2057,11 +2171,9 @@ jev.gen_op_glo_cst = function (ast, semfn, res1) {
 
 jev.gen_op_glo_cst_dyn = function (ast, semfn, res1, code2) {
 
-    return function (rte, cont)
-           {
+    return function (rte, cont) {
                return code2(rte,
-                            function (rte, res2)
-                            {
+                            function (rte, res2) {
                                 return semfn(rte,
                                              cont,
                                              ast,
@@ -2074,8 +2186,7 @@ jev.gen_op_glo_cst_dyn = function (ast, semfn, res1, code2) {
 
 jev.pure_op1_to_semfn = function (op) {
 
-  switch (op)
-  {
+  switch (op) {
   case "void x": return jev.sem_void_x;
   case "typeof x": return jev.sem_typeof_x;
   case "+ x": return jev.sem_plus_x;
@@ -2087,8 +2198,7 @@ jev.pure_op1_to_semfn = function (op) {
 
 jev.assign_op1_to_semfn = function (op) {
 
-  switch (op)
-  {
+  switch (op) {
   case "delete x": return jev.sem_delete_x;
   case "++ x": return jev.sem_plusplus_x;
   case "-- x": return jev.sem_minusminus_x;
@@ -2099,8 +2209,7 @@ jev.assign_op1_to_semfn = function (op) {
 
 jev.pure_op2_to_semfn = function (op) {
 
-  switch (op)
-  {
+  switch (op) {
   case "x [ y ]": return jev.sem_prop_index;
   case "x . y": return jev.sem_prop_access;
   case "x * y": return jev.sem_x_mult_y;
@@ -2129,8 +2238,7 @@ jev.pure_op2_to_semfn = function (op) {
 
 jev.assign_op2_to_semfn = function (op) {
 
-  switch (op)
-  {
+  switch (op) {
   case "var x = y": return jev.sem_var_x_equal_y
   case "x = y": return jev.sem_x_equal_y;
   case "x += y": return jev.sem_x_plusequal_y;
