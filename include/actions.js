@@ -241,10 +241,6 @@ function editor_URL(content, filename) {
     var site = document.location.origin +
                document.location.pathname.replace(/\/[^/]*$/g,"");
 
-    if (site === "http://dynamo.iro.umontreal.ca/~codeboot") {
-        site = "http://codeboot.org"; // inverse redirection
-    }
-
     return site +
            "/query.cgi?replay%=" +
            encodeURIComponent(("@C" +

@@ -16,12 +16,12 @@ cb.scrollTo = function (elementOrSelector) {
     $("#editors").animate({scrollTop: elementOffset}, 400);
 }
 
-cb.getShortURL = function (longURL) {
+cb.getShortURL = function (longUrl) {
 	var shortURL;
 	$.ajax({
-            url: "shorten.php",
+            url: "urlshortener.cgi",
             type: "POST",
-            data: {url: longURL},
+            data: {longUrl: longUrl},
             dataType: "json",
             async: false,
             success: function (data) {
