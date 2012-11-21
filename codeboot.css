@@ -15,13 +15,13 @@
     font-size: 18px;
     font-weight: bold;
     color: black;
-    border: 5px solid #000000;
-    background-color: yellow;
+    border: 3px solid #FEE310;
+    background-color: #FEF1B8;
 }
 
 .tooltip.tryme .tooltip-arrow {
     /* We know only the left placement is used, so don't bother making this more general right now */
-    border-left-color: #000000;
+    border-left-color: #FEE310;
 }
 
 /* ----- Menus ----- */

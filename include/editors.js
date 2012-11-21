@@ -176,7 +176,7 @@ function createREPL(node) {
             "Ctrl-C": function (cm) { cb.clearREPL(); cm.cb.history.resetPos(); },
             "Ctrl-L": function (cm) { cb.clearAll(); cm.cb.history.resetPos(); },
             "Ctrl-Enter": function(cm) { cm.autoInsertBraces(cm); },
-            "Shift-Enter": function(cm) { cb.run(true); },
+            "Shift-Enter": function(cm) { cb.animate(0); },
             "Enter": function(cm) { cb.run(false); },
             "Up": function (cm) {
                 cm.cb.history.previous();
