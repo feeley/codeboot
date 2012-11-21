@@ -238,8 +238,14 @@ function escape_HTML(text) {
 
 function editor_URL(content, filename) {
 
-    return document.location.origin +
-           document.location.pathname.replace(/\/[^/]*$/g,"") +
+    var site = document.location.origin +
+               document.location.pathname.replace(/\/[^/]*$/g,"");
+
+    if (site === "http://dynamo.iro.umontreal.ca/~codeboot") {
+        site = "http://codeboot.org"; // inverse redirection
+    }
+
+    return site +
            "/query.cgi?replay%=" +
            encodeURIComponent(("@C" +
                                (filename === void 0 ? "" : (filename + "@0")) +
