@@ -1,3 +1,5 @@
+// CodeMirror version 3.0rc1
+//
 // CodeMirror is the only global var we claim
 window.CodeMirror = (function() {
   "use strict";
@@ -329,9 +331,12 @@ window.CodeMirror = (function() {
 
   // LINE NUMBERS
 
-  function alignVertically(display) {
+  function alignHorizontally(display, targetScrollLeft) {
     if (!display.alignWidgets && !display.gutters.firstChild) return;
-    var comp = compensateForHScroll(display), gutterW = display.gutters.offsetWidth, l = comp + "px";
+    var comp = compensateForHScroll(display);
+    if (targetScrollLeft != null)
+      comp += display.scroller.scrollLeft - targetScrollLeft;
+    var gutterW = display.gutters.offsetWidth, l = comp + "px";
     for (var n = display.lineDiv.firstChild; n; n = n.nextSibling) if (n.alignable) {
       for (var i = 0, a = n.alignable; i < a.length; ++i) a[i].style.left = l;
     }
@@ -1518,7 +1523,7 @@ window.CodeMirror = (function() {
     cm.view.scrollLeft = val;
     if (cm.display.scroller.scrollLeft != val) cm.display.scroller.scrollLeft = val;
     if (cm.display.scrollbarH.scrollLeft != val) cm.display.scrollbarH.scrollLeft = val;
-    alignVertically(cm.display);
+    alignHorizontally(cm.display);
   }
 
   // Since the delta values reported on mouse wheel events are
@@ -1561,6 +1566,10 @@ window.CodeMirror = (function() {
         }
       }
       updateDisplay(cm, [], {top: top, bottom: bot});
+    }
+    if (dx && wheelPixelsPerUnit != null) {
+      var target = Math.max(0, Math.min(scroll.scrollWidth - scroll.clientWidth, dx * wheelPixelsPerUnit + scroll.scrollLeft));
+      if (target != scroll.scrollLeft) alignHorizontally(cm.display, target);
     }
     if (wheelSamples < 20) {
       if (wheelStartX == null) {
@@ -4429,7 +4438,7 @@ window.CodeMirror = (function() {
 
   // THE END
 
-  CodeMirror.version = "3.0 B2";
+  CodeMirror.version = "3.0 rc1";
 
   return CodeMirror;
 })();
