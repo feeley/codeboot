@@ -43,8 +43,8 @@ function importStandardFromHost() {
     importFromHost("JSON");
 
     importFromHost("document");
-    importFromHost("alert");
-    importFromHost("prompt");
+    //importFromHost("alert");
+    //importFromHost("prompt");
 }
 
 importStandardFromHost();
@@ -60,6 +60,32 @@ builtin_print.toString = function () {
 };
 
 cb.addGlobal("print", builtin_print);
+
+// alert
+
+function builtin_alert() {
+    var hostGlobalObject = (function () { return this; }());
+    return alert.apply(hostGlobalObject, arguments);
+}
+
+builtin_alert.toString = function () {
+    return "function alert(value) { ... }";
+};
+
+cb.addGlobal("alert", builtin_alert);
+
+// prompt
+
+function builtin_prompt() {
+    var hostGlobalObject = (function () { return this; }());
+    return prompt.apply(hostGlobalObject, arguments);
+}
+
+builtin_prompt.toString = function () {
+    return "function prompt(value) { ... }";
+};
+
+cb.addGlobal("prompt", builtin_prompt);
 
 // load
 
