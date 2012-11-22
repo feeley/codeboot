@@ -22,14 +22,22 @@ jev.RTE = function (glo, stack, frame) {
 
 };
 
-jev.newGlobalRTE = function () {
+jev.newGlobalRTE = function (options) {
 
-    var global_obj = (function () { return this; })();
-//    var global_obj = {print: print, Object: Object};
+    var globalObject;
 
-    return new jev.RTE(global_obj,
+    if (options === void 0 ||
+        options.globalObject === void 0) {
+        globalObject = (function () { return this; })();
+    } else {
+        globalObject = options.globalObject;
+    }
+
+//    globalObject = {print: print, Object: Object};
+
+    return new jev.RTE(globalObject,
                        null,
-                       new jev.RTFrame(global_obj,
+                       new jev.RTFrame(globalObject,
                                        null,
                                        [],
                                        [],
@@ -89,19 +97,19 @@ jev.eval = function (source, options) {
 
     var code = jev.compile(source, options);
 
-    return jev.run(code);
+    return jev.run(code, options);
 };
 
-jev.run = function (code) {
+jev.run = function (code, options) {
 
-    var rte = jev.runSetup(code);
+    var rte = jev.runSetup(code, options);
 
     return rte.runUntilFinished();
 };
 
-jev.runSetup = function (code) {
+jev.runSetup = function (code, options) {
 
-    var rte = jev.newGlobalRTE();
+    var rte = jev.newGlobalRTE(options);
 
     rte.resume = function (rte) {
         return code(rte,
@@ -1475,7 +1483,7 @@ jev.compExpr = function (cte, ast) {
                     return closure._apply_(rte, cont, this_, args);
                 };
 
-                return jev.run(code);
+                return jev.run(code, {globalObject: rte.glo});
             };
 
             closure.toString = function () {

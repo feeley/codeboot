@@ -1121,6 +1121,12 @@ cb.load = function(filename, single_step) {
     cb.run_setup_and_execute(code_gen, single_step);
 };
 
+cb.globalObject = {};
+
+cb.addGlobal = function (name, value) {
+    cb.globalObject[name] = value;
+};
+
 cb.run_setup_and_execute = function (code_gen, single_step) {
 
     cb.hide_error();
@@ -1129,7 +1135,8 @@ cb.run_setup_and_execute = function (code_gen, single_step) {
 
     try {
         var code = code_gen();
-        program_state.rte = jev.runSetup(code);
+        program_state.rte = jev.runSetup(code,
+                                         {globalObject: cb.globalObject});
     }
     catch (e) {
         if (e !== false)
