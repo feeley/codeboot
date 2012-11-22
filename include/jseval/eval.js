@@ -812,14 +812,16 @@ jev.compStatement = function (cte, ast) {
 
     } else if (ast instanceof TryStatement) {
 
-        var ctrl_env_catch = new jev.CTCtrlFinally(cte.ctrl_env);
-        var ctrl_env_try = new jev.CTCtrlCatch(ctrl_env_catch);
+        var ctrl_env_finally = new jev.CTCtrlFinally(cte.ctrl_env);
+        var ctrl_env_catch = new jev.CTCtrlCatch(ctrl_env_finally);
 
         var new_cte_try = new jev.CTE(cte.callee,
                                       cte.params,
                                       cte.locals,
                                       cte.lex_env,
-                                      ctrl_env_try,
+                                      (ast.catch_part === null)
+                                      ? ctrl_env_finally
+                                      : ctrl_env_catch,
                                       cte.parent,
                                       cte.options);
 
@@ -833,7 +835,7 @@ jev.compStatement = function (cte, ast) {
                                             cte.params,
                                             cte.locals,
                                             {name: id_str, next: cte.lex_env},
-                                            ctrl_env_catch,
+                                            ctrl_env_finally,
                                             cte.parent,
                                             cte.options);
 
