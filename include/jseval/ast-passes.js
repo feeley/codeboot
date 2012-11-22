@@ -285,7 +285,7 @@ function register_decl(scope, id, is_param)
     var v;
     var id_str = id.toString();
 
-    if (!scope.vars.hasOwnProperty(id_str))
+    if (!Object.prototype.hasOwnProperty.call(scope.vars, id_str))
     {
         v = new Variable((id instanceof Token) ? id : id.tok,
                          is_param,
@@ -477,7 +477,7 @@ function resolve_var(scope, id)
     {
         // Check if id is declared in the current scope
 
-        if (scope.vars.hasOwnProperty(id_str))
+        if (Object.prototype.hasOwnProperty.call(scope.vars, id_str))
             return scope.vars[id_str];
 
         var parent = scope.parent;
@@ -518,7 +518,7 @@ var_resolution_pass_ctx.prototype.walk_statement = function (ast)
 
         function set_special(id)
         {
-            if (ast.vars.hasOwnProperty(id))
+            if (Object.prototype.hasOwnProperty.call(ast.vars, id))
             {
                 var v = ast.vars[id];
                 v.special = id;

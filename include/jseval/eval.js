@@ -1668,35 +1668,30 @@ jev.compExpr = function (cte, ast) {
     }
 };
 
-jev.LexicalAccess = function (index)
-{
+jev.LexicalAccess = function (index) {
     this.index = index;
 };
 
-jev.LocalAccess = function (up, over)
-{
+jev.LocalAccess = function (up, over) {
     this.up = up;
     this.over = over;
 };
 
-jev.ParamAccess = function (up, over)
-{
+jev.ParamAccess = function (up, over) {
     this.up = up;
     this.over = over;
 };
 
-jev.CalleeAccess = function (up)
-{
+jev.CalleeAccess = function (up) {
     this.up = up;
 };
 
-jev.GlobalAccess = function (name)
-{
+jev.GlobalAccess = function (name) {
     this.name = name;
 };
 
-jev.cte_access = function (cte, id_str)
-{
+jev.cte_access = function (cte, id_str) {
+
     var index = 0;
     var env = cte.lex_env;
 
@@ -1712,9 +1707,9 @@ jev.cte_access = function (cte, id_str)
 
     while (cte.parent !== null) {
 
-        if (id_str in cte.locals) {
+        if (Object.prototype.hasOwnProperty.call(cte.locals, id_str)) {
             return new jev.LocalAccess(up, cte.locals[id_str]);
-        } else if (id_str in cte.params) {
+        } else if (Object.prototype.hasOwnProperty.call(cte.params, id_str)) {
             return new jev.ParamAccess(up, cte.params[id_str]);
         } else if (id_str === cte.callee) {
             return new jev.CalleeAccess(up);
@@ -1723,13 +1718,11 @@ jev.cte_access = function (cte, id_str)
         up++;
     }
 
-    var ga = cte.locals[id_str];
-
-    if (ga === void 0) {
-        ga = (cte.locals[id_str] = new jev.GlobalAccess(id_str));
+    if (Object.prototype.hasOwnProperty.call(cte.locals, id_str)) {
+        return cte.locals[id_str];
+    } else {
+        return (cte.locals[id_str] = new jev.GlobalAccess(id_str));
     }
-
-    return ga;
 };
 
 jev.compOp1Assign = function (cte, ast, op1, lhs) {

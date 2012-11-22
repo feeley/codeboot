@@ -29,37 +29,35 @@ var global_obj = this;
 var read_file;
 var write_file;
 
-if ("exports" in global_obj) {
+(function () {
 
-    var fs = this.require("fs");
+    if ("exports" in global_obj) {
 
-    read_file = function (filename)
-    {
-        return fs.readFileSync(filename, 'utf-8');
-    };
+        var fs = this.require("fs");
 
-    write_file = function (filename, str)
-    {
-        var stream = fs.createWriteStream(filename, {flags : 'w'});
+        read_file = function (filename) {
+            return fs.readFileSync(filename, 'utf-8');
+        };
 
-        stream.write(str, 'utf-8');
+        write_file = function (filename, str) {
+            var stream = fs.createWriteStream(filename, {flags : 'w'});
 
-        stream.end();
-        stream.destroySoon();
-    };
-} else {
+            stream.write(str, 'utf-8');
 
-    read_file = function (filename)
-    {
-        return global_obj.readFile(filename);
-    };
+            stream.end();
+            stream.destroySoon();
+        };
+    } else {
 
-    write_file = function (filename, str)
-    {
-        global_obj.writeFile(filename, str);
+        read_file = function (filename) {
+            return global_obj.readFile(filename);
+        };
 
-    };
-}
+        write_file = function (filename, str) {
+            global_obj.writeFile(filename, str);
+        };
+    }
+})();
 
 var EOF = -1;
 
