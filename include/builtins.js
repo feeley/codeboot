@@ -43,6 +43,8 @@ function importStandardFromHost() {
     importFromHost("JSON");
 
     importFromHost("document");
+    importFromHost("alert");
+    importFromHost("prompt");
 }
 
 importStandardFromHost();
