@@ -25,6 +25,7 @@ jev.RTE = function (glo, stack, frame) {
 jev.newGlobalRTE = function () {
 
     var global_obj = (function () { return this; })();
+//    var global_obj = {print: print, Object: Object};
 
     return new jev.RTE(global_obj,
                        null,
@@ -743,7 +744,7 @@ jev.compStatement = function (cte, ast) {
                     return function (rte, value) {
                         return code_expr(rte,
                                          function (rte, value2) {
-                                             if (value2 == value) {
+                                             if (value2 === value) {
                                                  return code_stat_chain(rte, void 0);
                                              } else {
                                                  return code_next(rte, value);
