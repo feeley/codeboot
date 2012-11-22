@@ -4,7 +4,7 @@ function importFromHost(global) {
 
     var hostGlobalObject = (function () { return this; }());
 
-    if (hostGlobalObject.hasOwnProperty(global)) {
+    if (global in hostGlobalObject) {
         cb.addGlobal(global, hostGlobalObject[global]);
     }
 }
