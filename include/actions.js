@@ -1005,7 +1005,7 @@ cb.execute2 = function (single_step) {
     if (rte !== null && !rte.finished()) {
 
         try {
-            rte.step(single_step ? 1 : 257);
+            rte.step(single_step ? 1 : 51151);
         }
         catch (e) {
             if (e !== false)
