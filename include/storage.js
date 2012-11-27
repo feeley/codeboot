@@ -27,7 +27,8 @@ cb.serializeState = function () {
             history: undefined
         },
         devMode: cb.devMode,
-        languageLevel: cb.languageLevel
+        languageLevel: cb.languageLevel,
+        options: cb.options
     };
 
     state.repl.history = cb.repl.cb.history.serializeState();
@@ -53,6 +54,10 @@ function cb_internal_attempt(operation) {
 cb.restoreState = function (state) {
     if (state === undefined) return;
     var failed = false;
+
+    if (state.options) {
+        cb.options = state.options;
+    }
 
     failed = cb_internal_attempt(function () {
         cb.repl.cb.history.restoreState(state.repl.history);

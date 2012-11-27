@@ -101,6 +101,8 @@
                     <li><a id="setting-speed-slow" href="#" data-radio-group="speed" onclick="setStepDelay(2000);"><i class="icon-none"></i> Slow</a></li>
                     <li><a id="setting-speed-normal" href="#" data-radio-group="speed" onclick="setStepDelay(500);"><i class="icon-ok"></i> Normal</a></li>
                     <li><a id="setting-speed-fast" href="#" data-radio-group="speed" onclick="setStepDelay(125);"><i class="icon-none"></i> Fast</a></li>
+                    <li class="nav-header">Editing</li>
+                    <li><a id="setting-linenums" href="#" data-toggle="checkbox" onclick="cb.toggleLineNumbers();"><i class="icon-none"></i> Show line numbers</a></li>
                 </ul>
               </div>
           </div>
@@ -198,6 +200,10 @@
             lastEditor: null,
             languageLevel: "novice",
             navbarColor: "default",
+            stepDelay: 0,
+            options: {
+              showLineNumbers: false
+            },
 
             // Elements
             alerts: undefined,
@@ -249,6 +255,15 @@
             $("body").attr("data-lang-level", lang);
         };
 
+        cb.toggleLineNumbers = function () {
+            cb.options.showLineNumbers = !cb.options.showLineNumbers;
+            cb.fs.each(function (f) {
+               if (f.editor) {
+                   f.editor.setOption("lineNumbers", cb.options.showLineNumbers);
+               }
+            });
+        };
+
         function cb_internal_getBounds($element) {
             var offset = $element.offset();
             var w = $element.width();
@@ -298,8 +313,6 @@
                 cb_internal_updatePopupPos();
             });
 
-
-
             document.getElementById("transcript").style.display='none';
             $(window).resize(cb_internal_resizeEditors);
             cb_internal_resizeEditors();
@@ -307,8 +320,10 @@
             cb.initFS();
 
             cb.loadSession();
+            $("#setting-linenums").toggleItem(cb.options.showLineNumbers);
 
             $("#repl").click(focusREPL);
+
 
             $('#about-box').add("#urlModal").on('hidden', function () {
               cb_restoreFocus();
@@ -423,18 +438,48 @@
                     .find('[data-radio-group="' + groupName + '"]');
             }
 
-            $.fn.checkItem = function () {
-                var $group = getGroup(this);
-                var $items = getGroupItems(this, getGroupName(this));
+            function setItemStatus($item, checked) {
+                var $icon = $item.children("i");
 
-                $items.children("i").removeClass("icon-ok").addClass("icon-none");
-                this.children("i").removeClass("icon-none").addClass("icon-ok");
+                if (checked === "toggle") {
+                    checked = !$icon.hasClass("icon-ok");
+                }
+
+                $icon
+                    .toggleClass("icon-ok", checked)
+                    .toggleClass("icon-none", !checked);
+            }
+
+            $.fn.toggleItem = function (test) {
+                setItemStatus(this, test === void 0 ? "toggle" : test);
+            }
+
+            $.fn.uncheckItem = function () {
+                return this.each(function () {
+                  setItemStatus($(this), false);
+                });
+            }
+
+            $.fn.checkItem = function () {
+                return this.each(function () {
+                    var $this = $(this);
+                    var groupName = getGroupName($this);
+                    if (groupName) {
+                        getGroupItems($this, groupName).uncheckItem();
+                    }
+                    setItemStatus($this, true);
+                });
             };
 
             $(function () {
-                $('body').on('click.codeboot.toggles', '[data-radio-group]', function ( e ) {
+                $('body').on('click.codeboot.toggles.radio', '[data-radio-group]', function ( e ) {
                     var $item = $(e.target);
                     $item.checkItem();
+                });
+
+                $('body').on('click.codeboot.toggles.checkbox', '[data-toggle="checkbox"]', function ( e ) {
+                    var $item = $(e.target);
+                    setItemStatus($item, "toggle");
                 });
             });
         })(jQuery);
