@@ -1039,8 +1039,7 @@ cb.execute2 = function (single_step) {
         } else {
 
             if (rte.error !== null) {
-                cb.show_error(program_state.rte.ast.loc);
-                cb.transcript.addLine(rte.error, "error-message");
+                cb.displayError(program_state.rte.ast.loc, null, String(rte.error));
             } else {
                 var result = rte.getResult();
                 if (result !== void 0) {
@@ -1456,17 +1455,23 @@ var warnSemicolon = true;
 cb.syntax_error = function (loc, kind, msg) {
 
     if (warnSemicolon && msg === "';' missing after this token") {
-        kind = "syntax error";
-        cb.show_error(loc);
-        cb.transcript.addLine(kind + " -- " + msg, "error-message");
+        cb.displayError(loc, "syntax error", msg);
         throw false;
     }
 
     if (kind !== "warning") {
-        cb.show_error(loc);
-        cb.transcript.addLine(kind + " -- " + msg, "error-message");
+        cb.displayError(loc, kind, msg);
         throw false;
     }
+};
+
+cb.displayError = function (loc, kind, msg) {
+    var locText = "";
+    if (cb.options.showLineNumbers && loc.container.toString() != "<REPL>") {
+        locText = loc.toString() + ": ";
+    }
+    cb.show_error(loc);
+    cb.transcript.addLine(locText + ((kind === null) ? "" : kind + " -- ") + msg, "error-message");
 };
 
 cb.clearREPL = function () {
