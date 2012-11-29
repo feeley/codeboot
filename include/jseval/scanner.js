@@ -1388,31 +1388,37 @@ function position_to_char_offset(loc, pos)
 }
 
 
-function Location(container, start_pos, end_pos)
-{
+function Location(container, start_pos, end_pos) {
     this.container = container;
     this.start_pos = start_pos;
     this.end_pos   = end_pos;
+}
 
-    // method join(loc1, loc2)
 
-    this.join = function (loc)
-    {
-        return new Location(this.container, this.start_pos, loc.end_pos);
-    };
+// method join(loc1, loc2)
 
-    // method toString()
+Location.prototype.join = function (loc) {
+    return new Location(this.container, this.start_pos, loc.end_pos);
+};
 
-    this.toString = function()
-    {
+
+// method toString(format)
+
+Location.prototype.toString = function(format) {
+
+    if (format === "simple") {
+        return "At line " +
+               position_to_line(this.start_pos) +
+               " in \"" + this.container.toString() + "\"";
+    } else {
         return "\"" + this.container.toString() + "\"@" +
                position_to_line(this.start_pos) + "." +
                position_to_column(this.start_pos) +
                "-" +
                position_to_line(this.end_pos) + "." +
                position_to_column(this.end_pos);
-    };
-}
+    }
+};
 
 
 var NUL_CH         =   0;

@@ -1468,7 +1468,7 @@ cb.syntax_error = function (loc, kind, msg) {
 cb.displayError = function (loc, kind, msg) {
     var locText = "";
     if (cb.options.showLineNumbers && loc.container.toString() != "<REPL>") {
-        locText = loc.toString() + ": ";
+        locText = loc.toString("simple") + ": ";
     }
     cb.show_error(loc);
     cb.transcript.addLine(locText + ((kind === null) ? "" : kind + " -- ") + msg, "error-message");
