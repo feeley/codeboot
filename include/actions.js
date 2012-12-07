@@ -1404,7 +1404,7 @@ function builtin_load(filename) {
 builtin_load._apply_ = function (rte, cont, this_, params) {
 
     var filename = params[0];
-    var code = cb.compile_internal_file(filename);
+    var code = cb.compile_file(filename);
 
     return exec_fn_body(code,
                         builtin_load,
@@ -1420,6 +1420,47 @@ builtin_load._apply_ = function (rte, cont, this_, params) {
 cb.compile_repl_expression = function (source, line, ch) {
     return cb.compile(source,
                       new SourceContainer(source, "<REPL>", line+1, ch+1));
+};
+
+cb.compile_file = function (filename) {
+    if (/^http:\/\//.test(filename)) {
+        return cb.compile_url_file(filename);
+    } else {
+        return cb.compile_internal_file(filename);
+    }
+};
+
+cb.urlGet = function (url) {
+    var content;
+    $.ajax({
+        url: "urlget.cgi",
+        type: "POST",
+        data: {url: url},
+        dataType: "json",
+        async: false,
+        success: function (data) {
+	    content = data.content;
+        }
+    });
+    return content;
+};
+
+cb.cacheURL = {};
+
+cb.readURL = function (url) {
+    if (cb.cacheURL.hasOwnProperty(url)) {
+        return cb.cacheURL[url];
+    } else {
+        return cb.cacheURL[url] = cb.urlGet(url);
+    }
+};
+
+cb.compile_url_file = function (url) {
+
+    var source = cb.readURL(url);
+
+    return cb.compile(source,
+                      new SourceContainer(source, url, 1, 1));
 };
 
 cb.compile_internal_file = function (filename) {
