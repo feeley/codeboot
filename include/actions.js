@@ -1436,10 +1436,13 @@ cb.urlGet = function (url) {
         url: "urlget.cgi",
         type: "POST",
         data: {url: url},
-        dataType: "json",
+        dataType: "text",
         async: false,
         success: function (data) {
-	    content = data.content;
+            content = data;
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            cb.transcript.addLine("Failed to load remote ressource", "error-message");
         }
     });
     return content;
@@ -1451,13 +1454,16 @@ cb.readURL = function (url) {
     if (cb.cacheURL.hasOwnProperty(url)) {
         return cb.cacheURL[url];
     } else {
-        return cb.cacheURL[url] = cb.urlGet(url);
+        var source = cb.urlGet(url);
+        if (source !== (void 0)) cb.cacheURL[url] = source;
+        return source;
     }
 };
 
 cb.compile_url_file = function (url) {
 
     var source = cb.readURL(url);
+    if (source === (void 0)) source = "";
 
     return cb.compile(source,
                       new SourceContainer(source, url, 1, 1));

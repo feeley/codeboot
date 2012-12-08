@@ -1,11 +1,21 @@
-#!/bin/sh
+#!/usr/bin/env python
 
-if [ "$REQUEST_METHOD" = "POST" ] ; then
+DEBUG = False
 
-  #echo `sed -e '1! d' -e 's/%/\\\\x/g' -e 's/^longUrl=/{"longUrl":"/' -e 's/$/"}/'` | curl --header "Content-Type: application/json" --data @- "https://www.googleapis.com/urlshortener/v1/url?key=$KEY" > $TEMP
+import sys
+import cgi
+import urllib2
 
-  echo "Content-Type: application/json"
-  echo ""
-  echo "{ content: \"function cube(n) { return n*n*n; }\" }"
+if DEBUG:
+    import cgitb
+    cgitb.enable();
 
-fi
+request = cgi.FieldStorage()
+response = urllib2.urlopen(request.getvalue("url"))
+fileData = response.read()
+
+print "Content-Type: text/html"     # HTML is following
+print "Content-Length:", len(fileData)
+print                               # blank line, end of headers
+sys.stdout.write(fileData)
+sys.stdout.flush()
