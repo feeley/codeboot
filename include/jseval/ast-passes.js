@@ -437,7 +437,17 @@ simplification_pass_ctx.prototype.walk_expr = function (ast)
         return ast_walk_expr(ast, new_ctx);
     }
     else
+    {
+        if (ast instanceof Ref &&
+            ast.id.toString() === "arguments")
+        {
+            // when a reference to "arguments" is found, force
+            // its declaration in the current scope
+            register_decl(this.non_catch_scope, ast.id, false);
+        }
+
         return ast_walk_expr(ast, this);
+    }
 };
 
 simplification_pass_ctx.prototype.walk_statements = function (asts)

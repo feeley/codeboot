@@ -1444,13 +1444,18 @@ jev.compExpr = function (cte, ast) {
         var params = {};
         var locals = {};
         var i = 0;
+        var arguments_index = -1;
 
         for (var v in ast.vars) {
             var id_str = v.toString();
             if (i < nb_params) {
                 params[id_str] = i;
             } else {
-                locals[id_str] = i-nb_params;
+                var index = i-nb_params;
+                if (id_str === "arguments") {
+                    arguments_index = index;
+                }
+                locals[id_str] = index;
                 nb_locals++;
             }
             i++;
@@ -1493,13 +1498,17 @@ jev.compExpr = function (cte, ast) {
             };
 
             closure._apply_ = function (rte, cont, this_, params) {
+                var locals = new Array(nb_locals);
+                if (arguments_index >= 0) {
+                    locals[arguments_index] = params;
+                }
                 return jev.exec_fn_body(code_body,
                                         closure,
                                         rte,
                                         cont,
                                         this_,
                                         params,
-                                        new Array(nb_locals),
+                                        locals,
                                         parent,
                                         fn_cte);
             };
