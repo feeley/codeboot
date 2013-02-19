@@ -15,6 +15,13 @@ function setFullScreen(cm, full) {
         .css("left", full ? consoleOffset.left : 0)
         .css("right", full ? consoleOffset.left : 0);
     cb.makeEditorResizable(cm, !full);
+    var $cm_wrapper = $(cm.getWrapperElement());
+    if (full) {
+        $cm_wrapper.attr("data-orig-height", $cm_wrapper.height());
+        $cm_wrapper.height($wrapper.height());
+    } else {
+        $cm_wrapper.height($cm_wrapper.attr("data-orig-height"));
+    }
     cm.refresh();
 
     $("#floating-console").css("visibility", full ? "hidden" : "visible");
@@ -46,6 +53,14 @@ function setFullScreen(cm, full) {
         $(".editor-restore-btn", $wrapper.get(0)).remove();
     }
 }
+
+CodeMirror.on(window, "resize", function() {
+    var $showing = $(".CodeMirror-fullscreen");
+    if ($showing.length == 0) return;
+    var editor = $showing.get(0).childNodes[0].CodeMirror;
+    var $wrapper = getFullScreenWrapper(editor);
+    $(editor.getWrapperElement()).height($wrapper.height());
+});
 
 function createCodeEditor(node) {
     var options = {
