@@ -162,6 +162,13 @@ CPFile.prototype.getContent = function () {
     return this.content;
 };
 
+CPFile.prototype.setContent = function (content) {
+    if (this.editor) {
+        this.content = content;
+        this.editor.setValue(this.content);
+    }
+};
+
 CPFile.prototype.save = function () {
     if (this.editor) {
         var old_content = this.content;
@@ -276,6 +283,11 @@ CPFileManager.prototype.getContent = function (fileOrFilename) {
 
 CPFileManager.prototype.getEditor = function (fileOrFilename) {
     return this._asFile(fileOrFilename).editor;
+};
+
+CPFileManager.prototype.setContent = function (fileOrFilename, content) {
+    var file = this._asFile(fileOrFilename);
+    return file.setContent(content);
 };
 
 CPFileManager.prototype.each = function (callback, selector) {
@@ -526,6 +538,15 @@ cb.makeLHSEditorToolbar = function (file) {
         saveAs(cb.fs.getContent(file), name);
     });
     $saveButton.appendTo($group);
+
+    if (typeof FileReader !== "undefined") {
+        // FileReader supported, add an open button
+        var $openButton = makeTBButton($('<i class="icon-folder-open"/>'), {"title" : "Upload"});
+        $openButton.click(function () {
+            $("#openFileModal").attr("data-cb-filename", file.filename).modal('show');
+        });
+        $openButton.appendTo($group);
+    }
 
     var $btnShare = makeDropdown($('<i class="icon-share"/>'), function ($menu) {
 		$menu.append(makeDropdownItem("Email public link").click(function () {

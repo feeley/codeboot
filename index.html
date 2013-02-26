@@ -338,6 +338,24 @@
             $('body').on('click.codeboot.nonav', '[href="#"]', function (e) {
                 e.preventDefault();
             });
+
+            $("#openFileModal").on('show', function () {
+                $('#openFileModalOKBtn').attr('disabled', 'disabled');
+                var $form = $("#openFileForm");
+                $form.empty().append($('<input type="file" id="openFileInput">').change(function (e) {
+                    $('#openFileModalOKBtn').removeAttr('disabled');
+                }));
+            });
+
+            $("#openFileModalOKBtn").click(function (e) {
+                var files = $("#openFileInput").get(0).files;
+                if (!files.length) return;
+
+                var file = files[0];
+
+                var filename = $("#openFileModal").attr('data-cb-filename');
+                cb.loadFile(cb.fs.getEditor(filename), file);
+            });
         });
 
         function cb_internal_resizeEditors() {
@@ -500,6 +518,22 @@
 	  </div>
 	  <div class="modal-footer">
 		<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+	  </div>
+	</div>
+
+	<div id="openFileModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="openFileModalLabel" aria-hidden="true">
+	  <div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+		<h3 id="openFileModalLabel">Upload file</h3>
+	  </div>
+	  <div class="modal-body">
+      <form id="openFileForm">
+        <!-- Filled dynamically -->
+      </form>
+	  </div>
+	  <div class="modal-footer">
+      <button class="btn btn-primary" id="openFileModalOKBtn" disabled="disabled" data-dismiss="modal" aria-hidden="true">OK</button>
+		  <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
 	  </div>
 	</div>
   </body>

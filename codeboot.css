@@ -24,6 +24,13 @@
     border-left-color: #FEE310;
 }
 
+#openFileModal input {
+    -webkit-box-shadow: none;
+       -moz-box-shadow: none;
+            box-shadow: none;
+    line-height: 0;
+}
+
 /* ----- Menus ----- */
 
 .dropdown-align-right {

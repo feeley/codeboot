@@ -48,18 +48,19 @@ cb.loadFile = function (cm, f) {
 };
 
 function cb_internal_readTextFile(f, callback) {
-    if (!Modernizr.filereader) {
+    if (typeof FileReader === "undefined") {
         cb.reportError("File is reader not supported by the browser");
-    } else {
-        var reader = new FileReader();
-        reader.onerror = function (e) {
-            cb.reportError("File read failed");
-        };
-        reader.onload = function(e) {
-            callback(e.target.result);
-        };
-        reader.readAsText(f);
+        return;
     }
+
+    var reader = new FileReader();
+    reader.onerror = function (e) {
+        cb.reportError("Failed to read file");
+    };
+    reader.onload = function(e) {
+        callback(e.target.result);
+    };
+    reader.readAsText(f);
 }
 
 // ================================================================================
