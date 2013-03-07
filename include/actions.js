@@ -482,7 +482,7 @@ cb.replay = function () {
                 if (existing &&
                     filename !== default_filename &&
                     editor.getValue() !== str) {
-                    replace = confirm("You are about to replace the file '" + filename + "' with different content.  Are you sure you want proceed with the replacement and lose your local changes to that file?");
+                    replace = confirm("You are about to replace the file '" + filename + "' with different content.  Are you sure you want to proceed with the replacement and lose your local changes to that file?");
                 }
                 if (replace) {
                     editor.setValue(str);
@@ -554,8 +554,29 @@ var program_state = {
     timeout_id: null,
     step_delay: 0,
     mode: 'stopped',
-    step_counter: null
+    step_counter: null,
+    code_queue: []
 };
+
+function code_queue_add(code) {
+    program_state.code_queue.push(code);
+    code_queue_check();
+}
+
+function code_queue_check() {
+    if (program_state.mode === 'stopped') {
+        code_queue_service();
+    }
+}
+
+function code_queue_service() {
+    if (program_state.code_queue.length > 0) {
+        var code = program_state.code_queue.shift();
+        program_state.rte = jev.runSetup(code,
+                                         {globalObject: cb.globalObject});
+        cb.execute(false);
+    }
+}
 
 function setControllerState(controller, enabled) {
     $(".dropdown-toggle", controller).toggleClass('disabled', !enabled);
@@ -1052,6 +1073,8 @@ cb.execute2 = function (single_step) {
     }
 
     cb.enterMode(newMode);
+
+    code_queue_check();
 };
 
 cb.run = function(single_step) {
@@ -1087,6 +1110,7 @@ cb.run = function(single_step) {
             set_prompt(cb.repl);
             cb.repl.refresh();
             cb.enterMode('stopped');
+            code_queue_check();
             return;
         }
     }
@@ -1094,8 +1118,7 @@ cb.run = function(single_step) {
     cb.repl.cb.history.add(str);
     cb.transcript.addLine(str, "transcript-input");
 
-    var code_gen = function ()
-                   {
+    var code_gen = function () {
                        return cb.compile_repl_expression(source, line, ch);
                    };
 
@@ -1112,8 +1135,7 @@ cb.load = function(filename, single_step) {
     cb.repl.cb.history.add(src);
     cb.transcript.addLine(src, "transcript-input");
 
-    var code_gen = function ()
-                   {
+    var code_gen = function () {
                        return cb.compile_internal_file(filename);
                    };
 

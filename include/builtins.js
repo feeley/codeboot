@@ -142,3 +142,52 @@ builtin_setPixel.toString = function () {
 };
 
 cb.addGlobal("setPixel", builtin_setPixel);
+
+// setTimeout
+
+function builtin_setTimeout(func, delay) {
+    throw "setTimeout must be called from codeBoot code";
+}
+
+builtin_setTimeout.toString = function () {
+    return "function setTimeout(func, delay) { ... }";
+};
+
+builtin_setTimeout._apply_ = function (rte, cont, this_, params) {
+
+    var func = params[0];
+    var delay = params[1];
+    var args = Array.prototype.slice.call(arguments, 2);
+
+    if (typeof func !== "function" || !("_apply_" in func)) {
+        throw "setTimeout expects a function as first parameter";
+    }
+
+    var hostGlobalObject = (function () { return this; }());
+
+    var f = function () {
+        code_queue_add(
+            function (rte, cont) {
+                return func._apply_(rte, cont, rte.glo, args);
+            });
+    };
+
+    var result = setTimeout.apply(hostGlobalObject, [f, delay]);
+
+    return cont(rte, result);
+};
+
+cb.addGlobal("setTimeout", builtin_setTimeout);
+
+// clearTimeout
+
+function builtin_clearTimeout(timeoutID) {
+    var hostGlobalObject = (function () { return this; }());
+    return clearTimeout.apply(hostGlobalObject, [timeoutID]);
+}
+
+builtin_clearTimeout.toString = function () {
+    return "function clearTimeout(timeoutID) { ... }";
+};
+
+cb.addGlobal("clearTimeout", builtin_clearTimeout);
