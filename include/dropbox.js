@@ -18,12 +18,10 @@ function cb_refresh(){
     function handleReadyStateChange() {
 	console.log('on ready state change');
 	console.log('ready state changed : ' + http.readyState);
-	// document.getElementById("response").innerHTML = http.responseText;
 	
 	if (http.readyState == 4) {
             if (http.status == 200) {
-		document.getElementById("response").innerHTML=http.responseText;
-		console.log('ready state changed');
+		console.log('WORKED');
 		
 		console.log('Response text : ' + http.responseText);
 		console.log(http);
@@ -39,15 +37,29 @@ function cb_refresh(){
 
 function cb_refreshing(){
     var file;
-    $.ajax({
-	url: "http://localhost:3000/test/get",
-	type: "GET",
-	async: false,
-	success: function(data){
-	    file = data;
-	}
-    });
-    console.log(file);
+    // $.ajax({
+    // 	url: "http://localhost:3000/test/get",
+    // 	type: "GET",
+    // 	async: false,
+    // 	success: function(data){
+    // 	    file = data;
+    // 	}
+    // });
+    // console.log(file);
+    $.get(
+        'http://localhost:3000/test/get', 
+        { 'result': result }, 
+        function(data) {
+	    console.log(data);
+            // $.post(
+            //     '/auth_validate_username/', 
+            //     { 'username': username }, 
+            //     function(data) { 
+            //         $('.error_message').html(data); 
+            //     }
+            // );
+        }
+    );
 
 
 }
