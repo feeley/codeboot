@@ -37,7 +37,7 @@ function cb_refresh(){
     }
 }
 
-function cb_refresh2(){
+function cb_refreshing(){
     var file;
     $.ajax({
 	url: "http://localhost:3000/test/get",
