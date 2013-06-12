@@ -1,4 +1,4 @@
-function createCodeEditor(node) {
+function createCodeEditor(node, file) {
     var options = {
         value: "",
         mode:  "javascript",
@@ -14,7 +14,10 @@ function createCodeEditor(node) {
                 var tok = cm.getTokenAt(cm.getCursor(false));
                 var isComment = tok.className === "comment";
                 cm.commentRange(!isComment, cm.getCursor(true), cm.getCursor(false));
-             }
+             },
+             "F5" : function () { cb_action_fileStepOne(file); },
+             "F6" : function () { cb_action_fileAnimate(file); },
+             "F7" : function () { cb_action_fileExecute(file); }
         },
 
         onDragEvent: function(cm, event) {
@@ -187,7 +190,8 @@ function createREPL(node) {
                 cm.cb.history.next();
                 return true;
             },
-            "Ctrl-\\": function (cm) { Mousetrap.trigger("ctrl+\\"); }
+            "Ctrl-\\": function (cm) { Mousetrap.trigger("ctrl+\\"); },
+            "F5" : function (cm) { cb.animate(0); }
         },
         onKeyEvent: function (cm, event) {
             if (cm.busy) {

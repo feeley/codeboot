@@ -442,6 +442,32 @@ function endsWith(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }
 
+function cb_action_fileStepOne(file) {
+	if (program_state.mode === 'stopped') {
+		program_state.step_delay = 0;
+		cb.load(file.filename, true);
+	} else {
+		cb.animate(0);
+	}
+}
+
+function cb_action_fileAnimate(file) {
+	if (program_state.mode === 'stopped') {
+		program_state.step_delay = cb.stepDelay;
+		cb.load(file.filename, true);
+	} else {
+		cb.animate(cb.stepDelay);
+	}
+}
+
+function cb_action_fileExecute(file) {
+	if (program_state.mode === 'stopped') {
+		cb.load(file.filename, false);
+	} else {
+		cb.play();
+	}
+}
+
 cb.makeEditorToolbar = function (file) {
     var $toolbar = makeToolbar();
     $toolbar.attr('data-cb-exec', 'controller');
@@ -450,39 +476,19 @@ cb.makeEditorToolbar = function (file) {
     	{
     		title: "Step",
     		icons: ["icon-play", "icon-exp-pause"],
-    		action: function () {
-				if (program_state.mode === 'stopped') {
-					program_state.step_delay = 0;
-					cb.load(file.filename, true);
-				} else {
-					cb.animate(0);
-				}
-			}
+    		action: function () { cb_action_fileStepOne(file); }
     	},
 
     	{
     		title: "Execute",
     		icons: ["icon-play", "icon-exp-infinity"],
-    		action: function () {
-				if (program_state.mode === 'stopped') {
-					cb.load(file.filename, false);
-				} else {
-					cb.play();
-				}
-			}
+    		action: function () { cb_action_fileExecute(file); }
     	},
 
     	{
 			title: "Animate",
     		icons: ["icon-play"],
-    		action: function () {
-				if (program_state.mode === 'stopped') {
-					program_state.step_delay = cb.stepDelay;
-					cb.load(file.filename, true);
-				} else {
-					cb.animate(cb.stepDelay);
-				}
-			}
+    		action: function () { cb_action_fileAnimate(file); }
     	}
     ];
 
@@ -595,7 +601,7 @@ cb.makeLHSEditorToolbar = function (file) {
 var SAVE_DELAY = 300; // length of window (in ms) during which changes will be buffered
 
 function createFileEditor(node, file) {
-    var editor = createCodeEditor(node);
+    var editor = createCodeEditor(node, file);
 
     file.editor = editor;
     editor.setValue(file.content);
