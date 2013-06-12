@@ -191,7 +191,11 @@ function createREPL(node) {
                 return true;
             },
             "Ctrl-\\": function (cm) { Mousetrap.trigger("ctrl+\\"); },
-            "F5" : function (cm) { cb.animate(0); }
+            "F5" : function (cm) { cb.animate(0); },
+            "F6" : function (cm) { cb.animate(cb.stepDelay); },
+            "Shift-F6" : function (cm) { if (!$('#pause-button').is('.disabled')) cb.animate(0); },
+            "F7" : function (cm) { cb.play(); },
+            "F8" : function (cm) { if (!$('#cancel-button').is('.disabled')) cb.cancel(); },
         },
         onKeyEvent: function (cm, event) {
             if (cm.busy) {
