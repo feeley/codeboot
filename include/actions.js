@@ -1004,6 +1004,15 @@ uninteresting_global["setScreenMode"] = true;
 uninteresting_global["getScreenWidth"] = true;
 uninteresting_global["getScreenHeight"] = true;
 uninteresting_global["setPixel"] = true;
+uninteresting_global["cs"] = true;
+uninteresting_global["st"] = true;
+uninteresting_global["ht"] = true;
+uninteresting_global["pu"] = true;
+uninteresting_global["pd"] = true;
+uninteresting_global["fd"] = true;
+uninteresting_global["bk"] = true;
+uninteresting_global["lt"] = true;
+uninteresting_global["rt"] = true;
 
 cb.execute = function (single_step) {
 

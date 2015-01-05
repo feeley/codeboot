@@ -265,6 +265,10 @@ div.tab-pane {
     opacity: 1;
 }
 
+#drawing-window {
+    float: right;
+}
+
 /* ----- REPL ----- */
 
 #repl.busy .CodeMirror-cursor {

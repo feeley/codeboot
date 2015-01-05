@@ -103,6 +103,8 @@
                     <li><a id="setting-speed-fast" href="#" data-radio-group="speed" onclick="setStepDelay(125);"><i class="icon-none"></i> Fast</a></li>
                     <li class="nav-header">Editing</li>
                     <li><a id="setting-linenums" href="#" data-toggle="checkbox" onclick="cb.toggleLineNumbers();"><i class="icon-none"></i> Show line numbers</a></li>
+                    <li class="nav-header">Graphics</li>
+                    <li><a id="setting-linenums" href="#" onclick="cb.toggleDrawingWindow();"><i id="show-drawing-window-icon" class="icon-none"></i> Show drawing window</a></li>
                 </ul>
               </div>
           </div>
@@ -126,8 +128,17 @@
 
       <!-- Console -->
       <div id="floating-console">
-        <div id="console-row" class="row">
-          <pre id="repl"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"><div id="transcript-clear-btn"><a title="Clear console" href="#" onclick="cb.clearAll();" data-cb-focus="restore"><i class="icon-trash"></i></a></div></div></pre>
+        <div id="console-row" class="row-fluid">
+          <div class="span12">
+            <div class="row-fluid">
+              <div id="repl-span" class="span12">
+                <pre id="repl"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"><div id="transcript-clear-btn"><a title="Clear console" href="#" onclick="cb.clearAll();" data-cb-focus="restore"><i class="icon-trash"></i></a></div></div></pre>
+              </div>
+              <div id="drawing-span" class="span0">
+                <div id="drawing-window"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div id="step-value-row" class="row">
@@ -262,6 +273,14 @@
                    f.editor.setOption("lineNumbers", cb.options.showLineNumbers);
                }
             });
+        };
+
+        cb.toggleDrawingWindow = function () {
+            if (showing_drawing_window()) {
+              hide_drawing_window();
+            } else {
+              show_drawing_window();
+            }
         };
 
         function cb_internal_getBounds($element) {
@@ -426,6 +445,7 @@
 
         }
     </script>
+    <script src="include/drawing.js"></script>
     <script src="include/actions.js"></script>
     <script src="include/editors.js"></script>
     <script src="include/builtins.js"></script>

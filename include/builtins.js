@@ -143,6 +143,78 @@ builtin_setPixel.toString = function () {
 
 cb.addGlobal("setPixel", builtin_setPixel);
 
+// cs
+
+builtin_cs.toString = function () {
+    return "function cs() { ... }";
+};
+
+cb.addGlobal("cs", builtin_cs);
+
+// pu
+
+builtin_pu.toString = function () {
+    return "function pu() { ... }";
+};
+
+cb.addGlobal("pu", builtin_pu);
+
+// pd
+
+builtin_pd.toString = function () {
+    return "function pd() { ... }";
+};
+
+cb.addGlobal("pd", builtin_pd);
+
+// st
+
+builtin_st.toString = function () {
+    return "function st() { ... }";
+};
+
+cb.addGlobal("st", builtin_st);
+
+// ht
+
+builtin_ht.toString = function () {
+    return "function ht() { ... }";
+};
+
+cb.addGlobal("ht", builtin_ht);
+
+// fd
+
+builtin_fd.toString = function () {
+    return "function fd(distance) { ... }";
+};
+
+cb.addGlobal("fd", builtin_fd);
+
+// bk
+
+builtin_bk.toString = function () {
+    return "function bk(distance) { ... }";
+};
+
+cb.addGlobal("bk", builtin_bk);
+
+// lt
+
+builtin_lt.toString = function () {
+    return "function lt(angle) { ... }";
+};
+
+cb.addGlobal("lt", builtin_lt);
+
+// rt
+
+builtin_rt.toString = function () {
+    return "function rt(angle) { ... }";
+};
+
+cb.addGlobal("rt", builtin_rt);
+
 // setTimeout
 
 function builtin_setTimeout(func, delay) {
