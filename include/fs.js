@@ -444,27 +444,25 @@ function endsWith(str, suffix) {
 
 function cb_action_fileStepOne(file) {
 	if (program_state.mode === 'stopped') {
-		program_state.step_delay = 0;
-		cb.load(file.filename, true);
+		cb.load(file.filename, 'step');
 	} else {
-		cb.animate(0);
+		cb.ui_event('step');
 	}
 }
 
 function cb_action_fileAnimate(file) {
 	if (program_state.mode === 'stopped') {
-		program_state.step_delay = cb.stepDelay;
-		cb.load(file.filename, true);
+		cb.load(file.filename, 'animate');
 	} else {
-		cb.animate(cb.stepDelay);
+		cb.ui_event('animate');
 	}
 }
 
 function cb_action_fileExecute(file) {
 	if (program_state.mode === 'stopped') {
-		cb.load(file.filename, false);
+		cb.load(file.filename, 'play');
 	} else {
-		cb.play();
+		cb.ui_event('play');
 	}
 }
 

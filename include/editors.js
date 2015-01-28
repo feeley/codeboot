@@ -177,11 +177,16 @@ function createREPL(node) {
         matchBrackets: true,
         gutters: ["CodeMirror-linenumbers", "cb-prompt"],
         extraKeys: {
-            "Ctrl-C": function (cm) { cb.clearREPL(); cm.cb.history.resetPos(); },
-            "Ctrl-L": function (cm) { cb.clearAll(); cm.cb.history.resetPos(); },
+            "Ctrl-C": function (cm) { cb.cancel(); },
+            "Ctrl-L": function (cm) { cb.cancel(); cb.clearAll(); cm.cb.history.resetPos(); },
             "Ctrl-Enter": function(cm) { cm.autoInsertBraces(cm); },
-            "Shift-Enter": function(cm) { cb.animate(0); },
-            "Enter": function(cm) { cb.run(false); },
+            "Shift-Enter": function(cm) { cb.ui_event('step'); },
+            "Enter": function(cm) {
+                if (program_state.rte !== null) // currently running code?
+                    cb.ui_event('step');
+                else
+                    cb.ui_event('play');
+            },
             "Up": function (cm) {
                 cm.cb.history.previous();
                 return true;
@@ -191,11 +196,11 @@ function createREPL(node) {
                 return true;
             },
             "Ctrl-\\": function (cm) { Mousetrap.trigger("ctrl+\\"); },
-            "F5" : function (cm) { cb.animate(0); },
-            "F6" : function (cm) { cb.animate(cb.stepDelay); },
-            "Shift-F6" : function (cm) { if (!$('#pause-button').is('.disabled')) cb.animate(0); },
-            "F7" : function (cm) { cb.play(); },
-            "F8" : function (cm) { if (!$('#cancel-button').is('.disabled')) cb.cancel(); },
+            "F5" : function (cm) { cb.ui_event('step'); },
+            "F6" : function (cm) { cb.ui_event('animate'); },
+            "Shift-F6" : function (cm) { if (!$('#pause-button').is('.disabled')) cb.ui_event('pause'); },
+            "F7" : function (cm) { cb.ui_event('play'); },
+            "F8" : function (cm) { if (!$('#cancel-button').is('.disabled')) cb.ui_event('cancel'); },
         },
         onKeyEvent: function (cm, event) {
             if (cm.busy) {

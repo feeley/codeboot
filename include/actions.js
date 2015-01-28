@@ -448,7 +448,7 @@ cb.replay = function () {
                     cb.repl.refresh();
                     cb.repl.focus();
                 } else {
-                    cb.run(false);
+                    cb.ui_event('play');
                     j += 2;
                 }
             } else if (command.charAt(j+1) === "S") {
@@ -457,7 +457,7 @@ cb.replay = function () {
                     cb.repl.refresh();
                     cb.repl.focus();
                 } else {
-                    cb.animate(0);
+                    cb.ui_event('step');
                     j += 2;
                 }
             } else if (command.charAt(j+1) === "A") {
@@ -466,7 +466,7 @@ cb.replay = function () {
                     cb.repl.refresh();
                     cb.repl.focus();
                 } else {
-                    cb.animate(500);
+                    cb.ui_event('animate');
                     j += 2;
                 }
             } else if (command.charAt(j+1) === "E") {
@@ -637,7 +637,7 @@ cb.enterMode = function (newMode) {
         }
     } else if (newMode === 'stopped' && program_state.step_counter != null) {
         // Clone the widget rather than attempt to reset its positioning for now
-        // TODO: move the widget rather the clone it
+        // TODO: move the widget rather than clone it
         var $newWidget = $('<span class="badge badge-info exec-lbl-count"/>');
         $oldWidget = $(program_state.step_counter);
         $newWidget.text($oldWidget.text());
@@ -646,29 +646,62 @@ cb.enterMode = function (newMode) {
         program_state.step_counter = null;
     }
 
+    cb.setMode(newMode);
+};
+
+cb.setMode = function (newMode) {
     program_state.mode = newMode;
+};
+
+// UI event handling
+
+cb.last_ui_event = 'cancel';
+
+cb.repeat_last_ui_event = function () {
+    cb.ui_event(cb.last_ui_event);
+};
+
+cb.ui_event = function (event) {
+
+    cb.last_ui_event = event;
+
+    switch (event) {
+
+        case 'step':
+        case 'pause':
+        cb.animate(0);
+        break;
+
+        case 'animate':
+        cb.animate(cb.stepDelay);
+        break;
+
+        case 'play':
+        cb.play();
+        break;
+
+        case 'cancel':
+        cb.cancel();
+        break;
+    }
 };
 
 cb.animate = function (new_step_delay) {
     program_state.step_delay = new_step_delay;
-    cb.step();
-};
-
-cb.play_or_step = function (single_step) {
-    cb.repl.focus();
-    if (program_state.rte !== null)
-        cb.execute(single_step);
-    else
-        cb.run(single_step);
+    cb.play_or_animate(true);
 };
 
 cb.play = function () {
-    program_state.mode = "animating";
-    cb.play_or_step(false);
+    cb.setMode("animating");
+    cb.play_or_animate(false);
 };
 
-cb.step = function () {
-    cb.play_or_step(true);
+cb.play_or_animate = function (single_step) {
+    cb.repl.focus();
+    if (program_state.rte !== null) // currently running code?
+        cb.execute(single_step);
+    else
+        cb.run(single_step);
 };
 
 cb.cancel_animation = function () {
@@ -1086,7 +1119,7 @@ cb.execute2 = function (single_step) {
     code_queue_check();
 };
 
-cb.run = function(single_step) {
+cb.run = function (single_step) {
 
     var str = cb.repl.getValue();
     set_prompt(cb.repl, "");
@@ -1134,7 +1167,20 @@ cb.run = function(single_step) {
     cb.run_setup_and_execute(code_gen, single_step);
 };
 
-cb.load = function(filename, single_step) {
+cb.load = function(filename, event) {
+
+    cb.last_ui_event = event;
+
+    switch (event) {
+
+        case 'step':
+        program_state.step_delay = 0;
+        break;
+
+        case 'animate':
+        program_state.step_delay = cb.stepDelay;
+        break;
+    }
 
     var src = "load(\"" + filename + "\")";
 
@@ -1148,7 +1194,7 @@ cb.load = function(filename, single_step) {
                        return cb.compile_internal_file(filename);
                    };
 
-    cb.run_setup_and_execute(code_gen, single_step);
+    cb.run_setup_and_execute(code_gen, event !== 'play');
 };
 
 cb.globalObject = {};
@@ -1210,7 +1256,25 @@ function builtin_pause(filename) {
 
 builtin_pause._apply_ = function (rte, cont, this_, params) {
 
+    var delay = params[0];
+
+    if (params.length === 0) {
+        delay = Infinity;
+    } else if (typeof delay !== "number" || delay < 0) {
+        return abort_fn_body(rte, void 0, "delay parameter of pause must be a non-negative number");
+    }
+
     var code = function (rte, cont) {
+
+        if (delay !== Infinity) {
+            cb.cancel_animation();
+            program_state.timeout_id = setTimeout(function ()
+                                                  {
+                                                      cb.repeat_last_ui_event();
+                                                  },
+                                                  delay*1000);
+        }
+
         return abort_fn_body(rte, void 0);
     };
 
