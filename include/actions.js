@@ -1256,15 +1256,15 @@ function builtin_pause(filename) {
 
 builtin_pause._apply_ = function (rte, cont, this_, params) {
 
-    var delay = params[0];
-
-    if (params.length === 0) {
-        delay = Infinity;
-    } else if (typeof delay !== "number" || delay < 0) {
-        return abort_fn_body(rte, void 0, "delay parameter of pause must be a non-negative number");
-    }
-
     var code = function (rte, cont) {
+
+        var delay = params[0];
+
+        if (params.length === 0) {
+            delay = Infinity;
+        } else if (typeof delay !== "number" || delay < 0) {
+            return abort_fn_body(rte, void 0, "delay parameter of pause must be a non-negative number");
+        }
 
         if (delay !== Infinity) {
             cb.cancel_animation();
