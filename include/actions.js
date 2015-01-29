@@ -1262,7 +1262,7 @@ builtin_pause._apply_ = function (rte, cont, this_, params) {
 
         if (params.length === 0) {
             delay = Infinity;
-        } else if (typeof delay !== "number" || delay < 0) {
+        } else if (typeof delay !== "number" || !(delay >= 0)) {
             return abort_fn_body(rte, void 0, "delay parameter of pause must be a non-negative number");
         }
 
