@@ -245,7 +245,7 @@ function editor_URL(content, filename) {
            "/query.cgi?replay%25=" +
            encodeURIComponent(("@C" +
                                (filename === void 0 ? "" : (filename + "@0")) +
-                               content + "@E").replace(/%/g,"%25").replace(/\n/g,"@N"));
+                               content + "@E").replace(/\n/g,"@N"));
 }
 
 function object_repr(obj, format, limit) {
