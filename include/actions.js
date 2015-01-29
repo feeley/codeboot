@@ -1303,7 +1303,7 @@ builtin_assert._apply_ = function (rte, cont, this_, params) {
                                  params[1]);
         }
 
-        return cont(rte, void 0);
+        return return_fn_body(rte, void 0);
     };
 
     return exec_fn_body(code,
@@ -1364,7 +1364,7 @@ builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
         cb.screenWidth = width;
         cb.screenHeight = height;
 
-        return cont(rte, void 0);
+        return return_fn_body(rte, void 0);
     };
 
     return exec_fn_body(code,
@@ -1478,7 +1478,7 @@ builtin_setPixel._apply_ = function (rte, cont, this_, params) {
                                  (256+color.g).toString(16).slice(1) +
                                  (256+color.b).toString(16).slice(1));
 
-        return cont(rte, void 0);
+        return return_fn_body(rte, void 0);
     };
 
     return exec_fn_body(code,

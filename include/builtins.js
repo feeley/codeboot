@@ -227,26 +227,47 @@ builtin_setTimeout.toString = function () {
 
 builtin_setTimeout._apply_ = function (rte, cont, this_, params) {
 
-    var func = params[0];
-    var delay = params[1];
-    var args = Array.prototype.slice.call(arguments, 2);
+    var code = function (rte, cont) {
 
-    if (typeof func !== "function" || !("_apply_" in func)) {
-        throw "setTimeout expects a function as first parameter";
-    }
+        var func = params[0];
+        var delay = params[1];
+        var args = params.slice(2);
 
-    var hostGlobalObject = (function () { return this; }());
+        if (params.length < 2) {
+            return abort_fn_body(rte, void 0, "setTimeout expects at least 2 parameters");
+        }
 
-    var f = function () {
-        code_queue_add(
-            function (rte, cont) {
-                return func._apply_(rte, cont, rte.glo, args);
-            });
+        if (typeof func !== "function" || !("_apply_" in func)) {
+            return abort_fn_body(rte, void 0, "func parameter of setTimeout must be a function");
+        }
+
+        if (typeof delay !== "number") {
+            return abort_fn_body(rte, void 0, "delay parameter of setTimeout must be a number");
+        }
+
+        var hostGlobalObject = (function () { return this; }());
+
+        var f = function () {
+            code_queue_add(
+                function (rte, cont) {
+                    return func._apply_(rte, cont, rte.glo, args);
+                });
+        };
+
+        var result = setTimeout.apply(hostGlobalObject, [f, delay]);
+
+        return return_fn_body(rte, result);
     };
 
-    var result = setTimeout.apply(hostGlobalObject, [f, delay]);
-
-    return cont(rte, result);
+    return exec_fn_body(code,
+                        builtin_setTimeout,
+                        rte,
+                        cont,
+                        this_,
+                        params,
+                        [],
+                        null,
+                        null);
 };
 
 cb.addGlobal("setTimeout", builtin_setTimeout);
