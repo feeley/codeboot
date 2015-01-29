@@ -242,7 +242,7 @@ function editor_URL(content, filename) {
                document.location.pathname.replace(/\/[^/]*$/g,"");
 
     return site +
-           "/query.cgi?replay%=" +
+           "/query.cgi?replay%25=" +
            encodeURIComponent(("@C" +
                                (filename === void 0 ? "" : (filename + "@0")) +
                                content + "@E").replace(/\n/g,"@N"));
