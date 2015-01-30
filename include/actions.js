@@ -241,11 +241,10 @@ function editor_URL(content, filename) {
     var site = document.location.origin +
                document.location.pathname.replace(/\/[^/]*$/g,"");
 
-    return site +
-           "/query.cgi?replay%25=" +
-           encodeURIComponent(("@C" +
-                               (filename === void 0 ? "" : (filename + "@0")) +
-                               content + "@E").replace(/\n/g,"@N"));
+    return site + "/query.cgi?" + "REPLAY=" +
+           btoa(encode_utf8(("@C" +
+                             (filename === void 0 ? "" : (filename + "@0")) +
+                             content + "@E").replace(/\n/g,"@N")));
 }
 
 function object_repr(obj, format, limit) {
@@ -384,6 +383,14 @@ cb.query = function (query) {
     cb.replay_parameters = [];
 };
 
+function encode_utf8(str) {
+    return unescape(encodeURIComponent(str));
+}
+
+function decode_utf8(str) {
+    return decodeURIComponent(escape(str));
+}
+
 cb.handle_query = function () {
 
     var query = cb.saved_query;
@@ -393,6 +400,13 @@ cb.handle_query = function () {
         cb.replay_command = decodeURIComponent(query.slice(7));
         cb.replay_command_index = 0;
         cb.replay_syntax = 1;
+
+        setTimeout(function () { cb.replay(); }, 100);
+    } else if (query && query.slice(0, 7) === "REPLAY=") {
+
+        cb.replay_command = decode_utf8(atob(query.slice(7)));
+        cb.replay_command_index = 0;
+        cb.replay_syntax = 2;
 
         setTimeout(function () { cb.replay(); }, 100);
     } else if (query && query.slice(0, 10) === "replay%25=") {
