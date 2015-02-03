@@ -215,6 +215,14 @@ builtin_rt.toString = function () {
 
 cb.addGlobal("rt", builtin_rt);
 
+// setpc
+
+builtin_setpc.toString = function () {
+    return "function setpc(r, g, b) { ... }";
+};
+
+cb.addGlobal("setpc", builtin_setpc);
+
 // setTimeout
 
 function builtin_setTimeout(func, delay) {

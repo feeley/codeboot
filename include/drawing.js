@@ -125,6 +125,28 @@ function DrawingWindow(id, width, height) {
   }
 }
 
+DrawingWindow.prototype.export = function (thunk) {
+
+    var w = this.drawing_canvas.width;
+    var h = this.drawing_canvas.height;
+    var c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    var ctx = c.getContext('2d');
+
+    ctx.fillStyle = 'rgba(255,255,255,1)';
+    ctx.fillRect(0,0,w,h);
+
+    ctx.drawImage(this.grid_canvas, 0, 0);
+    ctx.drawImage(this.drawing_canvas, 0, 0);
+    ctx.drawImage(this.turtle_canvas, 0, 0);
+
+    var URL = c.toDataURL();
+    $("#urlModal-body").text(URL);
+    $("#urlModal-clippy").empty().clippy({clippy_path: "clippy.swf", text: URL});
+    $("#urlModal").modal('show');
+};
+
 DrawingWindow.prototype.excursion = function (thunk) {
   var result;
   var pos = this.pos;
@@ -248,6 +270,10 @@ DrawingWindow.prototype.rt = function (angle) {
   }
 };
 
+DrawingWindow.prototype.setpc = function (r, g, b) {
+  this.set_color('rgb('+Math.floor(r*255)+','+Math.floor(g*255)+','+Math.floor(b*255)+')');
+};
+
 var drawing_window;
 
 function init_drawing_window(width, height) {
@@ -259,6 +285,10 @@ init_drawing_window(360, 200);
 
 function showing_drawing_window() {
   return document.getElementById("repl-span").className === "span6";
+}
+
+function export_drawing_window() {
+  drawing_window.export();
 }
 
 function show_drawing_window() {
@@ -331,4 +361,9 @@ function builtin_lt(angle) {
 function builtin_rt(angle) {
   ensure_showing_drawing_window();
   drawing_window.rt(angle);
+}
+
+function builtin_setpc(r, g, b) {
+  ensure_showing_drawing_window();
+  drawing_window.setpc(r, g, b);
 }

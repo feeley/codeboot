@@ -106,6 +106,7 @@
                     <li><a id="setting-linenums" href="#" data-toggle="checkbox" onclick="cb.toggleLineNumbers();"><i class="icon-none"></i> Show line numbers</a></li>
                     <li class="nav-header">Graphics</li>
                     <li><a id="setting-linenums" href="#" onclick="cb.toggleDrawingWindow();"><i id="show-drawing-window-icon" class="icon-none"></i> Show drawing window</a></li>
+                    <li><a id="setting-linenums" href="#" onclick="cb.exportDrawingWindow();"><i id="export-drawing-window-icon" class="icon-none"></i> Export drawing window</a></li>
                 </ul>
               </div>
           </div>
@@ -282,6 +283,10 @@
             } else {
               show_drawing_window();
             }
+        };
+
+        cb.exportDrawingWindow = function () {
+            export_drawing_window();
         };
 
         function cb_internal_getBounds($element) {

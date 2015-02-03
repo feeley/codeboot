@@ -505,6 +505,7 @@ cb.replay = function () {
                 j += 2;
             } else if (command.charAt(j+1) === "C") {
                 cb.closeAll();
+                drawing_window.cs();
                 j += 2;
             } else {
                 // unknown command
@@ -1060,6 +1061,7 @@ uninteresting_global["fd"] = true;
 uninteresting_global["bk"] = true;
 uninteresting_global["lt"] = true;
 uninteresting_global["rt"] = true;
+uninteresting_global["setpc"] = true;
 
 cb.execute = function (single_step) {
 
