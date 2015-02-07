@@ -274,6 +274,10 @@ DrawingWindow.prototype.setpc = function (r, g, b) {
   this.set_color('rgb('+Math.floor(r*255)+','+Math.floor(g*255)+','+Math.floor(b*255)+')');
 };
 
+DrawingWindow.prototype.setpw = function (width) {
+  this.set_thickness(width);
+};
+
 var drawing_window;
 
 function init_drawing_window(width, height) {
@@ -366,4 +370,9 @@ function builtin_rt(angle) {
 function builtin_setpc(r, g, b) {
   ensure_showing_drawing_window();
   drawing_window.setpc(r, g, b);
+}
+
+function builtin_setpw(width) {
+  ensure_showing_drawing_window();
+  drawing_window.setpw(width);
 }

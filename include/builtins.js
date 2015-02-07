@@ -223,6 +223,14 @@ builtin_setpc.toString = function () {
 
 cb.addGlobal("setpc", builtin_setpc);
 
+// setpw
+
+builtin_setpc.toString = function () {
+    return "function setpw(width) { ... }";
+};
+
+cb.addGlobal("setpw", builtin_setpw);
+
 // setTimeout
 
 function builtin_setTimeout(func, delay) {

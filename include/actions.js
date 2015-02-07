@@ -1062,6 +1062,7 @@ uninteresting_global["bk"] = true;
 uninteresting_global["lt"] = true;
 uninteresting_global["rt"] = true;
 uninteresting_global["setpc"] = true;
+uninteresting_global["setpw"] = true;
 
 cb.execute = function (single_step) {
 
@@ -1205,6 +1206,8 @@ cb.load = function(filename, event) {
 
     cb.repl.cb.history.add(src);
     cb.transcript.addLine(src, "transcript-input");
+
+    drawing_window.cs();
 
     var code_gen = function () {
                        return cb.compile_internal_file(filename);
