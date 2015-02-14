@@ -2669,12 +2669,12 @@ jev.sem_bounds_check = function (rte, cont, ast, x, y) {
             return jev.step_error(rte,
                                   cont,
                                   ast,
-                                  "index must be an integer");
+                                  "array index must be an integer");
         } else if (!(y >= 0 && y < x.length)) {
             return jev.step_error(rte,
                                   cont,
                                   ast,
-                                  "index out of bounds");
+                                  "array index is out of bounds");
         }
     }
     return true;
