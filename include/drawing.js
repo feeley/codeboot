@@ -9,6 +9,9 @@ function dom_create_canvas(id, width, height) {
   ctx.translate(width/2, height/2);
   ctx.scale(1, -1);
   ctx.lineCap = 'butt';
+  ctx.font = '10px Courier';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
   return c;
 }
 
@@ -111,15 +114,16 @@ function DrawingWindow(id, width, height) {
 
   var w2 = width/2;
   var h2 = height/2;
+  var grid_step = 10;
 
-  for (var x=0; x<=w2; x+=10) {
-    dom_set_thickness(this.grid_context, (x%50===0)?2:1);
+  for (var x=0; x<=w2; x+=grid_step) {
+    dom_set_thickness(this.grid_context, (x%(5*grid_step)===0)?2:1);
     dom_line_to(this.grid_context, x, -h2, x, h2);
     dom_line_to(this.grid_context, -x, -h2, -x, h2);
   }
 
-  for (var y=0; y<=h2; y+=10) {
-    dom_set_thickness(this.grid_context, (y%50===0)?2:1);
+  for (var y=0; y<=h2; y+=grid_step) {
+    dom_set_thickness(this.grid_context, (y%(5*grid_step)===0)?2:1);
     dom_line_to(this.grid_context, -w2, y, w2, y);
     dom_line_to(this.grid_context, -w2, -y, w2, -y);
   }
@@ -278,6 +282,16 @@ DrawingWindow.prototype.setpw = function (width) {
   this.set_thickness(width);
 };
 
+DrawingWindow.prototype.drawtext = function (text) {
+  var ctx = this.drawing_context;
+  ctx.save();
+  ctx.translate(this.pos.x, this.pos.y);
+  ctx.rotate((Math.PI/180)*this.orientation);
+  ctx.scale(1, -1);
+  dom_fill_text(ctx, text+"", 0, 0);
+  ctx.restore();
+};
+
 var drawing_window;
 
 function init_drawing_window(width, height) {
@@ -375,4 +389,9 @@ function builtin_setpc(r, g, b) {
 function builtin_setpw(width) {
   ensure_showing_drawing_window();
   drawing_window.setpw(width);
+}
+
+function builtin_drawtext(text) {
+  ensure_showing_drawing_window();
+  drawing_window.drawtext(text);
 }

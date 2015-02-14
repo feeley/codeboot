@@ -1063,6 +1063,7 @@ uninteresting_global["lt"] = true;
 uninteresting_global["rt"] = true;
 uninteresting_global["setpc"] = true;
 uninteresting_global["setpw"] = true;
+uninteresting_global["drawtext"] = true;
 
 cb.execute = function (single_step) {
 

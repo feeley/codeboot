@@ -231,6 +231,14 @@ builtin_setpc.toString = function () {
 
 cb.addGlobal("setpw", builtin_setpw);
 
+// drawtext
+
+builtin_drawtext.toString = function () {
+    return "function drawtext(text) { ... }";
+};
+
+cb.addGlobal("drawtext", builtin_drawtext);
+
 // setTimeout
 
 function builtin_setTimeout(func, delay) {
