@@ -2,7 +2,7 @@
 
 // File: "eval.js"
 
-// Copyright (c) 2012 by Marc Feeley, All Rights Reserved.
+// Copyright (c) 2012-2015 by Marc Feeley, All Rights Reserved.
 
 //=============================================================================
 
@@ -1215,7 +1215,7 @@ jev.compExpr = function (cte, ast) {
             var code_expr0 = jev.compExpr(cte, ast.exprs[0]);
 
             return jev.gen_op_dyn(ast,
-                                  jev.pure_op1_to_semfn(ast.op),
+                                  jev.pure_op1_to_semfn(cte, ast.op),
                                   code_expr0);
 
         } else if (ast.op === "x ? y : z") {
@@ -1285,7 +1285,7 @@ jev.compExpr = function (cte, ast) {
 
             default:
                 return jev.gen_op_dyn_dyn(ast,
-                                          jev.pure_op2_to_semfn(ast.op),
+                                          jev.pure_op2_to_semfn(cte, ast.op),
                                           code_expr0,
                                           code_expr1);
 
@@ -1747,7 +1747,7 @@ jev.cte_access = function (cte, id_str) {
 
 jev.compOp1Assign = function (cte, ast, op1, lhs) {
 
-    var op = jev.assign_op1_to_semfn(op1);
+    var op = jev.assign_op1_to_semfn(cte, op1);
 
     if (is_prop_access(lhs)) {
 
@@ -1781,7 +1781,7 @@ jev.compOp1Assign = function (cte, ast, op1, lhs) {
 
 jev.compOp2Assign = function (cte, ast, op2, lhs, get_code_value) {
 
-    var op = jev.assign_op2_to_semfn(op2);
+    var op = jev.assign_op2_to_semfn(cte, op2);
 
     if (is_prop_access(lhs)) {
 
@@ -2197,7 +2197,7 @@ jev.gen_op_glo_cst_dyn = function (ast, semfn, res1, code2) {
            };
 };
 
-jev.pure_op1_to_semfn = function (op) {
+jev.pure_op1_to_semfn = function (cte, op) {
 
   switch (op) {
   case "void x": return jev.sem_void_x;
@@ -2209,21 +2209,38 @@ jev.pure_op1_to_semfn = function (op) {
   }
 };
 
-jev.assign_op1_to_semfn = function (op) {
+jev.assign_op1_to_semfn = function (cte, op) {
 
-  switch (op) {
-  case "delete x": return jev.sem_delete_x;
-  case "++ x": return jev.sem_plusplus_x;
-  case "-- x": return jev.sem_minusminus_x;
-  case "x ++": return jev.sem_x_plusplus;
-  case "x --": return jev.sem_x_minusminus;
-  }
+    if (cte.options.languageLevel === "novice") {
+
+        switch (op) {
+        case "delete x": return jev.sem_delete_x;
+        case "++ x": return jev.sem_plusplus_x_with_bounds_check;
+        case "-- x": return jev.sem_minusminus_x_with_bounds_check;
+        case "x ++": return jev.sem_x_plusplus_with_bounds_check;
+        case "x --": return jev.sem_x_minusminus_with_bounds_check;
+        }
+
+    } else {
+
+        switch (op) {
+        case "delete x": return jev.sem_delete_x;
+        case "++ x": return jev.sem_plusplus_x;
+        case "-- x": return jev.sem_minusminus_x;
+        case "x ++": return jev.sem_x_plusplus;
+        case "x --": return jev.sem_x_minusminus;
+        }
+
+    }
 };
 
-jev.pure_op2_to_semfn = function (op) {
+jev.pure_op2_to_semfn = function (cte, op) {
 
   switch (op) {
-  case "x [ y ]": return jev.sem_prop_index;
+  case "x [ y ]":
+      return (cte.options.languageLevel === "novice")
+             ? jev.sem_prop_index_with_bounds_check
+             : jev.sem_prop_index;
   case "x . y": return jev.sem_prop_access;
   case "x * y": return jev.sem_x_mult_y;
   case "x / y": return jev.sem_x_div_y;
@@ -2249,23 +2266,45 @@ jev.pure_op2_to_semfn = function (op) {
   }
 };
 
-jev.assign_op2_to_semfn = function (op) {
+jev.assign_op2_to_semfn = function (cte, op) {
 
-  switch (op) {
-  case "var x = y": return jev.sem_var_x_equal_y
-  case "x = y": return jev.sem_x_equal_y;
-  case "x += y": return jev.sem_x_plusequal_y;
-  case "x -= y": return jev.sem_x_minusequal_y;
-  case "x *= y": return jev.sem_x_multequal_y;
-  case "x /= y": return jev.sem_x_divequal_y;
-  case "x <<= y": return jev.sem_x_lshiftequal_y;
-  case "x >>= y": return jev.sem_x_rshiftequal_y;
-  case "x >>>= y": return jev.sem_x_urshiftequal_y;
-  case "x &= y": return jev.sem_x_bitandequal_y;
-  case "x ^= y": return jev.sem_x_bitxorequal_y;
-  case "x |= y": return jev.sem_x_bitorequal_y;
-  case "x %= y": return jev.sem_x_modequal_y;
-  }
+    if (cte.options.languageLevel === "novice") {
+
+        switch (op) {
+        case "var x = y": return jev.sem_var_x_equal_y;
+        case "x = y": return jev.sem_x_equal_y_with_bounds_check;
+        case "x += y": return jev.sem_x_plusequal_y_with_bounds_check;
+        case "x -= y": return jev.sem_x_minusequal_y_with_bounds_check;
+        case "x *= y": return jev.sem_x_multequal_y_with_bounds_check;
+        case "x /= y": return jev.sem_x_divequal_y_with_bounds_check;
+        case "x <<= y": return jev.sem_x_lshiftequal_y_with_bounds_check;
+        case "x >>= y": return jev.sem_x_rshiftequal_y_with_bounds_check;
+        case "x >>>= y": return jev.sem_x_urshiftequal_y_with_bounds_check;
+        case "x &= y": return jev.sem_x_bitandequal_y_with_bounds_check;
+        case "x ^= y": return jev.sem_x_bitxorequal_y_with_bounds_check;
+        case "x |= y": return jev.sem_x_bitorequal_y_with_bounds_check;
+        case "x %= y": return jev.sem_x_modequal_y_with_bounds_check;
+        }
+
+    } else {
+
+        switch (op) {
+        case "var x = y": return jev.sem_var_x_equal_y;
+        case "x = y": return jev.sem_x_equal_y;
+        case "x += y": return jev.sem_x_plusequal_y;
+        case "x -= y": return jev.sem_x_minusequal_y;
+        case "x *= y": return jev.sem_x_multequal_y;
+        case "x /= y": return jev.sem_x_divequal_y;
+        case "x <<= y": return jev.sem_x_lshiftequal_y;
+        case "x >>= y": return jev.sem_x_rshiftequal_y;
+        case "x >>>= y": return jev.sem_x_urshiftequal_y;
+        case "x &= y": return jev.sem_x_bitandequal_y;
+        case "x ^= y": return jev.sem_x_bitxorequal_y;
+        case "x |= y": return jev.sem_x_bitorequal_y;
+        case "x %= y": return jev.sem_x_modequal_y;
+        }
+
+    }
 };
 
 // Semantic functions.
@@ -2280,7 +2319,21 @@ jev.sem_plusplus_x = function (rte, cont, ast, obj, prop) { // "++ x"
     return jev.step_end(rte, cont, ast, result);
 };
 
+jev.sem_plusplus_x_with_bounds_check = function (rte, cont, ast, obj, prop) { // "++ x"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
+    var result = (++ obj[prop]);
+    return jev.step_end(rte, cont, ast, result);
+};
+
 jev.sem_minusminus_x = function (rte, cont, ast, obj, prop) { // "-- x"
+    var result = (-- obj[prop]);
+    return jev.step_end(rte, cont, ast, result);
+};
+
+jev.sem_minusminus_x_with_bounds_check = function (rte, cont, ast, obj, prop) { // "-- x"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
     var result = (-- obj[prop]);
     return jev.step_end(rte, cont, ast, result);
 };
@@ -2290,7 +2343,21 @@ jev.sem_x_plusplus = function (rte, cont, ast, obj, prop) { // "x ++"
     return jev.step_end(rte, cont, ast, result);
 };
 
+jev.sem_x_plusplus_with_bounds_check = function (rte, cont, ast, obj, prop) { // "x ++"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
+    var result = (obj[prop] ++);
+    return jev.step_end(rte, cont, ast, result);
+};
+
 jev.sem_x_minusminus = function (rte, cont, ast, obj, prop) { // "x --"
+    var result = (obj[prop] --);
+    return jev.step_end(rte, cont, ast, result);
+};
+
+jev.sem_x_minusminus_with_bounds_check = function (rte, cont, ast, obj, prop) { // "x --"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
     var result = (obj[prop] --);
     return jev.step_end(rte, cont, ast, result);
 };
@@ -2326,6 +2393,13 @@ jev.sem_excl_x = function (rte, cont, ast, x) { // "! x"
 };
 
 jev.sem_prop_index = function (rte, cont, ast, x, y) { // "x [ y ]"
+    var result = (x [ y ]);
+    return jev.step_end(rte, cont, ast, result);
+};
+
+jev.sem_prop_index_with_bounds_check = function (rte, cont, ast, x, y) { // "x [ y ]"
+    var status = jev.sem_bounds_check(rte, cont, ast, x, y);
+    if (status !== true) return status;
     var result = (x [ y ]);
     return jev.step_end(rte, cont, ast, result);
 };
@@ -2450,7 +2524,21 @@ jev.sem_x_equal_y = function (rte, cont, ast, obj, prop, y) { // "x = y"
     return jev.step_end(rte, cont, ast, result);
 };
 
+jev.sem_x_equal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x = y"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
+    var result = (obj[prop] = y);
+    return jev.step_end(rte, cont, ast, result);
+};
+
 jev.sem_x_plusequal_y = function (rte, cont, ast, obj, prop, y) { // "x += y"
+    var result = (obj[prop] += y);
+    return jev.step_end(rte, cont, ast, result);
+};
+
+jev.sem_x_plusequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x += y"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
     var result = (obj[prop] += y);
     return jev.step_end(rte, cont, ast, result);
 };
@@ -2460,7 +2548,21 @@ jev.sem_x_minusequal_y = function (rte, cont, ast, obj, prop, y) { // "x -= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
+jev.sem_x_minusequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x -= y"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
+    var result = (obj[prop] -= y);
+    return jev.step_end(rte, cont, ast, result);
+};
+
 jev.sem_x_multequal_y = function (rte, cont, ast, obj, prop, y) { // "x *= y"
+    var result = (obj[prop] *= y);
+    return jev.step_end(rte, cont, ast, result);
+};
+
+jev.sem_x_multequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x *= y"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
     var result = (obj[prop] *= y);
     return jev.step_end(rte, cont, ast, result);
 };
@@ -2470,7 +2572,21 @@ jev.sem_x_divequal_y = function (rte, cont, ast, obj, prop, y) { // "x /= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
+jev.sem_x_divequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x /= y"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
+    var result = (obj[prop] /= y);
+    return jev.step_end(rte, cont, ast, result);
+};
+
 jev.sem_x_lshiftequal_y = function (rte, cont, ast, obj, prop, y) { // "x <<= y"
+    var result = (obj[prop] <<= y);
+    return jev.step_end(rte, cont, ast, result);
+};
+
+jev.sem_x_lshiftequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x <<= y"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
     var result = (obj[prop] <<= y);
     return jev.step_end(rte, cont, ast, result);
 };
@@ -2480,7 +2596,21 @@ jev.sem_x_rshiftequal_y = function (rte, cont, ast, obj, prop, y) { // "x >>= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
+jev.sem_x_rshiftequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x >>= y"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
+    var result = (obj[prop] >>= y);
+    return jev.step_end(rte, cont, ast, result);
+};
+
 jev.sem_x_urshiftequal_y = function (rte, cont, ast, obj, prop, y) { // "x >>>= y"
+    var result = (obj[prop] >>>= y);
+    return jev.step_end(rte, cont, ast, result);
+};
+
+jev.sem_x_urshiftequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x >>>= y"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
     var result = (obj[prop] >>>= y);
     return jev.step_end(rte, cont, ast, result);
 };
@@ -2490,7 +2620,21 @@ jev.sem_x_bitandequal_y = function (rte, cont, ast, obj, prop, y) { // "x &= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
+jev.sem_x_bitandequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x &= y"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
+    var result = (obj[prop] &= y);
+    return jev.step_end(rte, cont, ast, result);
+};
+
 jev.sem_x_bitxorequal_y = function (rte, cont, ast, obj, prop, y) { // "x ^= y"
+    var result = (obj[prop] ^= y);
+    return jev.step_end(rte, cont, ast, result);
+};
+
+jev.sem_x_bitxorequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x ^= y"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
     var result = (obj[prop] ^= y);
     return jev.step_end(rte, cont, ast, result);
 };
@@ -2500,9 +2644,40 @@ jev.sem_x_bitorequal_y = function (rte, cont, ast, obj, prop, y) { // "x |= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
+jev.sem_x_bitorequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x |= y"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
+    var result = (obj[prop] |= y);
+    return jev.step_end(rte, cont, ast, result);
+};
+
 jev.sem_x_modequal_y = function (rte, cont, ast, obj, prop, y) { // "x %= y"
     var result = (obj[prop] %= y);
     return jev.step_end(rte, cont, ast, result);
+};
+
+jev.sem_x_modequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x %= y"
+    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+    if (status !== true) return status;
+    var result = (obj[prop] %= y);
+    return jev.step_end(rte, cont, ast, result);
+};
+
+jev.sem_bounds_check = function (rte, cont, ast, x, y) {
+    if (typeof x === "object" && x instanceof Array) {
+        if (!(typeof y === "number" && y === Math.floor(y))) {
+            return jev.step_error(rte,
+                                  cont,
+                                  ast,
+                                  "index must be an integer");
+        } else if (!(y >= 0 && y < x.length)) {
+            return jev.step_error(rte,
+                                  cont,
+                                  ast,
+                                  "index out of bounds");
+        }
+    }
+    return true;
 };
 
 //-----------------------------------------------------------------------------
