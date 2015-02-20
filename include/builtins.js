@@ -308,3 +308,19 @@ builtin_clearTimeout.toString = function () {
 };
 
 cb.addGlobal("clearTimeout", builtin_clearTimeout);
+
+// readFile
+
+builtin_readFile.toString = function () {
+    return "function readFile(filename) { ... }";
+};
+
+cb.addGlobal("readFile", builtin_readFile);
+
+// writeFile
+
+builtin_writeFile.toString = function () {
+    return "function writeFile(filename, content) { ... }";
+};
+
+cb.addGlobal("writeFile", builtin_writeFile);

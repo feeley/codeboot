@@ -1532,6 +1532,91 @@ builtin_load._apply_ = function (rte, cont, this_, params) {
                         null);
 };
 
+function builtin_readFile(filename) {
+    throw "unimplemented";///////////////////////////
+}
+
+builtin_readFile._apply_ = function (rte, cont, this_, params) {
+
+    var code = function (rte, cont) {
+
+        if (params.length !== 1) {
+            return abort_fn_body(rte, void 0, "readFile expects 1 parameter");
+        }
+
+        var filename = params[0];
+
+        if (typeof filename !== "string") {
+            return abort_fn_body(rte, void 0, "filename parameter of readFile must be a string");
+        }
+
+        var state;
+
+        try {
+            state = readFileInternal(filename);
+        }
+        catch (e) {
+            return abort_fn_body(rte, void 0, String(e));
+        }
+
+        return return_fn_body(rte, state.content);
+    };
+
+    return exec_fn_body(code,
+                        builtin_readFile,
+                        rte,
+                        cont,
+                        this_,
+                        params,
+                        [],
+                        null,
+                        null);
+};
+
+function builtin_writeFile(filename, content) {
+    throw "unimplemented";///////////////////////////
+}
+
+builtin_writeFile._apply_ = function (rte, cont, this_, params) {
+
+    var code = function (rte, cont) {
+
+        if (params.length !== 2) {
+            return abort_fn_body(rte, void 0, "writeFile expects 2 parameters");
+        }
+
+        var filename = params[0];
+        var content = params[1];
+
+        if (typeof filename !== "string") {
+            return abort_fn_body(rte, void 0, "filename parameter of writeFile must be a string");
+        }
+
+        if (typeof content !== "string") {
+            return abort_fn_body(rte, void 0, "content parameter of writeFile must be a string");
+        }
+
+        try {
+            writeFileInternal(filename, content);
+        }
+        catch (e) {
+            return abort_fn_body(rte, void 0, String(e));
+        }
+
+        return return_fn_body(rte, void 0);
+    };
+
+    return exec_fn_body(code,
+                        builtin_writeFile,
+                        rte,
+                        cont,
+                        this_,
+                        params,
+                        [],
+                        null,
+                        null);
+};
+
 cb.compile_repl_expression = function (source, line, ch) {
     return cb.compile(source,
                       new SourceContainer(source, "<REPL>", line+1, ch+1));
@@ -1601,6 +1686,22 @@ function readFileInternal(filename) {
         stamp: file.stamp,
         content: file.getContent(),
     };
+}
+
+function writeFileInternal(filename, content) {
+
+    var file;
+
+    if (cb.fs.hasFile(filename)) {
+        file = cb.fs.getByName(filename);
+    } else {
+        file = new CPFile(filename);
+        cb.fs.addFile(file);
+        cb.addFileToMenu(file);
+    }
+
+    file.content = content;
+    file.setContent(content);
 }
 
 cb.compile = function (source, container) {
