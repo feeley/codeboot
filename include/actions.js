@@ -1219,7 +1219,11 @@ cb.load = function(filename, event) {
 
 cb.globalObject = {};
 
-cb.addGlobal = function (name, value) {
+cb.getGlobal = function (name) {
+    return cb.globalObject[name];
+};
+
+cb.setGlobal = function (name, value) {
     cb.globalObject[name] = value;
 };
 

@@ -5,9 +5,22 @@ function importFromHost(global) {
     var hostGlobalObject = (function () { return this; }());
 
     if (global in hostGlobalObject) {
-        cb.addGlobal(global, hostGlobalObject[global]);
+        cb.setGlobal(global, hostGlobalObject[global]);
     }
 }
+
+function exportToHost(global) {
+
+    var hostGlobalObject = (function () { return this; }());
+
+    hostGlobalObject[global] = function () {
+        var fn = cb.getGlobal(global);
+        return fn.apply(hostGlobalObject, arguments);
+    };
+}
+
+exportToHost("clic");
+exportToHost("init");
 
 function importStandardFromHost() {
 
@@ -59,7 +72,7 @@ builtin_print.toString = function () {
     return "function print(value) { ... }";
 };
 
-cb.addGlobal("print", builtin_print);
+cb.setGlobal("print", builtin_print);
 
 // alert
 
@@ -72,7 +85,7 @@ builtin_alert.toString = function () {
     return "function alert(value) { ... }";
 };
 
-cb.addGlobal("alert", builtin_alert);
+cb.setGlobal("alert", builtin_alert);
 
 // prompt
 
@@ -85,7 +98,7 @@ builtin_prompt.toString = function () {
     return "function prompt(value) { ... }";
 };
 
-cb.addGlobal("prompt", builtin_prompt);
+cb.setGlobal("prompt", builtin_prompt);
 
 // load
 
@@ -93,7 +106,7 @@ builtin_load.toString = function () {
     return "function load(filename) { ... }";
 };
 
-cb.addGlobal("load", builtin_load);
+cb.setGlobal("load", builtin_load);
 
 // pause
 
@@ -101,7 +114,7 @@ builtin_pause.toString = function () {
     return "function pause() { ... }";
 };
 
-cb.addGlobal("pause", builtin_pause);
+cb.setGlobal("pause", builtin_pause);
 
 // assert
 
@@ -109,7 +122,7 @@ builtin_assert.toString = function () {
     return "function assert(condition) { ... }";
 };
 
-cb.addGlobal("assert", builtin_assert);
+cb.setGlobal("assert", builtin_assert);
 
 // setScreenMode
 
@@ -117,7 +130,7 @@ builtin_setScreenMode.toString = function () {
     return "function setScreenMode(width, height) { ... }";
 };
 
-cb.addGlobal("setScreenMode", builtin_setScreenMode);
+cb.setGlobal("setScreenMode", builtin_setScreenMode);
 
 // getScreenWidth
 
@@ -125,7 +138,7 @@ builtin_getScreenWidth.toString = function () {
     return "function getScreenWidth() { ... }";
 };
 
-cb.addGlobal("getScreenWidth", builtin_getScreenWidth);
+cb.setGlobal("getScreenWidth", builtin_getScreenWidth);
 
 // getScreenHeight
 
@@ -133,7 +146,7 @@ builtin_getScreenHeight.toString = function () {
     return "function getScreenHeight() { ... }";
 };
 
-cb.addGlobal("getScreenHeight", builtin_getScreenHeight);
+cb.setGlobal("getScreenHeight", builtin_getScreenHeight);
 
 // setPixel
 
@@ -141,7 +154,7 @@ builtin_setPixel.toString = function () {
     return "function setPixel(x, y, color) { ... }";
 };
 
-cb.addGlobal("setPixel", builtin_setPixel);
+cb.setGlobal("setPixel", builtin_setPixel);
 
 // cs
 
@@ -149,7 +162,7 @@ builtin_cs.toString = function () {
     return "function cs() { ... }";
 };
 
-cb.addGlobal("cs", builtin_cs);
+cb.setGlobal("cs", builtin_cs);
 
 // pu
 
@@ -157,7 +170,7 @@ builtin_pu.toString = function () {
     return "function pu() { ... }";
 };
 
-cb.addGlobal("pu", builtin_pu);
+cb.setGlobal("pu", builtin_pu);
 
 // pd
 
@@ -165,7 +178,7 @@ builtin_pd.toString = function () {
     return "function pd() { ... }";
 };
 
-cb.addGlobal("pd", builtin_pd);
+cb.setGlobal("pd", builtin_pd);
 
 // st
 
@@ -173,7 +186,7 @@ builtin_st.toString = function () {
     return "function st() { ... }";
 };
 
-cb.addGlobal("st", builtin_st);
+cb.setGlobal("st", builtin_st);
 
 // ht
 
@@ -181,7 +194,7 @@ builtin_ht.toString = function () {
     return "function ht() { ... }";
 };
 
-cb.addGlobal("ht", builtin_ht);
+cb.setGlobal("ht", builtin_ht);
 
 // fd
 
@@ -189,7 +202,7 @@ builtin_fd.toString = function () {
     return "function fd(distance) { ... }";
 };
 
-cb.addGlobal("fd", builtin_fd);
+cb.setGlobal("fd", builtin_fd);
 
 // bk
 
@@ -197,7 +210,7 @@ builtin_bk.toString = function () {
     return "function bk(distance) { ... }";
 };
 
-cb.addGlobal("bk", builtin_bk);
+cb.setGlobal("bk", builtin_bk);
 
 // lt
 
@@ -205,7 +218,7 @@ builtin_lt.toString = function () {
     return "function lt(angle) { ... }";
 };
 
-cb.addGlobal("lt", builtin_lt);
+cb.setGlobal("lt", builtin_lt);
 
 // rt
 
@@ -213,7 +226,7 @@ builtin_rt.toString = function () {
     return "function rt(angle) { ... }";
 };
 
-cb.addGlobal("rt", builtin_rt);
+cb.setGlobal("rt", builtin_rt);
 
 // setpc
 
@@ -221,7 +234,7 @@ builtin_setpc.toString = function () {
     return "function setpc(r, g, b) { ... }";
 };
 
-cb.addGlobal("setpc", builtin_setpc);
+cb.setGlobal("setpc", builtin_setpc);
 
 // setpw
 
@@ -229,7 +242,7 @@ builtin_setpc.toString = function () {
     return "function setpw(width) { ... }";
 };
 
-cb.addGlobal("setpw", builtin_setpw);
+cb.setGlobal("setpw", builtin_setpw);
 
 // drawtext
 
@@ -237,7 +250,7 @@ builtin_drawtext.toString = function () {
     return "function drawtext(text) { ... }";
 };
 
-cb.addGlobal("drawtext", builtin_drawtext);
+cb.setGlobal("drawtext", builtin_drawtext);
 
 // setTimeout
 
@@ -294,7 +307,7 @@ builtin_setTimeout._apply_ = function (rte, cont, this_, params) {
                         null);
 };
 
-cb.addGlobal("setTimeout", builtin_setTimeout);
+cb.setGlobal("setTimeout", builtin_setTimeout);
 
 // clearTimeout
 
@@ -307,7 +320,7 @@ builtin_clearTimeout.toString = function () {
     return "function clearTimeout(timeoutID) { ... }";
 };
 
-cb.addGlobal("clearTimeout", builtin_clearTimeout);
+cb.setGlobal("clearTimeout", builtin_clearTimeout);
 
 // readFile
 
@@ -315,7 +328,7 @@ builtin_readFile.toString = function () {
     return "function readFile(filename) { ... }";
 };
 
-cb.addGlobal("readFile", builtin_readFile);
+cb.setGlobal("readFile", builtin_readFile);
 
 // writeFile
 
@@ -323,4 +336,4 @@ builtin_writeFile.toString = function () {
     return "function writeFile(filename, content) { ... }";
 };
 
-cb.addGlobal("writeFile", builtin_writeFile);
+cb.setGlobal("writeFile", builtin_writeFile);

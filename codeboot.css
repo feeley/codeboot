@@ -221,13 +221,34 @@ div.tab-pane {
     background: white;
 }
 
-#editors {
+#editors_now_disabled {
     position: absolute;
     top: 160px;
     left: 55px;
     right: 55px;
     bottom: 0;
     overflow-y: auto;
+}
+
+/* ----- Pseudo-body for DOM experimentation ----- */
+
+#b table {
+    float: left;
+}
+
+#b td {
+    table-layout: fixed;
+    width: 70px;
+    height: 98px;
+    text-align: center;
+    vertical-align: middle;
+    font-family: Helvetica;
+    font-size: 24px;
+}
+
+#b img {
+    vertical-align: middle;
+    width: 100%;
 }
 
 /* ----- Transcript ----- */

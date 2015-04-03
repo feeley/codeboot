@@ -300,6 +300,7 @@ function init_drawing_window(width, height) {
 }
 
 init_drawing_window(360, 200);
+//init_drawing_window(250, 250);
 
 function showing_drawing_window() {
   return document.getElementById("repl-span").className === "span6";
