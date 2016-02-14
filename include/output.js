@@ -9,12 +9,27 @@ cb.output = {};
         borderWidth: 1
     };
 
+	function rgbToHex(color) {
+	    return "#" +
+             (256+color.r).toString(16).slice(1) +
+             (256+color.g).toString(16).slice(1) +
+             (256+color.b).toString(16).slice(1);
+	}
+
 	function PixelGrid(container, opts) {
 	    this.container = container;
 	    this.rows = opts.rows || defaults.rows;
 	    this.cols = opts.cols || defaults.cols;
 	    this.pixelSize = opts.pixelSize || defaults.pixelSize;
 	    this.borderWidth = (opts.borderWidth !== void 0) ? opts.borderWidth : defaults.borderWidth;
+	    this.pixels = [];
+	    
+	    for(var i = 0; i<this.rows; i++) {
+            this.pixels.push([]);
+	        for(var j = 0; j<this.cols; j++) {
+	            this.pixels[i].push(this.black);
+            }
+        }
 
 		this._draw();
 	}
@@ -58,27 +73,38 @@ cb.output = {};
 	};
 
 	PixelGrid.prototype.clear = function (color) {
-            if (color === void 0) {
-                color = 'transparent';
-            }
+        if (color === void 0) {
+            color = this.black;
+        }
 	    this.each(function ($e) {
-		$e.css('background-color', color);
+		    $e.css('background-color', rgbToHex(color));
 	    });
+		for (var i = 0; i < this.rows; i++) {
+			for (var j = 0; j < this.cols; j++) {
+				this.pixels[i][j] = color;
+			}
+		}
 	}
 
 	PixelGrid.prototype.setPixel = function (col, row, color) {
-            if (color === void 0) {
-                color = 'black';
-            }
-	    this.$pixels[row][col].css('background-color', color);
+        if (color === void 0) {
+            color = this.black;
+        }
+        
+        this.pixels[row][col] = color;
+        
+	    this.$pixels[row][col].css('background-color', rgbToHex(color));
 	};
 
 	PixelGrid.prototype.clearPixel = function (col, row, color) {
             if (color === void 0) {
-                color = 'transparent';
+                color = this.black;
             }
 	    this.$pixels[row][col].css('background-color', color);
+	    this.$pixels[row][col].css('background-color', rgbToHex(color));
 	};
+	
+	PixelGrid.prototype.black = {r:0,g:0,b:0};
 
     exports.PixelGrid = PixelGrid;
 
