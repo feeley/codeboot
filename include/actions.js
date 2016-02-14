@@ -1083,8 +1083,6 @@ cb.execute2 = function (single_step) {
 
     var rte = program_state.rte;
 
-    console.log(rte);
-
     if (rte !== null && !rte.finished()) {
 
         try {
