@@ -9,13 +9,6 @@ cb.output = {};
         borderWidth: 1
     };
 
-	function rgbToHex(color) {
-	    return "#" +
-             (256+color.r).toString(16).slice(1) +
-             (256+color.g).toString(16).slice(1) +
-             (256+color.b).toString(16).slice(1);
-	}
-
 	function PixelGrid(container, opts) {
 	    this.container = container;
 	    this.rows = opts.rows || defaults.rows;
@@ -77,7 +70,7 @@ cb.output = {};
             color = this.black;
         }
 	    this.each(function ($e) {
-		    $e.css('background-color', rgbToHex(color));
+		    $e.css('background-color', color);
 	    });
 		for (var i = 0; i < this.rows; i++) {
 			for (var j = 0; j < this.cols; j++) {
@@ -92,19 +85,10 @@ cb.output = {};
         }
         
         this.pixels[row][col] = color;
-        
-	    this.$pixels[row][col].css('background-color', rgbToHex(color));
-	};
-
-	PixelGrid.prototype.clearPixel = function (col, row, color) {
-            if (color === void 0) {
-                color = this.black;
-            }
 	    this.$pixels[row][col].css('background-color', color);
-	    this.$pixels[row][col].css('background-color', rgbToHex(color));
 	};
 	
-	PixelGrid.prototype.black = {r:0,g:0,b:0};
+	PixelGrid.prototype.black = '#000000';
 
     exports.PixelGrid = PixelGrid;
 

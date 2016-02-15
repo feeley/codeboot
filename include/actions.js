@@ -1380,10 +1380,10 @@ builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
             borderWidth: (pixSize >= 3) ? 1 : 0,
         });
 
+
         pixels.clear(pixels.black);
 
         cb.transcript.addLineWidget(divNode);
-
         cb.screenPixels = pixels;
         cb.screenWidth = width;
         cb.screenHeight = height;
@@ -1497,7 +1497,10 @@ builtin_setPixel._apply_ = function (rte, cont, this_, params) {
 
         cb.screenPixels.setPixel(x,
                                  y,
-                                 color);
+                                 "#" +
+                                 (256+color.r).toString(16).slice(1) +
+                                 (256+color.g).toString(16).slice(1) +
+                                 (256+color.b).toString(16).slice(1));
 
         return return_fn_body(rte, void 0);
     };
@@ -1524,23 +1527,16 @@ builtin_exportScreen._apply_ = function (rte, cont, this_, params) {
             return return_fn_body(rte, null);
         }
         
-        // Clone screen pixels
-        // see http://stackoverflow.com/a/3774429/4056491
-        var clone = (function(){
-          return function (obj) { Clone.prototype=obj; return new Clone() };
-          function Clone(){}
-        }());
-        
         var pixels = [];
         
-        for(var i = 0; i<cb.screenWidth; i++) {
+        for(var i = 0; i<cb.screenHeight; i++) {
             pixels.push([]);
-	        for(var j = 0; j<cb.screenHeight; j++) {
-	            pixels[i].push(clone(cb.screenPixels.pixels[i][j]));
+	        for(var j = 0; j<cb.screenWidth; j++) {
+	            pixels[i].push(cb.screenPixels.pixels[i][j]);
             }
         }
         
-        return return_fn_body(rte, pixels);
+        return return_fn_body(rte, pixels.map(function(e) { return e.join(''); }).join('\n'));
     };
 
     return exec_fn_body(code,
