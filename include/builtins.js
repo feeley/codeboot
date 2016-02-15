@@ -156,6 +156,14 @@ builtin_setPixel.toString = function () {
 
 cb.setGlobal("setPixel", builtin_setPixel);
 
+// exportScreen
+
+builtin_exportScreen.toString = function () {
+    return "function exportScreen() { ... }";
+};
+
+cb.setGlobal("exportScreen", builtin_exportScreen);
+
 // cs
 
 builtin_cs.toString = function () {

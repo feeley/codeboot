@@ -1052,6 +1052,7 @@ uninteresting_global["setScreenMode"] = true;
 uninteresting_global["getScreenWidth"] = true;
 uninteresting_global["getScreenHeight"] = true;
 uninteresting_global["setPixel"] = true;
+uninteresting_global["exportScreen"] = true;
 uninteresting_global["cs"] = true;
 uninteresting_global["st"] = true;
 uninteresting_global["ht"] = true;
@@ -1066,7 +1067,6 @@ uninteresting_global["setpw"] = true;
 uninteresting_global["drawtext"] = true;
 
 cb.execute = function (single_step) {
-
     if (false && cb.hide_step()) { //TODO: find a better way... this causes too much flicker
         // give some time for the browser to refresh the page
         setTimeout(function () { cb.execute2(single_step); }, 10);
@@ -1380,7 +1380,7 @@ builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
             borderWidth: (pixSize >= 3) ? 1 : 0,
         });
 
-        pixels.clear('black');
+        pixels.clear(pixels.black);
 
         cb.transcript.addLineWidget(divNode);
 
@@ -1497,16 +1497,54 @@ builtin_setPixel._apply_ = function (rte, cont, this_, params) {
 
         cb.screenPixels.setPixel(x,
                                  y,
-                                 "#" +
-                                 (256+color.r).toString(16).slice(1) +
-                                 (256+color.g).toString(16).slice(1) +
-                                 (256+color.b).toString(16).slice(1));
+                                 color);
 
         return return_fn_body(rte, void 0);
     };
 
     return exec_fn_body(code,
                         builtin_setPixel,
+                        rte,
+                        cont,
+                        this_,
+                        params,
+                        [],
+                        null,
+                        null);
+};
+
+function builtin_exportScreen() {
+    throw "unimplemented";///////////////////////////
+}
+
+builtin_exportScreen._apply_ = function (rte, cont, this_, params) {
+
+    var code = function (rte, cont) {
+        if (!('screenPixels' in cb)) {
+            return return_fn_body(rte, null);
+        }
+        
+        // Clone screen pixels
+        // see http://stackoverflow.com/a/3774429/4056491
+        var clone = (function(){
+          return function (obj) { Clone.prototype=obj; return new Clone() };
+          function Clone(){}
+        }());
+        
+        var pixels = [];
+        
+        for(var i = 0; i<cb.screenWidth; i++) {
+            pixels.push([]);
+	        for(var j = 0; j<cb.screenHeight; j++) {
+	            pixels[i].push(clone(cb.screenPixels.pixels[i][j]));
+            }
+        }
+        
+        return return_fn_body(rte, pixels);
+    };
+
+    return exec_fn_body(code,
+                        builtin_exportScreen,
                         rte,
                         cont,
                         this_,
