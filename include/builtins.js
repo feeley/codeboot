@@ -100,18 +100,18 @@ builtin_prompt.toString = function () {
 
 cb.setGlobal("prompt", builtin_prompt);
 
-// prompt
+// confirm
 
-function builtin_prompt() {
+function builtin_confirm() {
     var hostGlobalObject = (function () { return this; }());
-    return prompt.apply(hostGlobalObject, arguments);
+    return confirm.apply(hostGlobalObject, arguments);
 }
 
-builtin_prompt.toString = function () {
-    return "function prompt(value) { ... }";
+builtin_confirm.toString = function () {
+    return "function confirm(value) { ... }";
 };
 
-cb.setGlobal("prompt", builtin_prompt);
+cb.setGlobal("confirm", builtin_confirm);
 
 // load
 
