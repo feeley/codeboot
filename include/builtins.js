@@ -100,6 +100,19 @@ builtin_prompt.toString = function () {
 
 cb.setGlobal("prompt", builtin_prompt);
 
+// prompt
+
+function builtin_prompt() {
+    var hostGlobalObject = (function () { return this; }());
+    return prompt.apply(hostGlobalObject, arguments);
+}
+
+builtin_prompt.toString = function () {
+    return "function prompt(value) { ... }";
+};
+
+cb.setGlobal("prompt", builtin_prompt);
+
 // load
 
 builtin_load.toString = function () {
