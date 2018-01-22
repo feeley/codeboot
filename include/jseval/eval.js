@@ -167,12 +167,22 @@ jev.compile = function (source, options) {
                         ? options.languageLevel
                         : "novice";
 
+    var detectEmpty = (typeof options === "object" &&
+                       options.detectEmpty !== void 0)
+                      ? options.detectEmpty
+                      : false;
+
+    var filterAST = (typeof options === "object" &&
+                     options.filterAST !== void 0)
+                    ? options.filterAST
+                    : function (ast, source) { return ast; };
+
     var opts = {
                  container:
                    (typeof options === "object" &&
                     options.container !== void 0)
                    ? options.container
-                 : new SourceContainer(source, "<string>", 1, 1),
+                   : new SourceContainer(source, "<string>", 1, 1),
 
                  error:
                    (typeof options === "object" &&
@@ -198,7 +208,20 @@ jev.compile = function (source, options) {
     var port = new String_input_port(source, opts.container);
     var s = new Scanner(port, opts.error, opts.container.start_line, opts.container.start_column);
     var p = new Parser(s, opts.warnings);
-    var ast = p.parse();
+    var ast = filterAST(p.parse(), source);
+
+    if (detectEmpty) {
+        if (ast instanceof Program) {
+            var block = ast.block;
+            if (block instanceof BlockStatement) {
+                var statements = block.statements;
+                if (statements.length === 0) {
+                    return null; /* indicate empty program */
+                }
+            }
+        }
+    }
+
     var cte = jev.newGlobalCTE(opts);
 
     var options = {
@@ -502,7 +525,7 @@ jev.compStatement = function (cte, ast) {
         cte = jev.controlContext(cte, ast, "for-in");
 
         var code_assign = jev.compOp2Assign(cte,
-                                            null,
+                                            ast.lhs_expr,
                                             "x = y",
                                             ast.lhs_expr,
                                             function () {
@@ -1296,40 +1319,14 @@ jev.compExpr = function (cte, ast) {
 
         var code_cons = jev.compExpr(cte, ast.expr);
         var code_args = jev.compExprs(cte, ast.args);
-        var new_semfn = jev.get_new_semfn(ast.args.length);
 
         var op = function (rte, cont, ast, cons, args) {
 
-            if (typeof cons !== "function") {
-
-                return jev.step_error(rte,
+            return jev.step_construct(rte,
                                       cont,
                                       ast,
-                                      "constructor is not a function");
-
-            } else if ("_apply_" in cons) {
-
-                var obj = Object.create(cons.prototype);
-                return cons._apply_(rte,
-                                    function (rte, result) {
-                                        return jev.step_end(rte,
-                                                            cont,
-                                                            ast,
-                                                            obj);
-                                    },
-                                    obj,
-                                    args);
-
-            } else {
-
-                var result = new_semfn(cons, args);
-
-                return jev.step_end(rte,
-                                    cont,
-                                    ast,
-                                    result);
-
-            }
+                                      cons,
+                                      args);
         };
 
         return jev.gen_op_dyn_dyn(ast, op, code_cons, code_args);
@@ -1369,27 +1366,12 @@ jev.compExpr = function (cte, ast) {
 
                                     return code_args(rte,
                                                      function (rte, args) {
-                                                         if (typeof fn !== "function") {
-                                                             return jev.step_error(rte,
-                                                                                   cont,
-                                                                                   ast,
-                                                                                   "cannot call a non function");
-                                                         } else if ("_apply_" in fn) {
-                                                             return fn._apply_(rte,
-                                                                               function (rte, result) {
-                                                                                   return jev.step_end(rte,
-                                                                                                       cont,
-                                                                                                       ast,
-                                                                                                       result);
-                                                                               },
+                                                         return jev.step_apply(rte,
+                                                                               cont,
+                                                                               ast,
+                                                                               fn,
                                                                                obj,
                                                                                args);
-                                                         } else {
-                                                             return jev.step_end(rte,
-                                                                                 cont,
-                                                                                 ast,
-                                                                                 fn.apply(obj, args));
-                                                         }
                                                      });
                                 };
 
@@ -1410,28 +1392,12 @@ jev.compExpr = function (cte, ast) {
             var code_args = jev.compExprs(cte, ast.args);
 
             var op = function (rte, cont, ast, fn, args) {
-
-                if (typeof fn !== "function") {
-                    return jev.step_error(rte,
-                                          cont,
-                                          ast,
-                                          "cannot call a non function");
-                } else if ("_apply_" in fn) {
-                    return fn._apply_(rte,
-                                      function (rte, result) {
-                                          return jev.step_end(rte,
-                                                              cont,
-                                                              ast,
-                                                              result);
-                                      },
+                return jev.step_apply(rte,
+                                      cont,
+                                      ast,
+                                      fn,
                                       rte.glo,
                                       args);
-                } else {
-                    return jev.step_end(rte,
-                                        cont,
-                                        ast,
-                                        fn.apply(rte.glo, args));
-                }
             };
 
             return jev.gen_op_dyn_dyn(ast, op, code_fn, code_args);
@@ -1650,18 +1616,27 @@ jev.compExpr = function (cte, ast) {
             var name = access.name;
 
             return function (rte, cont) {
-                var result = rte.glo[name];
-                if (error_msg !== false && result === void 0) {
-                    return jev.step_error(rte,
-                                          cont,
-                                          ast,
-                                          error_msg);
+                var result = void 0;
+                if (Object.prototype.hasOwnProperty.call(rte.glo, name)) {
+                    result = rte.glo[name];
+                    if (error_msg !== false && result === void 0) {
+                        return jev.step_error(rte,
+                                              cont,
+                                              ast,
+                                              "cannot read the undefined global variable " + name);
+                    }
                 } else {
-                    return jev.step_end(rte,
-                                        cont,
-                                        ast,
-                                        result);
+                    if (error_msg !== false) {
+                        return jev.step_error(rte,
+                                              cont,
+                                              ast,
+                                              "cannot read the undeclared global variable " + name);
+                    }
                 }
+                return jev.step_end(rte,
+                                    cont,
+                                    ast,
+                                    result);
             };
 
         } else {
@@ -2215,10 +2190,10 @@ jev.assign_op1_to_semfn = function (cte, op) {
 
         switch (op) {
         case "delete x": return jev.sem_delete_x;
-        case "++ x": return jev.sem_plusplus_x_with_bounds_check;
-        case "-- x": return jev.sem_minusminus_x_with_bounds_check;
-        case "x ++": return jev.sem_x_plusplus_with_bounds_check;
-        case "x --": return jev.sem_x_minusminus_with_bounds_check;
+        case "++ x": return jev.sem_plusplus_x_with_setter_check;
+        case "-- x": return jev.sem_minusminus_x_with_setter_check;
+        case "x ++": return jev.sem_x_plusplus_with_setter_check;
+        case "x --": return jev.sem_x_minusminus_with_setter_check;
         }
 
     } else {
@@ -2239,7 +2214,7 @@ jev.pure_op2_to_semfn = function (cte, op) {
   switch (op) {
   case "x [ y ]":
       return (cte.options.languageLevel === "novice")
-             ? jev.sem_prop_index_with_bounds_check
+             ? jev.sem_prop_index_with_getter_check
              : jev.sem_prop_index;
   case "x . y": return jev.sem_prop_access;
   case "x * y": return jev.sem_x_mult_y;
@@ -2272,18 +2247,18 @@ jev.assign_op2_to_semfn = function (cte, op) {
 
         switch (op) {
         case "var x = y": return jev.sem_var_x_equal_y;
-        case "x = y": return jev.sem_x_equal_y_with_bounds_check;
-        case "x += y": return jev.sem_x_plusequal_y_with_bounds_check;
-        case "x -= y": return jev.sem_x_minusequal_y_with_bounds_check;
-        case "x *= y": return jev.sem_x_multequal_y_with_bounds_check;
-        case "x /= y": return jev.sem_x_divequal_y_with_bounds_check;
-        case "x <<= y": return jev.sem_x_lshiftequal_y_with_bounds_check;
-        case "x >>= y": return jev.sem_x_rshiftequal_y_with_bounds_check;
-        case "x >>>= y": return jev.sem_x_urshiftequal_y_with_bounds_check;
-        case "x &= y": return jev.sem_x_bitandequal_y_with_bounds_check;
-        case "x ^= y": return jev.sem_x_bitxorequal_y_with_bounds_check;
-        case "x |= y": return jev.sem_x_bitorequal_y_with_bounds_check;
-        case "x %= y": return jev.sem_x_modequal_y_with_bounds_check;
+        case "x = y": return jev.sem_x_equal_y_with_setter_check;
+        case "x += y": return jev.sem_x_plusequal_y_with_setter_check;
+        case "x -= y": return jev.sem_x_minusequal_y_with_setter_check;
+        case "x *= y": return jev.sem_x_multequal_y_with_setter_check;
+        case "x /= y": return jev.sem_x_divequal_y_with_setter_check;
+        case "x <<= y": return jev.sem_x_lshiftequal_y_with_setter_check;
+        case "x >>= y": return jev.sem_x_rshiftequal_y_with_setter_check;
+        case "x >>>= y": return jev.sem_x_urshiftequal_y_with_setter_check;
+        case "x &= y": return jev.sem_x_bitandequal_y_with_setter_check;
+        case "x ^= y": return jev.sem_x_bitxorequal_y_with_setter_check;
+        case "x |= y": return jev.sem_x_bitorequal_y_with_setter_check;
+        case "x %= y": return jev.sem_x_modequal_y_with_setter_check;
         }
 
     } else {
@@ -2319,8 +2294,8 @@ jev.sem_plusplus_x = function (rte, cont, ast, obj, prop) { // "++ x"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_plusplus_x_with_bounds_check = function (rte, cont, ast, obj, prop) { // "++ x"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_plusplus_x_with_setter_check = function (rte, cont, ast, obj, prop) { // "++ x"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (++ obj[prop]);
     return jev.step_end(rte, cont, ast, result);
@@ -2331,8 +2306,8 @@ jev.sem_minusminus_x = function (rte, cont, ast, obj, prop) { // "-- x"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_minusminus_x_with_bounds_check = function (rte, cont, ast, obj, prop) { // "-- x"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_minusminus_x_with_setter_check = function (rte, cont, ast, obj, prop) { // "-- x"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (-- obj[prop]);
     return jev.step_end(rte, cont, ast, result);
@@ -2343,8 +2318,8 @@ jev.sem_x_plusplus = function (rte, cont, ast, obj, prop) { // "x ++"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_plusplus_with_bounds_check = function (rte, cont, ast, obj, prop) { // "x ++"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_plusplus_with_setter_check = function (rte, cont, ast, obj, prop) { // "x ++"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] ++);
     return jev.step_end(rte, cont, ast, result);
@@ -2355,8 +2330,8 @@ jev.sem_x_minusminus = function (rte, cont, ast, obj, prop) { // "x --"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_minusminus_with_bounds_check = function (rte, cont, ast, obj, prop) { // "x --"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_minusminus_with_setter_check = function (rte, cont, ast, obj, prop) { // "x --"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] --);
     return jev.step_end(rte, cont, ast, result);
@@ -2397,8 +2372,8 @@ jev.sem_prop_index = function (rte, cont, ast, x, y) { // "x [ y ]"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_prop_index_with_bounds_check = function (rte, cont, ast, x, y) { // "x [ y ]"
-    var status = jev.sem_bounds_check(rte, cont, ast, x, y);
+jev.sem_prop_index_with_getter_check = function (rte, cont, ast, x, y) { // "x [ y ]"
+    var status = jev.sem_getter_check(rte, cont, ast, x, y);
     if (status !== true) return status;
     var result = (x [ y ]);
     return jev.step_end(rte, cont, ast, result);
@@ -2524,8 +2499,8 @@ jev.sem_x_equal_y = function (rte, cont, ast, obj, prop, y) { // "x = y"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_equal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x = y"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_equal_y_with_setter_check = function (rte, cont, ast, obj, prop, y) { // "x = y"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] = y);
     return jev.step_end(rte, cont, ast, result);
@@ -2536,8 +2511,8 @@ jev.sem_x_plusequal_y = function (rte, cont, ast, obj, prop, y) { // "x += y"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_plusequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x += y"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_plusequal_y_with_setter_check = function (rte, cont, ast, obj, prop, y) { // "x += y"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] += y);
     return jev.step_end(rte, cont, ast, result);
@@ -2548,8 +2523,8 @@ jev.sem_x_minusequal_y = function (rte, cont, ast, obj, prop, y) { // "x -= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_minusequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x -= y"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_minusequal_y_with_setter_check = function (rte, cont, ast, obj, prop, y) { // "x -= y"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] -= y);
     return jev.step_end(rte, cont, ast, result);
@@ -2560,8 +2535,8 @@ jev.sem_x_multequal_y = function (rte, cont, ast, obj, prop, y) { // "x *= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_multequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x *= y"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_multequal_y_with_setter_check = function (rte, cont, ast, obj, prop, y) { // "x *= y"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] *= y);
     return jev.step_end(rte, cont, ast, result);
@@ -2572,8 +2547,8 @@ jev.sem_x_divequal_y = function (rte, cont, ast, obj, prop, y) { // "x /= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_divequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x /= y"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_divequal_y_with_setter_check = function (rte, cont, ast, obj, prop, y) { // "x /= y"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] /= y);
     return jev.step_end(rte, cont, ast, result);
@@ -2584,8 +2559,8 @@ jev.sem_x_lshiftequal_y = function (rte, cont, ast, obj, prop, y) { // "x <<= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_lshiftequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x <<= y"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_lshiftequal_y_with_setter_check = function (rte, cont, ast, obj, prop, y) { // "x <<= y"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] <<= y);
     return jev.step_end(rte, cont, ast, result);
@@ -2596,8 +2571,8 @@ jev.sem_x_rshiftequal_y = function (rte, cont, ast, obj, prop, y) { // "x >>= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_rshiftequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x >>= y"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_rshiftequal_y_with_setter_check = function (rte, cont, ast, obj, prop, y) { // "x >>= y"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] >>= y);
     return jev.step_end(rte, cont, ast, result);
@@ -2608,8 +2583,8 @@ jev.sem_x_urshiftequal_y = function (rte, cont, ast, obj, prop, y) { // "x >>>= 
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_urshiftequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x >>>= y"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_urshiftequal_y_with_setter_check = function (rte, cont, ast, obj, prop, y) { // "x >>>= y"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] >>>= y);
     return jev.step_end(rte, cont, ast, result);
@@ -2620,8 +2595,8 @@ jev.sem_x_bitandequal_y = function (rte, cont, ast, obj, prop, y) { // "x &= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_bitandequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x &= y"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_bitandequal_y_with_setter_check = function (rte, cont, ast, obj, prop, y) { // "x &= y"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] &= y);
     return jev.step_end(rte, cont, ast, result);
@@ -2632,8 +2607,8 @@ jev.sem_x_bitxorequal_y = function (rte, cont, ast, obj, prop, y) { // "x ^= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_bitxorequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x ^= y"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_bitxorequal_y_with_setter_check = function (rte, cont, ast, obj, prop, y) { // "x ^= y"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] ^= y);
     return jev.step_end(rte, cont, ast, result);
@@ -2644,8 +2619,8 @@ jev.sem_x_bitorequal_y = function (rte, cont, ast, obj, prop, y) { // "x |= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_bitorequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x |= y"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_bitorequal_y_with_setter_check = function (rte, cont, ast, obj, prop, y) { // "x |= y"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] |= y);
     return jev.step_end(rte, cont, ast, result);
@@ -2656,11 +2631,29 @@ jev.sem_x_modequal_y = function (rte, cont, ast, obj, prop, y) { // "x %= y"
     return jev.step_end(rte, cont, ast, result);
 };
 
-jev.sem_x_modequal_y_with_bounds_check = function (rte, cont, ast, obj, prop, y) { // "x %= y"
-    var status = jev.sem_bounds_check(rte, cont, ast, obj, prop);
+jev.sem_x_modequal_y_with_setter_check = function (rte, cont, ast, obj, prop, y) { // "x %= y"
+    var status = jev.sem_setter_check(rte, cont, ast, obj, prop);
     if (status !== true) return status;
     var result = (obj[prop] %= y);
     return jev.step_end(rte, cont, ast, result);
+};
+
+jev.sem_setter_check = function (rte, cont, ast, x, y) {
+    if (x === rte.glo) {
+        if (!Object.prototype.hasOwnProperty.call(x, y)) {
+            return jev.step_error(rte,
+                                  cont,
+                                  ast,
+                                  "cannot set the undeclared global variable "+y);
+        }
+    } else {
+        return jev.sem_bounds_check(rte, cont, ast, x, y);
+    }
+    return true;
+};
+
+jev.sem_getter_check = function (rte, cont, ast, x, y) {
+    return jev.sem_bounds_check(rte, cont, ast, x, y);
 };
 
 jev.sem_bounds_check = function (rte, cont, ast, x, y) {
@@ -2681,6 +2674,116 @@ jev.sem_bounds_check = function (rte, cont, ast, x, y) {
 };
 
 //-----------------------------------------------------------------------------
+
+jev.step_construct = function (rte, cont, ast, cons, args) {
+
+    if (typeof cons !== "function") {
+
+        return jev.step_error(rte,
+                              cont,
+                              ast,
+                              "constructor is not a function");
+
+    } else if ("_apply_" in cons) {
+
+        var obj = Object.create(cons.prototype);
+
+        var cont2 = function (rte, result) {
+
+            return jev.step_end(rte,
+                                cont,
+                                ast,
+                                obj); // constructor returns the object!
+        };
+
+        try {
+            return cons._apply_(rte,
+                                cont2,
+                                obj,
+                                args);
+        }
+        catch (e) {
+            return jev.step_error(rte,
+                                  cont,
+                                  ast,
+                                  String(e));
+        }
+
+    } else {
+
+        var result;
+
+        try {
+            var new_semfn = jev.get_new_semfn(ast.args.length);
+            result = new_semfn(cons, args);
+        }
+        catch (e) {
+            return jev.step_error(rte,
+                                  cont,
+                                  ast,
+                                  String(e));
+        }
+
+        return jev.step_end(rte,
+                            cont,
+                            ast,
+                            result);
+
+    }
+};
+
+jev.step_apply = function (rte, cont, ast, fn, obj, args) {
+
+    if (typeof fn !== "function") {
+
+        return jev.step_error(rte,
+                              cont,
+                              ast,
+                              "cannot call a non function");
+
+    } else if ("_apply_" in fn) {
+
+        var cont2 = function (rte, result) {
+
+            return jev.step_end(rte,
+                                cont,
+                                ast,
+                                result); // function returns the result
+        };
+
+        try {
+            return fn._apply_(rte,
+                              cont2,
+                              obj,
+                              args);
+        }
+        catch (e) {
+            return jev.step_error(rte,
+                                  cont,
+                                  ast,
+                                  String(e));
+        }
+
+    } else {
+
+        var result;
+
+        try {
+            result = fn.apply(obj, args);
+        }
+        catch (e) {
+            return jev.step_error(rte,
+                                  cont,
+                                  ast,
+                                  String(e));
+        }
+
+        return jev.step_end(rte,
+                            cont,
+                            ast,
+                            result);
+    }
+};
 
 jev.step_end = function (rte, cont, ast, result) {
 

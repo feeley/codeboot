@@ -1,568 +1,206 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>codeBoot</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
 
-    <!-- Styles -->
-    <link href="include/jquery-ui/css/custom-theme/jquery-ui-1.8.16.custom.css" rel="stylesheet">
-    <link href="include/bootstrap/css/bootstrap.css" rel="stylesheet">
-    <style>
-      body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
-    </style>
-    <link href="include/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
-    <link rel="stylesheet" href="include/codemirror3/lib/codemirror.css">
-    <link rel="stylesheet" href="include/codemirror3/theme/eclipse.css">
-    <link href="codeboot.css" rel="stylesheet">
+<!---------------------------------------------------------------------------->
 
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+<head>
 
-    <script src="include/compat.js"></script>
-    <script src="include/modernizr-custom.js"></script>
-    <script type="text/javascript">
-        window.MISSING   = 0;
-        window.EMULATED  = 1;
-        window.SUPPORTED = 2;
+  <meta charset="utf-8">
+  <title>codeBoot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
 
-        window.features = [
-            {
-              name: "File reader",
-              url:  "http://caniuse.com/filereader",
-              status: Modernizr.filereader ? SUPPORTED : MISSING
-            },
-            {
-              name: "JSON",
-              url:  "http://caniuse.com/json",
-              status: Modernizr.json ? SUPPORTED : EMULATED
-            }
-        ];
+  <!-- Styles -->
+  <link rel="stylesheet" href="include/font-awesome-4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="include/tippyjs-1.2.0/dist/tippy.css">
+  <link rel="stylesheet" href="include/bootstrap-4.0.0-beta-dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="include/CodeMirror/lib/codemirror.css">
+  <link rel="stylesheet" href="include/codeboot.css">
 
-        Modernizr.load([
-            {
-                test : Modernizr.json,
-                nope : ['include/polyfills/json2.js']
-            }
-        ]);
-    </script>
-  </head>
+</head>
 
-  <body onunload="cb.saveSession();">
-    <div id="codeboot-header" class="row"></div>
-    <div id="b" class="row"></div>
-    <!-- Navbar -->
-    <div id="navbar" class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <a class="brand" href="#">codeBoot v1.4<span id="devModeTitle"></span></a>
+<!---------------------------------------------------------------------------->
 
-          <ul class="nav">
-            <li><a href="#" onclick="cb_tutorial();">Help</a></li>
-            <li><a href="#" role="button" data-toggle="modal" data-target="#about-box">About</a></li>
-          </ul>
+<body class="cb-hide-header cb-hide-playground cb-hide-footer" data-cb-lang-level="novice" onunload="cb.unload();">
 
-          <div class="btn-toolbar pull-right">
-              <div id="repl-controls" class="btn-group" data-cb-exec="controller">
-                  <button id="step-button" title="Step" class="btn exec-btn-step" onclick="cb.ui_event('step');"><i class="icon-play"></i><i id="step-mode-icon" class="icon-exp-pause"></i></button>
-                  <button id="play-button" title="Execute" class="btn" onclick="cb.ui_event('play');"><i class="icon-play"></i><i class="icon-exp-infinity"></i></button>
-                  <button id="animate-button" title="Animate" class="btn" onclick="cb.ui_event('animate');"><i class="icon-play"></i></button>
-                  <button id="pause-button" title="Pause" class="btn exec-btn-pause disabled" onclick="if (!$('#pause-button').is('.disabled')) cb.ui_event('pause');"><i class="icon-pause"></i></button>
-                  <button id="cancel-button" title="Stop" class="btn exec-btn-cancel disabled" onclick="if (!$('#cancel-button').is('.disabled')) cb.ui_event('cancel');"><i class="icon-stop"></i></button>
-              </div>
+  <div id="cb-header"></div>
 
-              <div class="btn-group">
-                  <button id="new-file-button" title="New file" class="btn" onclick="cb.newFile();"><i class="icon-plus"></i><i class="icon-file"></i></button>
-                  <button class="btn dropdown-toggle" data-toggle="dropdown">
-                      <span class="caret"></span>
-                  </button>
-                  <ul id="file-list" class="dropdown-menu dropdown-align-right">
-                      <!-- This menu will be populated dynamically -->
-                  </ul>
-              </div>
+  <div id="cb-navbar">
 
-              <div class="btn-group" data-cb-focus="restore">
-                <button id="settings-button" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                    <i class="icon-wrench"></i>
-                    <span class="caret"></span>
-                </button>
-                <ul id="settings-menu" class="dropdown-menu dropdown-align-right" data-toggle="radio-groups">
-                    <li class="nav-header">Language level</li>
-                    <li><a id="setting-lang-novice" href="#" data-radio-group="lang"
-                       onclick="cb.setLanguageLevel('novice');"><i class="icon-ok"></i> Novice</a></li>
-                    <li><a id="setting-lang-standard" href="#" data-radio-group="lang"
-                       onclick="cb.setLanguageLevel('standard');"><i class="icon-none"></i> Standard</a></li>
-                    <li class="nav-header">Animation speed</li>
-                    <li><a id="setting-speed-slow" href="#" data-radio-group="speed" onclick="setStepDelay(2000);"><i class="icon-none"></i> Slow</a></li>
-                    <li><a id="setting-speed-normal" href="#" data-radio-group="speed" onclick="setStepDelay(500);"><i class="icon-ok"></i> Normal</a></li>
-                    <li><a id="setting-speed-fast" href="#" data-radio-group="speed" onclick="setStepDelay(125);"><i class="icon-none"></i> Fast</a></li>
-                    <li><a id="setting-speed-fast" href="#" data-radio-group="speed" onclick="setStepDelay(1);"><i class="icon-none"></i> Turbo</a></li>
-                    <li class="nav-header">Editing</li>
-                    <li><a id="setting-linenums" href="#" data-toggle="checkbox" onclick="cb.toggleLineNumbers();"><i class="icon-none"></i> Show line numbers</a></li>
-                    <li class="nav-header">Graphics</li>
-                    <li><a id="setting-linenums" href="#" onclick="cb.toggleDrawingWindow();"><i id="show-drawing-window-icon" class="icon-none"></i> Show drawing window</a></li>
-                    <li><a id="setting-linenums" href="#" onclick="cb.exportDrawingWindow();"><i id="export-drawing-window-icon" class="icon-none"></i> Export drawing window</a></li>
-                </ul>
-              </div>
+    <div id="cb-navbar-header"></div>
+
+    <div id="cb-navbar-controls">
+
+      <!-- Menus -->
+
+      <div id="cb-menu">
+
+        <span id="cb-menu-brand">
+          <button class="btn btn-secondary cb-button" type="button" id="cb-menu-brand-btn" data-toggle="modal" data-target="#cb-about-box">codeBoot v2.0<span id="cb-menu-brand-btn-mode"></span></button>
+        </span>
+
+        <span id="cb-menu-file" class="dropdown">
+          <button class="btn btn-secondary cb-button" type="button" id="cb-menu-file-btn" data-toggle="dropdown">&nbsp;&nbsp;<i class="fa fa-file">&nbsp;</i></button>
+          <div id="cb-file-selection" class="dropdown-menu">
           </div>
-        </div>
+        </span>
+
+        <span id="cb-menu-settings" class="dropdown">
+
+          <button class="btn btn-secondary cb-button" type="button" id="cb-menu-settings-btn" data-toggle="dropdown">&nbsp;&nbsp;<i class="fa fa-cogs"></i>&nbsp;</button>
+          <div class="dropdown-menu">
+
+            <h5 class="dropdown-header">Language level</h5>
+            <a href="#" class="dropdown-item" data-cb-setting-level="novice"><span><i class="fa fa-check"></i></span>&nbsp;&nbsp;Novice</a>
+            <a href="#" class="dropdown-item" data-cb-setting-level="standard"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Standard</a>
+
+            <div class="dropdown-divider"></div>
+
+            <h5 class="dropdown-header">Animation speed</h5>
+            <a href="#" class="dropdown-item" data-cb-setting-speed="slow"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Slow</a>
+            <a href="#" class="dropdown-item" data-cb-setting-speed="normal"><span><i class="fa fa-check"></i></span>&nbsp;&nbsp;Normal</a>
+            <a href="#" class="dropdown-item" data-cb-setting-speed="fast"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Fast</a>
+            <a href="#" class="dropdown-item" data-cb-setting-speed="turbo"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Turbo</a>
+            <a href="#" class="dropdown-item" data-cb-setting-speed="lightning"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Lightning</a>
+
+            <div class="dropdown-divider"></div>
+
+            <h5 class="dropdown-header">Editing</h5>
+            <a href="#" class="dropdown-item" data-cb-setting-editor="line-numbers"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Show line numbers</a>
+            <a href="#" class="dropdown-item" data-cb-setting-editor="large-font"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Large font</a>
+
+            <div class="dropdown-divider"></div>
+
+            <h5 class="dropdown-header">Graphics</h5>
+            <a href="#" class="dropdown-item" data-cb-setting-graphics="show-window"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Show drawing window</a>
+
+          </div>
+        </span>
+
       </div>
+
+      <!-- Execution control buttons -->
+
+      <div id="cb-exec-controls">
+
+        <div id="cb-exec-controls-counter">
+          <span id="cb-exec-step-counter" class="badge badge-primary badge-pill cb-step-counter"></span>
+        </div>
+
+        <div id="cb-exec-controls-buttons" class="btn-group" role="group" data-toggle="tooltip" data-delay="2000" data-trigger="manual" data-placement="left" title="TRY ME!">
+
+          <button id="cb-exec-btn-step" type="button" class="btn btn-secondary cb-button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Single step/Pause">
+            <img id="cb-exec-img-play-1" src="include/img/play-1.png"></img>
+            <img id="cb-exec-img-pause" src="include/img/pause.png"></img>
+            <img id="cb-exec-img-play-pause" src="include/img/play-pause.png"></img>
+          </button>
+
+          <button id="cb-exec-btn-animate" type="button" class="btn btn-secondary cb-button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Execute with animation">
+            <img id="cb-exec-img-play" src="include/img/play.png"></img>
+          </button>
+
+          <button id="cb-exec-btn-eval" type="button" class="btn btn-secondary cb-button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Execute to end">
+            <img id="cb-exec-img-play-inf" src="include/img/play-inf.png"></img>
+          </button>
+
+          <button id="cb-exec-btn-stop" type="button" class="btn btn-secondary cb-button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Stop">
+            <img id="cb-exec-img-stop" src="include/img/stop.png"></img>
+          </button>
+
+        </div>
+
+      </div>
+
     </div>
 
-    <!-- Content -->
-    <div id="contents" class="container">
-      <!-- Editor -->
-      <!--
-      <div class="row">
-        <ul class="nav nav-tabs">
-          <li class="active"><a href="#">Untitled.js</a></li>
+    <div id="cb-navbar-footer"></div>
+
+  </div>
+
+  <div id="cb-console">
+    <div id="cb-repl-container">
+      <textarea id="cb-repl"></textarea>
+    </div>
+    <div id="cb-playground">
+      <div id="cb-drawing-window" onclick="drawing_window.screenshot();"></div>
+      <div id="b"></div>
+    </div>
+  </div>
+
+  <div id="cb-editors">
+    <ul id="cb-file-tabs" class="nav nav-tabs"></ul>
+  </div>
+    
+  <div id="cb-footer"></div>
+    
+<!---------------------------------------------------------------------------->
+
+<!-- Hidden elements -->
+
+<div id="cb-exec-point-bubble-template"></div>
+
+<div id="cb-about-box" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">About codeBoot</h4>
+      </div>
+      <div class="modal-body">
+        <p>codeBoot is developped by Marc Feeley and Bruno Dufour using the following components:</p>
+        <ul>
+          <li><a href="http://github.com/twbs/bootstrap" target="_blank">Bootstrap</a></li>
+          <li><a href="http://jquery.com/" target="_blank">jQuery</a></li>
+          <li><a href="http://codemirror.net/" target="_blank">CodeMirror</a></li>
         </ul>
-        <div class="tab-content">
-          <div class="tab-pane active" id="home">...</div>
-        </div>
-      </div>
-      -->
-
-      <!-- Console -->
-      <div id="floating-console">
-        <div id="console-row" class="row-fluid">
-          <div class="span12">
-            <div class="row-fluid">
-              <div id="repl-span" class="span12">
-                <pre id="repl"><div id="transcript"></div><hr id="transcript-sep"/><div id="console"><div id="transcript-clear-btn"><a title="Clear console" href="#" onclick="cb.clearAll();" data-cb-focus="restore"><i class="icon-trash"></i></a></div></div></pre>
-              </div>
-              <div id="drawing-span" class="span0">
-                <div id="drawing-window"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="step-value-row" class="row">
-          <pre id="step-value" class="step-value" style="display:none;"></pre>
-        </div>
-
-        <div id="editors-shadow" class="hide"></div>
-      </div>
-
-      <div id="editors"></div>
-
-      <div id="about-box" class="modal hide fade">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h3>About codeBoot</h3>
-        </div>
-        <div class="modal-body">
-          <p>codeBoot is developped by Marc Feeley and Bruno Dufour using the following components:</p>
-          <ul>
-            <li><a href="http://twitter.github.com/bootstrap/" target="_blank">Twitter Bootstrap</a></li>
-            <li><a href="http://jquery.com/" target="_blank">jQuery</a></li>
-            <li><a href="http://jqueryui.com/" target="_blank">jQuery UI</a></li>
-            <li><a href="http://codemirror.net/" target="_blank">CodeMirror</a></li>
-            <li><a href="http://modernizr.com/" target="_blank">Modernizr</a></li>
-            <li><a href="http://craig.is/killing/mice" target="_blank">Mousetrap</a></li>
-            <li><a href="http://ekamanganese.deviantart.com/art/Snail-Vector-94976805" target="_blank">Snail icon</a> by ekamanganese</li>
-            <li><a href="http://thenounproject.com/noun/rabbit/#icon-No5354" target="_blank">Rabbit icon</a> by Samuel Fine from The Noun Project</li>
-            <li><a href="http://gentleface.com/">Gentleface icons</a></li>
-          </ul>
-          <p>The code is freely <a href="https://github.com/feeley/codeboot" target="_blank">available on Github</a>. Feel free
-             to <a href="https://github.com/feeley/codeboot/issues/new" target="_blank">report issues</a> or contribute.</p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-        </div>
+        <p>The code is freely <a href="https://github.com/feeley/codeboot" target="_blank">available on Github</a>. Feel free
+          to <a href="https://github.com/feeley/codeboot/issues/new" target="_blank">report issues</a> or contribute.</p>
       </div>
     </div>
+  </div>
+</div>
 
-    <div id="codeboot-footer">
-    </div>
+<form id="cb-form-download" class="hide" action="download.php" method="post">
+  <textarea id="cb-form-download-content" name="content"></textarea>
+  <textarea id="cb-form-download-filename" name="filename"></textarea>
+</form>
 
-    <!-- Imports (importing at the end makes the page load faster) -->
-    <script src="include/jquery.js"></script>
-    <script src="include/jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
-    <script src="include/bootstrap/js/bootstrap.js"></script>
-    <script src="include/codemirror3/lib/codemirror.js"></script>
-    <script src="include/codemirror3/mode/javascript/javascript.js"></script>
-    <script src="include/codemirror3/lib/util/matchbrackets.js"></script>
-    <script src="include/codemirror3/lib/util/formatting.js"></script>
-    <script src="include/cm-autoclose.js"></script>
+<!---------------------------------------------------------------------------->
 
-    <script src="include/polyfills/BlobBuilder.js"></script>
-    <script src="include/polyfills/FileSaver.js"></script>
+<!-- Load JavaScript code last -->
 
-    <script src="include/jseval/system.js"></script>
-    <script src="include/jseval/num.js"></script>
-    <script src="include/jseval/scanner.js"></script>
-    <script src="include/jseval/parser.js"></script>
-    <script src="include/jseval/pp.js"></script>
-    <script src="include/jseval/ast-passes.js"></script>
-    <script src="include/jseval/eval.js"></script>
+<script src="include/jquery-3.2.1.min.js"></script>
+<script src="include/popper-1.11.0.min.js"></script>
+<script src="include/tippyjs-1.2.0/dist/tippy.standalone.js"></script>
+<script src="include/jquery.clippy.min.js"></script>
+<script src="include/bootstrap-4.0.0-beta-dist/js/bootstrap.min.js"></script>
 
-    <script type="text/javascript">
-        window.cb = {
-            builtins: {},
+<script src="include/CodeMirror/lib/codemirror.js"></script>
+<script src="include/CodeMirror/addon/edit/matchbrackets.js"></script>
+<script src="include/CodeMirror/addon/comment/continuecomment.js"></script>
+<script src="include/CodeMirror/addon/comment/comment.js"></script>
+<script src="include/CodeMirror/mode/javascript/javascript.js"></script>
 
-            // state
-            currentConsoleLine: undefined,
-            saveInProgress: false,
-            lastEditor: null,
-            languageLevel: "novice",
-            navbarColor: "default",
-            stepDelay: 0,
-            options: {
-              showLineNumbers: false
-            },
+<script src="include/jseval/system.js"></script>
+<script src="include/jseval/num.js"></script>
+<script src="include/jseval/scanner.js"></script>
+<script src="include/jseval/parser.js"></script>
+<script src="include/jseval/pp.js"></script>
+<script src="include/jseval/ast-passes.js"></script>
+<script src="include/jseval/eval.js"></script>
 
-            // Elements
-            alerts: undefined,
-            repl: undefined,
-            console: undefined
-        };
+<script src="include/codeboot.js"></script>
+<script src="include/drawing.js"></script>
+<script src="include/actions.js"></script>
+<script src="include/editors.js"></script>
+<script src="include/builtins.js"></script>
+<script src="include/fs.js"></script>
+<script src="include/storage.js"></script>
+<script src="include/tutorial.js"></script>
+<script src="include/output.js"></script>
+<script src="include/jquery.visibility.js"></script>
+<script>cb.query(null);</script>
 
-        function setStepDelay(delay) {
-            cb.stepDelay = delay;
-            program_state.step_delay = delay;
-        }
+</body>
 
-        function navbarColorClass(color) {
-            if (color === "default") {
-                return ""; // make white default to avoid flicker on reload
-            } else if (color === "white") {
-                return "";
-            } else {
-                return "navbar-color-" + color;
-            }
-        }
-
-        function setNavbarColor(color) {
-            $("#navbar")
-                .removeClass(navbarColorClass(cb.navbarColor))
-                .addClass(navbarColorClass(color));
-                cb.navbarColor = color;
-        }
-
-        cb.setDevMode = function (devMode) {
-            cb.devMode = devMode;
-            if (cb.devMode) {
-                setNavbarColor("white");
-                $("#devModeTitle").text(" (dev mode)");
-            } else {
-                cb.setLanguageLevel(cb.languageLevel);
-                $("#devModeTitle").text("");
-            }
-        };
-
-        cb.setLanguageLevel = function (lang) {
-            cb.languageLevel = lang;
-            if (lang === "novice") {
-                setNavbarColor("turquoise");
-            } else {
-                setNavbarColor("red");
-            }
-            $("#setting-lang-" + lang).checkItem();
-            $("body").attr("data-lang-level", lang);
-        };
-
-        cb.toggleLineNumbers = function () {
-            cb.options.showLineNumbers = !cb.options.showLineNumbers;
-            cb.fs.each(function (f) {
-               if (f.editor) {
-                   f.editor.setOption("lineNumbers", cb.options.showLineNumbers);
-               }
-            });
-        };
-
-        cb.toggleDrawingWindow = function () {
-            if (showing_drawing_window()) {
-              hide_drawing_window();
-            } else {
-              show_drawing_window();
-            }
-        };
-
-        cb.exportDrawingWindow = function () {
-            export_drawing_window();
-        };
-
-        function cb_internal_getBounds($element) {
-            var offset = $element.offset();
-            var w = $element.width();
-            var h = $element.height();
-            return {
-                left: offset.left,
-                top: offset.top,
-                width: w,
-                clientWidth: w,
-                height: h,
-                clientHeight: h
-            };
-        }
-
-        $(document).ready(function() {
-            Mousetrap.bind('ctrl+\\', function () {
-                cb.setDevMode(!cb.devMode);
-            });
-            Mousetrap.bind('ctrl+shift+c', function () {
-                cb.closeAll();
-            });
-            window.onbeforeunload = function () {
-                if (cb.saveInProgress) {
-                    cb.saveInProgress = false;
-                    return undefined;
-                }
-                if (!cb.devMode) {
-                    return "You codeBoot session will be lost."
-                } else {
-                    return undefined;
-                }
-            };
-            // checkBrowserFeatures();
-
-            $("#setting-speed-normal").click();
-
-            cb.alerts = document.getElementById("alerts");
-            cb.repl   = createREPL(document.getElementById("repl"));
-            cb.transcript = new CPTranscript(createTranscript(document.getElementById("transcript")));
-            cb.console = document.getElementById("console");
-            cb.setDevMode(false);
-
-            $("#editors").on("scroll", function () {
-                var $firstEditor = $("#editors").children().first();
-                $("#editors-shadow").toggle($firstEditor.size() > 0 && $firstEditor.position().top < 0);
-
-                cb_internal_updatePopupPos();
-            });
-
-            document.getElementById("transcript").style.display='none';
-            $(window).resize(cb_internal_resizeEditors);
-            cb_internal_resizeEditors();
-
-            cb.initFS();
-
-            cb.loadSession();
-            $("#setting-linenums").toggleItem(cb.options.showLineNumbers);
-
-            $("#repl").click(focusREPL);
-
-
-            $('#about-box').add("#urlModal").on('hidden', function () {
-              cb_restoreFocus();
-            });
-
-            cb.handle_query();
-
-            // Stop navigation to '#'
-            $('body').on('click.codeboot.restoreFocus', '[data-cb-focus="restore"]', function (e) {
-              cb_restoreFocus();
-            });
-            $('body').on('click.codeboot.nonav', '[href="#"]', function (e) {
-                e.preventDefault();
-            });
-
-            $("#openFileModal").on('show', function () {
-                $('#openFileModalOKBtn').attr('disabled', 'disabled');
-                var $form = $("#openFileForm");
-                $form.empty().append($('<input type="file" id="openFileInput">').change(function (e) {
-                    $('#openFileModalOKBtn').removeAttr('disabled');
-                }));
-            });
-
-            $("#openFileModalOKBtn").click(function (e) {
-                var files = $("#openFileInput").get(0).files;
-                if (!files.length) return;
-
-                var file = files[0];
-
-                var filename = $("#openFileModal").attr('data-cb-filename');
-                cb.loadFile(cb.fs.getEditor(filename), file);
-            });
-        });
-
-        function cb_internal_resizeEditors() {
-            var $console = $("#console-row");
-            var consoleOffset = $console.offset();
-            $("#editors")
-                .css("left", consoleOffset.left)
-                .css("right", consoleOffset.left)
-                .css("top", consoleOffset.top + $console.height());
-        }
-
-        function checkBrowserFeatures() {
-            var MISSING = 0, EMULATED = 1, SUPPORTED = 2;
-            var status = SUPPORTED;
-
-            for (var i = 0; i < window.features.length; i++) {
-                var feature = window.features[i];
-                var status_label;
-                switch (feature.status) {
-                  case MISSING:
-                    status_label = "missing";
-                    break;
-                  case EMULATED:
-                    status_label = "emulated";
-                    break;
-                  default:
-                    status_label = "supported";
-                    break;
-                }
-
-                $("#browserIssues ul").append($("<li/>").append($('<a/>').attr('href', feature.url).attr("target", "new").text(feature.name + " " + status_label)));
-                status = Math.min(status, feature.status);
-            }
-
-            if (status === SUPPORTED) {
-                $("#browserStatus").addClass("badge-success");
-                $("#browserStatusMsg").text("All features supported");
-                $("#browserStatusIcon").addClass("icon-ok");
-            } else if (status === EMULATED) {
-                $("#browserStatus").addClass("badge-warning");
-                $("#browserStatusMsg").text("Some features are emulated");
-                $("#browserStatusIcon").addClass("icon-warning-sign");
-            } else {
-                $("#browserStatus").addClass("badge-important");
-                $("#browserStatusMsg").text("Some features are missing");
-                $("#browserStatusIcon").addClass("icon-exclamation-sign");
-            }
-        }
-
-        function focusREPL() {
-            cb.repl.focus();
-        }
-
-        function cb_restoreFocus() {
-            if (cb.lastEditor) {
-                cb.lastEditor.focus();
-            }
-        }
-
-        function saveAs(content, filename) {
-            $("#form-download-content").val(content);
-            $("#form-download-filename").val(filename);
-            cb.saveInProgress = true;
-            $("#form-download").submit();
-        }
-
-        function cb_about() {
-
-        }
-    </script>
-    <script src="include/drawing.js"></script>
-    <script src="include/actions.js"></script>
-    <script src="include/editors.js"></script>
-    <script src="include/builtins.js"></script>
-    <script src="include/fs.js"></script>
-    <script src="include/storage.js"></script>
-    <script src="include/mousetrap.min.js"></script>
-    <script src="include/tutorial.js"></script>
-    <script src="include/output.js"></script>
-    <script src="include/jquery.clippy.min.js"></script>
-    <script src="include/jquery.visibility.js"></script>
-    <script>cb.query(null);</script>
-
-    <script>
-        (function ($) {
-            // Enable menu toggles
-
-            function getGroup($item) {
-                return $item.closest('[data-toggle="radio-groups"]');
-            }
-
-            function getGroupName($item) {
-                return $item.attr('data-radio-group');
-            }
-
-            function getGroupItems($group, groupName) {
-                return $group
-                    .closest('[data-toggle="radio-groups"]')
-                    .find('[data-radio-group="' + groupName + '"]');
-            }
-
-            function setItemStatus($item, checked) {
-                var $icon = $item.children("i");
-
-                if (checked === "toggle") {
-                    checked = !$icon.hasClass("icon-ok");
-                }
-
-                $icon
-                    .toggleClass("icon-ok", checked)
-                    .toggleClass("icon-none", !checked);
-            }
-
-            $.fn.toggleItem = function (test) {
-                setItemStatus(this, test === void 0 ? "toggle" : test);
-            }
-
-            $.fn.uncheckItem = function () {
-                return this.each(function () {
-                  setItemStatus($(this), false);
-                });
-            }
-
-            $.fn.checkItem = function () {
-                return this.each(function () {
-                    var $this = $(this);
-                    var groupName = getGroupName($this);
-                    if (groupName) {
-                        getGroupItems($this, groupName).uncheckItem();
-                    }
-                    setItemStatus($this, true);
-                });
-            };
-
-            $(function () {
-                $('body').on('click.codeboot.toggles.radio', '[data-radio-group]', function ( e ) {
-                    var $item = $(e.target);
-                    $item.checkItem();
-                });
-
-                $('body').on('click.codeboot.toggles.checkbox', '[data-toggle="checkbox"]', function ( e ) {
-                    var $item = $(e.target);
-                    setItemStatus($item, "toggle");
-                });
-            });
-        })(jQuery);
-    </script>
-
-	<form id="form-download" class="hide" action="download.php" method="post">
-	  <textarea id="form-download-content" name="content" style="width: 0; height: 0;"></textarea>
-	  <textarea id="form-download-filename" name="filename" style="width: 0; height: 0;"></textarea>
-	</form>
-
-	<div id="urlModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="urlModalLabel" aria-hidden="true">
-	  <div class="modal-header">
-		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-		<h3 id="urlModalLabel">Share link <span id="urlModal-clippy"></span></h3>
-	  </div>
-	  <div class="modal-body">
-		<pre id="urlModal-body"></pre>
-	  </div>
-	  <div class="modal-footer">
-		<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-	  </div>
-	</div>
-
-	<div id="openFileModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="openFileModalLabel" aria-hidden="true">
-	  <div class="modal-header">
-		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-		<h3 id="openFileModalLabel">Upload file</h3>
-	  </div>
-	  <div class="modal-body">
-      <form id="openFileForm">
-        <!-- Filled dynamically -->
-      </form>
-	  </div>
-	  <div class="modal-footer">
-      <button class="btn btn-primary" id="openFileModalOKBtn" disabled="disabled" data-dismiss="modal" aria-hidden="true">OK</button>
-		  <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-	  </div>
-	</div>
-  </body>
 </html>

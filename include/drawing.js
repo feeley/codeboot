@@ -93,7 +93,7 @@ function dom_measure_text(context, text) {
 }
 
 function dom_remove_children(parent) {
-  while (parent.hasChildNodes()) {   
+  while (parent.hasChildNodes()) {
     parent.removeChild(parent.firstChild);
   }
 }
@@ -129,7 +129,7 @@ function DrawingWindow(id, width, height) {
   }
 }
 
-DrawingWindow.prototype.export = function (thunk) {
+DrawingWindow.prototype.toDataURL = function () {
 
     var w = this.drawing_canvas.width;
     var h = this.drawing_canvas.height;
@@ -145,10 +145,11 @@ DrawingWindow.prototype.export = function (thunk) {
     ctx.drawImage(this.drawing_canvas, 0, 0);
     ctx.drawImage(this.turtle_canvas, 0, 0);
 
-    var URL = c.toDataURL();
-    $("#urlModal-body").text(URL);
-    $("#urlModal-clippy").empty().clippy({clippy_path: "clippy.swf", text: URL});
-    $("#urlModal").modal('show');
+    return c.toDataURL();
+};
+
+DrawingWindow.prototype.screenshot = function () {
+    window.open(drawing_window.toDataURL());
 };
 
 DrawingWindow.prototype.excursion = function (thunk) {
@@ -165,7 +166,7 @@ DrawingWindow.prototype.excursion = function (thunk) {
   return result;
 };
 
-DrawingWindow.prototype.cs = function () {
+DrawingWindow.prototype.cs = function (width, height) {
   dom_clear(this.drawing_canvas);
   this.turtle_height = 0;
   this.pen_height = 0;
@@ -176,12 +177,26 @@ DrawingWindow.prototype.cs = function () {
   this.set_thickness(1);
 };
 
-DrawingWindow.prototype.fd = function (len) {
-  var rad = Math.PI * this.orientation / 180;
+DrawingWindow.prototype.fd = function (xdistance, ydistance) {
+  if (ydistance === void 0) ydistance = 0;
+  var rad = Math.PI * (this.orientation / 180);
   var x0 = this.pos.x;
   var y0 = this.pos.y;
-  var x1 = x0 + len * Math.cos(rad);
-  var y1 = y0 + len * Math.sin(rad);
+  var x1 = x0 + xdistance * Math.cos(rad) - ydistance * Math.sin(rad);
+  var y1 = y0 + xdistance * Math.sin(rad) + ydistance * Math.cos(rad);
+  this.mv(x1, y1);
+};
+
+DrawingWindow.prototype.bk = function (xdistance, ydistance) {
+  if (ydistance === void 0) ydistance = 0;
+  this.fd(-xdistance,-ydistance);
+};
+
+DrawingWindow.prototype.mv = function (x, y) {
+  var x0 = this.pos.x;
+  var y0 = this.pos.y;
+  var x1 = x;
+  var y1 = y;
   if (this.pen_height === 0) {
     dom_line_to(this.drawing_context, x0, y0, x1, y1);
   }
@@ -191,16 +206,14 @@ DrawingWindow.prototype.fd = function (len) {
   }
 };
 
-DrawingWindow.prototype.bk = function (len) {
-  this.fd(-len);
-};
-
 DrawingWindow.prototype.set_color = function (color) {
   dom_set_color(this.drawing_context, color);
 };
 
 DrawingWindow.prototype.set_thickness = function (width) {
-  dom_set_thickness(this.drawing_context, width);
+  var ctx = this.drawing_context;
+  dom_set_font(ctx, (9+width) + 'px Courier');
+  dom_set_thickness(ctx, width);
 };
 
 DrawingWindow.prototype.pu = function () {
@@ -286,49 +299,60 @@ DrawingWindow.prototype.drawtext = function (text) {
   var ctx = this.drawing_context;
   ctx.save();
   ctx.translate(this.pos.x, this.pos.y);
-  ctx.rotate((Math.PI/180)*this.orientation);
+  ctx.rotate(Math.PI*(this.orientation/180));
   ctx.scale(1, -1);
-  dom_fill_text(ctx, text+"", 0, 0);
+  dom_fill_text(ctx, text+'', 0, 0);
   ctx.restore();
 };
 
 var drawing_window;
 
-function init_drawing_window(width, height) {
-  drawing_window = new DrawingWindow('drawing-window', width, height);
+function create_drawing_window(width, height) {
+  drawing_window = new DrawingWindow('cb-drawing-window', width, height);
   drawing_window.cs();
 }
 
-init_drawing_window(360, 200);
-//init_drawing_window(250, 250);
-
-function showing_drawing_window() {
-  return document.getElementById("repl-span").className === "span6";
+function init_drawing_window(small) {
+    if (small) {
+        create_drawing_window(200, 200);
+    } else {
+        create_drawing_window(360, 240);
+    }
 }
 
-function export_drawing_window() {
-  drawing_window.export();
+init_drawing_window(false);
+
+function showing_drawing_window() {
+  return $('#cb-drawing-window').is(':visible');
 }
 
 function show_drawing_window() {
-  document.getElementById("repl-span").className = "span6";
-  document.getElementById("drawing-span").className = "span6";
-  var parent = document.getElementById('drawing-window');
+  $('#cb-drawing-window').css('display', 'inline');
+  var parent = document.getElementById('cb-drawing-window');
   dom_remove_children(parent);
   parent.appendChild(drawing_window.drawing_canvas);
   parent.appendChild(drawing_window.turtle_canvas);
   parent.appendChild(drawing_window.grid_canvas);
-  cb.transcript.addLine("showing drawing window", "error-message");
-  document.getElementById("show-drawing-window-icon").className = "icon-ok";
+  update_playground_visibility();
 }
 
 function hide_drawing_window() {
-  var parent = document.getElementById('drawing-window');
+  var parent = document.getElementById('cb-drawing-window');
   dom_remove_children(parent);
-  document.getElementById("repl-span").className = "span12";
-  document.getElementById("drawing-span").className = "span0";
-  cb.transcript.addLine("hiding drawing window", "error-message");
-  document.getElementById("show-drawing-window-icon").className = "icon-none";
+  $('#cb-drawing-window').css('display', 'none');
+  update_playground_visibility();
+}
+
+function update_playground_visibility() {
+  var drawing_window_visible =
+      $('#cb-drawing-window').css('display') !== 'none';
+  $('a[data-cb-setting-graphics="show-window"] > span')
+        .css('visibility', drawing_window_visible ? 'visible' : 'hidden');
+  if (drawing_window_visible || $('#b').html() !== '') {
+      $('body').removeClass('cb-hide-playground');
+  } else {
+      $('body').addClass('cb-hide-playground');
+  }
 }
 
 function ensure_showing_drawing_window() {
@@ -337,62 +361,117 @@ function ensure_showing_drawing_window() {
   }
 }
 
-function builtin_cs() {
-  ensure_showing_drawing_window();
+function builtin_cs(width, height) {
+  if (width !== void 0 || height !== void 0) {
+    if (width === void 0 || height === void 0)
+      throw 'cs expects 0 or 2 parameters';
+    if (typeof width !== 'number')
+      throw 'width parameter of cs must be a number';
+    if (typeof height !== 'number')
+      throw 'height parameter of cs must be a number';
+    create_drawing_window(width, height);
+    show_drawing_window();
+  }
   drawing_window.cs();
+  ensure_showing_drawing_window();
 }
 
 function builtin_st() {
-  ensure_showing_drawing_window();
   drawing_window.st();
+  ensure_showing_drawing_window();
 }
 
 function builtin_ht() {
-  ensure_showing_drawing_window();
   drawing_window.ht();
+  ensure_showing_drawing_window();
 }
 
 function builtin_pu() {
-  ensure_showing_drawing_window();
   drawing_window.pu();
+  ensure_showing_drawing_window();
 }
 
 function builtin_pd() {
-  ensure_showing_drawing_window();
   drawing_window.pd();
+  ensure_showing_drawing_window();
 }
 
-function builtin_fd(distance) {
+function builtin_fd(xdistance, ydistance) {
+  if (xdistance === void 0)
+    throw 'fd expects at least 1 parameter';
+  if (typeof xdistance !== 'number')
+    throw 'xdistance parameter of fd must be a number';
+  if (ydistance !== void 0 && typeof ydistance !== 'number')
+    throw 'ydistance parameter of fd must be a number';
+  drawing_window.fd(xdistance, ydistance);
   ensure_showing_drawing_window();
-  drawing_window.fd(distance);
 }
 
-function builtin_bk(distance) {
+function builtin_bk(xdistance, ydistance) {
+  if (xdistance === void 0)
+    throw 'bk expects at least 1 parameter';
+  if (typeof xdistance !== 'number')
+    throw 'xdistance parameter of bk must be a number';
+  if (ydistance !== void 0 && typeof ydistance !== 'number')
+    throw 'ydistance parameter of bk must be a number';
+  drawing_window.bk(xdistance, ydistance);
   ensure_showing_drawing_window();
-  drawing_window.bk(distance);
+}
+
+function builtin_mv(x, y) {
+  if (x === void 0 || y === void 0)
+    throw 'mv expects 2 parameters';
+  if (typeof x !== 'number')
+    throw 'x parameter of mv must be a number';
+  if (typeof y !== 'number')
+    throw 'y parameter of mv must be a number';
+  drawing_window.mv(x, y);
+  ensure_showing_drawing_window();
 }
 
 function builtin_lt(angle) {
-  ensure_showing_drawing_window();
+  if (angle === void 0)
+    throw 'lt expects 1 parameter';
+  if (typeof angle !== 'number')
+    throw 'angle parameter of lt must be a number';
   drawing_window.lt(angle);
+  ensure_showing_drawing_window();
 }
 
 function builtin_rt(angle) {
-  ensure_showing_drawing_window();
+  if (angle === void 0)
+    throw 'rt expects 1 parameter';
+  if (typeof angle !== 'number')
+    throw 'angle parameter of rt must be a number';
   drawing_window.rt(angle);
+  ensure_showing_drawing_window();
 }
 
 function builtin_setpc(r, g, b) {
-  ensure_showing_drawing_window();
+  if (r === void 0 || g === void 0 || b === void 0)
+    throw 'setpc expects 3 parameters';
+  if (typeof r !== 'number')
+    throw 'r parameter of setpc must be a number';
+  if (typeof g !== 'number')
+    throw 'g parameter of setpc must be a number';
+  if (typeof b !== 'number')
+    throw 'b parameter of setpc must be a number';
   drawing_window.setpc(r, g, b);
+  ensure_showing_drawing_window();
 }
 
 function builtin_setpw(width) {
-  ensure_showing_drawing_window();
+  if (width === void 0)
+    throw 'setpw expects 1 parameter';
+  if (typeof width !== 'number')
+    throw 'width parameter of setpw must be a number';
   drawing_window.setpw(width);
+  ensure_showing_drawing_window();
 }
 
 function builtin_drawtext(text) {
-  ensure_showing_drawing_window();
+  if (text === void 0)
+    throw 'drawtext expects 1 parameter';
   drawing_window.drawtext(text);
+  ensure_showing_drawing_window();
 }

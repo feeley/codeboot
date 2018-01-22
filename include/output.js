@@ -28,26 +28,26 @@ cb.output = {};
 	}
 
 	PixelGrid.prototype._draw = function () {
-	    var $table = $('<table/>').addClass("pixelGrid");
+	    var $table = $('<table/>').addClass('pixelGrid');
 
-	    $table.css("height", (this.rows * this.pixelSize + this.rows * this.borderWidth) + "px");
-	    $table.css("padding", "0");
-	    $table.css("margin", "0");
-	    $table.css("border-collapse", "collapse");
+	    $table.css('height', (this.rows * this.pixelSize + this.rows * this.borderWidth) + 'px');
+	    $table.css('padding', '0');
+	    $table.css('margin', '0');
+	    $table.css('border-collapse', 'collapse');
 
 	    this.$pixels = [];
 	    for (var i = 0; i < this.rows; i++) {
-			var $row = $("<tr/>");
+			var $row = $('<tr/>');
 			$table.append($row);
 
 			this.$pixels.push([]);
 			for (var j = 0; j < this.cols; j++) {
-			    var $pixel = $("<td/>");
-			    $pixel.css("padding", "0");
-			    $pixel.css("margin", "0");
-			    $pixel.css("width", this.pixelSize + "px");
-			    $pixel.css("height", this.pixelSize + "px");
-			    $pixel.css("border", this.borderWidth + "px solid #c0c0c0");
+			    var $pixel = $('<td/>');
+			    $pixel.css('padding', '0');
+			    $pixel.css('margin', '0');
+			    $pixel.css('width', this.pixelSize + 'px');
+			    $pixel.css('height', this.pixelSize + 'px');
+			    $pixel.css('border', this.borderWidth + 'px solid #c0c0c0');
 
 				$row.append($pixel);
 				this.$pixels[i].push($pixel);

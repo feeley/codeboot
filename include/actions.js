@@ -1,142 +1,61 @@
-$(document).ready(function() {
-    if (!CodeMirror.commands.save) {
-        CodeMirror.commands.save = function (cm) {
-            if (cm.save) cm.save(cm);
-        };
-    }
-});
+CodeBoot.prototype.setupDrop = function (elt, handler) {
 
-cb.addAlert = function (text, title, kind) {
-    var alertDiv = $("<div/>").addClass("alert");
-    if (kind) alertDiv.addClass("alert-" + kind);
+    var onDragEnter = function (e) {
+        onDragOver(e);
+    };
+
+    var onDragLeave = function (e) {
+    };
+
+    var onDragOver = function (e) {
+        if (handler !== void 0) {
+            e.dataTransfer.dropEffect = 'copy';
+        }
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    var onDrop = function (e) {
+        e.preventDefault();
+        if (handler !== void 0) {
+            handler(e);
+        }
+    };
+
+    elt.addEventListener('dragenter', onDragEnter);
+    elt.addEventListener('dragleave', onDragLeave);
+    elt.addEventListener('dragover', onDragOver);
+    elt.addEventListener('drop', onDrop);
+};
+
+CodeBoot.prototype.addAlert = function (text, title, kind) {
+    var alertDiv = $('<div/>').addClass('alert');
+    if (kind) alertDiv.addClass('alert-' + kind);
     alertDiv.text(text);
     if (title) {
-        alertDiv.prepend($("<strong/>").text(title), " ");
+        alertDiv.prepend($('<strong/>').text(title), ' ');
     }
     alertDiv.prepend('<button class="close" data-dismiss="alert">&times;</button>');
     $(cb.alerts).append(alertDiv);
 };
 
-cb.reportError = function (text, title) {
-    if (title === undefined) title = "Error!";
-    cb.addAlert(text, title, "error");
+CodeBoot.prototype.reportError = function (text, title) {
+    if (title === undefined) title = 'Error!';
+    cb.addAlert(text, title, 'error');
 };
 
-cb.reportWarning = function (text, title) {
-    if (title === undefined) title = "Warning!";
+CodeBoot.prototype.reportWarning = function (text, title) {
+    if (title === undefined) title = 'Warning!';
     cb.addAlert(text, title);
-};
-
-cb.scrollToEnd = function (editor) {
-    var info = editor.getScrollInfo();
-    editor.scrollTo(null, info.height - info.clientHeight);
 };
 
 function removeTrailingNewline(text) {
     var s = String(text);
-    if (s.charAt(text.length - 1) === "\n") {
+    if (s.charAt(text.length - 1) === '\n') {
         s = s.slice(0, s.length-1);
     }
     return s;
 }
-
-function CPTranscript(editor) {
-    this.editor = editor;
-    this.is_empty = true;
-
-    this.widgets = [];
-}
-
-CPTranscript.prototype.onTranscriptChanged = function () {
-    // TODO: make this configurable
-    var $console = $("#console-row");
-    var top = $console.offset().top;
-    var height = $console.height();
-    $("#editors").css("top", top + height);
-}
-
-CPTranscript.prototype.clear = function () {
-    for (var i = 0; i < this.widgets.length; i++) {
-        this.editor.removeLineWidget(this.widgets[i]);
-    }
-    this.editor.setValue("");
-    this.editor.refresh();
-    this.is_empty = true;
-    this.hide();
-    this.onTranscriptChanged();
-};
-
-CPTranscript.prototype.show = function () {
-    $("#transcript").show();
-    $("#transcript-sep").show();
-    this.onTranscriptChanged();
-};
-
-CPTranscript.prototype.hide = function () {
-    $("#transcript").hide();
-    $("#transcript-sep").hide();
-    this.onTranscriptChanged();
-};
-
-CPTranscript.prototype.addTextLine = function (text, cssClass) {
-    var editor = this.editor;
-    text = removeTrailingNewline(text);
-    // CodeMirror needs to be visible to the updates to the gutter to work...
-    if (this.is_empty) this.show();
-
-    var line;
-    if (this.is_empty) {
-        line = 0;
-    } else {
-        text = "\n" + text;
-        line = editor.lineCount();
-    }
-
-    editor.replaceRange(text, { line: line, ch: 0 });
-    editor.markText({ line: line, ch: 0 }, { line: line+1, ch: 0 }, {"className" : cssClass});
-
-    if (editor.lineInfo(line).gutterMarkers) {
-        // Oops, CodeMirror moved the gutter down instead of appending a blank line
-        // We'll set the gutter back on the previous line (ugly!)
-        line -= 1;
-    }
-    editor.setGutterMarker(line, "cb-prompt", document.createTextNode(">"));
-    this.is_empty = false;
-
-    this.onTranscriptChanged();
-};
-
-CPTranscript.prototype.addLineWidget = function (textOrNode, cssClass) {
-    // CodeMirror needs to be visible to the updates to the gutter to work...
-    if (this.is_empty) this.show();
-
-    var widget;
-    if (typeof textOrNode === "string") {
-        var text = removeTrailingNewline(textOrNode);
-        var $widget = $("<div/>");
-        if (cssClass) $widget.addClass(cssClass);
-        $widget.text(text);
-        widget = $widget.get(0);
-    } else {
-        widget = textOrNode;
-    }
-    var w = this.editor.addLineWidget(this.editor.lineCount() - 1, widget);
-    this.widgets.push(w);
-
-    cb.scrollToEnd(this.editor);
-
-    this.onTranscriptChanged();
-};
-
-CPTranscript.prototype.addLine = function (text, cssClass) {
-    var line;
-
-    if (cssClass === "transcript-input") {
-        this.addTextLine(text, cssClass);
-    } else {
-        this.addLineWidget(text, cssClass);
-    }
-};
 
 function position_to_line_ch(pos) {
     return { line: position_to_line(pos)-1,
@@ -144,7 +63,7 @@ function position_to_line_ch(pos) {
            };
 }
 
-function code_highlight(loc, cssClass) {
+CodeBoot.prototype.codeHighlight = function (loc, cssClass, markEnd) {
 
     var container = loc.container;
     var editor;
@@ -158,21 +77,32 @@ function code_highlight(loc, cssClass) {
         if (container.stamp !== state.stamp) {
             return null; // the content of the editor has changed so can't highlight
         }
-        cb.openFile(filename);
+        cb.fs.openFile(filename);
         editor = cb.fs.getEditor(filename);
     } else if (container instanceof SourceContainer) {
-        editor = cb.transcript.editor;
+        editor = cb.repl;
     } else {
         // unknown source container
         return null;
     }
 
-    var start = position_to_line_ch(loc.start_pos);
     var end = position_to_line_ch(loc.end_pos);
-    return editor.markText(start, end, {"className": cssClass});
-}
+    var start = position_to_line_ch(loc.start_pos);
+    var allMarker = editor.markText(start, end, { 'className': cssClass });
+    allMarker.cb_editor = editor;
 
-function printed_repr_old(x) {
+    if (markEnd) {
+        start.line = end.line;
+        start.ch = end.ch-1;
+        var endMarker = editor.markText(start, end, { 'className': cssClass+'-end' });
+        endMarker.cb_editor = editor;
+        return { all: allMarker, end: endMarker };
+    } else {
+        return { all: allMarker, end: null };
+    }
+};
+
+CodeBoot.prototype.printedRepresentation_old = function (x) {
 
     //TODO: avoid infinite loops for circular data!
     //TODO: avoid printing wider than page!
@@ -206,12 +136,12 @@ function printed_repr_old(x) {
         } else if (x instanceof Array) {
             var a = [];
             for (var i=0; i<x.length; i++)
-                a.push(printed_repr(x[i]));
+                a.push(cb.printedRepresentation(x[i]));
             return "[" + a.join(", ") + "]";
         } else {
             var a = [];
             for (var p in x)
-                a.push(printed_repr(p)+": "+printed_repr(x[p]));
+                a.push(cb.printedRepresentation(p)+": "+cb.printedRepresentation(x[p]));
             return "{" + a.join(", ") + "}";
         }
     } else if (typeof x === "undefined") {
@@ -219,16 +149,16 @@ function printed_repr_old(x) {
     } else {
         return String(x);
     }
-}
+};
 
-function printed_repr(obj, format) {
+CodeBoot.prototype.printedRepresentation = function (obj, format) {
 
     if (format === void 0) {
-        format = "plain";
+        format = 'plain';
     }
 
-    return object_repr(obj, format, 80).text;
-}
+    return cb.objectRepresentation(obj, format, 80).text;
+};
 
 function escape_HTML(text) {
   return text.replace(/[&<>"'`]/g, function (chr) {
@@ -239,28 +169,28 @@ function escape_HTML(text) {
 function editor_URL(content, filename) {
 
     var site = document.location.origin +
-               document.location.pathname.replace(/\/[^/]*$/g,"");
+               document.location.pathname.replace(/\/[^/]*$/g,'');
 
-    return site + "/query.cgi?" + "REPLAY=" +
-           btoa(encode_utf8(("@C" +
-                             (filename === void 0 ? "" : (filename + "@0")) +
-                             content + "@E").replace(/\n/g,"@N")));
+    return site + '/query.cgi?' + 'REPLAY=' +
+           btoa(encode_utf8(('@C' +
+                             (filename === void 0 ? '' : (filename + '@0')) +
+                             content + '@E').replace(/\n/g,'@N')));
 }
 
-function object_repr(obj, format, limit) {
+CodeBoot.prototype.objectRepresentation = function (obj, format, limit) {
 
     var string_key_required = function (key) {
 
         return !((Scanner.prototype.is_identifier(key) &&
                   !Scanner.prototype.is_keyword(key)) ||
-                 (""+key === ""+(+key) &&
+                 (''+key === ''+(+key) &&
                   +key >= 0));
 
     };
 
     var xform = function (str) {
         var text;
-        if (format === "HTML") {
+        if (format === 'HTML') {
             text = escape_HTML(str);
         } else {
             text = str;
@@ -268,29 +198,29 @@ function object_repr(obj, format, limit) {
         return { text: text, len: str.length };
     };
 
-    if (typeof obj === "object") {
+    if (typeof obj === 'object') {
 
         if (obj === null) {
 
-            return xform("null");
+            return xform('null');
 
-        } else if ("obj_repr" in obj) {
+        } else if ('obj_repr' in obj) {
 
             return obj.obj_repr(format, limit);
 
         } else if (obj instanceof Array) {
 
-            var a = ["["];
+            var a = ['['];
             var len = 1;
 
             for (var i=0; i<obj.length; i++) {
                 if (i > 0) {
-                    a.push(", ");
+                    a.push(', ');
                     len += 2;
                 }
-                var r = object_repr(obj[i], format, limit-len-1);
+                var r = cb.objectRepresentation(obj[i], format, limit-len-1);
                 if (len + r.len + 1 > limit) {
-                    a.push("...");
+                    a.push('...');
                     len += 3;
                     break;
                 } else {
@@ -299,86 +229,87 @@ function object_repr(obj, format, limit) {
                 }
             }
 
-            a.push("]");
+            a.push(']');
             len += 1;
 
-            return { text: a.join(""), len: len };
+            return { text: a.join(''), len: len };
 
         } else {
 
-            var a = ["{"];
+            var a = ['{'];
             var len = 1;
             var i = 0;
 
             for (var p in obj) {
                 if (i++ > 0) {
-                    a.push(", ");
+                    a.push(', ');
                     len += 2;
                 }
                 var r1;
                 if (string_key_required(p)) {
-                    r1 = object_repr(p, format, limit);
+                    r1 = cb.objectRepresentation(p, format, limit);
                 } else {
-                    r1 = xform(""+p);
+                    r1 = xform(''+p);
                 }
-                var r2 = object_repr(obj[p], format, limit-len-r1.len-3);
+                var r2 = cb.objectRepresentation(obj[p], format, limit-len-r1.len-3);
                 if (len + r1.len + r2.len + 3 > limit) {
-                    a.push("...");
+                    a.push('...');
                     len += 3;
                     break;
                 } else {
                     a.push(r1.text);
-                    a.push(": ");
+                    a.push(': ');
                     a.push(r2.text);
                     len += r1.len + 2 + r2.len;
                 }
             }
 
-            a.push("}");
+            a.push('}');
             len += 1;
 
-            return { text: a.join(""), len: len };
+            return { text: a.join(''), len: len };
 
         }
-    } else if (typeof obj === "string") {
+    } else if (typeof obj === 'string') {
 
+        var delim = '"';
         var chars = [];
-        chars.push("\"");
+        chars.push(delim);
         for (var i=0; i<obj.length; i++) {
             var c = obj.charAt(i);
-            if (c === "\"") {
-                chars.push("\\\"");
-            } else if (c === "\\") {
-                chars.push("\\\\");
-            } else if (c === "\n") {
-                chars.push("\\n");
+            if (c === delim) {
+                chars.push('\\'+delim);
+            } else if (c === '\\') {
+                chars.push('\\\\');
+            } else if (c === '\n') {
+                chars.push('\\n');
             } else {
                 var n = obj.charCodeAt(i);
                 if (n <= 31 || n >= 256) {
-                    chars.push("\\u" + (n+65536).toString(16).slice(1));
+                    chars.push('\\u' + (n+65536).toString(16).slice(1));
                 } else {
                     chars.push(c);
                 }
             }
         }
-        chars.push("\"");
+        chars.push(delim);
 
-        return xform(chars.join(""));
+        return xform(chars.join(''));
 
-    } else if (typeof obj === "undefined") {
+    } else if (typeof obj === 'undefined') {
 
-        return xform("undefined");
+        return xform('undefined');
 
     } else {
 
         return xform(String(obj));
 
     }
-}
+};
 
-cb.query = function (query) {
+CodeBoot.prototype.query = function (query) {
     cb.saved_query = query;
-    cb.replay_command = "";
+    cb.replay_command = '';
     cb.replay_command_index = 0;
     cb.replay_parameters = [];
 };
@@ -391,32 +322,32 @@ function decode_utf8(str) {
     return decodeURIComponent(escape(str));
 }
 
-cb.handle_query = function () {
+CodeBoot.prototype.handle_query = function () {
 
     var query = cb.saved_query;
 
-    if (query && query.slice(0, 7) === "replay=") {
+    if (query && query.slice(0, 7) === 'replay=') {
 
         cb.replay_command = decodeURIComponent(query.slice(7));
         cb.replay_command_index = 0;
         cb.replay_syntax = 1;
 
         setTimeout(function () { cb.replay(); }, 100);
-    } else if (query && query.slice(0, 7) === "REPLAY=") {
+    } else if (query && query.slice(0, 7) === 'REPLAY=') {
 
         cb.replay_command = decode_utf8(atob(query.slice(7)));
         cb.replay_command_index = 0;
         cb.replay_syntax = 2;
 
         setTimeout(function () { cb.replay(); }, 100);
-    } else if (query && query.slice(0, 10) === "replay%25=") {
+    } else if (query && query.slice(0, 10) === 'replay%25=') {
 
         cb.replay_command = decodeURIComponent(decodeURIComponent(query.slice(10)));
         cb.replay_command_index = 0;
         cb.replay_syntax = 2;
 
         setTimeout(function () { cb.replay(); }, 100);
-    } else if (query && query.slice(0, 8) === "replay%=") {
+    } else if (query && query.slice(0, 8) === 'replay%=') {
 
         cb.replay_command = decodeURIComponent(query.slice(8));
         cb.replay_command_index = 0;
@@ -426,7 +357,7 @@ cb.handle_query = function () {
     }
 };
 
-cb.replay = function () {
+CodeBoot.prototype.replay = function () {
 
     var command = cb.replay_command;
     var i = cb.replay_command_index;
@@ -434,10 +365,10 @@ cb.replay = function () {
     if (i < command.length) {
         var j = i;
         while (j < command.length &&
-               (command.charAt(j) !== "@" ||
-                (command.charAt(j+1) === "@" ||
-                 (cb.replay_syntax === 2 && command.charAt(j+1) === "N")))) {
-            if (command.charAt(j) === "@") {
+               (command.charAt(j) !== '@' ||
+                (command.charAt(j+1) === '@' ||
+                 (cb.replay_syntax === 2 && command.charAt(j+1) === 'N')))) {
+            if (command.charAt(j) === '@') {
                 j += 2;
             } else {
                 j += 1;
@@ -447,64 +378,64 @@ cb.replay = function () {
         var str;
 
         if (cb.replay_syntax === 2) {
-            str = command.slice(i, j).replace(/@N/g,"\n").replace(/@@/g,"@");
+            str = command.slice(i, j).replace(/@N/g,'\n').replace(/@@/g,'@');
         } else {
-            str = command.slice(i, j).replace(/@@/g,"\n");
+            str = command.slice(i, j).replace(/@@/g,'\n');
         }
 
-        if (command.charAt(j) === "@") {
-            if (command.charAt(j+1) >= "0" && command.charAt(j+1) <= "9") {
+        if (command.charAt(j) === '@') {
+            if (command.charAt(j+1) >= '0' && command.charAt(j+1) <= '9') {
                 cb.replay_parameters[+command.charAt(j+1)] = str;
                 j += 2;
-            } else if (command.charAt(j+1) === "P") {
-                if (str !== "") {
-                    set_input(cb.repl, str);
+            } else if (command.charAt(j+1) === 'P') {
+                if (str !== '') {
+                    cb.setInputREPL(str);
                     cb.repl.refresh();
                     cb.repl.focus();
                 } else {
-                    cb.ui_event('play');
+                    cb.execEval();
                     j += 2;
                 }
-            } else if (command.charAt(j+1) === "S") {
-                if (str !== "") {
-                    set_input(cb.repl, str);
+            } else if (command.charAt(j+1) === 'S') {
+                if (str !== '') {
+                    cb.setInputREPL(str);
                     cb.repl.refresh();
                     cb.repl.focus();
                 } else {
-                    cb.ui_event('step');
+                    cb.execStep();
                     j += 2;
                 }
-            } else if (command.charAt(j+1) === "A") {
-                if (str !== "") {
-                    set_input(cb.repl, str);
+            } else if (command.charAt(j+1) === 'A') {
+                if (str !== '') {
+                    cb.setInputREPL(str);
                     cb.repl.refresh();
                     cb.repl.focus();
                 } else {
-                    cb.ui_event('animate');
+                    cb.execAnimate();
                     j += 2;
                 }
-            } else if (command.charAt(j+1) === "E") {
-                var default_filename = "scratch";
+            } else if (command.charAt(j+1) === 'E') {
+                var default_filename = 'scratch';
                 var filename = default_filename;
                 if (cb.replay_parameters[0] !== void 0) {
                     filename = cb.replay_parameters[0];
                     cb.replay_parameters[0] = void 0;
                 }
-                var existing = cb.openFileExistingOrNew(filename);
+                var existing = cb.fs.openFileExistingOrNew(filename);
                 var editor = cb.fs.getEditor(filename);
                 var replace = true;
                 if (existing &&
                     filename !== default_filename &&
                     editor.getValue() !== str) {
-                    replace = confirm("You are about to replace the file '" + filename + "' with different content.  Are you sure you want to proceed with the replacement and lose your local changes to that file?");
+                    replace = confirm('You are about to replace the file "' + filename + '" with different content.  Are you sure you want to proceed with the replacement and lose your local changes to that file?');
                 }
                 if (replace) {
                     editor.setValue(str);
-                    showTryMeTooltip(filename);
+                    cb.showTryMeTooltip();
                 }
                 j += 2;
-            } else if (command.charAt(j+1) === "C") {
-                cb.closeAll();
+            } else if (command.charAt(j+1) === 'C') {
+                cb.fs.removeAllEditors();
                 drawing_window.cs();
                 j += 2;
             } else {
@@ -512,10 +443,10 @@ cb.replay = function () {
                 j += 2;
             }
         } else {
-            if (str !== "") {
-                set_input(cb.repl, str);
+            if (str !== '') {
+                cb.setInputREPL(str);
                 if (j === command.length) {
-                    showTryMeOnButton($("#step-button"));
+                    cb.showTryMeTooltip();
                 }
             }
         }
@@ -528,546 +459,673 @@ cb.replay = function () {
     }
 };
 
-function showTryMeTooltip(filename) {
-    var $row = $('.row[data-cb-filename="' + filename + '"]');
-    var $btn = $(".action-btn", $row.get(0));
-    showTryMeOnButton($btn);
+CodeBoot.prototype.showTryMeTooltip = function (filename) {
+    $('#cb-exec-controls-buttons').tooltip('show');
+
+    // Auto hide the tooltip after 2 secs
+    setTimeout(function () { $('#cb-exec-controls-buttons').tooltip('hide'); }, 2000);
 };
 
-function showTryMeOnButton($btn) {
+CodeBoot.prototype.modeStopped = function () {
+    return 'stopped';
+};
 
-    $btn.tooltip({
-        trigger: "manual",
-        placement: "left",
-        html: true,
-        template: '<div class="tooltip tryme"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'
-    });
+CodeBoot.prototype.modeAnimating = function () {
+    return 'animating';
+};
 
-    var tooltip = $btn.data('tooltip');
-    if (tooltip) {
-        tooltip.getTitle = function () {
-            // Bootstrap insists on using the title attribute for tooltips, so override
-            return 'Try me!';
-        };
-        $btn.tooltip('show');
+CodeBoot.prototype.modeAnimatingSleeping = function () {
+    return 'animatingSleeping';
+};
 
-        // Auto hide the tooltip after 5 secs
-        setTimeout(function () { $btn.tooltip('hide'); }, 5000);
+CodeBoot.prototype.modeStepping = function () {
+    return 'stepping';
+};
 
-        // Hide the tooltip if the user clicks on the button before 5 secs
-        $btn.on("click.codeboot.tryMe", function () {
-            $btn.tooltip('hide');
-        });
-    }
-}
-
-var program_state = {
-    rte: null,
-    error_mark: null,
-    step_mark: null,
-    value_bubble: null,
-    timeout_id: null,
-    step_delay: 0,
-    mode: 'stopped',
-    step_counter: null,
-    code_queue: []
+CodeBoot.prototype.initProgramState = function () {
+    cb.programState = {
+        rte: null,
+        errorMark: null,
+        execPointMark: null,
+        execPointBubble: new CBExecPointBubble(),
+        value_bubble: null, //TODO: deprecated
+        timeoutId: null,
+        stepDelay: 0,
+        mode: null,
+        code_queue: []
+    };
 };
 
 function code_queue_add(code) {
-    program_state.code_queue.push(code);
+    cb.programState.code_queue.push(code);
     code_queue_check();
 }
 
 function code_queue_check() {
-    if (program_state.mode === 'stopped') {
+    if (cb.programState.mode === cb.modeStopped()) {
         code_queue_service();
     }
 }
 
 function code_queue_service() {
-    if (program_state.code_queue.length > 0) {
-        var code = program_state.code_queue.shift();
-        program_state.rte = jev.runSetup(code,
-                                         {globalObject: cb.globalObject});
+    if (cb.programState.code_queue.length > 0) {
+        var code = cb.programState.code_queue.shift();
+        cb.programState.rte = jev.runSetup(code,
+                                           {globalObject: cb.globalObject});
         cb.execute(false);
     }
 }
 
-function setControllerState(controller, enabled) {
-    $(".dropdown-toggle", controller).toggleClass('disabled', !enabled);
-    $(".action-btn", controller).toggleClass('disabled', !enabled);
-}
-
-function setStepCounter(count) {
-    if (program_state.step_counter !== null) {
-        program_state.step_counter.text(count + " step" + (count>1 ? "s" : ""));
-    }
-}
-
-function disableAllControllers() {
-    $('[data-cb-exec="controller"]').each(function () {
-        setControllerState(this, false);
-    });
-}
-
-function enableAllControllers() {
-    $('[data-cb-exec="controller"]').each(function () {
-        setControllerState(this, true);
-    });
-}
-
-cb.enterMode = function (newMode) {
-    // newMode is one of 'stopped', 'animating', 'stepping'
-
-    if (program_state.mode === newMode) return;
-
-    if (newMode === "stopped") {
-        enableAllControllers();
-    } else {
-        disableAllControllers();
-    }
-
-    var control = $("#repl-controls");
-
-    // Cancel button
-    $(".exec-btn-cancel", control).toggleClass("disabled", newMode === 'stopped');
-
-    // Pause button
-    $(".exec-btn-pause", control).toggleClass("disabled", newMode !== 'animating');
-
-    // Step button + icon
-    $(".exec-btn-step", control).toggleClass("disabled", newMode === 'animating');
-    if (newMode === 'stepping') {
-        $("#step-mode-icon").removeClass("icon-exp-pause").addClass("icon-exp-one");
-    } else {
-        $("#step-mode-icon").removeClass("icon-exp-one").addClass("icon-exp-pause");
-    }
-
-    // Step counter
-    if (newMode === 'animating' || newMode === 'stepping') {
-        if (program_state.step_counter === null) {
-            program_state.step_counter = $('<span class="badge badge-info exec-lbl-count"/>');
-            setStepCounter(program_state.rte.step_count);
-            cb.repl.addWidget({line: 0, ch: 0}, program_state.step_counter.get(0), false);
-        }
-    } else if (newMode === 'stopped' && program_state.step_counter != null) {
-        // Clone the widget rather than attempt to reset its positioning for now
-        // TODO: move the widget rather than clone it
-        var $newWidget = $('<span class="badge badge-info exec-lbl-count"/>');
-        $oldWidget = $(program_state.step_counter);
-        $newWidget.text($oldWidget.text());
-        $oldWidget.remove();
-        cb.transcript.addLineWidget($newWidget.get(0));
-        program_state.step_counter = null;
-    }
-
-    cb.setMode(newMode);
+CodeBoot.prototype.showingStepCounter = function () {
+    return $('#cb-exec-step-counter').is(':visible');
 };
 
-cb.setMode = function (newMode) {
-    program_state.mode = newMode;
+CodeBoot.prototype.showStepCounter = function () {
+    var counter = $('#cb-exec-step-counter');
+    counter.css('display', 'inline');
+    counter.text(cb.textStepCounter());
+};
+
+CodeBoot.prototype.hideStepCounter = function () {
+    var counter = $('#cb-exec-step-counter');
+    counter.css('display', 'none');
+};
+
+CodeBoot.prototype.textStepCounter = function () {
+    var count = cb.programState.rte.step_count;
+    return + count + ' step' + (count>1 ? 's' : '');
+};
+
+CodeBoot.prototype.updatePopupPos = function () {
+    if (cb.programState.execPointMark !== null &&
+        cb.programState.execPointMark.end !== null &&
+        cb.programState.execPointBubble !== null) {
+        if (cb.isMarkerVisible(cb.programState.execPointMark.end)) {
+            cb.programState.execPointBubble.show();
+        } else {
+            cb.programState.execPointBubble.hide();
+        }
+    }
+};
+
+CodeBoot.prototype.enterMode = function (newMode) {
+
+    // newMode is one of 'stopped', 'animating', 'animatingSleeping', 'stepping'
+
+    if (cb.programState.mode === newMode)
+        return false;
+
+    var isStopped = newMode === cb.modeStopped();
+    var isStepping = newMode === cb.modeStepping();
+    var isAnimating = newMode === cb.modeAnimating();
+    var isAnimatingSleeping = newMode === cb.modeAnimatingSleeping();
+
+    // Show either play-1, pause or play-pause
+
+    if (isStopped) {
+        $('#cb-exec-img-play-1'    ).css('display', 'none');
+        $('#cb-exec-img-pause'     ).css('display', 'none');
+        $('#cb-exec-img-play-pause').css('display', 'inline');
+    } else if (isAnimating || isAnimatingSleeping) {
+        $('#cb-exec-img-play-1'    ).css('display', 'none');
+        $('#cb-exec-img-pause'     ).css('display', 'inline');
+        $('#cb-exec-img-play-pause').css('display', 'none');
+    } else {
+        $('#cb-exec-img-play-1'    ).css('display', 'inline');
+        $('#cb-exec-img-pause'     ).css('display', 'none');
+        $('#cb-exec-img-play-pause').css('display', 'none');
+    }
+
+    if (isStopped) {
+        $('body').removeClass('cb-mode-running');
+        cb.repl.setOption('readOnly', false);
+        cb.fs.editorManager.setReadOnlyAllEditors(false);
+    } else {
+        $('body').addClass('cb-mode-running');
+        cb.repl.setOption('readOnly', true);
+        cb.fs.editorManager.setReadOnlyAllEditors(true);
+    }
+
+    if (isStopped) {
+
+        cb.focusLastFocusedEditor();
+        cb.stopAnimation();
+        cb.hideExecPoint();
+        cb.hideStepCounter();
+        cb.programState.rte = null;
+        cb.setPromptREPL();
+        //TODO: interferes?
+        //cb.repl.focus();
+    } else {
+        // Update step counter
+        if (cb.showingStepCounter()) {
+            cb.showStepCounter(cb.programState.rte.step_count);
+        }
+    }
+
+    cb.programState.mode = newMode;
+
+    return true;
 };
 
 // UI event handling
 
-cb.last_ui_event = 'cancel';
+// Control of execution
 
-cb.repeat_last_ui_event = function () {
-    cb.ui_event(cb.last_ui_event);
+CodeBoot.prototype.execStep = function () {
+    cb.execEvent('step');
 };
 
-cb.ui_event = function (event) {
+CodeBoot.prototype.execAnimate = function () {
+    cb.execEvent('animate');
+};
 
-    cb.last_ui_event = event;
+CodeBoot.prototype.execEval = function () {
+    cb.execEvent('eval');
+};
+
+CodeBoot.prototype.execStop = function () {
+    cb.execEvent('stop');
+};
+
+CodeBoot.prototype.repeatLastExecEvent = function () {
+    cb.execEvent(cb.lastExecEvent);
+};
+
+CodeBoot.prototype.execStepOrEval = function () {
+    if (cb.programState.rte !== null) // currently running code?
+        cb.execStep();
+    else
+        cb.execEval();
+};
+
+CodeBoot.prototype.execEvent = function (event) {
+
+    cb.lastExecEvent = event;
 
     switch (event) {
 
-        case 'step':
-        case 'pause':
+    case 'step':
         cb.animate(0);
         break;
 
-        case 'animate':
+    case 'animate':
         cb.animate(cb.stepDelay);
         break;
 
-        case 'play':
-        cb.play();
+    case 'eval':
+        cb.eval();
         break;
 
-        case 'cancel':
-        cb.cancel();
+    case 'stop':
+        cb.stop();
         break;
     }
 };
 
-cb.animate = function (new_step_delay) {
-    program_state.step_delay = new_step_delay;
-    cb.play_or_animate(true);
+CodeBoot.prototype.animate = function (newStepDelay) {
+    var was_animating = cb.stopAnimation();
+    cb.programState.stepDelay = newStepDelay;
+    if (newStepDelay === 0) {
+        cb.enterMode(cb.modeStepping());
+        if (!was_animating)
+            cb.step_or_animate(true);
+        else
+            cb.showExecPoint();
+    } else {
+        cb.enterMode(cb.modeAnimating());
+        cb.step_or_animate(true);
+    }
 };
 
-cb.play = function () {
-    cb.setMode("animating");
-    cb.play_or_animate(false);
+CodeBoot.prototype.eval = function () {
+    cb.enterMode(cb.modeAnimating());
+    cb.hideExecPoint();
+    cb.step_or_animate(false);
 };
 
-cb.play_or_animate = function (single_step) {
-    cb.repl.focus();
-    if (program_state.rte !== null) // currently running code?
+CodeBoot.prototype.step_or_animate = function (single_step) {
+    //TODO: interferes?
+    //cb.repl.focus();
+    if (cb.programState.rte !== null) // currently running code?
         cb.execute(single_step);
     else
         cb.run(single_step);
 };
 
-cb.cancel_animation = function () {
-    if (program_state.timeout_id !== null) {
-        clearTimeout(program_state.timeout_id);
-        program_state.timeout_id = null;
+CodeBoot.prototype.stopAnimation = function () {
+
+    // Stops any time-based animation of the program
+
+    var id = cb.programState.timeoutId;
+
+    if (id !== null) {
+        clearTimeout(id); // cancel the scheduled execution step
+        cb.programState.timeoutId = null;
+    }
+
+    return id !== null; // returns true if a time-based animation was cancelled
+};
+
+CodeBoot.prototype.stop = function (reason) {
+
+    if (cb.programState.mode !== cb.modeStopped()) {
+
+        var msg = $('<span class="cb-repl-error"/>');
+        var withStepCounter = cb.showingStepCounter();
+
+        if (reason !== null) {
+            if (reason === void 0) {
+                reason = 'stopped';
+            } else {
+                var loc = cb.programState.rte.ast.loc;
+                cb.showError(loc);
+                reason = cb.errorMessage(loc, null, reason);
+            }
+            if (withStepCounter) {
+                reason += ' after ';
+            }
+            msg.text(reason);
+        }
+
+        if (withStepCounter) {
+            var counter = $('<span class="badge badge-primary badge-pill cb-step-counter"/>');
+            counter.text(cb.textStepCounter());
+            msg.append(counter);
+            cb.hideStepCounter();
+        }
+
+        if (reason !== null || withStepCounter) {
+            cb.addLineWidgetTranscriptREPL(msg.get(0));
+        }
+
+        cb.enterMode(cb.modeStopped());
     }
 };
 
-cb.cancel = function () {
-    cb.cancel_animation();
-    cb.hide_step();
-    cb.enterMode('stopped');
-    program_state.rte = null;
-    cb.repl.busy = false;
-    set_prompt(cb.repl);
-    cb.repl.refresh();
-    cb.repl.focus();
-};
-
-cb.show_error = function (loc) {
+CodeBoot.prototype.showError = function (loc) {
 
     cb.hide_error();
 
-    program_state.error_mark = code_highlight(loc, "error-code");
+    cb.programState.errorMark = cb.codeHighlight(loc, 'cb-code-error', false);
+
+    cb.scrollToMarker(cb.programState.errorMark.all);
 };
 
-cb.hide_error = function () {
-    if (program_state.error_mark !== null) {
-        program_state.error_mark.clear();
-        program_state.error_mark = null;
+CodeBoot.prototype.hide_error = function () {
+    if (cb.programState.errorMark !== null) {
+        cb.clearMarker(cb.programState.errorMark);
+        cb.programState.errorMark = null;
     }
 };
 
-function within(rect, viewport) {
-    if (rect.left < viewport.left) return false;
-    if (rect.right > viewport.left + viewport.clientWidth) return false;
-    if (rect.top < viewport.top) return false;
-    if (rect.bottom > viewport.top + viewport.clientHeight) return false;
+CodeBoot.prototype.clearMarker = function (marker) {
+    if (marker.all !== null) {
+        marker.all.clear();
+    }
+    if (marker.end !== null) {
+        marker.end.clear();
+    }
+};
+
+CodeBoot.prototype.within = function (rect, viewport) {
+
+    var x = (rect.left + rect.right) / 2;
+    var y = (rect.top + rect.bottom) / 2;
+ 
+    //alert(x+','+y+'   '+viewport.left+','+(viewport.left+viewport.clientWidth)+','+viewport.top+','+(viewport.top+viewport.clientHeight));
+
+    if (x < viewport.left) return false;
+    if (x > viewport.left + viewport.clientWidth) return false;
+    if (y < viewport.top) return false;
+    if (y > viewport.top + viewport.clientHeight) return false;
+
     return true;
-}
+};
 
-function isCharacterVisible(pos, cm) {
-    var point = cm.charCoords(pos, "local");
-    var scrollInfo = cm.getScrollInfo();
-    return within(point, scrollInfo);
-}
+CodeBoot.prototype.isCharacterVisible = function (pos, editor) {
+    var point = editor.charCoords(pos, 'local');
+    var scrollInfo = editor.getScrollInfo();
+    return cb.within(point, scrollInfo);
+};
 
-function isMarkerVisible(marker, cm) {
-    if (!cm) cm = marker.cm; // TODO: non-documented, so brittle
+CodeBoot.prototype.isMarkerVisible = function (marker, editor) {
+    var res = false;
+    if (!editor) editor = marker.cb_editor;
     var range = marker.find();
-    if (range) return isCharacterVisible(range.from, cm);
+    if (range) res = cb.isCharacterVisible(range.from, editor);
+    return res;
+};
 
-    return false;
-}
-
-function scrollToMarker(marker, cm) {
-    if (!cm) cm = marker.cm; // TODO: non-documented, so brittle
-    if (!isMarkerVisible(marker, cm)) {
+CodeBoot.prototype.scrollToMarker = function (marker, editor) {
+    if (!marker) return;
+    if (!editor) editor = marker.cb_editor;
+    if (!cb.isMarkerVisible(marker, editor)) {
         var range = marker.find();
         if (range) {
-            var rect = cm.charCoords(range.from, "local");
-            cm.scrollTo(rect.left, rect.top);
+            var rect = editor.charCoords(range.from, 'local');
+            var scrollInfo = editor.getScrollInfo();
+            //editor.scrollIntoView(rect, 0.5 * scrollInfo.clientHeight);
+            editor.scrollIntoView(rect, 0.1 * scrollInfo.clientHeight);
+       }
+    }
+};
+
+function CBExecPointBubble() {
+    this.tip  = null;
+    this.elem = null;
+};
+
+CBExecPointBubble.prototype.isVisible = function () {
+
+    if (this.tip !== null) {
+        var popper = this.tip.getPopperElement(this.elem);
+        if (popper !== null) {
+            return popper.style.visibility !== 'hidden';
         }
     }
-}
 
-function CPValueBubble(opts) {
-    this.opts = {};
-    $.extend(this.opts, {
-        value : program_state.rte.result,
-        context : cb.dump_context(),
-        $anchor : function () { return $(".exec-point-code").last(); },
-        $container: null,
-    }, opts);
-
-    this.closed = false;
-    this.$last_anchor = null;
-    this.init(this.anchor())
-}
-
-CPValueBubble.prototype.init = function ($anchor) {
-    if (this._popover) this._popover.destroy();
-    $anchor.popover({
-        animation: false,
-        placement: "bottom",
-        trigger: "manual",
-        title: '<span class="exec-point-value">'
-                 + this._valueRepr(this.opts.value)
-                 + '</span>'
-                 + '<button class="close">&times;</button>',
-        content: this.opts.context,
-        html: true,
-        padding: 2
-    });
-    this._popover = $anchor.data('popover');
-
-    // Add close button handler
-    // Popovers / tooltips are created lazily, so intercept their creation to install the handler
-    var oldShow = this._popover.show;
-    var self = this;
-    this._popover.show = function () {
-        var $tip = this.tip();
-        $tip.addClass("value-bubble");
-        oldShow.apply(this, arguments);
-        $("button.close", $tip).on("click", function() {
-            self.closed = true;
-            self.hide();
-            $(".exec-point-code").one("mouseover", function () {
-                if (!self.isOpen()) {
-                    self.show();
-                }
-            });
-        });
-    }
+    return false;
 };
 
-CPValueBubble.prototype.anchor = function () {
-    var $anchor = this.opts.$anchor;
-    if (typeof $anchor === "function") {
-        this.$last_anchor = $anchor();
-        if (this._popover && !this.$last_anchor.data('popover')) {
-            // We lost the popover, most likely because the anchor
-            // changed under our feet. This seems to happen when e.g. the window
-            // is resized (observed on Chrome)
-            this.init(this.$last_anchor);
+CBExecPointBubble.prototype.show = function () {
+
+    if (this.tip !== null) {
+        var popper = this.tip.getPopperElement(this.elem);
+        if (popper !== null) {
+            this.tip.show(popper);
         }
-        return this.$last_anchor;
-    } else {
-        return $anchor;
-    }
-};
-
-CPValueBubble.prototype._valueRepr = function (val) {
-    if (val === void 0) return "NO VALUE";
-    return printed_repr(val, "HTML");
-};
-
-CPValueBubble.prototype.show = function () {
-    this.closed = false;
-    if (this.anchor().isInView(this.opts.$container)) {
-        // The proper height for the tooltip will only be available after
-        // we show it. So, we first display it with visibility:hidden,
-        // compute the placement, and finally display it to the user.
-        this._popover.tip().css("visibility", "hidden");
-        this.anchor().popover('show');
-        this.setPlacement(this._calculatePlacement());
-        this.anchor().popover('show');
-        this._popover.tip().css("visibility", "visible");
-    }
-};
-
-CPValueBubble.prototype._calculatePlacement = function () {
-    if (!this.opts.$container) {
-        return "bottom";
     }
 
-    var $bubble = this._popover.tip();
-    var extra_padding = 5; // Extra padding for safety
-    var editorsRect = this.opts.$container.getBounds();
-    var anchorRect = this.anchor().getBounds();
-    if (anchorRect.bottom + this.height() + extra_padding >= editorsRect.bottom) {
-        return "top";
-    } else {
-        return "bottom";
-    }
 };
 
-CPValueBubble.prototype.update = function () {
-    if (this.closed) return;
+CBExecPointBubble.prototype.hide = function () {
 
-    if (this.anchor().isInView(this.opts.$container)) {
-        this.setPlacement(this._calculatePlacement());
-        this.anchor().popover('show');
-    } else {
-        this.hide();
-    }
-};
-
-CPValueBubble.prototype.hide = function () {
-    this.$last_anchor.popover('hide');
-};
-
-CPValueBubble.prototype.destroy = function () {
-    this.$last_anchor.popover('destroy');
-    this._popover = null;
-};
-
-CPValueBubble.prototype.isOpen = function (args) {
-    return this._popover.tip().hasClass('in');
-};
-
-CPValueBubble.prototype.setPlacement = function (placement) {
-    this._popover.options.placement = placement;
-};
-
-CPValueBubble.prototype.height = function () {
-    var arrow_height = 10;
-    var h = this._popover.tip().height();
-    if (h === 0) {
-        // Popover hasn't been created yet, so create it
-        this._popover.setContent();
-        h = this._popover.tip().height();
-    }
-    return h + arrow_height;
-}
-
-cb.hide_step = function () {
-
-    if (program_state.step_mark !== null ||
-        program_state.value_bubble !== null) {
-
-        if (program_state.value_bubble !== null) {
-            program_state.value_bubble.destroy();
-            program_state.value_bubble = null;
+    if (this.tip !== null) {
+        var popper = this.tip.getPopperElement(this.elem);
+        if (popper !== null) {
+            this.tip.hide(popper);
         }
-
-        if (program_state.step_mark !== null) {
-            program_state.step_mark.clear();
-            program_state.step_mark = null;
-        }
-
-        // Somehow, CodeMirror seems to hold on to the marked elements somewhere,
-        // causing problems when displaying the bubble. This kludge should at least
-        // prevent the problem from manifesting for the user.
-        // TODO: proper fix
-        $(".exec-point-code").removeClass("exec-point-code");
-
-        return true;
     }
+
+};
+
+CBExecPointBubble.prototype.destroy = function () {
+
+    if (this.tip !== null) {
+        var popper = this.tip.getPopperElement(this.elem);
+        if (popper !== null) {
+            this.tip.destroy(popper);
+        }
+    }
+
+    this.tip  = null;
+    this.elem = null;
+
+};
+
+CBExecPointBubble.prototype.replaceContent = function (html) {
+
+    if (this.tip !== null) {
+        var popper = this.tip.getPopperElement(this.elem);
+        if (popper !== null) {
+            var contentElem = popper.querySelector('.tippy-tooltip-content');
+            if (contentElem !== null) {
+                contentElem.innerHTML = html;
+            }
+        }
+    }
+
+};
+
+CodeBoot.prototype.execPointCodeElement = function () {
+
+    var elems = [].slice.call(document.querySelectorAll('.cb-exec-point-code-end'),-1);
+
+    if (elems.length === 0)
+        return null;
     else
-    {
-        return false;
+        return elems[0];
+};
+
+CBExecPointBubble.prototype.attachTo = function (elem, html) {
+
+    if (elem === null) return;
+
+    var _this = this;
+
+    if (this.elem === null || this.elem !== elem) {
+
+        /* create a new bubble */
+
+        if (this.elem !== null)
+            this.destroy();
+
+        //count++; $('#cb-menu-brand-btn').text(count);
+        var tip = tippy(elem, {
+            html: '#cb-exec-point-bubble-template',
+            theme: 'cb-exec-point-bubble',
+            position: 'bottom-start',
+            trigger: 'manual',
+            sticky: 'true',
+            zIndex: 999, /* just under dropdown menu */
+            arrow: true,
+            interactive: true,
+            duration: 0,
+            popperOptions: {
+                modifiers: {
+                    flip: {
+                        enabled: true
+                    }
+                }
+            }
+        });
+
+        this.tip = tip;
+        this.elem = elem;
+    }
+
+    this.replaceContent(html);
+    setTimeout(function () { _this.show(); }, 0);
+
+};
+
+CodeBoot.prototype.execPointBubbleHTML = function () {
+
+    var val = cb.programState.rte.result;
+    var valHTML = (val === void 0)
+                  ? '<i>no value</i>'
+                  : cb.printedRepresentation(val, 'HTML');
+
+    var contextHTML = cb.dumpContext();
+
+    if (contextHTML === '') {
+        return '<div class="cb-exec-point-bubble-value-no-context">' +
+               valHTML +
+               '</div>';
+    } else {
+        return '<div class="cb-exec-point-bubble-value">' +
+               valHTML +
+               '</div>' +
+               '<div class="cb-exec-point-bubble-context">' +
+               contextHTML +
+               '</div>';
     }
 };
 
-cb.show_step = function () {
+CodeBoot.prototype.hideExecPoint = function () {
 
-    cb.hide_step();
+    cb.programState.execPointBubble.destroy();
 
-    var loc = program_state.rte.ast.loc;
-    program_state.step_mark = code_highlight(loc, "exec-point-code");
-    scrollToMarker(program_state.step_mark);
+    var mark = cb.programState.execPointMark;
 
-    var value = program_state.rte.result;
+    if (mark !== null) {
+        cb.clearMarker(mark);
+        cb.programState.execPointMark = null;
+    }
+
+        // Somehow, CodeMirror seems to hold on to the marked elements
+        // somewhere, causing problems when displaying the
+        // bubble. This kludge should at least prevent the problem
+        // from manifesting for the user.
+        //TODO: proper fix
+//        $('.cb-exec-point-code').removeClass('cb-exec-point-code');
+};
+
+CodeBoot.prototype.showExecPoint = function () {
+
+    cb.showStepCounter();
+
+    cb.hideExecPoint();
+
+    var loc = cb.programState.rte.ast.loc;
+    cb.programState.execPointMark = cb.codeHighlight(loc, 'cb-exec-point-code', true);
+
+    if (cb.programState.execPointMark !== null) {
+        cb.scrollToMarker(cb.programState.execPointMark.end);
+    }
+
+    var value = cb.programState.rte.result;
     var $container;
     if (loc.container instanceof SourceContainerInternalFile) {
-        $container = $("#editors");
+        $container = $('#cb-editors');
     } else {
         $container = null; /* use whole document */
     }
 
-    if (!$(".exec-point-code").last().isInView($container)) {
+    if ($container !== null &&
+        !$('.cb-exec-point-code-end').last().isInView($container)) {
         var filename = loc.container.toString();
-        cb.scrollTo(cb.getContainerFor(filename));
+        cb.fs.openFile(filename);
+        cb.scrollTo(cb.getFileContainerFor(filename));
     }
 
-    program_state.value_bubble = new CPValueBubble({
-        $container: $container
+    cb.programState.execPointBubble.attachTo(
+        cb.execPointCodeElement(),
+        cb.execPointBubbleHTML());
+
+    $('.cb-exec-point-code').hover(function (event) {
+        if (!cb.programState.execPointBubble.isVisible()) {
+            cb.showExecPoint();
+        }
     });
-    program_state.value_bubble.show();
 };
 
-cb.dump_context = function () {
+CodeBoot.prototype.dumpContext = function () {
 
-    //return ""; // don't dump context yet
-
-    var rte = program_state.rte;
+    var rte = cb.programState.rte;
     var f = rte.frame;
     var cte = f.cte;
     var result = [];
     var seen = {};
 
-    var add = function (id, val)
-    {
-        if (seen[id] === void 0)
-        {
-            if (val !== void 0) // don't show undefined variables
-            {
-                result.push("<strong>" + id + ":</strong> " + printed_repr(val, "HTML"));
+    var add = function (id, val) {
+        if (seen[id] === void 0) {
+            if (val !== void 0) { // don't show undefined variables
+                result.push('<div class="cb-exec-point-bubble-binding"><span class="cb-code-font">' + id + '</span>: ' + cb.printedRepresentation(val, 'HTML') + '</div>');
             }
             seen[id] = true;
         }
     };
 
-    while (cte !== null)
-    {
-        for (var id_str in cte.params)
-        {
+    while (cte !== null) {
+        for (var id_str in cte.params) {
             var i = cte.params[id_str];
             add(id_str, f.params[i]);
         }
-        for (var id_str in cte.locals)
-        {
-            if (cte.parent !== null)
-            {
+        for (var id_str in cte.locals) {
+            if (cte.parent !== null) {
                 var i = cte.locals[id_str];
                 add(id_str, f.locals[i]);
-            }
-            else
-            {
-                if (uninteresting_global[id_str] === void 0)
-                {
+            } else {
+                if (!well_known_global[id_str]) {
                     add(id_str, rte.glo[id_str]);
                 }
             }
         }
-        if (cte.callee !== null)
-        {
+        if (cte.callee !== null) {
             add(cte.callee, f.callee);
         }
         cte = cte.parent;
         f = f.parent;
     }
 
-    return result.join("<br/>");
+    return result.join('');
 };
 
-var uninteresting_global = {};
-uninteresting_global["print"] = true;
-uninteresting_global["alert"] = true;
-uninteresting_global["prompt"] = true;
-uninteresting_global["println"] = true;
-uninteresting_global["pause"] = true;
-uninteresting_global["assert"] = true;
-uninteresting_global["load"] = true;
-uninteresting_global["Math"] = true;
-uninteresting_global["Date"] = true;
-uninteresting_global["String"] = true;
-uninteresting_global["Array"] = true;
-uninteresting_global["Number"] = true;
-uninteresting_global["setScreenMode"] = true;
-uninteresting_global["getScreenWidth"] = true;
-uninteresting_global["getScreenHeight"] = true;
-uninteresting_global["setPixel"] = true;
-uninteresting_global["exportScreen"] = true;
-uninteresting_global["cs"] = true;
-uninteresting_global["st"] = true;
-uninteresting_global["ht"] = true;
-uninteresting_global["pu"] = true;
-uninteresting_global["pd"] = true;
-uninteresting_global["fd"] = true;
-uninteresting_global["bk"] = true;
-uninteresting_global["lt"] = true;
-uninteresting_global["rt"] = true;
-uninteresting_global["setpc"] = true;
-uninteresting_global["setpw"] = true;
-uninteresting_global["drawtext"] = true;
+CodeBoot.prototype.undeclareGlobals = function (rte) {
 
-cb.execute = function (single_step) {
-    if (false && cb.hide_step()) { //TODO: find a better way... this causes too much flicker
+    var glo = rte.glo;
+
+    for (var v in glo) {
+        if (!well_known_global[v]) {
+            delete glo[v];
+        }
+    }
+};
+
+var well_known_global = {};
+well_known_global['NaN'] = true;
+well_known_global['Infinity'] = true;
+well_known_global['undefined'] = true;
+well_known_global['parseInt'] = true;
+well_known_global['parseFloat'] = true;
+well_known_global['isNaN'] = true;
+well_known_global['isFinite'] = true;
+well_known_global['decodeURI'] = true;
+well_known_global['encodeURI'] = true;
+well_known_global['decodeURIComponent'] = true;
+well_known_global['encodeURIComponent'] = true;
+well_known_global['Object'] = true;
+well_known_global['Function'] = true;
+well_known_global['Array'] = true;
+well_known_global['String'] = true;
+well_known_global['Boolean'] = true;
+well_known_global['Number'] = true;
+well_known_global['Date'] = true;
+well_known_global['RegExp'] = true;
+well_known_global['Error'] = true;
+well_known_global['EvalError'] = true;
+well_known_global['RangeError'] = true;
+well_known_global['ReferenceError'] = true;
+well_known_global['SyntaxError'] = true;
+well_known_global['TypeError'] = true;
+well_known_global['URIError'] = true;
+well_known_global['Math'] = true;
+well_known_global['JSON'] = true;
+well_known_global['document'] = true;
+well_known_global['print'] = true;
+well_known_global['alert'] = true;
+well_known_global['prompt'] = true;
+well_known_global['confirm'] = true;
+well_known_global['load'] = true;
+well_known_global['pause'] = true;
+well_known_global['assert'] = true;
+well_known_global['setScreenMode'] = true;
+well_known_global['getScreenWidth'] = true;
+well_known_global['getScreenHeight'] = true;
+well_known_global['setPixel'] = true;
+well_known_global['exportScreen'] = true;
+well_known_global['cs'] = true;
+well_known_global['pu'] = true;
+well_known_global['pd'] = true;
+well_known_global['st'] = true;
+well_known_global['ht'] = true;
+well_known_global['fd'] = true;
+well_known_global['bk'] = true;
+well_known_global['mv'] = true;
+well_known_global['lt'] = true;
+well_known_global['rt'] = true;
+well_known_global['setpc'] = true;
+well_known_global['setpw'] = true;
+well_known_global['drawtext'] = true;
+well_known_global['setTimeout'] = true;
+well_known_global['clearTimeout'] = true;
+well_known_global['readFile'] = true;
+well_known_global['writeFile'] = true;
+
+CodeBoot.prototype.execute = function (single_step) {
+    if (false && cb.hideExecPoint()) { //TODO: find a better way... this causes too much flicker
         // give some time for the browser to refresh the page
         setTimeout(function () { cb.execute2(single_step); }, 10);
     } else {
@@ -1076,59 +1134,65 @@ cb.execute = function (single_step) {
     }
 };
 
-cb.execute2 = function (single_step) {
+CodeBoot.prototype.execute2 = function (single_step) {
 
-    var newMode = 'stopped';
-    cb.cancel_animation();
+    var stepChunk = 51151;
+    var newMode = cb.modeStopped();
+    cb.stopAnimation();
 
-    var rte = program_state.rte;
+    var rte = cb.programState.rte;
 
     if (rte !== null && !rte.finished()) {
 
         try {
-            rte.step(single_step ? 1 : 51151);
+            rte.step(single_step ? 1 : stepChunk);
         }
         catch (e) {
+            update_playground_visibility();
             if (e !== false)
-                cb.transcript.addLine(String(e), "error-message");
-            cb.cancel();
+                cb.stop(String(e));
+            else
+                cb.stop(null);
             return;
         }
 
-        setStepCounter(rte.step_count);
+        update_playground_visibility();
 
-        if (program_state.mode === 'stepping') {
+        if (cb.programState.mode === cb.modeStepping()) {
             single_step = true;
         }
 
+        //$('#cb-menu-brand').text(cb.programState.mode);
+
         if (!rte.finished()) {
-            newMode = 'stepping';
+            newMode = cb.modeStepping();
             if (single_step) {
-                cb.show_step();
-                if (program_state.step_delay > 0) {
-                    newMode = 'animating';
-                    program_state.timeout_id = setTimeout(function ()
-                                                          { cb.execute(true); },
-                                                          program_state.step_delay);
+                cb.showExecPoint();
+                if (cb.programState.stepDelay > 0) {
+                    newMode = cb.modeAnimating();
+                    cb.programState.timeoutId = setTimeout(function ()
+                                                           { cb.execute(true); },
+                                                           cb.programState.stepDelay);
+                } else if (cb.programState.timeoutId !== null) {
+                    newMode = cb.modeAnimatingSleeping();
                 }
             } else {
-                newMode = 'animating';
-                program_state.timeout_id = setTimeout(function ()
-                                                      { cb.execute(false); },
-                                                      1);
+                if (cb.showingStepCounter() ||
+                    cb.programState.rte.step_count >= stepChunk) {
+                    cb.showStepCounter();
+                }
+                newMode = cb.modeAnimating();
+                cb.programState.timeoutId = setTimeout(function ()
+                                                       { cb.execute(false); },
+                                                       1);
             }
         } else {
 
             if (rte.error !== null) {
-                cb.displayError(program_state.rte.ast.loc, null, String(rte.error));
+                cb.executionEndedWithError(String(rte.error));
             } else {
-                var result = rte.getResult();
-                if (result !== void 0) {
-                    cb.transcript.addLine(printed_repr(result), "transcript-result");
-                }
+                cb.executionEndedWithResult(rte.getResult());
             }
-
-            cb.cancel();
         }
     }
 
@@ -1137,129 +1201,124 @@ cb.execute2 = function (single_step) {
     code_queue_check();
 };
 
-cb.run = function (single_step) {
+CodeBoot.prototype.executionEndedWithError = function (msg) {
+    cb.stop(msg);
+};
 
-    var str = cb.repl.getValue();
-    set_prompt(cb.repl, "");
-    cb.repl.refresh();
+CodeBoot.prototype.executionEndedWithResult = function (result) {
 
-    var line;
-    if (cb.transcript.is_empty) {
-        line = 0;
+    cb.lastResult = result;
+    cb.lastResultRepresentation = cb.printedRepresentation(result);
+
+    if (result !== void 0) {
+        cb.addTranscriptREPL(cb.lastResultRepresentation + '\n',
+                             'cb-repl-result');
+    }
+
+    cb.executionHook();
+
+    cb.stop(null);
+};
+
+CodeBoot.prototype.executionHook = function () {
+};              
+
+CodeBoot.prototype.run = function (single_step) {
+
+    var code_gen;
+    var source;
+
+    if (cb.lastFocusedEditor === cb.repl) {
+
+        /* running REPL input */
+
+        source = cb.getInputREPL();
+
+        if (false && source.trim() === '') {
+            if (cb.programState.rte !== null) {
+                cb.execute(true);
+                return;
+            }
+            if (single_step) {
+                cb.enterMode(cb.modeStopped());
+                code_queue_check();
+                return;
+            }
+        }
+
+        var line = cb.inputPosREPL().line;
+
+        code_gen = function () {
+            return cb.compile_repl_expression(source, line+1, 1);
+        };
+
     } else {
-        line = cb.transcript.editor.lineCount();
+
+        /* running file */
+
+        var filename = cb.lastFocusedEditor.cb.fileEditor.filename;
+
+        source = 'load("' + filename + '")';
+
+        cb.replaceInputREPL(source);
+
+        drawing_window.cs(); /* clear drawing window when running file */
+
+        code_gen = function () {
+            var code = cb.compile_internal_file(filename);
+            return function (rte, cont) {
+                cb.undeclareGlobals(rte);
+                return code(rte, cont);
+            };
+        };
     }
 
-    var ch = 0;
+    if (source.trim() !== '')
+        cb.repl.cb.history.add(source);
 
-    var source = str;
-    if (source.slice(0, 2) === "> ") {
-        source = source.slice(2);
-        ch = 2;
-    } else if (source.slice(0, 1) === ">") {
-        source = source.slice(1);
-        ch = 1;
-    }
-
-    if (source === "") {
-        if (program_state.rte !== null) {
-            cb.execute(true);
-            return;
-        }
-        if (single_step) {
-            set_prompt(cb.repl);
-            cb.repl.refresh();
-            cb.enterMode('stopped');
-            code_queue_check();
-            return;
-        }
-    }
-
-    cb.repl.cb.history.add(str);
-    cb.transcript.addLine(str, "transcript-input");
-
-    var code_gen = function () {
-                       return cb.compile_repl_expression(source, line, ch);
-                   };
+    cb.acceptInputREPL();
 
     cb.run_setup_and_execute(code_gen, single_step);
 };
 
-cb.load = function(filename, event) {
-
-    cb.last_ui_event = event;
-
-    switch (event) {
-
-        case 'step':
-        program_state.step_delay = 0;
-        break;
-
-        case 'animate':
-        program_state.step_delay = cb.stepDelay;
-        break;
-    }
-
-    var src = "load(\"" + filename + "\")";
-
-    set_prompt(cb.repl, "");
-    cb.repl.refresh();
-
-    cb.repl.cb.history.add(src);
-    cb.transcript.addLine(src, "transcript-input");
-
-    drawing_window.cs();
-
-    var code_gen = function () {
-                       return cb.compile_internal_file(filename);
-                   };
-
-    cb.run_setup_and_execute(code_gen, event !== 'play');
-};
-
-cb.globalObject = {};
-
-cb.getGlobal = function (name) {
-    return cb.globalObject[name];
-};
-
-cb.setGlobal = function (name, value) {
-    cb.globalObject[name] = value;
-};
-
-cb.run_setup_and_execute = function (code_gen, single_step) {
+CodeBoot.prototype.run_setup_and_execute = function (code_gen, single_step) {
 
     cb.hide_error();
 
-    cb.repl.busy = true;
-
     try {
         var code = code_gen();
-        program_state.rte = jev.runSetup(code,
-                                         {globalObject: cb.globalObject});
+        if (code === null) {
+            cb.stop(null);
+            return;
+        } else {
+            cb.programState.rte = jev.runSetup(code,
+                                               {globalObject: cb.globalObject});
+        }
     }
     catch (e) {
         if (e !== false)
-            cb.transcript.addLine(String(e), "error-message");
-        cb.cancel();
+            cb.stop(String(e));
+        else
+            cb.stop(null);
         return;
     }
 
     cb.execute(single_step);
 
-    cb.repl.focus();
+    //TODO: interferes?
+    //cb.repl.focus();
 };
 
 function abort_fn_body(rte, result, msg) {
 
-    cb.enterMode("stepping");
+    cb.programState.stepDelay = 0;
+    rte.step_limit = rte.step_count; // exit trampoline
 
     if (msg !== void 0) {
-        cb.transcript.addLine(msg, "error-message");
+        cb.stop(msg);
+    } else {
+        cb.enterMode(cb.modeStepping());
     }
-
-    program_state.step_delay = 0;
-    rte.step_limit = rte.step_count; // exit trampoline
 
     return return_fn_body(rte, result);
 }
@@ -1275,7 +1334,7 @@ function return_fn_body(rte, result) {
 }
 
 function builtin_pause(filename) {
-    throw "unimplemented";///////////////////////////
+    throw 'unimplemented';///////////////////////////
 }
 
 builtin_pause._apply_ = function (rte, cont, this_, params) {
@@ -1286,17 +1345,16 @@ builtin_pause._apply_ = function (rte, cont, this_, params) {
 
         if (params.length === 0) {
             delay = Infinity;
-        } else if (typeof delay !== "number" || !(delay >= 0)) {
-            return abort_fn_body(rte, void 0, "delay parameter of pause must be a non-negative number");
+        } else if (typeof delay !== 'number' || !(delay >= 0)) {
+            throw 'delay parameter of pause must be a non-negative number';
         }
 
         if (delay !== Infinity) {
-            cb.cancel_animation();
-            program_state.timeout_id = setTimeout(function ()
-                                                  {
-                                                      cb.repeat_last_ui_event();
-                                                  },
-                                                  delay*1000);
+            cb.stopAnimation();
+            cb.programState.timeoutId = setTimeout(function () {
+                                                       cb.repeatLastExecEvent();
+                                                   },
+                                                   delay*1000);
         }
 
         return abort_fn_body(rte, void 0);
@@ -1314,7 +1372,7 @@ builtin_pause._apply_ = function (rte, cont, this_, params) {
 };
 
 function builtin_assert(condition) {
-    throw "unimplemented";///////////////////////////
+    throw 'unimplemented';///////////////////////////
 }
 
 builtin_assert._apply_ = function (rte, cont, this_, params) {
@@ -1323,8 +1381,7 @@ builtin_assert._apply_ = function (rte, cont, this_, params) {
 
         if (!params[0]) {
             return abort_fn_body(rte,
-                                 "THIS ASSERTION FAILED",
-                                 params[1]);
+                                 params[1] ? String(params[1]) : 'THIS ASSERTION FAILED');
         }
 
         return return_fn_body(rte, void 0);
@@ -1342,7 +1399,7 @@ builtin_assert._apply_ = function (rte, cont, this_, params) {
 };
 
 function builtin_setScreenMode(width, height) {
-    throw "unimplemented";///////////////////////////
+    throw 'unimplemented';///////////////////////////
 }
 
 builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
@@ -1350,28 +1407,31 @@ builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
     var code = function (rte, cont) {
 
         if (params.length !== 2) {
-            return abort_fn_body(rte, void 0, "setScreenMode expects 2 parameters");
+            throw 'setScreenMode expects 2 parameters';
         }
 
         var width = params[0];
         var height = params[1];
 
-        if (typeof width !== "number" ||
+        if (typeof width !== 'number' ||
             Math.floor(width) !== width ||
             width < 1 ||
             width > 300) {
-            return abort_fn_body(rte, void 0, "width parameter of setScreenMode must be a positive integer no greater than 300");
+            throw 'width parameter of setScreenMode must be a positive integer no greater than 300';
         }
 
-        if (typeof height !== "number" ||
+        if (typeof height !== 'number' ||
             Math.floor(height) !== height ||
-            height < 1) {
-            return abort_fn_body(rte, void 0, "height parameter of setScreenMode must be a positive integer no greater than 200");
+            height < 1 ||
+            height > 100) {
+            throw 'height parameter of setScreenMode must be a positive integer no greater than 100';
         }
 
-        var pixSize = Math.min(10, Math.floor(450 / width + 1));
+        var pixSize = Math.min(10,
+                               Math.floor(300 / width + 1),
+                               Math.floor(150 / height + 1));
 
-        var divNode = document.createElement("div");
+        var divNode = document.createElement('div');
 
         var pixels = new cb.output.PixelGrid(divNode, {
             rows: height,
@@ -1383,7 +1443,7 @@ builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
 
         pixels.clear(pixels.black);
 
-        cb.transcript.addLineWidget(divNode);
+        cb.addLineWidgetTranscriptREPL(divNode);
         cb.screenPixels = pixels;
         cb.screenWidth = width;
         cb.screenHeight = height;
@@ -1405,7 +1465,7 @@ builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
 cb.screenWidth = 0;
 
 function builtin_getScreenWidth() {
-    throw "unimplemented";///////////////////////////
+    throw 'unimplemented';///////////////////////////
 }
 
 builtin_getScreenWidth._apply_ = function (rte, cont, this_, params) {
@@ -1428,7 +1488,7 @@ builtin_getScreenWidth._apply_ = function (rte, cont, this_, params) {
 cb.screenHeight = 0;
 
 function builtin_getScreenHeight() {
-    throw "unimplemented";///////////////////////////
+    throw 'unimplemented';///////////////////////////
 }
 
 builtin_getScreenHeight._apply_ = function (rte, cont, this_, params) {
@@ -1449,7 +1509,7 @@ builtin_getScreenHeight._apply_ = function (rte, cont, this_, params) {
 };
 
 function builtin_setPixel(x, y, color) {
-    throw "unimplemented";///////////////////////////
+    throw 'unimplemented';///////////////////////////
 }
 
 builtin_setPixel._apply_ = function (rte, cont, this_, params) {
@@ -1457,47 +1517,47 @@ builtin_setPixel._apply_ = function (rte, cont, this_, params) {
     var code = function (rte, cont) {
 
         if (params.length !== 3) {
-            return abort_fn_body(rte, void 0, "setPixel expects 3 parameters");
+            throw 'setPixel expects 3 parameters';
         }
 
         var x = params[0];
         var y = params[1];
         var color = params[2];
 
-        if (typeof x !== "number" ||
+        if (typeof x !== 'number' ||
             Math.floor(x) !== x ||
             x < 0 ||
             x >= cb.screenWidth) {
-            return abort_fn_body(rte, void 0, "x parameter of setPixel must be a positive integer less than " + cb.screenWidth);
+            throw 'x parameter of setPixel must be a positive integer less than ' + cb.screenWidth;
         }
 
-        if (typeof y !== "number" ||
+        if (typeof y !== 'number' ||
             Math.floor(y) !== y ||
             y < 0 ||
             y >= cb.screenHeight) {
-            return abort_fn_body(rte, void 0, "y parameter of setPixel must be a positive integer less than " + cb.screenHeight);
+            throw 'y parameter of setPixel must be a positive integer less than ' + cb.screenHeight;
         }
 
-        if (typeof color !== "object" ||
+        if (typeof color !== 'object' ||
             color === null ||
-            !("r" in color) ||
-            typeof color.r !== "number" ||
+            !('r' in color) ||
+            typeof color.r !== 'number' ||
             Math.floor(color.r) !== color.r ||
             color.r < 0 || color.r > 255 ||
-            !("g" in color) ||
-            typeof color.g !== "number" ||
+            !('g' in color) ||
+            typeof color.g !== 'number' ||
             Math.floor(color.g) !== color.g ||
             color.g < 0 || color.g > 255 ||
-            !("b" in color) ||
-            typeof color.b !== "number" ||
+            !('b' in color) ||
+            typeof color.b !== 'number' ||
             Math.floor(color.b) !== color.b ||
             color.b < 0 || color.b > 255) {
-            return abort_fn_body(rte, void 0, "color parameter of setPixel must be a RGB structure");
+            throw 'color parameter of setPixel must be a RGB structure';
         }
 
         cb.screenPixels.setPixel(x,
                                  y,
-                                 "#" +
+                                 '#' +
                                  (256+color.r).toString(16).slice(1) +
                                  (256+color.g).toString(16).slice(1) +
                                  (256+color.b).toString(16).slice(1));
@@ -1517,7 +1577,7 @@ builtin_setPixel._apply_ = function (rte, cont, this_, params) {
 };
 
 function builtin_exportScreen() {
-    throw "unimplemented";///////////////////////////
+    throw 'unimplemented';///////////////////////////
 }
 
 builtin_exportScreen._apply_ = function (rte, cont, this_, params) {
@@ -1531,8 +1591,8 @@ builtin_exportScreen._apply_ = function (rte, cont, this_, params) {
         
         for(var i = 0; i<cb.screenHeight; i++) {
             pixels.push([]);
-	        for(var j = 0; j<cb.screenWidth; j++) {
-	            pixels[i].push(cb.screenPixels.pixels[i][j]);
+            for(var j = 0; j<cb.screenWidth; j++) {
+                pixels[i].push(cb.screenPixels.pixels[i][j]);
             }
         }
         
@@ -1551,13 +1611,19 @@ builtin_exportScreen._apply_ = function (rte, cont, this_, params) {
 };
 
 function builtin_load(filename) {
-    throw "unimplemented";///////////////////////////
+    throw 'unimplemented';///////////////////////////
 }
 
 builtin_load._apply_ = function (rte, cont, this_, params) {
 
     var filename = params[0];
     var code = cb.compile_file(filename);
+
+    if (code === null) {
+        code = function (rte, cont) {
+            return return_fn_body(rte, void 0);
+        };
+    }
 
     return exec_fn_body(code,
                         builtin_load,
@@ -1571,7 +1637,7 @@ builtin_load._apply_ = function (rte, cont, this_, params) {
 };
 
 function builtin_readFile(filename) {
-    throw "unimplemented";///////////////////////////
+    throw 'unimplemented';///////////////////////////
 }
 
 builtin_readFile._apply_ = function (rte, cont, this_, params) {
@@ -1579,23 +1645,16 @@ builtin_readFile._apply_ = function (rte, cont, this_, params) {
     var code = function (rte, cont) {
 
         if (params.length !== 1) {
-            return abort_fn_body(rte, void 0, "readFile expects 1 parameter");
+            throw 'readFile expects 1 parameter';
         }
 
         var filename = params[0];
 
-        if (typeof filename !== "string") {
-            return abort_fn_body(rte, void 0, "filename parameter of readFile must be a string");
+        if (typeof filename !== 'string') {
+            throw 'filename parameter of readFile must be a string';
         }
 
-        var state;
-
-        try {
-            state = readFileInternal(filename);
-        }
-        catch (e) {
-            return abort_fn_body(rte, void 0, String(e));
-        }
+        var state = readFileInternal(filename);
 
         return return_fn_body(rte, state.content);
     };
@@ -1612,7 +1671,7 @@ builtin_readFile._apply_ = function (rte, cont, this_, params) {
 };
 
 function builtin_writeFile(filename, content) {
-    throw "unimplemented";///////////////////////////
+    throw 'unimplemented';///////////////////////////
 }
 
 builtin_writeFile._apply_ = function (rte, cont, this_, params) {
@@ -1620,26 +1679,21 @@ builtin_writeFile._apply_ = function (rte, cont, this_, params) {
     var code = function (rte, cont) {
 
         if (params.length !== 2) {
-            return abort_fn_body(rte, void 0, "writeFile expects 2 parameters");
+            throw 'writeFile expects 2 parameters';
         }
 
         var filename = params[0];
         var content = params[1];
 
-        if (typeof filename !== "string") {
-            return abort_fn_body(rte, void 0, "filename parameter of writeFile must be a string");
+        if (typeof filename !== 'string') {
+            throw 'filename parameter of writeFile must be a string';
         }
 
-        if (typeof content !== "string") {
-            return abort_fn_body(rte, void 0, "content parameter of writeFile must be a string");
+        if (typeof content !== 'string') {
+            throw 'content parameter of writeFile must be a string';
         }
 
-        try {
-            writeFileInternal(filename, content);
-        }
-        catch (e) {
-            return abort_fn_body(rte, void 0, String(e));
-        }
+        writeFileInternal(filename, content);
 
         return return_fn_body(rte, void 0);
     };
@@ -1655,12 +1709,12 @@ builtin_writeFile._apply_ = function (rte, cont, this_, params) {
                         null);
 };
 
-cb.compile_repl_expression = function (source, line, ch) {
+CodeBoot.prototype.compile_repl_expression = function (source, line, ch) {
     return cb.compile(source,
-                      new SourceContainer(source, "<REPL>", line+1, ch+1));
+                      new SourceContainer(source, '<REPL>', line, ch));
 };
 
-cb.compile_file = function (filename) {
+CodeBoot.prototype.compile_file = function (filename) {
     if (/^http:\/\//.test(filename)) {
         return cb.compile_url_file(filename);
     } else {
@@ -1668,19 +1722,20 @@ cb.compile_file = function (filename) {
     }
 };
 
-cb.urlGet = function (url) {
+CodeBoot.prototype.urlGet = function (url) {
     var content;
     $.ajax({
-        url: "urlget.cgi",
-        type: "POST",
+        url: 'urlget.cgi',
+        type: 'POST',
         data: {url: url},
-        dataType: "text",
+        dataType: 'text',
         async: false,
         success: function (data) {
             content = data;
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            cb.transcript.addLine("Failed to load remote ressource", "error-message");
+            cb.addTranscriptREPL('Failed to load remote ressource\n',
+                                 'cb-repl-error');
         }
     });
     return content;
@@ -1688,8 +1743,8 @@ cb.urlGet = function (url) {
 
 cb.cacheURL = {};
 
-cb.readURL = function (url) {
-    if (cb.cacheURL.hasOwnProperty(url)) {
+CodeBoot.prototype.readURL = function (url) {
+    if (Object.prototype.hasOwnProperty.call(cb.cacheURL, url)) {
         return cb.cacheURL[url];
     } else {
         var source = cb.urlGet(url);
@@ -1698,16 +1753,16 @@ cb.readURL = function (url) {
     }
 };
 
-cb.compile_url_file = function (url) {
+CodeBoot.prototype.compile_url_file = function (url) {
 
     var source = cb.readURL(url);
-    if (source === (void 0)) source = "";
+    if (source === (void 0)) source = '';
 
     return cb.compile(source,
                       new SourceContainer(source, url, 1, 1));
 };
 
-cb.compile_internal_file = function (filename) {
+CodeBoot.prototype.compile_internal_file = function (filename) {
 
     var state = readFileInternal(filename);
     var source = state.content;
@@ -1733,64 +1788,72 @@ function writeFileInternal(filename, content) {
     if (cb.fs.hasFile(filename)) {
         file = cb.fs.getByName(filename);
     } else {
-        file = new CPFile(filename);
+        file = new CBFile(cb.fs, filename);
         cb.fs.addFile(file);
-        cb.addFileToMenu(file);
+        cb.fs.addFileToMenu(file);
     }
 
-    file.content = content;
     file.setContent(content);
 }
 
-cb.compile = function (source, container) {
+CodeBoot.prototype.compile = function (source, container) {
     return jev.compile(source,
                        {
                            container: container,
-                           error: cb.syntax_error,
-                           languageLevel: cb.languageLevel
+                           error: function (loc, kind, msg) {
+                               cb.syntaxError(loc, kind, msg);
+                           },
+                           detectEmpty: true,
+                           languageLevel: cb.languageLevel,
+                           filterAST: function (ast, source) {
+                               return cb.filterAST(ast, source);
+                           }
                        });
+};
+
+CodeBoot.prototype.filterAST = function (ast, source) {
+    cb.lastAST = ast;
+    cb.lastSource = source;
+    cb.lastResult = null;
+    cb.lastResultRepresentation = null;
+    return ast;
 };
 
 var warnSemicolon = true;
 
-cb.syntax_error = function (loc, kind, msg) {
+CodeBoot.prototype.syntaxError = function (loc, kind, msg) {
 
-    if (warnSemicolon && msg === "';' missing after this token") {
-        cb.displayError(loc, "syntax error", msg);
+    if (warnSemicolon && msg === '\';\' missing after this token') {
+        cb.displayError(loc, 'syntax error', msg);
         throw false;
     }
 
-    if (kind !== "warning") {
+    if (kind !== 'warning') {
         cb.displayError(loc, kind, msg);
         throw false;
     }
 };
 
-cb.displayError = function (loc, kind, msg) {
-    var locText = "";
-    if (cb.options.showLineNumbers && loc.container.toString() != "<REPL>") {
-        locText = loc.toString("simple") + ": ";
+CodeBoot.prototype.errorMessage = function (loc, kind, msg) {
+    var locText = '';
+    if (cb.options.showLineNumbers && loc.container.toString() != '<REPL>') {
+        locText = loc.toString('simple') + ': ';
     }
-    cb.show_error(loc);
-    cb.transcript.addLine(locText + ((kind === null) ? "" : kind + " -- ") + msg, "error-message");
+    return locText + ((kind === null) ? '' : kind + ' -- ') + msg;
 };
 
-cb.clearREPL = function () {
-    set_prompt(cb.repl);
-    cb.repl.refresh();
-    cb.repl.focus();
+CodeBoot.prototype.displayError = function (loc, kind, msg) {
+    cb.showError(loc);
+    cb.addTranscriptREPL(cb.errorMessage(loc, kind, msg) + '\n',
+                         'cb-repl-error');
 };
 
-cb.clearAll = function () {
-    cb.cancel();
-    cb.clearREPL();
-    cb.transcript.clear();
-}
-
-cb.undo = function (cm) {
+CodeBoot.prototype.undo = function (cm) {
     cm.undo();
 };
 
-cb.redo = function (cm) {
+CodeBoot.prototype.redo = function (cm) {
     cm.redo();
 };
+
+cb.initProgramState();

@@ -1,33 +1,29 @@
-cb.clearSession = function () {
-    localStorage.removeItem("codeboot");
+CodeBoot.prototype.clearSession = function () {
+    localStorage.removeItem('codeboot');
 };
 
-cb.saveSession = function () {
+CodeBoot.prototype.saveSession = function () {
     var state = cb.serializeState();
-    localStorage["codeboot"] = JSON.stringify(state);
+    localStorage['codeboot'] = JSON.stringify(state);
 };
 
-cb.loadSession = function () {
-    // Restore tabs
-    var state = localStorage["codeboot"];
-    if (!state) {
-        // For the transition period
-        state = localStorage["codeplay"];
-        localStorage.removeItem("codeplay");
-    }
+CodeBoot.prototype.loadSession = function () {
+    var state = localStorage['codeboot'];
     if (state) {
+        cb.fs.init();
         cb.restoreState(JSON.parse(state));
     }
 };
 
-cb.serializeState = function () {
+CodeBoot.prototype.serializeState = function () {
     var state = {
         tabs: [],
         repl: {
             history: undefined
         },
-        devMode: cb.devMode,
         languageLevel: cb.languageLevel,
+        devMode: cb.devMode,
+        animationSpeed: cb.animationSpeed,
         options: cb.options
     };
 
@@ -35,9 +31,13 @@ cb.serializeState = function () {
 
     state.files = cb.fs.serialize();
     state.openEditors = [];
-    $(".row[data-cb-filename]").each(function () {
-        state.openEditors.push($(this).attr("data-cb-filename"));
+    cb.fs.forEachEditor(function (editor) {
+        state.openEditors.push(editor.file.filename);
     });
+    state.activeEditor = null;
+    if (cb.fs.editorManager.activated >= 0) {
+        state.activeEditor = cb.fs.editorManager.editors[cb.fs.editorManager.activated].file.filename;
+    }
 
     return state;
 };
@@ -51,8 +51,10 @@ function cb_internal_attempt(operation) {
     }
 }
 
-cb.restoreState = function (state) {
+CodeBoot.prototype.restoreState = function (state) {
+
     if (state === undefined) return;
+
     var failed = false;
 
     if (state.options) {
@@ -64,29 +66,48 @@ cb.restoreState = function (state) {
     }) || failed;
 
     failed = cb_internal_attempt(function () {
-        cb.setLanguageLevel(state.languageLevel || "novice");
+        cb.setLanguageLevel(state.languageLevel || 'novice');
     }) || failed;
 
     failed = cb_internal_attempt(function () {
         cb.setDevMode(!!state.devMode);
     }) || failed;
 
+    failed = cb_internal_attempt(function () {
+        cb.setAnimationSpeed(state.animationSpeed);
+    }) || failed;
+
+    failed = cb_internal_attempt(function () {
+        cb.setShowLineNumbers(!!state.options.showLineNumbers);
+    }) || failed;
+
+    failed = cb_internal_attempt(function () {
+        cb.setLargeFont(!!state.options.largeFont);
+    }) || failed;
+
     if (state.files) {
         failed = cb_internal_attempt(function () {
             cb.fs.restore(state.files);
-            cb.rebuildFileMenu();
+            cb.fs.rebuildFileMenu();
         }) || failed;
     }
 
     if (state.openEditors) {
         failed = cb_internal_attempt(function () {
-            for (var i = state.openEditors.length - 1; i >= 0; i--) {
-                cb.openFile(state.openEditors[i]);
-            }
+            state.openEditors.forEach(function (filename) {
+                cb.fs.openFile(filename);
+            });
+        }) || failed;
+    }
+
+    if (state.activeEditor) {
+        failed = cb_internal_attempt(function () {
+            var file = cb.fs._asFile(state.activeEditor);
+            file.editor.activate();
         }) || failed;
     }
 
     if (failed) {
-        cb.reportError("Failed to restore state");
+        cb.reportError('Failed to restore state');
     }
 };

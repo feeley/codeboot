@@ -1,113 +1,45 @@
 /* ----- UI helpers ----- */
 
-var NAVBAR_HEIGHT = 40;
-var EDITOR_SPACING = 20;
-
-function makeCloseButton() {
-    return $("<button/>").addClass("close").append("&times;");
+CodeBoot.prototype.makeCloseButton = function () {
+    return $('<button/>')
+        .addClass('close')
+        .append('<i class="fa fa-close"></i>');
 }
 
-function makeMenuSeparator() {
-    return $('<li class="divider"></li>');
+CodeBoot.prototype.makeDeleteButton = function () {
+    return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Delete file"/>')
+        .addClass('close')
+        .append('<i class="fa fa-trash-o"></i>');
 }
 
-cb.scrollTo = function (elementOrSelector) {
-    var elementOffset = $(elementOrSelector).position().top; // - NAVBAR_HEIGHT - EDITOR_SPACING;
-    $("#editors").animate({scrollTop: elementOffset}, 400);
+CodeBoot.prototype.makeShareButton = function () {
+    return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Share file"/>')
+        .addClass('close')
+        .append('<i class="fa fa-share"></i>');
 }
 
-cb.getShortURL = function (longUrl) {
-	var shortURL;
-	$.ajax({
-            url: "urlshortener.cgi",
-            type: "POST",
-            data: {longUrl: longUrl},
-            dataType: "json",
-            async: false,
-            success: function (data) {
-				shortURL = data.id;
-            }
-    });
-    return shortURL;
+CodeBoot.prototype.makeDownloadButton = function () {
+    return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Download file"/>')
+        .addClass('close')
+        .append('<i class="fa fa-download"></i>');
+}
+
+CodeBoot.prototype.makeEmailButton = function () {
+    return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Send codeBoot link by email"/>')
+        .addClass('close')
+        .append('<i class="fa fa-envelope"></i>');
+}
+
+CodeBoot.prototype.makeCopyButton = function () {
+    return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Copy codeBoot link to clipboard"/>')
+        .addClass('close')
+        .append('<svg width="14" height="16" version="1.1" viewBox="0 0 14 16"><path fill-rule="evenodd" d="M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z"></path></svg>');
 };
 
-function makeToolbar() {
-    var $toolbar = $('<div class="btn-toolbar pull-right"/>');
-
-    return $toolbar;
-}
-
-function makeTBGroup() {
-    return $('<div class="btn-group"/>');
-}
-
-function makeTBButton($contents, props) {
-    var $btn = $('<button class="btn"/>');
-
-    for (var key in props) {
-        $btn.attr(key, props[key]);
-    }
-
-    if ($contents) {
-        $btn.append($contents);
-    }
-
-    return $btn;
-}
-
-function makeDropdown($contents, populateFn) {
-    var $group = $('<div class="btn-group"/>');
-    var $dropdownBtn = $('<a class="btn dropdown-toggle" data-toggle="dropdown" href="#"/>');
-    $dropdownBtn.append($contents);
-    $dropdownBtn.append(document.createTextNode(" "));
-    $dropdownBtn.append($('<span class="caret"></span>'));
-
-    var $dropdownMenu = $('<ul class="dropdown-menu"/>');
-    if (populateFn) populateFn($dropdownMenu);
-
-    $group.append($dropdownBtn);
-    $group.append($dropdownMenu);
-
-    return $group;
-}
-
-function makeSplitDropdown($contents, populateFn) {
-	var $group = $('<div class="btn-group"/>');
-
-	var $btn = $('<button class="btn"/>').appendTo($group);
-
-	$('<a class="btn dropdown-toggle" data-toggle="dropdown"/>')
-		.append($('<span class="caret"/>'))
-		.appendTo($group);
-
-	var $dropdownMenu = $('<ul class="dropdown-menu"/>').appendTo($group);
-
-    if (typeof $contents === "function") {
-		if (populateFn === undefined) {
-			$contents($btn, $dropdownMenu);
-		} else {
-			$contents($btn);
-		}
-	} else {
-		$btn.append($contents);
-	}
-
-	if (populateFn) populateFn($dropdownMenu);
-
-    return $group;
-}
-
-function makeDropdownItem($contents) {
-	var $link = $('<a href="#"/>');
-	var $item = $('<li/>').append($link);
-	if (typeof $contents === "function") {
-		$contents($link);
-	} else {
-		$link.append($contents);
-	}
-
-	return $item;
-}
+CodeBoot.prototype.scrollTo = function (elementOrSelector) {
+    var elementOffset = $(elementOrSelector).position().top;
+    $('#cb-editors').animate({scrollTop: elementOffset}, 400);
+};
 
 /* ----- Internal file system ----- */
 
@@ -138,14 +70,21 @@ var BUILTIN_FILES = {
                             'print(a);\n',
 };
 
-var NEW_FILE_DEFAULT_CONTENT = "// Enter JavaScript code here";
+var NEW_FILE_DEFAULT_CONTENT = '// Enter JavaScript code here';
 
-function CPFile(filename, content, opts) {
+BUILTIN_FILES = {};
+NEW_FILE_DEFAULT_CONTENT = '';
+
+function CBFile(fileManager, filename, content, opts) {
+
+    this.fileManager = fileManager;
     this.filename = filename;
     this.content = (content !== (void 0)) ? content : NEW_FILE_DEFAULT_CONTENT;
     this.cursor = null;
     this.stamp = 0;
     this.editor = undefined;
+
+    new CBFileEditor(this); // initializes this.editor
 
     if (opts) {
         for (var prop in opts) {
@@ -154,33 +93,31 @@ function CPFile(filename, content, opts) {
     }
 }
 
-CPFile.prototype.getContent = function () {
-    if (this.editor) {
+CBFile.prototype.getContent = function () {
+    if (this.editor.isEnabled()) {
         return this.editor.getValue();
-    }
-
-    return this.content;
-};
-
-CPFile.prototype.setContent = function (content) {
-    if (this.editor) {
-        this.content = content;
-        this.editor.setValue(this.content);
+    } else {
+        return this.content;
     }
 };
 
-CPFile.prototype.save = function () {
-    if (this.editor) {
-        var old_content = this.content;
-        var new_content = this.editor.getValue();
-        if (new_content !== old_content) {
-            this.content = new_content;
+CBFile.prototype.setContent = function (content) {
+    this.content = content;
+    this.editor.setValue(content);
+};
+
+CBFile.prototype.save = function () {
+    if (this.editor.isEnabled()) {
+        var oldContent = this.content;
+        var newContent = this.editor.getValue();
+        if (newContent !== oldContent) {
+            this.content = newContent;
             this.stamp += 1;
         }
     }
 };
 
-CPFile.prototype.serialize = function () {
+CBFile.prototype.serialize = function () {
     var json = {
         filename: this.filename,
         content: this.getContent(),
@@ -192,63 +129,82 @@ CPFile.prototype.serialize = function () {
     return json;
 };
 
-CPFile.prototype.clone = function () {
-    var other = new CPFile(this.filename, this.content);
+CBFile.prototype.clone = function () {
+    var other = new CBFile(this.fileManager, this.filename, this.content);
     for (var prop in this) {
-        if (this.hasOwnProperty(prop)) {
+        if (Object.prototype.hasOwnProperty.call(this, prop)) {
             other[prop] = this[prop];
         }
     }
     return other;
 };
 
-function CPFileManager() {
-    this.clear();
+function CBFileManager() {
+    this.editorManager = undefined;
+    new CBFileEditorManager(this);
+    this.init();
 }
 
-CPFileManager.prototype.clear = function () {
+CBFileManager.prototype.init = function () {
+    this.removeAllEditors();
+    this.clear();
+    this.rebuildFileMenu();
+};
+
+CBFileManager.prototype.clear = function () {
     this.builtins = {};
     this.files = Object.create(this.builtins);
     this._loadBuiltins();
 };
 
-CPFileManager.prototype._loadBuiltins = function () {
+CBFileManager.prototype._loadBuiltins = function () {
     for (var filename in BUILTIN_FILES) {
-        var f = new CPFile(filename, BUILTIN_FILES[filename]);
+        var f = new CBFile(this, filename, BUILTIN_FILES[filename]);
         this.builtins[filename] = f;
     };
 };
 
-CPFileManager.prototype._asFilename = function (fileOrFilename) {
-    if (typeof fileOrFilename === "string") return fileOrFilename;
+CBFileManager.prototype._asFilename = function (fileOrFilename) {
+    if (typeof fileOrFilename === 'string') return fileOrFilename;
     return fileOrFilename.filename;
 };
 
-CPFileManager.prototype._asFile = function (fileOrFilename) {
-    if (typeof fileOrFilename !== "string") return fileOrFilename;
+CBFileManager.prototype._asFile = function (fileOrFilename) {
+    if (typeof fileOrFilename !== 'string') return fileOrFilename;
     return this.getByName(fileOrFilename);
 };
 
-CPFileManager.prototype.isBuiltin = function (fileOrFilename) {
+CBFileManager.prototype.isBuiltin = function (fileOrFilename) {
     var filename = this._asFilename(fileOrFilename);
-    return this.builtins.hasOwnProperty(filename);
+    return Object.prototype.hasOwnProperty.call(this.builtins, filename);
 };
 
-CPFileManager.prototype.addFile = function (f) {
+CBFileManager.prototype.addFile = function (f) {
     this.files[f.filename] = f;
 };
 
-CPFileManager.prototype.hasFile = function (fileOrFilename) {
+CBFileManager.prototype.hasFile = function (fileOrFilename) {
     var filename = this._asFilename(fileOrFilename);
-    return this.files.hasOwnProperty(filename) || this.builtins.hasOwnProperty(filename);
+    return Object.prototype.hasOwnProperty.call(this.files, filename) ||
+           Object.prototype.hasOwnProperty.call(this.builtins, filename);
 };
 
-CPFileManager.prototype.getByName = function (filename) {
+CBFileManager.prototype.generateUniqueFilename = function () {
+    var prefix = 'untitled';
+    for (var index = 1; ; index++) {
+        var candidateName = prefix + (index===1 ? '' : index) + '.js';
+        if (!this.hasFile(candidateName)) {
+            return candidateName;
+        }
+    }
+};
+
+CBFileManager.prototype.getByName = function (filename) {
     if (!this.hasFile(filename)) {
-        throw "File not found: '" + filename + "'";
+        throw 'File not found: "' + filename + '"';
     }
     var file = this.files[filename];
-    if (!this.files.hasOwnProperty(filename)) {
+    if (!Object.prototype.hasOwnProperty.call(this.files, filename)) {
         // This is a builtin file, make an editable copy
         file = file.clone();
         this.files[filename] = file;
@@ -256,7 +212,7 @@ CPFileManager.prototype.getByName = function (filename) {
     return file;
 };
 
-CPFileManager.prototype.deleteFile = function (fileOrFilename) {
+CBFileManager.prototype.deleteFile = function (fileOrFilename) {
     var filename = this._asFilename(fileOrFilename);
     if (this.hasFile(filename)) {
         delete this.files[filename];
@@ -266,9 +222,9 @@ CPFileManager.prototype.deleteFile = function (fileOrFilename) {
     return false;
 };
 
-CPFileManager.prototype.renameFile = function (fileOrFilename, newFilename) {
+CBFileManager.prototype.renameFile = function (fileOrFilename, newFilename) {
     if (this.hasFile(newFilename)) {
-        throw "File already exists: " + newFilename;
+        throw 'File already exists: "' + newFilename + '"';
     }
     var file = this._asFile(fileOrFilename);
     delete this.files[file.filename];
@@ -276,23 +232,24 @@ CPFileManager.prototype.renameFile = function (fileOrFilename, newFilename) {
     this.addFile(file);
 };
 
-CPFileManager.prototype.getContent = function (fileOrFilename) {
+CBFileManager.prototype.getContent = function (fileOrFilename) {
     var file = this._asFile(fileOrFilename);
     return file.getContent();
 };
 
-CPFileManager.prototype.getEditor = function (fileOrFilename) {
-    return this._asFile(fileOrFilename).editor;
+CBFileManager.prototype.getEditor = function (fileOrFilename) {
+    return this._asFile(fileOrFilename).editor.editor;
 };
 
-CPFileManager.prototype.setContent = function (fileOrFilename, content) {
+CBFileManager.prototype.setContent = function (fileOrFilename, content) {
     var file = this._asFile(fileOrFilename);
-    return file.setContent(content);
+    file.setContent(content);
 };
 
-CPFileManager.prototype.each = function (callback, selector) {
+CBFileManager.prototype.each = function (callback, selector) {
     if (!selector) selector = function (f) { return true; };
     for (var filename in this.files) {
+
         if (!this.hasFile(filename)) continue; // Prune Object method name
 
         var file = this.getByName(filename);
@@ -302,11 +259,15 @@ CPFileManager.prototype.each = function (callback, selector) {
     }
 };
 
-CPFileManager.prototype.serialize = function () {
+CBFileManager.prototype.forEachEditor = function (callback) {
+    this.editorManager.editors.forEach(callback);
+};
+
+CBFileManager.prototype.serialize = function () {
     var json = [];
     var self = this;
     var isUserFile = function (file) {
-        return self.files.hasOwnProperty(file.filename);
+        return Object.prototype.hasOwnProperty.call(self.files, file.filename);
     };
 
     this.each(function (file) {
@@ -317,447 +278,517 @@ CPFileManager.prototype.serialize = function () {
     return json;
 };
 
-CPFileManager.prototype.restore = function (json) {
+CBFileManager.prototype.restore = function (json) {
     this.clear();
     for (var i = 0; i < json.length; i++) {
         var fileProps = json[i];
-        var file = new CPFile(fileProps.filename, fileProps.content, fileProps);
+        var file = new CBFile(this, fileProps.filename, fileProps.content, fileProps);
         this.addFile(file);
     }
 };
 
-// ----------------------------------------------------------------------
+CBFileManager.prototype.rebuildFileMenu = function () {
 
-cb.addFileToMenu = function (fileOrFilename) {
-    var file = cb.fs._asFile(fileOrFilename);
-    var filename = file.filename;
+    var self = this;
 
-    var $file_item = $('<li/>');
-    $file_item.attr("data-cb-filename", filename);
-    var $file_link = $('<a href="#"/>');
-    $file_link.click(function () {
-        cb.openFile(filename);
+    $('#cb-file-selection').empty();
+
+    var item = $('<a id="cb-file-new" class="dropdown-item" href="#"><strong>New</strong></a>');
+
+    item.on('click', function (event) {
+        self.newFile();
     });
 
-    if (!cb.fs.isBuiltin(file)) {
-        var $deleteButton = $('<i class="icon-trash pull-right"/>');
-        $file_link.append($deleteButton);
-        $deleteButton.click(function (event) {
-            var reallyDelete = confirm("Delete file '" + filename + "'? This cannot be undone.");
+    $('#cb-file-selection').append(item);
+
+    $('#cb-file-selection').append($('<div class="dropdown-divider"></div>'));
+
+    this.each(function (file) {
+        self.addFileToMenu(file);
+    });
+};
+
+CBFileManager.prototype.addFileToMenu = function (file) {
+
+    var self = this;
+    var filename = file.filename;
+
+    var item = $('<a class="dropdown-item" href="#"/>');
+    item.attr('data-cb-filename', filename);
+
+    item.on('click', function (event) {
+        file.editor.edit();
+    });
+
+    item.append($('<span/>').text(filename));
+
+    var buttons =$('<span/>').addClass('cb-file-buttons');
+
+    if (!this.isBuiltin(file)) {
+
+        var deleteButton = cb.makeDeleteButton();
+
+        deleteButton.on('click', function (event) {
+
+            $(deleteButton).tooltip('hide');
+
+            var reallyDelete = confirm('Delete file "' + file.filename + '"? This cannot be undone.');
+
             if (reallyDelete) {
-                cb.deleteFile(filename);
-            } else {
-                event.preventDefault();
-                event.stopPropagation();
+                file.editor.disable();
+                item.remove();
+                self.deleteFile(file);
             }
+
+            return false;
         });
+
+        buttons.append(deleteButton);
     }
 
-    $file_link.append(filename);
-    $file_item.append($file_link);
+    var downloadButton = cb.makeDownloadButton();
+
+    downloadButton.on('click', function (event) {
+        $('#cb-file-selection').dropdown('toggle');
+        $(downloadButton).tooltip('hide');
+        file.download();
+        return false;
+    });
+
+    buttons.append(downloadButton);
+
+    var emailButton = cb.makeEmailButton();
+
+    emailButton.on('click', function (event) {
+        $('#cb-file-selection').dropdown('toggle');
+        $(emailButton).tooltip('hide');
+        file.email();
+        return false;
+    });
+
+    buttons.append(emailButton);
+
+    item.append(buttons);
 
     // Keep the menu sorted
-    var $children = $("#file-list").children();
-    for (var i = 0; i < $children.size(); i++) {
-        var $element = $($children.get(i));
-        var element_filename = $element.attr('data-cb-filename');
-        if (filename < element_filename) {
-            $file_item.insertBefore($element);
+    var children = $('#cb-file-selection').children();
+    for (var i=2; i<children.length; i++) {
+        var element = $(children.get(i));
+        if (filename < element.attr('data-cb-filename')) {
+            item.insertBefore(element);
             return;
         }
     }
 
-    $("#file-list").append($file_item);
+    $('#cb-file-selection').append(item);
 };
 
-cb.rebuildFileMenu = function () {
-    $("#file-list").empty();
-    cb.fs.each(function (file) {
-        cb.addFileToMenu(file);
-    });
+CBFile.prototype.download = function () {
+    var file = this;
+    var filename = file.filename;
+    var content = file.content;
+    $('#cb-form-download-content').val(content);
+    $('#cb-form-download-filename').val(filename);
+//    cb.saveInProgress = true;
+    $('#cb-form-download').submit();
 };
 
-cb.initFS = function () {
-    cb.fs = new CPFileManager();
-    cb.rebuildFileMenu();
+CBFile.prototype.email = function () {
+    var file = this;
+    var filename = file.filename;
+    var content = file.content;
+    var url = editor_URL(content, filename);
+    var subject = encodeURIComponent(filename);
+    var body = encodeURIComponent(url+'\n\n\n'+content);
+    var href = 'mailto:?subject=' + subject + '&body=' + body;
+    var w = window.open(href, '_blank');
+    if (w) w.close();
 };
 
-cb.generateUniqueFilename = function () {
-    var prefix = "script";
-    for (var index = 1; ; index++) {
-        var candidateName = prefix + index;
-        if (!cb.fs.hasFile(candidateName)) {
-            return candidateName;
+CBFileManager.prototype.openFile = function (fileOrFilename) {
+
+    var file = this._asFile(fileOrFilename);
+
+    file.editor.edit();
+};
+
+CBFileManager.prototype.newFile = function (filename) {
+
+    if (filename === void 0) {
+        filename = this.generateUniqueFilename();
+    }
+
+    var file = new CBFile(this, filename);
+
+    this.addFile(file);
+    this.addFileToMenu(file);
+
+    file.editor.edit();
+
+    return filename;
+};
+
+CBFileManager.prototype.openFileExistingOrNew = function (filename) {
+
+    if (this.hasFile(filename)) {
+        this.openFile(filename);
+        return true;
+    } else {
+        this.newFile(filename);
+        return false;
+    }
+};
+
+CBFileManager.prototype.removeAllEditors = function () {
+    this.editorManager.removeAllEditors();
+};
+
+//-----------------------------------------------------------------------------
+
+function CBFileEditorManager(fileManager) {
+    fileManager.editorManager = this;
+    this.fileManager = fileManager;
+    this.editors = [];
+    this.activated = -1;
+}
+
+CBFileEditorManager.prototype.isActivated = function (editor) {
+    return (this.activated >= 0 && this.editors[this.activated] === editor);
+};
+
+CBFileEditorManager.prototype.indexOf = function (editor) {
+    for (var i=this.editors.length-1; i>=0; i--) {
+        if (this.editors[i] === editor) {
+            return i;
         }
     }
+    return -1;
 };
 
-cb.getContainerFor = function (fileOrFilename) {
-    var filename = cb.fs._asFilename(fileOrFilename);
-    return $('.row[data-cb-filename="' + filename + '"]').get(0);
+CBFileEditorManager.prototype.activate = function (editor) {
+
+    if (editor.isActivated()) return; // already activated
+
+    var i = this.indexOf(editor);
+
+    if (i < 0) return; // not a valid editor
+
+    if (this.activated >= 0) {
+        // deactivate currently activated editor
+        this.editors[this.activated].deactivatePresentation();
+    }
+
+    editor.activatePresentation(); // activate editor
+
+    this.activated = i; // remember it is activated
 };
 
-cb.openFile = function (filename) {
-    var container = cb.getContainerFor(filename);
-    if (!container) {
-        cb.newTab(filename);
+CBFileEditorManager.prototype.add = function (editor) {
+    this.editors.push(editor);
+    if (this.activated < 0) {
+        this.show(); // show editors
+        editor.activate(); // activate editor
+    } else {
+        editor.deactivatePresentation(); // deactivate editor
     }
 };
 
-cb.closeFile = function (fileOrFilename) {
-    var file = cb.fs._asFile(fileOrFilename);
-    file.save();
-    file.editor = null;
-
-	var $container = $(cb.getContainerFor(file));
-
-	if ($(".exec-point-code", $container).size() > 0) {
-		// Current file editor contains some highlighted code
-		cb.hide_step();
-	}
-
-    $container.remove();
-    focusREPL();
-
-    cb_internal_updatePopupPos();
+CBFileEditorManager.prototype.setReadOnlyAllEditors = function (readOnly) {
+    for (var i=0; i<this.editors.length; i++) {
+        this.editors[i].setReadOnly(readOnly);
+    }
 };
 
-cb.closeAll = function () {
-    $("[data-cb-filename]").each(function () {
-        var filename = $(this).attr('data-cb-filename');
-        cb.closeFile(filename);
-    });
+CBFileEditorManager.prototype.removeAllEditors = function () {
+    while (this.editors.length > 0) {
+        this.remove(this.editors[this.editors.length-1]);
+    }
 };
 
-cb.deleteFile = function (filename) {
-    $('[data-cb-filename="' + filename + '"]').remove();
-    cb.fs.deleteFile(filename);
-};
+CBFileEditorManager.prototype.remove = function (editor) {
 
-function basename(filename) {
-    return filename.replace(/\\/g,'/').replace( /.*\//, '');
-}
+    var i = this.indexOf(editor);
 
-function endsWith(str, suffix) {
-    return str.indexOf(suffix, str.length - suffix.length) !== -1;
-}
+    if (i < 0) return; // not a valid editor
 
-function cb_action_fileStepOne(file) {
-	if (program_state.mode === 'stopped') {
-		cb.load(file.filename, 'step');
-	} else {
-		cb.ui_event('step');
-	}
-}
+    editor.file.save();
 
-function cb_action_fileAnimate(file) {
-	if (program_state.mode === 'stopped') {
-		cb.load(file.filename, 'animate');
-	} else {
-		cb.ui_event('animate');
-	}
-}
+    editor.removePresentation();
 
-function cb_action_fileExecute(file) {
-	if (program_state.mode === 'stopped') {
-		cb.load(file.filename, 'play');
-	} else {
-		cb.ui_event('play');
-	}
-}
+    editor.fileTab = null;
+    editor.fileTabLabel = null;
+    editor.fileTabCloseButton = null;
+    editor.fileContainer = null;
+    editor.editor = null;
 
-cb.makeEditorToolbar = function (file) {
-    var $toolbar = makeToolbar();
-    $toolbar.attr('data-cb-exec', 'controller');
+    this.editors.splice(i, 1); // remove from editors
 
-    var buttons = [
-    	{
-    		title: "Step",
-    		icons: ["icon-play", "icon-exp-pause"],
-    		action: function () { cb_action_fileStepOne(file); }
-    	},
-
-    	{
-    		title: "Execute",
-    		icons: ["icon-play", "icon-exp-infinity"],
-    		action: function () { cb_action_fileExecute(file); }
-    	},
-
-    	{
-			title: "Animate",
-    		icons: ["icon-play"],
-    		action: function () { cb_action_fileAnimate(file); }
-    	}
-    ];
-
-    makeSplitDropdown(function ($btn, $menu) {
-    	$menu.addClass("dropdown-align-right dropdown-btns-only");
-    	$btn.addClass("action-btn");
-
-		function changeButtonNature(nature) {
-			$btn.empty();
-			nature.icons.forEach(function (cssClass) {
-				$btn.append($("<i/>").addClass(cssClass));
-			});
-			$btn.attr('title', nature.title);
-			$btn.unbind('click');
-			$btn.click(function () {
-				if (!$btn.is(".disabled")) nature.action();
-			});
-		}
-
-    	buttons.forEach(function (button) {
-			makeDropdownItem(function ($link) {
-				button.icons.forEach(function (cssClass) {
-					$link.append($("<i/>").addClass(cssClass));
-				});
-				$link.attr('title', button.title);
-
-				$link.click(function () {
-					changeButtonNature(button);
-					button.action();
-				});
-			}).appendTo($menu);
-    	});
-
-        changeButtonNature(buttons[1]);
-    }).appendTo($toolbar);
-
-
-
-    return $toolbar;
-};
-
-cb.makeLHSEditorToolbar = function (file) {
-    var $toolbar = makeToolbar();
-    var $group = makeTBGroup();
-    $group.appendTo($toolbar);
-
-    var $saveButton = makeTBButton($('<i class="icon-download-alt"/>'), {"title" : "Download"});
-    $saveButton.click(function () {
-        var name = basename(file.filename);
-        if (!endsWith(name, ".js")) {
-            name = name + ".js";
+    if (i === this.activated) {
+        this.activated = -1;
+        // need to activate some other editor
+        if (i < this.editors.length) {
+            this.editors[i].activate();
+        } else if (i > 0) {
+            this.editors[i-1].activate();
+        } else {
+            // no other editor to activate
+            this.hide();
+            cb.focusREPL();
         }
-        saveAs(cb.fs.getContent(file), name);
-    });
-    $saveButton.appendTo($group);
-
-    if (typeof FileReader !== "undefined") {
-        // FileReader supported, add an open button
-        var $openButton = makeTBButton($('<i class="icon-folder-open"/>'), {"title" : "Upload"});
-        $openButton.click(function () {
-            $("#openFileModal").attr("data-cb-filename", file.filename).modal('show');
-        });
-        $openButton.appendTo($group);
+    } else if (i < this.activated) {
+        this.activated--;
     }
-
-    var $btnShare = makeDropdown($('<i class="icon-share"/>'), function ($menu) {
-		$menu.append(makeDropdownItem("Email public link").click(function () {
-			var content = cb.fs.getContent(file);
-			var url = editor_URL(content, file.filename);
-			var shortURL = cb.getShortURL(url);
-            if (!shortURL) {
-                alert("Failed to generate short URL");
-                return;
-            }
-
-			var subject = encodeURIComponent("codeBoot link");
-			var body = encodeURIComponent(shortURL);
-		    var href = "mailto:?subject=" + subject + "&body=" + body;
-			var w = window.open(href, "_blank");
-			if (w) w.close();
-		}));
-
-		$menu.append(makeDropdownItem("Generate public link").click(function () {
-			var content = cb.fs.getContent(file);
-			var url = editor_URL(content, file.filename);
-			var shortURL = cb.getShortURL(url);
-			if (shortURL) {
-				$("#urlModal-body").text(shortURL);
-                $("#urlModal-clippy").empty().clippy({clippy_path: "clippy.swf", text: shortURL});
-				$("#urlModal").modal('show');
-			} else {
-			    alert("Failed to generate short URL");
-			}
-		}));
-
-		$menu.append(makeDropdownItem("Generate private link").click(function () {
-			var content = cb.fs.getContent(file);
-			var url = editor_URL(content, file.filename);
-			$("#urlModal-body").text(url);
-            $("#urlModal-clippy").empty().clippy({clippy_path: "clippy.swf", text: url});
-			$("#urlModal").modal('show');
-		}));
-    }, {"title" : "Share contents"});
-
-    $btnShare.appendTo($group);
-
-    return $toolbar;
 };
 
-var SAVE_DELAY = 300; // length of window (in ms) during which changes will be buffered
+CBFileEditorManager.prototype.show = function () {
+    $('#cb-editors').css('display', 'flex');
+};
 
-function createFileEditor(node, file) {
-    var editor = createCodeEditor(node, file);
+CBFileEditorManager.prototype.hide = function () {
+    $('#cb-editors').css('display', 'none');
+};
 
-    file.editor = editor;
+//-----------------------------------------------------------------------------
+
+function CBFileEditor(file) {
+    file.editor = this;
+    this.file = file;
+    this.fileTab = null;
+    this.fileTabLabel = null;
+    this.fileTabCloseButton = null;
+    this.fileContainer = null;
+    this.editor = null;
+}
+
+CBFileEditor.prototype.isActivated = function () {
+    var fileManager = this.file.fileManager;
+    return fileManager.editorManager.isActivated(this);
+};
+
+CBFileEditor.prototype.activate = function () {
+    var fileManager = this.file.fileManager;
+    fileManager.editorManager.activate(this);
+};
+
+CBFileEditor.prototype.activatePresentation = function () {
+    this.fileTab.addClass('active');
+    this.fileContainer.css('display', 'inline');
+    this.editor.refresh();
+};
+
+CBFileEditor.prototype.deactivatePresentation = function () {
+    this.fileTab.removeClass('active');
+    this.fileContainer.css('display', 'none');
+};
+
+CBFileEditor.prototype.removePresentation = function () {
+    this.fileTab.remove();
+    this.fileContainer.remove();
+};
+
+CBFileEditor.prototype.isEnabled = function () {
+    return this.editor !== null;
+};
+
+CBFileEditor.prototype.getValue = function () {
+    if (this.isEnabled()) {
+        return this.editor.getValue();
+    } else {
+        return '';
+    }
+};
+
+CBFileEditor.prototype.setValue = function (val) {
+    if (this.isEnabled()) {
+        this.editor.setValue(val);
+    }
+};
+
+CBFileEditor.prototype.edit = function () {
+    this.enable();
+    this.activate();
+    this.editor.focus();
+};
+
+CBFileEditor.prototype.enable = function () {
+
+    if (this.isEnabled()) return; // noop if currently enabled
+
+    var self = this;
+
+    var file = this.file;
+    var filename = file.filename;
+
+    // create file tab
+
+    var fileTab = $('<li class="nav-link cb-file-tab"/>');
+
+    //fileTab.attr('data-cb-filename', filename);
+
+    var fileTabCloseButton = cb.makeCloseButton();
+    var fileTabLabel = $('<span class="tab-label"/>').text(filename);
+
+    fileTab.append(fileTabCloseButton).append(fileTabLabel);
+
+    // create file container
+
+    var fileContainer = $('<div class="cb-file-container"/>');
+
+    //fileContainer.attr('data-cb-filename', filename);
+
+    var textarea = $('<textarea class="cb-file-editor"/>');
+
+    fileContainer.append(textarea);
+
+    // add file tab and file container to page
+
+    $('#cb-file-tabs').append(fileTab);
+    $('#cb-editors').append(fileContainer);
+
+    // create code editor
+
+    var editor = cb.createCodeEditor(textarea.get(0), file);
+
     editor.setValue(file.content);
+
     if (file.cursor) {
         editor.setCursor(file.cursor);
     }
+
     var saveHandler = function () {
         file.save();
         editor.currentSaveTimeout = (void 0);
     };
-    editor.on("change", function (cm, change) {
+
+    editor.on('change', function (cm, change) {
         if (editor.currentSaveTimeout !== (void 0)) {
             // extend the window
             clearTimeout(editor.currentSaveTimeout);
         }
         editor.currentSaveTimeout = setTimeout(saveHandler, SAVE_DELAY);
     });
-    editor.on("cursorActivity", function () {
+
+    editor.on('cursorActivity', function () {
         file.cursor = editor.getCursor();
     });
-    return editor;
-}
 
-function cb_internal_onTabDblClick(event) {
-    var $element = $(event.target);
+    fileContainer.on('click', function (event) {
+        editor.focus();
+    });
 
-    var oldFilename = $element.text();
-    var $inputBox = $('<input type="text" class="rename-box span2"/>');
-    $inputBox.val(oldFilename);
-    $element.empty();
-    $element.append($inputBox);
+    // remember each element for quick access
 
-    var resetTab = function () {
-        $inputBox.remove();
-        $element.text(oldFilename);
+    this.fileTab = fileTab;
+    this.fileTabLabel = fileTabLabel;
+    this.fileTabCloseButton = fileTabCloseButton;
+    this.fileContainer = fileContainer;
+    this.editor = editor;
+
+    this.normalTabEvents();
+
+    file.fileManager.editorManager.add(this);
+};
+
+// length of window (in ms) during which changes will be buffered
+var SAVE_DELAY = 300;
+
+CBFileEditor.prototype.normalTabEvents = function () {
+
+    var self = this;
+
+    this.fileTab.on('click', function (event) {
+        self.edit();
+    });
+
+    this.fileTab.on('dblclick', function (event) {
+        self.rename();
+    });
+
+    this.fileTabCloseButton.on('click', function (event) {
+        self.disable();
+    });
+
+    this.fileTabCloseButton.css('display', 'inline');
+};
+
+CBFileEditor.prototype.renameTabEvents = function () {
+    this.fileTab.off('click');
+    this.fileTab.off('dblclick');
+    this.fileTabCloseButton.css('display', 'none');
+};
+
+CBFileEditor.prototype.disable = function () {
+
+    if (!this.isEnabled()) return; // noop if currently not enabled
+
+    var file = this.file;
+
+    file.fileManager.editorManager.remove(this);
+};
+
+CBFileEditor.prototype.rename = function () {
+
+    if (!this.isEnabled()) return; // noop if currently not enabled
+
+    var lastFocusedEditor = cb.lastFocusedEditor;
+    cb.lastFocusedEditor = null; // allow focus to leave editor
+
+    var editor = this;
+    var oldFilename = editor.file.filename;
+    var inputBox = $('<input type="text" class="cb-rename-box"/>');
+    inputBox.val(oldFilename);
+    editor.fileTabLabel.empty();
+    editor.fileTabLabel.append(inputBox);
+
+    var resetTabTo = function (filename) {
+        inputBox.remove();
+        editor.fileTabLabel.text(filename);
+        editor.normalTabEvents();
+        cb.lastFocusedEditor = lastFocusedEditor;
+        cb.focusLastFocusedEditor();
     };
 
-    $inputBox.focusout(resetTab);
+    var resetTabToOldFilename = function () {
+        resetTabTo(oldFilename);
+    };
 
-    $inputBox.keydown(function (event) {
+    editor.renameTabEvents();
+
+    inputBox.focusout(function (event) {
+        resetTabToOldFilename();
+    });
+
+    inputBox.keypress(function (event) {
         if (event.keyCode == 13) {
             // Enter pressed, perform renaming
-            var newFilename = $inputBox.val();
-            if (cb.fs.hasFile(newFilename)) {
-                alert("Filename already in use");
-                resetTab();
-                return;
+            var newFilename = inputBox.val();
+            if (newFilename !== oldFilename) {
+
+                if (editor.file.fileManager.hasFile(newFilename)) {
+                    alert('Filename already in use');
+                    resetTabToOldFilename();
+                    return;
+                }
+
+                editor.file.fileManager.renameFile(oldFilename, newFilename);
             }
-
-            cb.fs.renameFile(oldFilename, newFilename);
-            $inputBox.remove();
-            $element.text(newFilename);
-            $('[data-cb-filename="' + oldFilename + '"]').attr("data-cb-filename", newFilename);
-
-            cb.rebuildFileMenu(); // TODO: inefficient
+            resetTabTo(newFilename);
+            editor.file.fileManager.rebuildFileMenu(); // TODO: inefficient
         } else if (event.keyCode == 27) {
             // Escape pressed, reset
-            resetTab();
+            resetTabToOldFilename();
         }
     });
 
-    $inputBox.focus();
+    inputBox.focus();
+};
+
+CBFileEditor.prototype.setReadOnly = function (readOnly) {
+    this.editor.setOption('readOnly', readOnly);
+};
+
+//-----------------------------------------------------------------------------
+
+function endsWith(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }
-
-function cb_internal_updatePopupPos() {
-    if (program_state.value_bubble) {
-        program_state.value_bubble.update();
-    }
-}
-
-cb.newTab = function (fileOrFilename) {
-	/*
-     * <div class="row">
-     *   <ul class="nav nav-tabs">
-     *     <li class="active"><a href="#">Untitled.js<button class="close">&times;</button></a></li>
-     *   </ul>
-     *   <pre class="tab-content"></pre>
-     * </div>
-    */
-
-    var file = cb.fs._asFile(fileOrFilename);
-    var filename = file.filename;
-
-	var $row = $('<div class="row"/>');
-	$row.attr("data-cb-filename", filename);
-
-	var $toolbar = cb.makeEditorToolbar(file);
-	$row.append($toolbar);
-
-	if (program_state.mode !== "stopped") {
-	    setControllerState($toolbar, false);
-	}
-
-	var $nav = $('<ul class="nav nav-tabs"/>');
-
-	var $closeButton = makeCloseButton();
-	$closeButton.click(function () {
-	    cb.closeFile(file);
-	});
-	$tab_text_container = $('<span class="tab-label"/>').text(filename);
-	$tab_label = $('<a href="#"/>').append($tab_text_container).append($closeButton);
-	$nav.append($('<li class="active"/>').append($tab_label));
-    $nav.append($('<li/>').append(cb.makeLHSEditorToolbar(file)));
-	$row.append($nav);
-
-	// Support renaming
-	$tab_text_container.dblclick(cb_internal_onTabDblClick);
-
-	var $pre = $('<pre class="tab-content file-editor"/>');
-	$row.append($pre);
-
-    $("#editors").prepend($row);
-
-	var editor = createFileEditor($pre.get(0), file);
-
-	cb.scrollTo($row.get(0));
-
-    // Make editor resizable
-    $(".CodeMirror", $row).resizable({
-          handles: "s",
-          minHeight: 100,
-          stop: function() {
-            $(".CodeMirror", $row).css("width", "auto");
-            editor.refresh();
-          },
-          resize: function() {
-            $(".CodeMirror-scroll", $row).height($(this).height());
-            $(".CodeMirror-scroll", $row).width($(this).width());
-            editor.refresh();
-          }
-    });
-
-    editor.focus();
-
-    cb_internal_updatePopupPos();
-};
-
-cb.newFile = function () {
-    var filename = cb.generateUniqueFilename();
-    var file = new CPFile(filename);
-    cb.fs.addFile(file);
-
-    cb.addFileToMenu(file);
-    cb.newTab(file);
-    return filename;
-};
-
-cb.openFileExistingOrNew = function (filename) {
-
-    if (cb.fs.hasFile(filename)) {
-        cb.openFile(filename);
-        return true;
-    } else {
-        var file = new CPFile(filename);
-        cb.fs.addFile(file);
-
-        cb.addFileToMenu(file);
-        cb.newTab(file);
-        return false;
-    }
-};

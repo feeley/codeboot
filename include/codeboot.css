@@ -1,0 +1,1100 @@
+/*--------------------------- page layout ---------------------------*/
+
+body {
+    min-width: 790px;
+}
+
+#cb-header {
+    height: 155px;
+    padding: 10px 10px 10px 10px;
+    background-color: #EEE;
+}
+
+.cb-hide-header #cb-header {
+    display: none;
+}
+
+#cb-navbar {
+    height: 55px;
+}
+
+#cb-console {
+    height: 276px;
+    display: flex;
+    align-items: flex-start;
+}
+
+#cb-repl-container {
+    width: 100%;
+    margin: 15px 15px 15px 15px;
+    padding: 5px 5px 5px 5px;
+    border-radius: 4px;
+    background-color: orange;
+}
+
+#cb-repl {
+    display: none;
+}
+
+#cb-repl-container .CodeMirror {
+    height: auto;
+    min-width: calc( 667px - 384px );
+    max-height: calc( 276px - 15px - 15px );
+}
+
+#cb-repl-container .CodeMirror-scroll {
+    max-height: calc( 276px - 15px - 15px - 5px - 5px );
+}
+
+/* background color themes for navbar, buttons, repl and file editors */
+
+/* exec control button for file is gray */
+#cb-exec-controls-buttons .cb-button.btn-secondary,
+#cb-exec-controls-buttons .cb-button.btn-secondary:focus,
+#cb-exec-controls-buttons .cb-button.btn-secondary:active {
+    background-color: #f6f6f6;
+}
+#cb-exec-controls-buttons .cb-button.btn-secondary:hover {
+    background-color: #e0e0e0;
+}
+
+/* novice navbar is blue */
+body[data-cb-lang-level="novice"] #cb-navbar-controls {
+    background-color: #7db6d5;
+}
+
+/* novice repl is blue */
+body[data-cb-lang-level="novice"] #cb-repl-container {
+    border: 0;
+    background-color: #e0f0f6;
+}
+
+/* exec control button for standard repl is blue */
+body[data-cb-lang-level="novice"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary,
+body[data-cb-lang-level="novice"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:focus,
+body[data-cb-lang-level="novice"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:active {
+    background-color: #d0e6f1;
+}
+body[data-cb-lang-level="novice"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:hover {
+    background-color: #afd3e6;
+}
+
+/* standard navbar is red */
+body[data-cb-lang-level="standard"] #cb-navbar-controls {
+    background-color: #e7a555;
+}
+
+/* standard repl is red */
+body[data-cb-lang-level="standard"] #cb-repl-container {
+    border: 0;
+    background-color: #f7e1c6;
+}
+
+/* exec control button for standard repl is red */
+body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary,
+body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:focus,
+body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:active {
+    background-color: #f4d7b3;
+}
+body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:hover {
+    background-color: #f0c897;
+}
+
+#cb-playground {
+    width: 384px;
+}
+
+.cb-hide-playground #cb-playground {
+    display: none;
+}
+
+#cb-editors {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 0 15px 0 15px;
+}
+
+#cb-file-tabs {
+    height: 39px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-wrap: nowrap;
+}
+
+.dropdown-item[data-cb-filename] > span > .close {
+    opacity: 0;
+}
+
+.dropdown-item[data-cb-filename]:hover > span > .close {
+    opacity: 0.5;
+}
+
+.dropdown-item[data-cb-filename] > span > .close:hover {
+    opacity: 1;
+}
+
+#cb-form-download {
+    display: none;
+}
+
+.cb-file-container {
+    height: calc( 100vh - 0px - 55px - 276px - 39px - 15px );
+    padding: 5px 5px 5px 5px;
+    border: 0;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    background-color: #f6f6f6;
+}
+
+.cb-file-container {
+    height: calc( 0.60*(100vh - 155px - 55px - 276px - 39px) );
+}
+
+.cb-file-container .CodeMirror-scroll {
+    max-height: calc( 0.60*(100vh - 155px - 55px - 276px - 39px - 5px - 5px) );
+}
+
+.cb-hide-header .cb-file-container {
+    height: calc( 0.60*(100vh - 0px - 55px - 276px - 39px) );
+}
+
+.cb-hide-header .cb-file-container .CodeMirror-scroll {
+    max-height: calc( 0.60*(100vh - 0px - 55px - 276px - 39px - 5px - 5px) );
+}
+
+.cb-hide-footer .cb-file-container {
+    height: calc( 100vh - 155px - 55px - 276px - 39px - 15px );
+}
+
+.cb-hide-footer .cb-file-container .CodeMirror-scroll {
+    max-height: calc( 100vh - 155px - 55px - 276px - 39px - 5px - 5px - 15px );
+}
+
+.cb-hide-header.cb-hide-footer .cb-file-container {
+    height: calc( 100vh - 0px - 55px - 276px - 39px - 15px );
+}
+
+.cb-hide-header.cb-hide-footer .cb-file-container .CodeMirror-scroll {
+    max-height: calc( 100vh - 0px - 55px - 276px - 39px - 5px - 5px - 15px );
+}
+
+.cb-rename-box {
+    margin: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+#cb-footer {
+    height: calc( 0.40*(100vh - 155px - 55px - 276px - 39px) );
+}
+
+.cb-hide-header #cb-footer {
+    height: calc( 0.40*(100vh - 0px - 55px - 276px - 39px) );
+}
+
+.cb-hide-footer #cb-footer {
+    height: 15px;
+}
+
+/*-------------------------- navbar layout --------------------------*/
+
+#cb-navbar-header {
+}
+
+#cb-navbar-controls {
+    display: flex;
+    justify-content: space-between;
+}
+
+#cb-menu {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+#cb-menu .dropdown-menu {
+   font-size: 16px;
+   line-height: 16px;
+}
+
+#cb-menu button:hover {
+    color: black;
+}
+
+#cb-menu-brand-btn,
+#cb-menu-file-btn,
+#cb-menu-settings-btn {
+    font-weight: bold;
+    color: white;
+    background-color: transparent;
+    transform: translate(0, 8px);
+    margin: -10px 0 0 0;
+}
+
+#cb-menu-brand-btn {
+    font-size: 140%;
+}
+
+#cb-menu-file-btn,
+#cb-menu-settings-btn {
+    font-size: 110%;
+}
+
+#cb-menu-file .dropdown-item {
+    min-width: 250px;
+    display: flex;
+    justify-content: space-between;
+}
+
+#cb-menu-file .dropdown-item .cb-file-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-left: 10px;
+    margin-right: -20px;
+}
+
+#cb-menu-file .dropdown-item .close {
+    padding: 2px 5px 2px 5px;
+}
+
+#cb-exec-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+#cb-navbar-controls {
+    width: 100%;
+    padding: 5px 5px 5px 5px;
+}
+
+#cb-exec-controls-counter {
+}
+
+#cb-exec-step-counter {
+    margin: 5px;
+    display: none;
+}
+
+.cb-step-counter {
+    margin-bottom: 3px;
+    font-family: Verdana;
+    font-size: 12px;
+    font-style: normal;
+}
+
+#cb-exec-controls.cb-button {
+    height: 45px;
+}
+
+#cb-exec-btn-step,
+#cb-exec-btn-animate,
+#cb-exec-btn-eval,
+#cb-exec-btn-stop {
+    width: 48px;
+}
+
+#cb-exec-img-play-pause,
+#cb-exec-img-play-1,
+#cb-exec-img-pause,
+#cb-exec-img-play,
+#cb-exec-img-play-inf,
+#cb-exec-img-stop {
+    height: 22px;
+    margin: 2px 0 4px 0;
+}
+
+#cb-exec-img-play-1,
+#cb-exec-img-pause {
+    display: none;
+}
+
+.cb-button.btn-secondary,
+.cb-button.btn-secondary:focus,
+.cb-button.btn-secondary:active {
+    border-color: transparent;
+    box-shadow: none;
+}
+
+#cb-navbar-footer {
+}
+
+/*-------------------------- file editors ---------------------------*/
+
+#cb-editors .nav-tabs {
+    border-bottom: 0;
+}
+
+#cb-file-tabs .cb-file-tab {
+    border-bottom: 0;
+    border-top: 1px solid #f6f6f6;
+    border-left: 1px solid #f6f6f6;
+    border-right: 1px solid #f6f6f6;
+    background-color: #fdfdfd;
+    color: #ccc;
+    margin-right: 10px;
+    display: flex;
+}
+
+#cb-file-tabs .cb-file-tab.active,
+#cb-file-tabs .cb-file-tab.active:hover {
+    border: 0;
+    color: black;
+    background-color: #f6f6f6;
+}
+
+#cb-file-tabs .cb-file-tab button.close {
+  margin: 0 0 -3px -15px;
+  padding-right: 0;
+}
+
+#cb-file-tabs .cb-file-tab .tab-label {
+  padding-right: 8px;
+  padding-left: 5px;
+}
+
+#cb-file-tabs .cb-file-tab .close {
+    color: #aaa;
+    opacity: 0;
+}
+
+#cb-file-tabs .cb-file-tab:hover .close {
+    opacity: 0.5;
+}
+
+#cb-file-tabs .cb-file-tab:hover .close:hover {
+    opacity: 1;
+}
+
+#cb-file-tabs .cb-file-tab.active .close {
+    color: black;
+    opacity: 0;
+}
+
+#cb-file-tabs .cb-file-tab.active:hover .close {
+    opacity: 0.5;
+}
+
+#cb-file-tabs .cb-file-tab.active:hover .close:hover {
+    opacity: 1;
+}
+
+#cb-editors .CodeMirror {
+    border: 0;
+    height: auto;
+}
+
+.close {
+  font-size: 1em;
+}
+
+/*--------------------------- CodeMirror ----------------------------*/
+
+.CodeMirror-lines {
+}
+
+.cb-file-container .CodeMirror {
+    height: 100%;
+}
+
+.CodeMirror-matchingbracket {
+    color: #46a546 !important; /* green */
+}
+
+.CodeMirror-nonmatchingbracket {
+    color: #f89406 !important; /* orange */
+}
+
+.CodeMirror,
+.CodeMirror-gutters {
+    background-color: transparent;
+}
+
+.CodeMirror-linenumber {
+    min-width: 30px;
+    color: #ccc;
+}
+
+.cb-repl-cm-gutter {
+    width: 1em;
+}
+
+.cb-file-cm-gutter {
+    width: 0;
+}
+
+.CodeMirror-gutters {
+    border-right: 0;
+}
+
+.cb-transcript {
+}
+
+/* use block cursor */
+
+.CodeMirror-cursor {
+  width: auto;
+  border: 0 !important;
+  background: rgba(0,0,0,0.3);
+}
+
+.cb-mode-running .CodeMirror-cursor {
+    display: none !important;
+}
+
+/* prevent syntax highlighting in REPL output */
+
+.cb-repl-result,
+.cb-repl-result.cm-keyword,
+.cb-repl-result.cm-atom,
+.cb-repl-result.cm-number,
+.cb-repl-result.cm-def,
+.cb-repl-result.cm-variable,
+.cb-repl-result.cm-punctuation,
+.cb-repl-result.cm-property,
+.cb-repl-result.cm-operator,
+.cb-repl-result.cm-variable-2,
+.cb-repl-result.cm-variable-3,
+.cb-repl-result.cm-type,
+.cb-repl-result.cm-comment,
+.cb-repl-result.cm-string,
+.cb-repl-result.cm-string-2,
+.cb-repl-result.cm-meta,
+.cb-repl-result.cm-qualifier,
+.cb-repl-result.cm-builtin,
+.cb-repl-result.cm-bracket,
+.cb-repl-result.cm-tag,
+.cb-repl-result.cm-attribute,
+.cb-repl-result.cm-hr,
+.cb-repl-result.cm-link,
+.cb-repl-result.cm-error {
+    color: black;
+}
+
+.cb-repl-output,
+.cb-repl-output.cm-keyword,
+.cb-repl-output.cm-atom,
+.cb-repl-output.cm-number,
+.cb-repl-output.cm-def,
+.cb-repl-output.cm-variable,
+.cb-repl-output.cm-punctuation,
+.cb-repl-output.cm-property,
+.cb-repl-output.cm-operator,
+.cb-repl-output.cm-variable-2,
+.cb-repl-output.cm-variable-3,
+.cb-repl-output.cm-type,
+.cb-repl-output.cm-comment,
+.cb-repl-output.cm-string,
+.cb-repl-output.cm-string-2,
+.cb-repl-output.cm-meta,
+.cb-repl-output.cm-qualifier,
+.cb-repl-output.cm-builtin,
+.cb-repl-output.cm-bracket,
+.cb-repl-output.cm-tag,
+.cb-repl-output.cm-attribute,
+.cb-repl-output.cm-hr,
+.cb-repl-output.cm-link,
+.cb-repl-output.cm-error {
+    color: black;
+}
+
+body[data-cb-lang-level="novice"] .cb-repl-error,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-keyword,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-atom,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-number,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-def,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-variable,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-punctuation,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-property,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-operator,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-variable-2,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-variable-3,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-type,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-comment,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-string,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-string-2,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-meta,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-qualifier,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-builtin,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-bracket,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-tag,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-attribute,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-hr,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-link,
+body[data-cb-lang-level="novice"] .cb-repl-error.cm-error {
+    color: #eb48ff;
+    font-family: Times;
+    font-style: italic;
+}
+
+body[data-cb-lang-level="standard"] .cb-repl-error,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-keyword,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-atom,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-number,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-def,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-variable,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-punctuation,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-property,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-operator,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-variable-2,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-variable-3,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-type,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-comment,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-string,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-string-2,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-meta,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-qualifier,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-builtin,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-bracket,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-tag,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-attribute,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-hr,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-link,
+body[data-cb-lang-level="standard"] .cb-repl-error.cm-error {
+    color: #eb48ff;
+    font-family: Times;
+    font-style: italic;
+}
+
+/*------------------------- Error messages --------------------------*/
+
+body[data-cb-lang-level="novice"] .cb-code-error {
+    background-color: #eb48ff;
+}
+
+body[data-cb-lang-level="standard"] .cb-code-error {
+    background-color: #eb48ff;
+}
+
+/*-------------------------- Font size ------------------------------*/
+
+.cb-code-font {
+    font-family: Courier;
+}
+
+.CodeMirror {
+    font-family: Courier;
+    font-size: 18px;
+    line-height: 21px;
+}
+
+.cb-large-font .CodeMirror {
+    font-family: Courier;
+    font-size: 30px;
+    line-height: 33px;
+}
+
+.tippy-tooltip.cb-exec-point-bubble-theme {
+    font-size: 18px;
+    line-height: 20px;
+}
+
+.cb-large-font .tippy-tooltip.cb-exec-point-bubble-theme {
+    font-size: 26px;
+    line-height: 30px;
+}
+
+/*------------------ Execution point highlighting -------------------*/
+
+.cb-exec-point-code {
+    background-color: yellow;
+}
+
+#cb-exec-point-bubble-template {
+    display: none;
+}
+
+.tippy-tooltip.cb-exec-point-bubble-theme .cb-code-font {
+    font-weight: bold;
+}
+
+.tippy-tooltip.cb-exec-point-bubble-theme {
+    min-width: 50px;
+    background-color: yellow;
+    box-shadow: 0 5px 20px 0 rgba(0, 0, 0, 0.5);
+    padding: 0;
+}
+
+.tippy-popper[x-placement^=top] .tippy-tooltip.cb-exec-point-bubble-theme [x-arrow] {
+    border-top: 7px solid yellow;
+    border-right: 7px solid transparent;
+    border-left:7px solid transparent;
+}
+
+.tippy-popper[x-placement^=bottom] .tippy-tooltip.cb-exec-point-bubble-theme [x-arrow] {
+    border-bottom: 7px solid yellow;
+    border-right: 7px solid transparent;
+    border-left:7px solid transparent;
+}
+
+.tippy-popper[x-placement^=left] .tippy-tooltip.cb-exec-point-bubble-theme [x-arrow] {
+    border-left: 7px solid yellow;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+}
+
+.tippy-popper[x-placement^=right] .tippy-tooltip.cb-exec-point-bubble-theme [x-arrow] {
+    border-right: 7px solid yellow;
+    border-top: 7px solid transparent;
+    border-bottom:7px solid transparent;
+}
+
+.tippy-tooltip.cb-exec-point-bubble-theme .tippy-tooltip-content {
+    width: 100%;
+    color: black;
+}
+
+.cb-exec-point-bubble-value-no-context {
+    padding: 5px;
+}
+
+.cb-exec-point-bubble-value {
+    padding: 5px;
+    border-bottom: 2px solid #ccc;
+}
+
+.cb-exec-point-bubble-context {
+    padding: 5px;
+}
+
+.cb-exec-point-bubble-binding {
+    display: flex;
+}
+
+/*-------------------------------------------------------------------*/
+
+.cb-delete-btn {
+    flex: 0 0 17px;
+    margin: 0 0 0 60px;
+}
+
+.cb-file-name {
+    flex: 1 1 auto;
+}
+
+.cb-file-item {
+    display: flex;
+}
+
+#cb-about-box {
+    z-index: 10000;
+}
+
+/*-------------------------------------------------------------------*/
+
+.tooltip.bs-tooltip-left .tooltip-inner {
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+    border: 5px solid black;
+    background-color: #FEF1B8;
+}
+
+/*-------------------------------------------------------------------*/
+
+
+
+
+
+/* ----- Layout ----- */
+
+
+.row {
+    margin-left: 0; /* Somehow, Bootstrap uses a negative margin for rows that makes our contents extend too far to the left. */
+    padding: 0 10px;
+}
+
+#openFileModal input {
+    -webkit-box-shadow: none;
+       -moz-box-shadow: none;
+            box-shadow: none;
+    line-height: 0;
+}
+
+/* ----- Menus ----- */
+
+.dropdown-align-right {
+    left: auto;
+    right: 0; /* Display file list menu to the left of the button to avoid extending outside the page */
+}
+
+.dropdown-btns-only {
+	min-width: 60px;
+}
+
+/* ----- Toolbars ----- */
+
+.btn-toolbar {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Support nested button groups in toolbars */
+
+.btn-toolbar > .btn-group > .btn-group {
+	margin-left: -1px;
+}
+
+.btn-toolbar > .btn-group > .btn-group > .btn {
+	-webkit-border-radius: 0px;
+    border-radius: 0px;
+    -moz-border-radius: 0px;
+}
+
+.btn-toolbar > .btn-group > .btn-group:first-child > .btn {
+	-webkit-border-bottom-left-radius: 4px;
+	    -moz-border-radius-bottomleft: 4px;
+            border-bottom-left-radius: 4px;
+    -webkit-border-top-left-radius: 4px;
+        -moz-border-radius-topleft: 4px;
+            border-top-left-radius: 4px;
+}
+
+.btn-toolbar > .btn-group > .btn-group:last-child > .btn {
+	-webkit-border-bottom-right-radius: 4px;
+	    -moz-border-radius-bottomright: 4px;
+            border-bottom-right-radius: 4px;
+    -webkit-border-top-right-radius: 4px;
+        -moz-border-radius-topright: 4px;
+            border-top-right-radius: 4px;
+}
+
+.btn-group > .btn-group + .btn {
+    /* A button immediately following an inline btn-group should not leave a gap */
+	margin-left: -1px;
+}
+
+.navbar .btn-group .btn {
+	margin-left: -1px; /* Fix group layout in navbar */
+}
+
+.nav-tabs .btn-group:first-child {
+    margin-left: 5px;
+}
+
+.nav-tabs > li > .btn-toolbar,
+.row > .btn-toolbar.pull-right {
+    margin-top: 3px;
+}
+
+/* ----- Tabs ----- */
+
+.nav-tabs {
+  margin-bottom: 0;
+}
+
+.tab-content {
+  position: relative;
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  -webkit-border-bottom-right-radius: 4px;
+  -webkit-border-bottom-left-radius: 4px;
+     -moz-border-radius-bottomright: 4px;
+     -moz-border-radius-bottomleft: 4px;
+          border-bottom-right-radius: 4px;
+          border-bottom-left-radius: 4px;
+
+  -webkit-border-top-right-radius: 0;
+  -webkit-border-top-left-radius: 0;
+     -moz-border-radius-topright: 0;
+     -moz-border-radius-topleft: 0;
+          border-top-right-radius: 0;
+          border-top-left-radius: 0;
+
+  margin-top: -1px;
+}
+
+div.tab-content,
+pre.tab-content,
+#zzzcb-repl {
+	margin-bottom: 20px;
+}
+
+div.tab-pane {
+	padding: 10px;
+}
+
+.nav-tabs button.close,
+.popover-title > span > button.close {
+  margin: -3px -8px 0 0;
+  padding-left: 8px;
+}
+
+.nav-tabs .dropdown-toggle .caret,
+.nav-tabs .dropdown-toggle:hover .caret {
+  /* Restore caret colours for file editor toolbars */
+  border-top-color: black;
+  border-bottom-color: black;
+}
+
+.navbar .btn-group {
+    background-color: white; /* Need to show disabled buttons properly */
+    -webkit-border-radius: 4px;
+       -moz-border-radius: 4px;
+            border-radius: 4px;
+
+    -webkit-background-clip: padding-box;
+       -moz-background-clip: padding;
+            background-clip: padding-box;
+}
+
+/* ----- Editors ----- */
+
+#zzzcb-editors {
+    padding-bottom: 50px;
+}
+
+#zzzcb-repl CodeMirror {
+  height: 1.5em;
+}
+
+/* Console should be 1 line high */
+#zzzcb-repl .CodeMirror {
+  height: 100%;
+  padding: 0 10px 0 10px;
+  margin: 0;
+}
+
+
+
+.zzzcb-file-editor2 {
+    min-height: 100px;
+    height: 100%;
+    border: 0;
+    background-color: #f6f6f6;
+}
+
+.tab-content.zzzcb-file-editor {
+  margin-bottom: 20px;
+}
+
+.zzzcb-file-editor .CodeMirror {
+  height: 200px;
+}
+
+
+.ui-resizable-s {
+    height: 7px;
+    bottom: 0;
+    background: transparent url('img/resize-handle-corner.png') no-repeat top right;
+}
+
+.ui-resizable-handle {
+    z-index: 1009; /* Just below bubbles */
+}
+
+#floating-console {
+    background-color: transparent;
+    position: relative;
+    z-index: 200;
+}
+
+/* ----- Pseudo-body for DOM experimentation ----- */
+
+#b table {
+    float: left;
+}
+
+#b td {
+    table-layout: fixed;
+    width: 70px;
+    height: 98px;
+    text-align: center;
+    vertical-align: middle;
+    font-family: Helvetica;
+    font-size: 24px;
+}
+
+#b img {
+    vertical-align: middle;
+    width: 100%;
+}
+
+/* ----- Drawing window ----- */
+
+#cb-drawing-window {
+    flex: 0 0 384px;
+    padding: 15px 15px 15px 0;
+    margin: 0;
+    float: right;
+    display: none;
+}
+
+/* ----- Console ----- */
+
+#zzzcb-repl {
+    margin: 15px 15px 15px 15px;
+    padding: 10px 0 10px 0;
+    border-radius: 4px;
+}
+
+
+
+.zzzcb-prompt {
+    /* CodeMirror gutter class for the prompt */
+    width: 1em;
+}
+
+
+
+#zzzcb-console {
+    width: 100%;
+    display: flex;
+    zzzflex-flow: row nowrap;
+}
+
+#zzzcb-repl {
+    min-width: 250px;
+    flex: 1 1 auto;
+    align-self: flex-start;
+}
+
+
+
+.zzzcb-file-editor {
+    margin: 15px 15px 15px 15px;
+    padding: 0;
+    background-color: transparent;
+}
+
+.zzzcb-file-editor-content {
+    border: 1px solid #e0e0e0;
+}
+    
+.zzzcb-file-editor-content .CodeMirror-scroll {
+    padding: 10px;
+}
+
+
+
+
+
+
+
+
+
+
+
+.cont {
+    display: flex;
+    margin: 15px 15px 15px 15px;
+    padding: 10px 0 10px 0;
+    border-radius: 4px;
+    background-color: gray;
+}
+
+.cons {
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-flow: row wrap;
+    background-color: red;
+    white-space: wrap;
+}
+
+.cons-transcript {
+    overflow: auto;
+    background-color: pink;
+}
+
+.cons-input {
+    background-color: green;
+}
+
+.draw1 {
+    background-color: purple;
+}
+
+.draw2 {
+    display: none;
+    background-color: purple;
+}
+
+.draw-window {
+    background-color: blue;
+}
+
+
+
+
+
+
+
+
+
+.console-line {
+  padding-left: 14px;
+}
+
+.console-output {
+  padding-left: 14px;
+}
+
+.console-result {
+  padding-left: 14px;
+  margin-left: 14px;
+}
+
+.console-error {
+  margin-top: 3px;
+  margin-bottom: 3px;
+  margin-left: 14px;
+}
+
+/* ----- Value bubbles ----- */
+
+.popover {
+    width: auto !important;
+    min-width: 200px;
+}
+
+
+
+/*
+<div class="tippy-tooltip tippy-tooltip--regular leave dark-theme" data-animation="shift" data-interactive="" data-template-id="#cb-exec-point-bubble-template" style="bottom: 0px;"><div class="arrow-regular" x-arrow=""></div><div class="tippy-tooltip-content">foo</div></div>
+*/
+
+/* ----- Execution point source code highlighting ----- */
+
+.zzzcb-exec-point-code {
+/*  border: 1px solid #aaa;*/
+  font-size: 20px;
+  background-color: yellow;
+}
+
+#zzzcb-exec-point-bubble-template {
+    display: none;
+}
+
+.zzzvalue-bubble {
+    background-color: yellow;
+}
+
+.value-bubble .popover-title {
+    font-size: 20px;
+    padding: 0 10px 0 10px;
+    margin: 1px;
+}
+
+.value-bubble.has-content .popover-title {
+    border-bottom: 1px solid #ccc;
+}
+
+.value-bubble .popover-content {
+    font-size: 18px;
+    padding: 0 10px 0 10px;
+}
+
+.value-bubble.bs-popover-bottom .arrow::after, .value-bubble.bs-popover-auto[x-placement^="bottom"] .arrow::after {
+  border-bottom-color: yellow;
+}
+
+.zzzpopover.value-bubble {
+    left: 83px !important;
+}
+
+.popover.value-bubble .arrow {
+    left: 13px !important;
+}

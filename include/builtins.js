@@ -19,45 +19,45 @@ function exportToHost(global) {
     };
 }
 
-exportToHost("clic");
-exportToHost("init");
+exportToHost('clic');
+exportToHost('init');
 
 function importStandardFromHost() {
 
-    importFromHost("NaN");
-    importFromHost("Infinity");
-    importFromHost("undefined");
-    importFromHost("parseInt");
-    importFromHost("parseFloat");
-    importFromHost("isNaN");
-    importFromHost("isFinite");
-    importFromHost("decodeURI");
-    importFromHost("encodeURI");
-    importFromHost("decodeURIComponent");
-    importFromHost("encodeURIComponent");
+    importFromHost('NaN');
+    importFromHost('Infinity');
+    importFromHost('undefined');
+    importFromHost('parseInt');
+    importFromHost('parseFloat');
+    importFromHost('isNaN');
+    importFromHost('isFinite');
+    importFromHost('decodeURI');
+    importFromHost('encodeURI');
+    importFromHost('decodeURIComponent');
+    importFromHost('encodeURIComponent');
 
-    importFromHost("Object");
-    importFromHost("Function");
-    importFromHost("Array");
-    importFromHost("String");
-    importFromHost("Boolean");
-    importFromHost("Number");
-    importFromHost("Date");
-    importFromHost("RegExp");
-    importFromHost("Error");
-    importFromHost("EvalError");
-    importFromHost("RangeError");
-    importFromHost("ReferenceError");
-    importFromHost("SyntaxError");
-    importFromHost("TypeError");
-    importFromHost("URIError");
+    importFromHost('Object');
+    importFromHost('Function');
+    importFromHost('Array');
+    importFromHost('String');
+    importFromHost('Boolean');
+    importFromHost('Number');
+    importFromHost('Date');
+    importFromHost('RegExp');
+    importFromHost('Error');
+    importFromHost('EvalError');
+    importFromHost('RangeError');
+    importFromHost('ReferenceError');
+    importFromHost('SyntaxError');
+    importFromHost('TypeError');
+    importFromHost('URIError');
 
-    importFromHost("Math");
-    importFromHost("JSON");
+    importFromHost('Math');
+    importFromHost('JSON');
 
-    importFromHost("document");
-    //importFromHost("alert");
-    //importFromHost("prompt");
+    importFromHost('document');
+    //importFromHost('alert');
+    //importFromHost('prompt');
 }
 
 importStandardFromHost();
@@ -65,14 +65,16 @@ importStandardFromHost();
 // print
 
 function builtin_print() {
-    cb.transcript.addLine(Array.prototype.slice.call(arguments).join(""), "transcript-output");
+    cb.addTranscriptREPL(Array.prototype.slice.call(arguments).join('') + '\n',
+                         'cb-repl-output');
+    cb.programState.rte.step_limit = -1; // force exit of trampoline
 }
 
 builtin_print.toString = function () {
-    return "function print(value) { ... }";
+    return 'function print(value) { ... }';
 };
 
-cb.setGlobal("print", builtin_print);
+cb.setGlobal('print', builtin_print);
 
 // alert
 
@@ -82,10 +84,10 @@ function builtin_alert() {
 }
 
 builtin_alert.toString = function () {
-    return "function alert(value) { ... }";
+    return 'function alert(value) { ... }';
 };
 
-cb.setGlobal("alert", builtin_alert);
+cb.setGlobal('alert', builtin_alert);
 
 // prompt
 
@@ -95,10 +97,10 @@ function builtin_prompt() {
 }
 
 builtin_prompt.toString = function () {
-    return "function prompt(value) { ... }";
+    return 'function prompt(value) { ... }';
 };
 
-cb.setGlobal("prompt", builtin_prompt);
+cb.setGlobal('prompt', builtin_prompt);
 
 // confirm
 
@@ -108,179 +110,187 @@ function builtin_confirm() {
 }
 
 builtin_confirm.toString = function () {
-    return "function confirm(value) { ... }";
+    return 'function confirm(value) { ... }';
 };
 
-cb.setGlobal("confirm", builtin_confirm);
+cb.setGlobal('confirm', builtin_confirm);
 
 // load
 
 builtin_load.toString = function () {
-    return "function load(filename) { ... }";
+    return 'function load(filename) { ... }';
 };
 
-cb.setGlobal("load", builtin_load);
+cb.setGlobal('load', builtin_load);
 
 // pause
 
 builtin_pause.toString = function () {
-    return "function pause() { ... }";
+    return 'function pause() { ... }';
 };
 
-cb.setGlobal("pause", builtin_pause);
+cb.setGlobal('pause', builtin_pause);
 
 // assert
 
 builtin_assert.toString = function () {
-    return "function assert(condition) { ... }";
+    return 'function assert(condition) { ... }';
 };
 
-cb.setGlobal("assert", builtin_assert);
+cb.setGlobal('assert', builtin_assert);
 
 // setScreenMode
 
 builtin_setScreenMode.toString = function () {
-    return "function setScreenMode(width, height) { ... }";
+    return 'function setScreenMode(width, height) { ... }';
 };
 
-cb.setGlobal("setScreenMode", builtin_setScreenMode);
+cb.setGlobal('setScreenMode', builtin_setScreenMode);
 
 // getScreenWidth
 
 builtin_getScreenWidth.toString = function () {
-    return "function getScreenWidth() { ... }";
+    return 'function getScreenWidth() { ... }';
 };
 
-cb.setGlobal("getScreenWidth", builtin_getScreenWidth);
+cb.setGlobal('getScreenWidth', builtin_getScreenWidth);
 
 // getScreenHeight
 
 builtin_getScreenHeight.toString = function () {
-    return "function getScreenHeight() { ... }";
+    return 'function getScreenHeight() { ... }';
 };
 
-cb.setGlobal("getScreenHeight", builtin_getScreenHeight);
+cb.setGlobal('getScreenHeight', builtin_getScreenHeight);
 
 // setPixel
 
 builtin_setPixel.toString = function () {
-    return "function setPixel(x, y, color) { ... }";
+    return 'function setPixel(x, y, color) { ... }';
 };
 
-cb.setGlobal("setPixel", builtin_setPixel);
+cb.setGlobal('setPixel', builtin_setPixel);
 
 // exportScreen
 
 builtin_exportScreen.toString = function () {
-    return "function exportScreen() { ... }";
+    return 'function exportScreen() { ... }';
 };
 
-cb.setGlobal("exportScreen", builtin_exportScreen);
+cb.setGlobal('exportScreen', builtin_exportScreen);
 
 // cs
 
 builtin_cs.toString = function () {
-    return "function cs() { ... }";
+    return 'function cs() { ... }';
 };
 
-cb.setGlobal("cs", builtin_cs);
+cb.setGlobal('cs', builtin_cs);
 
 // pu
 
 builtin_pu.toString = function () {
-    return "function pu() { ... }";
+    return 'function pu() { ... }';
 };
 
-cb.setGlobal("pu", builtin_pu);
+cb.setGlobal('pu', builtin_pu);
 
 // pd
 
 builtin_pd.toString = function () {
-    return "function pd() { ... }";
+    return 'function pd() { ... }';
 };
 
-cb.setGlobal("pd", builtin_pd);
+cb.setGlobal('pd', builtin_pd);
 
 // st
 
 builtin_st.toString = function () {
-    return "function st() { ... }";
+    return 'function st() { ... }';
 };
 
-cb.setGlobal("st", builtin_st);
+cb.setGlobal('st', builtin_st);
 
 // ht
 
 builtin_ht.toString = function () {
-    return "function ht() { ... }";
+    return 'function ht() { ... }';
 };
 
-cb.setGlobal("ht", builtin_ht);
+cb.setGlobal('ht', builtin_ht);
 
 // fd
 
 builtin_fd.toString = function () {
-    return "function fd(distance) { ... }";
+    return 'function fd(xdistance, ydistance) { ... }';
 };
 
-cb.setGlobal("fd", builtin_fd);
+cb.setGlobal('fd', builtin_fd);
 
 // bk
 
 builtin_bk.toString = function () {
-    return "function bk(distance) { ... }";
+    return 'function bk(xdistance, ydistance) { ... }';
 };
 
-cb.setGlobal("bk", builtin_bk);
+cb.setGlobal('bk', builtin_bk);
+
+// mv
+
+builtin_mv.toString = function () {
+    return 'function mv(x, y) { ... }';
+};
+
+cb.setGlobal('mv', builtin_mv);
 
 // lt
 
 builtin_lt.toString = function () {
-    return "function lt(angle) { ... }";
+    return 'function lt(angle) { ... }';
 };
 
-cb.setGlobal("lt", builtin_lt);
+cb.setGlobal('lt', builtin_lt);
 
 // rt
 
 builtin_rt.toString = function () {
-    return "function rt(angle) { ... }";
+    return 'function rt(angle) { ... }';
 };
 
-cb.setGlobal("rt", builtin_rt);
+cb.setGlobal('rt', builtin_rt);
 
 // setpc
 
 builtin_setpc.toString = function () {
-    return "function setpc(r, g, b) { ... }";
+    return 'function setpc(r, g, b) { ... }';
 };
 
-cb.setGlobal("setpc", builtin_setpc);
+cb.setGlobal('setpc', builtin_setpc);
 
 // setpw
 
 builtin_setpc.toString = function () {
-    return "function setpw(width) { ... }";
+    return 'function setpw(width) { ... }';
 };
 
-cb.setGlobal("setpw", builtin_setpw);
+cb.setGlobal('setpw', builtin_setpw);
 
 // drawtext
 
 builtin_drawtext.toString = function () {
-    return "function drawtext(text) { ... }";
+    return 'function drawtext(text) { ... }';
 };
 
-cb.setGlobal("drawtext", builtin_drawtext);
+cb.setGlobal('drawtext', builtin_drawtext);
 
 // setTimeout
 
 function builtin_setTimeout(func, delay) {
-    throw "setTimeout must be called from codeBoot code";
+    throw 'setTimeout must be called from codeBoot code';
 }
 
 builtin_setTimeout.toString = function () {
-    return "function setTimeout(func, delay) { ... }";
+    return 'function setTimeout(func, delay) { ... }';
 };
 
 builtin_setTimeout._apply_ = function (rte, cont, this_, params) {
@@ -292,15 +302,15 @@ builtin_setTimeout._apply_ = function (rte, cont, this_, params) {
         var args = params.slice(2);
 
         if (params.length < 2) {
-            return abort_fn_body(rte, void 0, "setTimeout expects at least 2 parameters");
+            throw 'setTimeout expects at least 2 parameters';
         }
 
-        if (typeof func !== "function" || !("_apply_" in func)) {
-            return abort_fn_body(rte, void 0, "func parameter of setTimeout must be a function");
+        if (typeof func !== 'function' || !('_apply_' in func)) {
+            throw 'func parameter of setTimeout must be a function';
         }
 
-        if (typeof delay !== "number") {
-            return abort_fn_body(rte, void 0, "delay parameter of setTimeout must be a number");
+        if (typeof delay !== 'number') {
+            throw 'delay parameter of setTimeout must be a number';
         }
 
         var hostGlobalObject = (function () { return this; }());
@@ -328,7 +338,7 @@ builtin_setTimeout._apply_ = function (rte, cont, this_, params) {
                         null);
 };
 
-cb.setGlobal("setTimeout", builtin_setTimeout);
+cb.setGlobal('setTimeout', builtin_setTimeout);
 
 // clearTimeout
 
@@ -338,23 +348,23 @@ function builtin_clearTimeout(timeoutID) {
 }
 
 builtin_clearTimeout.toString = function () {
-    return "function clearTimeout(timeoutID) { ... }";
+    return 'function clearTimeout(timeoutID) { ... }';
 };
 
-cb.setGlobal("clearTimeout", builtin_clearTimeout);
+cb.setGlobal('clearTimeout', builtin_clearTimeout);
 
 // readFile
 
 builtin_readFile.toString = function () {
-    return "function readFile(filename) { ... }";
+    return 'function readFile(filename) { ... }';
 };
 
-cb.setGlobal("readFile", builtin_readFile);
+cb.setGlobal('readFile', builtin_readFile);
 
 // writeFile
 
 builtin_writeFile.toString = function () {
-    return "function writeFile(filename, content) { ... }";
+    return 'function writeFile(filename, content) { ... }';
 };
 
-cb.setGlobal("writeFile", builtin_writeFile);
+cb.setGlobal('writeFile', builtin_writeFile);
