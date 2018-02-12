@@ -1,3 +1,44 @@
+/*
+ * Copyright 2018 Marc Feeley
+ *
+ * -- CodeBoot File system -- 
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ * may be used to endorse or promote products derived from this software without
+ * specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Authors:
+ * - Marc Feeley
+ *
+ * Contributors:
+ * - Olivier Dion <olivier.dion@polymtl.ca>
+ *
+ */
+
 /* ----- UI helpers ----- */
 
 CodeBoot.prototype.makeCloseButton = function () {
@@ -142,6 +183,7 @@ CBFile.prototype.clone = function () {
 function CBFileManager() {
     this.editorManager = undefined;
     new CBFileEditorManager(this);
+    new CBFeedback(this);
     this.init();
 }
 
@@ -786,6 +828,114 @@ CBFileEditor.prototype.rename = function () {
 CBFileEditor.prototype.setReadOnly = function (readOnly) {
     this.editor.setOption('readOnly', readOnly);
 };
+
+
+/*
+ * The feedback system implement by CodeBoot allows the user to mark its code
+ * source with colors, and create feedback/memo associate with it.
+ *
+ * To make thing simple, every mark has an atomic length, which mean that the
+ * cursor will always delete the mark entirely.
+ */
+
+const FEEDBACK_CLASS = "feedback";
+const FEEDBACK_ID    = "#feedback";
+const FEEDBACK_MODAL = "#cb-feedback-modal";
+
+function CBFeedback(editorsManager) {
+
+    if (typeof editorsManager === "undefined") {
+	console.error("CBFeedback' editors manager undefined");
+	return;
+    }
+	
+    this.manager = editorsManager.editorManager;
+    this.feedback = $(FEEDBACK_ID);
+    new CBFeedbackManager(this);
+
+    $(document).on("click", "."+FEEDBACK_CLASS, $.proxy(this.onclick, this));
+}
+
+CBFeedback.prototype.getCurrentEditor = function() {
+    return this.manager.editors[this.manager.activated];
+};
+
+
+CBFeedback.prototype.createMark = function(begin, end) {
+
+    var cm = this.getCurrentEditor().editor.doc.cm;
+
+    this.removeMarks(begin, end);
+
+    cm.markText(begin, end,
+		{
+		    className:FEEDBACK_CLASS,
+		    atomic:true,
+		    title:""
+		});
+};
+
+CBFeedback.prototype.removeMarks = function(begin, end) {
+
+    let cm = this.getCurrentEditor().editor.doc.cm;
+
+    let marks = cm.findMarks(begin, end);
+
+    for(var i = 0; i < marks.length; ++i) {
+	marks[i].clear();
+    }
+};
+
+CBFeedback.prototype.onclick = function(event) {
+    
+    let cm = this.getCurrentEditor().editor.doc.cm;
+
+    let pos = cm.getCursor();
+
+    let mark = cm.findMarksAt(pos, pos);
+    
+    if (mark.length === 0)
+	return;
+    
+    setTimeout(CBFeedbackManager.prototype.openFeedback.bind(this.fb_manager,
+							     mark[0],
+							     {
+								 x:event.originalEvent.x,
+								 y:event.originalEvent.y
+							     }
+							    ), 0);
+};
+
+function CBFeedbackManager(feedback) {
+
+    this.feedback = feedback;
+    feedback.fb_manager = this;
+    
+    this.mark = null;
+    this.textArea  = $(FEEDBACK_ID);
+    this.modal = $(FEEDBACK_MODAL);
+    $(this.modal).on("hidden.bs.modal", $.proxy(this.closeFeedback, this));
+}
+
+CBFeedbackManager.prototype.openFeedback = function(mark, coord) {
+    
+    this.mark              = mark;
+    this.textArea[0].value = mark.title;
+    
+    this.modal.modal("show");
+
+    this.textArea.focus();
+
+};
+
+CBFeedbackManager.prototype.closeFeedback = function(event) {
+    
+    this.mark.title = this.textArea[0].value;
+    this.mark = null;
+    this.textArea[0].value = "";
+    this.feedback.getCurrentEditor().editor.getInputField().focus();
+};
+
 
 //-----------------------------------------------------------------------------
 

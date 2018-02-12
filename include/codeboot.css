@@ -923,6 +923,15 @@ div.tab-pane {
     display: none;
 }
 
+/* ----- Feedback ----- */
+.feedback {
+    background-color: coral;
+}
+
+#feedback {
+    min-width:100%;
+}
+
 /* ----- Console ----- */
 
 #zzzcb-repl {
