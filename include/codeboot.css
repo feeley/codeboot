@@ -928,8 +928,14 @@ div.tab-pane {
     background-color: coral;
 }
 
-#feedback {
+#cb-feedback-textarea {
     min-width:100%;
+    resize:none;
+}
+
+#cb-mark-editor {
+    min-width:100%;
+    resize:none;
 }
 
 /* ----- Console ----- */

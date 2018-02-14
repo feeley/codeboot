@@ -183,7 +183,7 @@ CBFile.prototype.clone = function () {
 function CBFileManager() {
     this.editorManager = undefined;
     new CBFileEditorManager(this);
-    new CBFeedback(this);
+    new CBFeedbackManager(this);
     this.init();
 }
 
@@ -831,6 +831,8 @@ CBFileEditor.prototype.setReadOnly = function (readOnly) {
 
 
 /*
+ * CodeBoot Feedback system
+ * 
  * The feedback system implement by CodeBoot allows the user to mark its code
  * source with colors, and create feedback/memo associate with it.
  *
@@ -838,83 +840,29 @@ CBFileEditor.prototype.setReadOnly = function (readOnly) {
  * cursor will always delete the mark entirely.
  */
 
-const FEEDBACK_CLASS = "feedback";
-const FEEDBACK_ID    = "#feedback";
-const FEEDBACK_MODAL = "#cb-feedback-modal";
+const FEEDBACK_CLASS       = "feedback";
+const FEEDBACK_TEXTAREA    = "#cb-feedback-textarea";
+const FEEDBACK_MODAL       = "#cb-feedback-modal";
 
-function CBFeedback(editorsManager) {
+function CBFeedbackManager(editorsManager) {
 
     if (typeof editorsManager === "undefined") {
 	console.error("CBFeedback' editors manager undefined");
 	return;
     }
-	
-    this.manager = editorsManager.editorManager;
-    this.feedback = $(FEEDBACK_ID);
-    new CBFeedbackManager(this);
 
-    $(document).on("click", "."+FEEDBACK_CLASS, $.proxy(this.onclick, this));
-}
-
-CBFeedback.prototype.getCurrentEditor = function() {
-    return this.manager.editors[this.manager.activated];
-};
-
-
-CBFeedback.prototype.createMark = function(begin, end) {
-
-    var cm = this.getCurrentEditor().editor.doc.cm;
-
-    this.removeMarks(begin, end);
-
-    cm.markText(begin, end,
-		{
-		    className:FEEDBACK_CLASS,
-		    atomic:true,
-		    title:""
-		});
-};
-
-CBFeedback.prototype.removeMarks = function(begin, end) {
-
-    let cm = this.getCurrentEditor().editor.doc.cm;
-
-    let marks = cm.findMarks(begin, end);
-
-    for(var i = 0; i < marks.length; ++i) {
-	marks[i].clear();
-    }
-};
-
-CBFeedback.prototype.onclick = function(event) {
+    editorsManager.feedbackManager = this;
     
-    let cm = this.getCurrentEditor().editor.doc.cm;
+    this.manager   = editorsManager.editorManager;
+    this.mark      = null;
+    this.textArea  = $(FEEDBACK_TEXTAREA);
+    this.modal     = $(FEEDBACK_MODAL);
 
-    let pos = cm.getCursor();
-
-    let mark = cm.findMarksAt(pos, pos);
+    $(document).on("click", "."+FEEDBACK_CLASS,
+		   $.proxy(this.markClicked, this));
     
-    if (mark.length === 0)
-	return;
-    
-    setTimeout(CBFeedbackManager.prototype.openFeedback.bind(this.fb_manager,
-							     mark[0],
-							     {
-								 x:event.originalEvent.x,
-								 y:event.originalEvent.y
-							     }
-							    ), 0);
-};
-
-function CBFeedbackManager(feedback) {
-
-    this.feedback = feedback;
-    feedback.fb_manager = this;
-    
-    this.mark = null;
-    this.textArea  = $(FEEDBACK_ID);
-    this.modal = $(FEEDBACK_MODAL);
-    $(this.modal).on("hidden.bs.modal", $.proxy(this.closeFeedback, this));
+    $(this.modal).on("hidden.bs.modal",
+		     $.proxy(this.closeFeedback, this));
 }
 
 CBFeedbackManager.prototype.openFeedback = function(mark, coord) {
@@ -925,15 +873,86 @@ CBFeedbackManager.prototype.openFeedback = function(mark, coord) {
     this.modal.modal("show");
 
     this.textArea.focus();
-
 };
 
 CBFeedbackManager.prototype.closeFeedback = function(event) {
     
-    this.mark.title = this.textArea[0].value;
-    this.mark = null;
+    this.mark.title        = this.textArea[0].value;
+    this.mark              = null;
     this.textArea[0].value = "";
-    this.feedback.getCurrentEditor().editor.getInputField().focus();
+    
+    this.getCurrentEditor().editor.getInputField().focus();
+};
+
+CBFeedbackManager.prototype.getCurrentEditor = function() {
+    return this.manager.editors[this.manager.activated];
+};
+
+
+CBFeedbackManager.prototype.createMark = function(begin, end) {
+
+    var doc = this.getCurrentEditor().editor.doc;
+
+    this.removeMarks(begin, end);
+
+    doc.markText(begin, end,
+		 {
+		     className:FEEDBACK_CLASS,
+		     atomic:true,
+		     title:""
+		 });
+};
+
+CBFeedbackManager.prototype.removeMarks = function(begin, end) {
+
+    var doc = this.getCurrentEditor().editor.doc;
+
+    var marks = doc.findMarks(begin, end);
+
+    for (var i = 0; i < marks.length; ++i) {
+	marks[i].clear();
+    }
+};
+
+CBFeedbackManager.prototype.mergeMarks = function(begin, end) {
+
+    var doc = this.getCurrentEditor().editor.doc;
+
+    var marks = doc.findMarks(begin, end);
+
+    var feedbacks = [];
+
+    for (var i =0; i< marks.length; ++i) {
+	feedbacks.push(marks[0].title);
+	marks[i].clear();
+    }
+
+    doc.markText(begin, end,
+		 {
+		     className:FEEDBACK_CLASS,
+		     atomic:true,
+		     title:feedbacks.join('\n')
+		 });
+};
+
+CBFeedbackManager.prototype.markClicked = function(event) {
+    
+    var doc = this.getCurrentEditor().editor.doc;
+
+    var pos = doc.getCursor();
+
+    var mark = doc.findMarksAt(pos, pos);
+    
+    if (mark.length === 0)
+	return;
+    
+    setTimeout(CBFeedbackManager.prototype.openFeedback.bind(this,
+							     mark[0],
+							     {
+								 x:event.originalEvent.x,
+								 y:event.originalEvent.y
+							     }
+							    ), 0);
 };
 
 
