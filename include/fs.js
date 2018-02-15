@@ -841,72 +841,92 @@ CBFileEditor.prototype.setReadOnly = function (readOnly) {
  */
 
 const FEEDBACK_CLASS       = "feedback";
-const FEEDBACK_TEXTAREA    = "#cb-feedback-textarea";
 const FEEDBACK_MODAL       = "#cb-feedback-modal";
+const FEEDBACK_TEXTAREA    = "#cb-feedback-textarea";
+const ARE_MARKS_ATOMIC     = false;
+const MARK_TEXTAREA        = "#cb-mark-textarea";
 
-function CBFeedbackManager(editorsManager) {
+function CBFeedbackManager(fileManager) {
 
-    if (typeof editorsManager === "undefined") {
+    if (typeof fileManager === "undefined") {
 	console.error("CBFeedback' editors manager undefined");
 	return;
     }
 
-    editorsManager.feedbackManager = this;
+    fileManager.feedbackManager = this;
     
-    this.manager   = editorsManager.editorManager;
-    this.mark      = null;
-    this.textArea  = $(FEEDBACK_TEXTAREA);
-    this.modal     = $(FEEDBACK_MODAL);
+    this.feedbackTextArea  = $(FEEDBACK_TEXTAREA);
+    this.manager           = fileManager;
+    this.mark              = null;
+    this.markTextArea      = CodeMirror.fromTextArea($(MARK_TEXTAREA)[0]);
+    this.modal             = $(FEEDBACK_MODAL);
 
     $(document).on("click", "."+FEEDBACK_CLASS,
 		   $.proxy(this.markClicked, this));
-    
     $(this.modal).on("hidden.bs.modal",
 		     $.proxy(this.closeFeedback, this));
+    $(this.modal).on("shown.bs.modal",
+		     $.proxy(this.openFeedback, this));
 }
 
-CBFeedbackManager.prototype.openFeedback = function(mark, coord) {
-    
-    this.mark              = mark;
-    this.textArea[0].value = mark.title;
-    
-    this.modal.modal("show");
+CBFeedbackManager.prototype.openFeedback = function() {
 
-    this.textArea.focus();
+    var range = this.mark.find();
+        
+    this.markTextArea.swapDoc(this.mark.doc.linkedDoc({sharedHist:false,
+						       from:range.from.line,
+						       to:range.to.line+1}));
 };
 
 CBFeedbackManager.prototype.closeFeedback = function(event) {
+
+    this.mark.doc.unlinkDoc(this.markTextArea.doc);
     
-    this.mark.title        = this.textArea[0].value;
+    this.mark.title        = this.feedbackTextArea[0].value;
+
     this.mark              = null;
-    this.textArea[0].value = "";
+    this.feedbackTextArea[0].value = "";
+
     
     this.getCurrentEditor().editor.getInputField().focus();
 };
 
 CBFeedbackManager.prototype.getCurrentEditor = function() {
-    return this.manager.editors[this.manager.activated];
+    return this.manager.editorManager.editors[this.manager.editorManager.activated];
 };
 
 
-CBFeedbackManager.prototype.createMark = function(begin, end) {
+CBFeedbackManager.prototype.createMark = function(cm) {
 
-    var doc = this.getCurrentEditor().editor.doc;
+    var doc = cm.doc;
 
-    this.removeMarks(begin, end);
+    var selection = doc.sel.ranges[0];
+
+    var begin = {line:selection.anchor.line, ch:selection.anchor.ch};
+    var end   = {line:selection.head.line,   ch:selection.head.ch};
+    
+    this.removeMarks(cm, begin, end);
 
     doc.markText(begin, end,
 		 {
 		     className:FEEDBACK_CLASS,
-		     atomic:true,
+		     atomic:ARE_MARKS_ATOMIC,
 		     title:""
 		 });
+
+    this.markClicked(null);
 };
 
-CBFeedbackManager.prototype.removeMarks = function(begin, end) {
+CBFeedbackManager.prototype.removeMarks = function(cm, begin, end) {
 
-    var doc = this.getCurrentEditor().editor.doc;
+    var doc       = cm.doc;    
+    var selection = doc.sel.ranges[0];
 
+    if (typeof begin === "undefined") {	    
+	begin = {line:selection.anchor.line, ch:selection.anchor.ch};
+	end   = {line:selection.head.line,   ch:selection.head.ch};
+    }
+    
     var marks = doc.findMarks(begin, end);
 
     for (var i = 0; i < marks.length; ++i) {
@@ -914,23 +934,27 @@ CBFeedbackManager.prototype.removeMarks = function(begin, end) {
     }
 };
 
-CBFeedbackManager.prototype.mergeMarks = function(begin, end) {
+CBFeedbackManager.prototype.mergeMarks = function(cm) {
 
-    var doc = this.getCurrentEditor().editor.doc;
+    var doc       = cm.doc;
+    var selection = doc.sel.ranges[0];
 
+    var begin = {line:selection.anchor.line, ch:selection.anchor.ch};
+    var end   = {line:selection.head.line,   ch:selection.head.ch};
+    
     var marks = doc.findMarks(begin, end);
 
     var feedbacks = [];
 
     for (var i =0; i< marks.length; ++i) {
-	feedbacks.push(marks[0].title);
+	feedbacks.push(marks[i].title);
 	marks[i].clear();
     }
 
     doc.markText(begin, end,
 		 {
 		     className:FEEDBACK_CLASS,
-		     atomic:true,
+		     atomic:ARE_MARKS_ATOMIC,
 		     title:feedbacks.join('\n')
 		 });
 };
@@ -941,18 +965,15 @@ CBFeedbackManager.prototype.markClicked = function(event) {
 
     var pos = doc.getCursor();
 
-    var mark = doc.findMarksAt(pos, pos);
+    var marks = doc.findMarksAt(pos, pos);
     
-    if (mark.length === 0)
+    if (marks.length === 0)
 	return;
+
+    this.mark                      = marks[0];
+    this.feedbackTextArea[0].value = this.mark.title;
     
-    setTimeout(CBFeedbackManager.prototype.openFeedback.bind(this,
-							     mark[0],
-							     {
-								 x:event.originalEvent.x,
-								 y:event.originalEvent.y
-							     }
-							    ), 0);
+    this.modal.modal("show");
 };
 
 

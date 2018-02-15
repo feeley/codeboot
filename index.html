@@ -124,43 +124,39 @@
     <div id="cb-playground">
       <div id="cb-drawing-window" onclick="drawing_window.screenshot();"></div>
       <div id="b"></div>
-    </div>p
+    </div>
   </div>
-
 
   <!-- Feedback system -->
   <div id="cb-feedback" class="container">
-      <div class="modal fade" id="cb-feedback-modal" role="dialog" show="false">
-	  <div class="modal-dialog modal-lg">
-	      <div class="modal-content">
-		  <div class="modal-header">
-		      <h3>Feedback</h3>
-		  </div>
-		  <div class="modal-body">
-		      <div class="container">
-			  <div class="row">		      
-			      <div class="col-md-6">
-				  <textarea class="form-control"
-					    id="cb-mark-editor"
-					    rows="20"
-					    >
-				  </textarea>
-			      </div>
-			      <div class="col-md-6">
-				  <textarea class="form-control"
-					    id="cb-feedback-textarea"
-					    rows="20"
-					    >
-				  </textarea>
-			      </div>
-			  </div>
-		      </div>
-		  </div>
-	      </div>
+    <div class="modal fade" id="cb-feedback-modal" role="dialog" show="false">
+      <div class="modal-dialog modal-lg">
+	<div class="modal-content">
+	  <div class="modal-header">
+	    <h3>Feedback</h3>
 	  </div>
+	  <div class="modal-body">
+	    <div class="container">
+	      <div class="row">		      
+		<div class="col-md-6">
+		  <textarea class="form-control"
+			    id="cb-mark-textarea"
+			    rows="20"
+			    ></textarea>
+		</div>
+		<div class="col-md-6">
+		  <textarea class="form-control"
+			    id="cb-feedback-textarea"
+			    rows="20"
+			    ></textarea>
+		</div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
       </div>
+    </div>
   </div>
-
 
   <div id="cb-editors">
     <ul id="cb-file-tabs" class="nav nav-tabs"></ul>

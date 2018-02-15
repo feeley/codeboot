@@ -933,11 +933,6 @@ div.tab-pane {
     resize:none;
 }
 
-#cb-mark-editor {
-    min-width:100%;
-    resize:none;
-}
-
 /* ----- Console ----- */
 
 #zzzcb-repl {
