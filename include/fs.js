@@ -873,20 +873,18 @@ CBFeedbackManager.prototype.openFeedback = function() {
 
     var range = this.mark.find();
         
-    this.markTextArea.swapDoc(this.mark.doc.linkedDoc({sharedHist:false,
-						       from:range.from.line,
-						       to:range.to.line+1}));
+    this.markTextArea.swapDoc(this.mark.doc.linkedDoc({sharedHist: false,
+						       from:       range.from.line,
+						       to:         range.to.line+1}));
 };
 
 CBFeedbackManager.prototype.closeFeedback = function(event) {
 
     this.mark.doc.unlinkDoc(this.markTextArea.doc);
     
-    this.mark.title        = this.feedbackTextArea[0].value;
-
-    this.mark              = null;
+    this.mark.title                = this.feedbackTextArea[0].value;
+    this.mark                      = null;
     this.feedbackTextArea[0].value = "";
-
     
     this.getCurrentEditor().editor.getInputField().focus();
 };
@@ -898,20 +896,18 @@ CBFeedbackManager.prototype.getCurrentEditor = function() {
 
 CBFeedbackManager.prototype.createMark = function(cm) {
 
-    var doc = cm.doc;
-
+    var doc       = cm.doc;
     var selection = doc.sel.ranges[0];
-
-    var begin = {line:selection.anchor.line, ch:selection.anchor.ch};
-    var end   = {line:selection.head.line,   ch:selection.head.ch};
+    var begin     = {line:selection.anchor.line, ch:selection.anchor.ch};
+    var end       = {line:selection.head.line,   ch:selection.head.ch};
     
     this.removeMarks(cm, begin, end);
 
     doc.markText(begin, end,
 		 {
-		     className:FEEDBACK_CLASS,
-		     atomic:ARE_MARKS_ATOMIC,
-		     title:""
+		     className: FEEDBACK_CLASS,
+		     atomic:    ARE_MARKS_ATOMIC,
+		     title:     ""
 		 });
 
     this.markClicked(null);
@@ -927,44 +923,40 @@ CBFeedbackManager.prototype.removeMarks = function(cm, begin, end) {
 	end   = {line:selection.head.line,   ch:selection.head.ch};
     }
     
-    var marks = doc.findMarks(begin, end);
-
-    for (var i = 0; i < marks.length; ++i) {
-	marks[i].clear();
-    }
+    doc.findMarks(begin, end).forEach(
+	(mark) => {
+	    mark.clear();  
+	});
 };
 
 CBFeedbackManager.prototype.mergeMarks = function(cm) {
 
     var doc       = cm.doc;
     var selection = doc.sel.ranges[0];
-
-    var begin = {line:selection.anchor.line, ch:selection.anchor.ch};
-    var end   = {line:selection.head.line,   ch:selection.head.ch};
-    
-    var marks = doc.findMarks(begin, end);
-
+    var begin     = {line:selection.anchor.line, ch:selection.anchor.ch};
+    var end       = {line:selection.head.line,   ch:selection.head.ch};    
+    var marks     = doc.findMarks(begin, end);
     var feedbacks = [];
 
-    for (var i =0; i< marks.length; ++i) {
-	feedbacks.push(marks[i].title);
-	marks[i].clear();
-    }
-
+    marks.forEach(
+	(mark) => {
+	    feedbacks.push(mark.title);
+	    mark.clear();
+	});
+    
     doc.markText(begin, end,
 		 {
-		     className:FEEDBACK_CLASS,
-		     atomic:ARE_MARKS_ATOMIC,
-		     title:feedbacks.join('\n')
+		     className:    FEEDBACK_CLASS,
+		     atomic:       ARE_MARKS_ATOMIC,
+		     addToHistory: true,
+		     title:        feedbacks.join('\n')
 		 });
 };
 
 CBFeedbackManager.prototype.markClicked = function(event) {
     
-    var doc = this.getCurrentEditor().editor.doc;
-
-    var pos = doc.getCursor();
-
+    var doc   = this.getCurrentEditor().editor.doc;
+    var pos   = doc.getCursor();
     var marks = doc.findMarksAt(pos, pos);
     
     if (marks.length === 0)
@@ -975,6 +967,55 @@ CBFeedbackManager.prototype.markClicked = function(event) {
     
     this.modal.modal("show");
 };
+
+/**
+ * Serialize a CodeMirror instance.
+ */
+function serializeCodeMirror(cm, options) {
+
+    return {
+    	title: cm.getValue(),
+    	marks: cm.getAllMarks().map(
+    	    (mark) => {
+    		let range = mark.find();
+    		return {
+    		    title: mark.title,
+    		    from:  range.from,
+    		    to:    range.to
+    		};
+    	    })
+    };
+}
+
+
+/**
+ * Deserialize an object into a new CodeMirror instance.
+ * Return null on failure.
+ */
+function deserializeCodeMirror(object) {
+
+    var marks  = object.marks;
+    var title  = object.text;
+
+    if (typeof title !== "string" || !(marks instanceof Array))
+	return null;
+
+    var cm = new CodeMirror(title, "javascript");
+
+    marks.forEach(
+	(mark) => {
+	    cm.doc.markText(mark.from, mark.to,
+			    {
+				className: FEEDBACK_CLASS,
+				atomic:    ARE_MARK_ATOMIC,
+				title:     mark.title
+			    });
+	});
+
+    return cm;
+}
+
+
 
 
 //-----------------------------------------------------------------------------
