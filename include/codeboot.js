@@ -35,6 +35,14 @@ function CodeBoot() {
     this.lastSource = null;
     this.lastResult = null;
     this.lastResultRepresentation = null;
+
+
+    // Keys binded to macro. CB accepts only a maximum of 10 macros.
+    this.bindedMacros = new Array(10);
+
+    for(var i = 0; i < 10; ++i) {
+	this.bindedMacros[i] = "Ctrl-" + i; // Default binded to Ctrl-0...Ctrl-9
+    }
 }
 
 var cb = new CodeBoot();
@@ -471,3 +479,17 @@ CodeBoot.prototype.focusLastFocusedEditor = function () {
         cb.lastFocusedEditor.focus();
     }
 }
+
+// this.fs.feedbackManager
+
+CodeBoot.prototype.unbindMacro = function(index) {
+    
+};
+
+CodeBoot.prototype.bindMacro = function(index) {
+    
+};
+
+CodeBoot.prototype.importMacrosKeysBinding = function(file) {
+    
+};

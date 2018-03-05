@@ -840,43 +840,71 @@ CBFileEditor.prototype.setReadOnly = function (readOnly) {
  * cursor will always delete the mark entirely.
  */
 
-const FEEDBACK_CLASS       = "feedback";
-const FEEDBACK_MODAL       = "#cb-feedback-modal";
-const FEEDBACK_TEXTAREA    = "#cb-feedback-textarea";
-const ARE_MARKS_ATOMIC     = false;
-const MARK_TEXTAREA        = "#cb-mark-textarea";
+const CONTEXT_PADDING   = 5;
+const FEEDBACK_CLASS    = "feedback";
+const FEEDBACK_MODAL    = "#cb-feedback-modal";
+const FEEDBACK_TEXTAREA = "#cb-feedback-textarea";
+const MARK_ATOMIC       = false;
+const MARK_DEFAULT_TEXT = "";
+const MARK_IN_HISTORY   = true;
+const MARK_SHARED       = true;
+const MARK_TEXTAREA     = "#cb-mark-textarea";
 
 function CBFeedbackManager(fileManager) {
 
-    if (typeof fileManager === "undefined") {
-	console.error("CBFeedback' editors manager undefined");
-	return;
-    }
+  if (typeof fileManager === "undefined") {
+    console.error("CBFeedback' editors manager undefined");
+    return;
+  }
 
-    fileManager.feedbackManager = this;
+  fileManager.feedbackManager = this;
+  
+  this.feedbackTextArea  = $(FEEDBACK_TEXTAREA);
+  this.manager           = fileManager;
+  this.mark              = null;
+  this.markTextArea      = CodeMirror.fromTextArea($(MARK_TEXTAREA)[0]);
+  this.modal             = $(FEEDBACK_MODAL);
+
+  $(document).on("click", "."+FEEDBACK_CLASS,
+		 $.proxy(this.markClicked, this));
+  $(this.modal).on("hide.bs.modal",
+		   $.proxy(this.closeFeedback, this));
+  $(this.modal).on("shown.bs.modal",
+		   $.proxy(this.openFeedback, this));
+
+  // Default macros
+    this.macros = [];
     
-    this.feedbackTextArea  = $(FEEDBACK_TEXTAREA);
-    this.manager           = fileManager;
-    this.mark              = null;
-    this.markTextArea      = CodeMirror.fromTextArea($(MARK_TEXTAREA)[0]);
-    this.modal             = $(FEEDBACK_MODAL);
-
-    $(document).on("click", "."+FEEDBACK_CLASS,
-		   $.proxy(this.markClicked, this));
-    $(this.modal).on("hidden.bs.modal",
-		     $.proxy(this.closeFeedback, this));
-    $(this.modal).on("shown.bs.modal",
-		     $.proxy(this.openFeedback, this));
+    for (var i=0; i<10; ++i)
+    {
+	this.macros[i] = ""+i; // Default macros are 0...9
+    }    
 }
+
+CBFeedbackManager.prototype.insertMacro = function(index) {
+
+    console.log("foo");
+    
+    if (index < 0 || index >= this.macros.length)
+	return -1;
+    
+    setTimeout($.proxy(this.createMark(this.macros[index]), this), 0);
+};
 
 CBFeedbackManager.prototype.openFeedback = function() {
 
     var range = this.mark.find();
+
+    console.log(this.mark);
+    console.log(range);
+
+    this.feedbackTextArea[0].value = this.mark.title;
         
     this.markTextArea.swapDoc(this.mark.doc.linkedDoc({sharedHist: false,
-						       from:       range.from.line,
-						       to:         range.to.line+1}));
-};
+						       from:       range.from.line - CONTEXT_PADDING,
+						       to:         range.to.line + CONTEXT_PADDING + 1}));
+    this.feedbackTextArea.focus();
+}
 
 CBFeedbackManager.prototype.closeFeedback = function(event) {
 
@@ -894,97 +922,131 @@ CBFeedbackManager.prototype.getCurrentEditor = function() {
 };
 
 
-CBFeedbackManager.prototype.createMark = function(cm) {
+CBFeedbackManager.prototype.createMark = function(text) {
 
-    var doc       = cm.doc;
-    var selection = doc.sel.ranges[0];
-    var begin     = {line:selection.anchor.line, ch:selection.anchor.ch};
-    var end       = {line:selection.head.line,   ch:selection.head.ch};
+  if (typeof text === "undefined")
+    text = "";
     
-    this.removeMarks(cm, begin, end);
+  var doc       = this.getCurrentEditor().editor.doc;
 
-    doc.markText(begin, end,
-		 {
-		     className: FEEDBACK_CLASS,
-		     atomic:    ARE_MARKS_ATOMIC,
-		     title:     ""
-		 });
+  var range = getSelectionRange(doc);
+  
+  // If <C-m> pressed but no selection. Abort.
+  if (range.begin.line === range.end.line && range.begin.ch === range.end.ch)
+    return;
 
-    this.markClicked(null);
+  var marks = doc.findMarks(range.begin, range.end);
+  
+  marks.forEach(function (mark) {
+    if (MARK_SHARED)
+      mark = mark.primary;
+    mark.clear();
+  });
+
+  this.mark = doc.markText(range.begin, range.end,
+			   {
+			     className:    FEEDBACK_CLASS,
+			     atomic:       MARK_ATOMIC,
+			     addToHistory: MARK_IN_HISTORY,
+			     title:        text,
+			     shared:       MARK_SHARED
+			   });
+  if (MARK_SHARED)
+    this.mark = this.mark.primary;
+
+  this.modal.modal("show");
 };
 
-CBFeedbackManager.prototype.removeMarks = function(cm, begin, end) {
+CBFeedbackManager.prototype.removeMarks = function() {
+  
+  var doc       = this.getCurrentEditor().editor.doc;    
 
-    var doc       = cm.doc;    
-    var selection = doc.sel.ranges[0];
+  var range = getSelectionRange(doc);
+  
+  var marks = doc.findMarks(range.begin, range.end);
 
-    if (typeof begin === "undefined") {	    
-	begin = {line:selection.anchor.line, ch:selection.anchor.ch};
-	end   = {line:selection.head.line,   ch:selection.head.ch};
-    }
-    
-    doc.findMarks(begin, end).forEach(
-	(mark) => {
-	    mark.clear();  
-	});
+  marks.forEach(function(mark) {
+    if (MARK_SHARED)
+      mark = mark.primary;	
+    mark.clear();
+  });  
 };
 
-CBFeedbackManager.prototype.mergeMarks = function(cm) {
+CBFeedbackManager.prototype.mergeMarks = function() {
 
-    var doc       = cm.doc;
-    var selection = doc.sel.ranges[0];
-    var begin     = {line:selection.anchor.line, ch:selection.anchor.ch};
-    var end       = {line:selection.head.line,   ch:selection.head.ch};    
-    var marks     = doc.findMarks(begin, end);
-    var feedbacks = [];
+  var doc       = this.getCurrentEditor().editor.doc;    
 
-    marks.forEach(
-	(mark) => {
-	    feedbacks.push(mark.title);
-	    mark.clear();
-	});
+  var range = getSelectionRange(doc);
     
-    doc.markText(begin, end,
-		 {
-		     className:    FEEDBACK_CLASS,
-		     atomic:       ARE_MARKS_ATOMIC,
-		     addToHistory: true,
-		     title:        feedbacks.join('\n')
-		 });
+  var marks     = doc.findMarks(range.begin, range.end);
+  var feedbacks = [];
+
+  if (marks.length === 0)
+    return;
+  
+  marks.forEach(function (mark) {
+    if (MARK_SHARED)
+      mark = mark.primary;
+    feedbacks.push(mark.title);
+    mark.clear();
+  });
+  
+  this.mark = doc.markText(range.begin, range.end,
+			   {
+			     className:    FEEDBACK_CLASS,
+			     atomic:       MARK_ATOMIC,
+			     addToHistory: MARK_IN_HISTORY,
+			     title:        feedbacks.join('\n'),
+			     shared:       MARK_SHARED
+			   });
+  
+  if (MARK_SHARED)
+    this.mark = this.mark.primary;
+
+  this.modal.modal("show");
 };
 
 CBFeedbackManager.prototype.markClicked = function(event) {
-    
-    var doc   = this.getCurrentEditor().editor.doc;
-    var pos   = doc.getCursor();
-    var marks = doc.findMarksAt(pos, pos);
-    
-    if (marks.length === 0)
-	return;
 
-    this.mark                      = marks[0];
-    this.feedbackTextArea[0].value = this.mark.title;
-    
-    this.modal.modal("show");
+  if (this.mark !== null)
+    return;
+  
+  var doc   = this.getCurrentEditor().editor.doc;
+  var pos   = doc.getCursor();
+  var marks = doc.findMarksAt(pos, pos);
+  
+  if (marks.length === 0)
+    return;
+
+  if (MARK_SHARED)
+    this.mark = marks[0].primary;
+  else
+    this.mark = marks[0];
+  
+  this.modal.modal("show");
 };
 
 /**
- * Serialize a CodeMirror instance.
+ * Serialize a CodeMirror instance into an object.
+ * The corresponding object as the following members:
+ *
+ * string text
+ * Array {string title, int from, int to}
  */
 function serializeCodeMirror(cm, options) {
 
-    return {
-    	title: cm.getValue(),
-    	marks: cm.getAllMarks().map(
-    	    (mark) => {
-    		let range = mark.find();
-    		return {
-    		    title: mark.title,
-    		    from:  range.from,
-    		    to:    range.to
-    		};
-    	    })
-    };
+  return {
+    text: cm.getValue(),
+    marks: cm.getAllMarks().map(
+      (mark) => {
+    	let range = mark.find();
+    	return {
+    	  title: mark.title,
+    	  from:  range.from,
+    	  to:    range.to
+    	};
+      })
+  };
 }
 
 
@@ -993,29 +1055,56 @@ function serializeCodeMirror(cm, options) {
  * Return null on failure.
  */
 function deserializeCodeMirror(object) {
+  
+  var marks = object.marks;
+  var text  = object.text;
 
-    var marks  = object.marks;
-    var title  = object.text;
+  if (typeof text !== "string" || !(marks instanceof Array))
+    return null;
 
-    if (typeof title !== "string" || !(marks instanceof Array))
-	return null;
+  var cm = new CodeMirror(text, "javascript");
 
-    var cm = new CodeMirror(title, "javascript");
+  marks.forEach(
+    (mark) => {
+      cm.doc.markText(mark.from, mark.to,
+		      {
+			className:    FEEDBACK_CLASS,
+			atomic:       MARK_ATOMIC,
+			addToHistory: MARK_IN_HISTORY,
+			title:        mark.title
+		      });
+    });
 
-    marks.forEach(
-	(mark) => {
-	    cm.doc.markText(mark.from, mark.to,
-			    {
-				className: FEEDBACK_CLASS,
-				atomic:    ARE_MARK_ATOMIC,
-				title:     mark.title
-			    });
-	});
-
-    return cm;
+  return cm;
 }
 
+/**
+ * Function that return the current selection from a CodeMirror.Doc.
+ * [in] doc The document to operate on.
+ * Return a tuple, begin and end that have a 'line' and 'ch' members.
+ */
+function getSelectionRange(doc) {
 
+  var selection = doc.sel.ranges[0];
+
+  var range = {begin:null, end:null};
+  
+  var head   = selection.head;
+  var anchor = selection.anchor;
+  
+  if (head.line < anchor.line || head.line === anchor.line && head.ch < anchor.ch)
+  {
+    range.begin = {line:head.line,   ch:head.ch};
+    range.end   = {line:anchor.line, ch:anchor.ch};
+  }
+  else
+  {
+    range.begin = {line:anchor.line, ch:anchor.ch};
+    range.end   = {line:head.line,   ch:head.ch};
+  }
+
+  return range;
+}
 
 
 //-----------------------------------------------------------------------------

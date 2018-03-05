@@ -65,9 +65,9 @@ CodeBoot.prototype.createCodeEditor = function (node, fileEditor) {
             'Ctrl-L': function (cm) { cb.resetREPL(); },
             'Esc': function (cm) { cb.execStop(); },
             'Enter': function (cm) { if (cb.programState.mode === cb.modeStopped()) return CodeMirror.Pass; cb.execStep(); },
-	    'Ctrl-M': function(cm) {cb.fs.editorManager.fileManager.feedbackManager.createMark(cm); },
-	    'Shift-Ctrl-M': function(cm) {cb.fs.editorManager.fileManager.feedbackManager.mergeMarks(cm)},
-	    'Ctrl-D': function(cm) {cb.fs.editorManager.fileManager.feedbackManager.removeMarks(cm)},
+	    'Ctrl-M': function(cm) {cb.fs.editorManager.fileManager.feedbackManager.createMark(); },
+	    'Shift-Ctrl-M': function(cm) {cb.fs.editorManager.fileManager.feedbackManager.mergeMarks();},
+	    'Ctrl-D': function(cm) {cb.fs.editorManager.fileManager.feedbackManager.removeMarks();},
             'Shift-Enter': function (cm) { cb.execStep(); },
             'F5' : function (cm) { cb.execStep(); },
             'F6' : function (cm) { cb.execAnimate(); },
@@ -91,6 +91,15 @@ CodeBoot.prototype.createCodeEditor = function (node, fileEditor) {
         }
         //,viewportMargin: Infinity
     };
+
+    // Add to extraKeys the macros binding
+    this.bindedMacros.forEach(function (e, i) {
+	options.extraKeys[e] = function(cm) {cb.fs.editorManager.fileManager.feedbackManager.insertMacro(i);}	
+    });
+
+    console.log(options.extraKeys);
+
+
 
     var editor = CodeMirror.fromTextArea(node, options);
 
