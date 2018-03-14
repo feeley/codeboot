@@ -36,13 +36,8 @@ function CodeBoot() {
     this.lastResult = null;
     this.lastResultRepresentation = null;
 
-
-    // Keys binded to macro. CB accepts only a maximum of 10 macros.
-    this.bindedMacros = new Array(10);
-
-    for(var i = 0; i < 10; ++i) {
-	this.bindedMacros[i] = "Ctrl-" + i; // Default binded to Ctrl-0...Ctrl-9
-    }
+    // Keys binded to macro.
+    this.macros = {"Ctrl-1":"Hello world!"};
 }
 
 var cb = new CodeBoot();
@@ -178,6 +173,7 @@ CodeBoot.prototype.setupEventHandlers = function () {
             cb.fs.newFile();
         } else {
             cb.fs.openFile(filename);
+
         }
 
         return true;
@@ -480,16 +476,34 @@ CodeBoot.prototype.focusLastFocusedEditor = function () {
     }
 }
 
+
 // this.fs.feedbackManager
-
-CodeBoot.prototype.unbindMacro = function(index) {
-    
+CodeBoot.prototype.insertMacro = function(value) {
+    setTimeout($.proxy(this.fs.feedbackManager.createMark(value), this), 0);
 };
 
-CodeBoot.prototype.bindMacro = function(index) {
-    
+
+CodeBoot.prototype.loadMacrosDialog = function() {
+
+    $("#file-dialog").click();
+
 };
 
-CodeBoot.prototype.importMacrosKeysBinding = function(file) {
-    
+CodeBoot.prototype.handleFiles = function(files) {
+
+    if (!files.length)
+        return;
+
+    var json = files[0];
+
+    if (json.type !== "application/json")
+        return;
+
+    var reader = new FileReader();
+
+    var self = this;
+
+    $(reader).on('loadend', function() {self.macros = JSON.parse(reader.result);});
+
+    setTimeout(function() {reader.readAsText(json);}, 0);
 };

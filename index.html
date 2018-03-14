@@ -20,9 +20,12 @@
 </head>
 
 <!---------------------------------------------------------------------------->
-
 <body class="cb-hide-header cb-hide-playground cb-hide-footer" data-cb-lang-level="novice" onunload="cb.unload();">
-
+  <form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post">
+  <fieldset style="display:none;">
+  <input type="file" id="file-dialog" onchange="cb.handleFiles(this.files)">
+  </fieldset>
+  </form>
   <div id="cb-header"></div>
 
   <div id="cb-navbar">
@@ -68,11 +71,16 @@
             <h5 class="dropdown-header">Editing</h5>
             <a href="#" class="dropdown-item" data-cb-setting-editor="line-numbers"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Show line numbers</a>
             <a href="#" class="dropdown-item" data-cb-setting-editor="large-font"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Large font</a>
-
+            
             <div class="dropdown-divider"></div>
 
             <h5 class="dropdown-header">Graphics</h5>
             <a href="#" class="dropdown-item" data-cb-setting-graphics="show-window"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Show drawing window</a>
+
+            <div class="dropdown-divider"></div>
+
+            <h5 class="dropdown-header">Macros</h5>
+            <a id="load-macros" href="#" onclick="cb.loadMacrosDialog()" class="dropdown-item"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Macros</a>
 
           </div>
         </span>
@@ -140,10 +148,10 @@
 	      <div class="row">
 		<textarea class="form-control"
 			  id="cb-feedback-textarea"
-			  rows="10"
+			  rows="2"
 			  ></textarea>
 	      </div>
-	      <hr>
+	      <br>
 	      <div class="row  cb-file-container">		      
 		  <textarea class="form-control"
 			    id="cb-mark-textarea"

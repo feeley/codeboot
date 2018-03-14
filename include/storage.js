@@ -24,7 +24,8 @@ CodeBoot.prototype.serializeState = function () {
         languageLevel: cb.languageLevel,
         devMode: cb.devMode,
         animationSpeed: cb.animationSpeed,
-        options: cb.options
+        options: cb.options,
+        macros: cb.macros // Save binded macros
     };
 
     state.repl.history = cb.repl.cb.history.serializeState();
@@ -59,6 +60,10 @@ CodeBoot.prototype.restoreState = function (state) {
 
     if (state.options) {
         cb.options = state.options;
+    }
+
+    if (state.macros) {
+        cb.macros = state.macros;
     }
 
     failed = cb_internal_attempt(function () {
@@ -104,6 +109,7 @@ CodeBoot.prototype.restoreState = function (state) {
         failed = cb_internal_attempt(function () {
             var file = cb.fs._asFile(state.activeEditor);
             file.editor.activate();
+
         }) || failed;
     }
 
