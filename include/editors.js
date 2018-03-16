@@ -65,8 +65,9 @@ CodeBoot.prototype.createCodeEditor = function (node, fileEditor) {
             'Ctrl-L': function (cm) { cb.resetREPL(); },
             'Esc': function (cm) { cb.execStop(); },
             'Enter': function (cm) { if (cb.programState.mode === cb.modeStopped()) return CodeMirror.Pass; cb.execStep(); },
-	        'Ctrl-M': function(cm) {cb.fs.editorManager.fileManager.feedbackManager.createMark(); },
-	        'Shift-Ctrl-M': function(cm) {cb.fs.editorManager.fileManager.feedbackManager.mergeMarks();},
+	        'Ctrl-M': function(cm) {cb.fs.feedbackManager.createMark(); },
+            'Ctrl-O': function(cm) {cb.fs.feedbackManager.openMark(); },
+	        'Shift-Ctrl-M': function(cm) {cb.fs.feedbackManager.mergeMarks();},
 	        'Ctrl-D': function(cm) {cb.fs.editorManager.fileManager.feedbackManager.removeMarks();},
             'Shift-Enter': function (cm) { cb.execStep(); },
             'F5' : function (cm) { cb.execStep(); },
@@ -112,6 +113,7 @@ cb.loadFile = function (cm, f) {
     cb_internal_readTextFile(f, function(contents) {
         cm.setValue(contents);
     });
+
 };
 
 function cb_internal_readTextFile(f, callback) {

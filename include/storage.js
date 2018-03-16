@@ -109,7 +109,6 @@ CodeBoot.prototype.restoreState = function (state) {
         failed = cb_internal_attempt(function () {
             var file = cb.fs._asFile(state.activeEditor);
             file.editor.activate();
-
         }) || failed;
     }
 
