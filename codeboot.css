@@ -679,4 +679,6 @@ i.icon-exp-pause {
 
 .cb-resize-box {
 	position: relative;
+	width: auto;
+	height: auto;
 }
