@@ -670,5 +670,10 @@ i.icon-exp-pause {
 .cb-resize-icon {
 	width: 25px;
 	height: 25px;
-	border-radius: 50%;	
+	border-radius: 50%;
+	background-color: red;
+}
+
+.cb-resize-box {
+
 }
