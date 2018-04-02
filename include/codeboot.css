@@ -30,6 +30,7 @@ body {
     padding: 5px 5px 5px 5px;
     border-radius: 4px;
     background-color: orange;
+    display: relative;
 }
 
 #cb-repl {
@@ -963,7 +964,7 @@ div.tab-pane {
 .zzzcb-file-editor-content {
     border: 1px solid #e0e0e0;
 }
-    
+
 .zzzcb-file-editor-content .CodeMirror-scroll {
     padding: 10px;
 }
@@ -1097,4 +1098,16 @@ div.tab-pane {
 
 .popover.value-bubble .arrow {
     left: 13px !important;
+}
+
+/* -- Resize Section -- */
+
+.cb-resize-icon {
+	width: 25px;
+	height: 25px;
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	border-radius: 50%;
+	background-color: red;
 }
