@@ -677,8 +677,6 @@ i.icon-exp-pause {
 	background-color: red;
 }
 
-.cb-resize-box {
+#cb-repl-container {
 	position: relative;
-	width: auto;
-	height: auto;
 }
