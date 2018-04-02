@@ -664,3 +664,11 @@ i.icon-exp-pause {
    /* IE8-9 gradient filter */
   filter: progid:dximagetransform.microsoft.gradient(startColorstr='#ffee5f5b', endColorstr='#ffbd362f', GradientType=0);
 }
+
+/* -- Resize Section -- */
+
+.cb-resize-icon {
+	width: 25px;
+	height: 25px;
+	border-radius: 50%;	
+}
