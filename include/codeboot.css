@@ -1103,8 +1103,8 @@ div.tab-pane {
 /* -- Resize Section -- */
 
 .cb-resize-icon {
-	width: 25px;
-	height: 25px;
+	width: 5px;
+	height: 5px;
 	position: absolute;
 	bottom: 0;
 	right: 0;
