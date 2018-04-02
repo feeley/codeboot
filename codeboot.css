@@ -670,10 +670,13 @@ i.icon-exp-pause {
 .cb-resize-icon {
 	width: 25px;
 	height: 25px;
+	position: absolute;
+	bottom: 0;
+	right: 0;
 	border-radius: 50%;
 	background-color: red;
 }
 
 .cb-resize-box {
-
+	position: relative;
 }
