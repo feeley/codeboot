@@ -30,7 +30,7 @@ body {
     padding: 5px 5px 5px 5px;
     border-radius: 4px;
     background-color: orange;
-    display: relative;
+    position: relative;
 }
 
 #cb-repl {
