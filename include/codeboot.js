@@ -310,6 +310,7 @@ CodeBoot.prototype.setLanguageLevel = function (level) {
 
     cb.languageLevel = level;
 
+    // Change resize icon division color
     if ( level === "novice" ) {
 
       cbR.updateColor( "#7db6d5" );
