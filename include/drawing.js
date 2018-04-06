@@ -344,14 +344,32 @@ function hide_drawing_window() {
 }
 
 function update_playground_visibility() {
+
   var drawing_window_visible =
       $('#cb-drawing-window').css('display') !== 'none';
   $('a[data-cb-setting-graphics="show-window"] > span')
         .css('visibility', drawing_window_visible ? 'visible' : 'hidden');
   if (drawing_window_visible || $('#b').html() !== '') {
+
+      let replHeight = cbR.replHeight();
+      let bodyRect = cbR.getBodyRect();
+      let margins = cbR.getMargins();
+      let paddings = cbR.getPaddings();
+
+      $( '#cb-playground' )
+        .css({ height: replHeight, width: replHeight });
+
+      let playWidth = cbR.playWidth();
+
+      $( '#cb-repl-container' )
+        .css({ width: bodyRect.width - playWidth - margins - paddings });
+
       $('body').removeClass('cb-hide-playground');
+
   } else {
       $('body').addClass('cb-hide-playground');
+
+      $( '#cb-repl-container' ).css({ width: '100%' });
   }
 }
 

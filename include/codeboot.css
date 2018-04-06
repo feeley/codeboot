@@ -19,22 +19,19 @@ body {
 }
 
 #cb-console {
-    height: 276px;
+    height: auto;
+    width: 100%;
     display: flex;
-    align-items: flex-start;
 }
 
 #cb-repl-container {
-<<<<<<< HEAD
-    height: 90%;
     width: 100%;
-=======
-    height: 100%;
-	width: 100%;
->>>>>>> 4a02bf580c9d5a92d4fe0f7aee91d43c2c879303
-    margin: 15px 15px 15px 15px;
-    padding: 5px 5px 5px 5px;
-    border-radius: 4px;
+    height: 250px;
+    min-width: 200px;
+    min-height: 150px;
+    margin: 15px;
+    padding: 5px;
+    border-radius: 5px;
     background-color: orange;
     position: relative;
 }
@@ -44,13 +41,13 @@ body {
 }
 
 #cb-repl-container .CodeMirror {
-    height: auto;
-    min-width: calc( 667px - 384px );
-    max-height: calc( 276px - 15px - 15px );
+    width: 100%;
+    height: 100%;
 }
 
 #cb-repl-container .CodeMirror-scroll {
-    max-height: calc( 276px - 15px - 15px - 5px - 5px );
+    width: 100%;
+    height: 100%;
 }
 
 /* background color themes for navbar, buttons, repl and file editors */
@@ -108,7 +105,16 @@ body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-
 }
 
 #cb-playground {
-    width: 384px;
+    width: auto;
+    height: auto;
+    min-width: 200px;
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 15px;
+    padding: 5px;
+    position: relative;
 }
 
 .cb-hide-playground #cb-playground {
@@ -116,14 +122,19 @@ body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-
 }
 
 #cb-editors {
+    width: auto;
+    height: calc( 100vh - 55px - 295px );
+    min-width: 200px;
+    min-height: 150px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    margin: 0 15px 0 15px;
+    margin: 0 15px;
 }
 
 #cb-file-tabs {
-    height: 39px;
+    height: 50px;
+    padding-left: 10px;
     overflow: hidden;
     text-overflow: ellipsis;
     flex-wrap: nowrap;
@@ -146,17 +157,26 @@ body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-
 }
 
 .cb-file-container {
-    height: calc( 100vh - 0px - 55px - 276px - 39px - 15px );
-    padding: 5px 5px 5px 5px;
-    border: 0;
-    border-top-right-radius: 4px;
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 4px;
+    height: calc( 100% - 50px );
+    padding: 5px;
+    border-radius: 5px;
     background-color: #f6f6f6;
 }
 
+.cb-file-container .CodeMirror {
+    height: 100%;
+    width: 100%;
+}
+
+.cb-file-container .CodeMirror-scroll {
+    height: 100%;
+    width: 100%;
+}
+
+/*
 .cb-file-container {
     height: calc( 0.60*(100vh - 155px - 55px - 276px - 39px) );
+
 }
 
 .cb-file-container .CodeMirror-scroll {
@@ -186,6 +206,7 @@ body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-
 .cb-hide-header.cb-hide-footer .cb-file-container .CodeMirror-scroll {
     max-height: calc( 100vh - 0px - 55px - 276px - 39px - 5px - 5px - 15px );
 }
+*/
 
 .cb-rename-box {
     margin: 0 !important;
@@ -388,10 +409,12 @@ body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-
     opacity: 1;
 }
 
+/*
 #cb-editors .CodeMirror {
     border: 0;
     height: auto;
 }
+*/
 
 .close {
   font-size: 1em;
@@ -923,11 +946,17 @@ div.tab-pane {
 /* ----- Drawing window ----- */
 
 #cb-drawing-window {
-    flex: 0 0 384px;
-    padding: 15px 15px 15px 0;
+    width: 100%;
+    height: 100%;
     margin: 0;
     float: right;
     display: none;
+    position: relative;
+}
+
+#cb-drawing-window canvas {
+  width: 100%;
+  height: 100%;
 }
 
 /* ----- Console ----- */
@@ -1104,16 +1133,4 @@ div.tab-pane {
 
 .popover.value-bubble .arrow {
     left: 13px !important;
-}
-
-/* -- Resize Section -- */
-
-.cb-resize-icon {
-	width: 10px;
-	height: 10px;
-	position: absolute;
-	bottom: 0;
-	right: 0;
-	border-radius: 50%;
-	background-color: red;
 }

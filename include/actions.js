@@ -772,7 +772,7 @@ CodeBoot.prototype.within = function (rect, viewport) {
 
     var x = (rect.left + rect.right) / 2;
     var y = (rect.top + rect.bottom) / 2;
- 
+
     //alert(x+','+y+'   '+viewport.left+','+(viewport.left+viewport.clientWidth)+','+viewport.top+','+(viewport.top+viewport.clientHeight));
 
     if (x < viewport.left) return false;
@@ -1155,7 +1155,7 @@ CodeBoot.prototype.execute2 = function (single_step) {
                 cb.stop(null);
             return;
         }
-
+        
         update_playground_visibility();
 
         if (cb.programState.mode === cb.modeStepping()) {
@@ -1221,7 +1221,7 @@ CodeBoot.prototype.executionEndedWithResult = function (result) {
 };
 
 CodeBoot.prototype.executionHook = function () {
-};              
+};
 
 CodeBoot.prototype.run = function (single_step) {
 
@@ -1586,16 +1586,16 @@ builtin_exportScreen._apply_ = function (rte, cont, this_, params) {
         if (!('screenPixels' in cb)) {
             return return_fn_body(rte, null);
         }
-        
+
         var pixels = [];
-        
+
         for(var i = 0; i<cb.screenHeight; i++) {
             pixels.push([]);
             for(var j = 0; j<cb.screenWidth; j++) {
                 pixels[i].push(cb.screenPixels.pixels[i][j]);
             }
         }
-        
+
         return return_fn_body(rte, pixels.map(function(e) { return e.join(''); }).join('\n'));
     };
 

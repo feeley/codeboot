@@ -310,13 +310,23 @@ CodeBoot.prototype.setLanguageLevel = function (level) {
 
     cb.languageLevel = level;
 
+    if ( level === "novice" ) {
+
+      cbR.updateColor( "#7db6d5" );
+
+    } else {
+
+      cbR.updateColor( "#e7a555" );
+
+    }
+
     $('body').attr('data-cb-lang-level', level);
 
     $('a[data-cb-setting-level] > span')
         .css('visibility', 'hidden');
     $('a[data-cb-setting-level="' + level + '"] > span')
         .css('visibility', 'visible');
-    
+
 };
 
 CodeBoot.prototype.setDevMode = function (devMode) {
