@@ -351,16 +351,19 @@ function update_playground_visibility() {
         .css('visibility', drawing_window_visible ? 'visible' : 'hidden');
   if (drawing_window_visible || $('#b').html() !== '') {
 
+      // Values to update repl and playground
       let replHeight = cbR.replHeight();
       let bodyRect = cbR.getBodyRect();
       let margins = cbR.getMargins();
       let paddings = cbR.getPaddings();
 
+      // Update playground size
       $( '#cb-playground' )
         .css({ height: replHeight, width: replHeight });
 
       let playWidth = cbR.playWidth();
 
+      // Update repl container size
       $( '#cb-repl-container' )
         .css({ width: bodyRect.width - playWidth - margins - paddings });
 
