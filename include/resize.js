@@ -227,9 +227,10 @@ CBResize.prototype.updateRepl = function () {
 CBResize.prototype.updateEditor = function () {
 
   let width = "auto";
-  let height = this.zone.height - this.console.height();
+  let height = this.navH + this.footH + this.console.height();
+  let calc = "calc( 100vh - " + height + "px )";
 
-  updateCSS( this.editor, width, height );
+  updateCSS( this.editor, width, calc );
 
 };
 
