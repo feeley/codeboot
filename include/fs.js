@@ -24,7 +24,7 @@
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER INxk
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
@@ -849,16 +849,20 @@ CBFileEditor.prototype.setReadOnly = function (readOnly) {
  * cursor will always delete the mark entirely.
  */
 
-const CONTEXT_PADDING   = 5;
-const FEEDBACK_CLASS    = "feedback";
-const FEEDBACK_MODAL    = "#cb-feedback-modal";
-const FEEDBACK_TEXTAREA = "#cb-feedback-textarea";
-const MARK_ATOMIC       = false;
-const MARK_DEFAULT_TEXT = "";
-const MARK_IN_HISTORY   = true;
-const MARK_SHARED       = true;
-const SHARED_HISTORY    = true;
-const MARK_TEXTAREA     = "#cb-mark-textarea";
+const CONTEXT_PADDING         = 5;
+const FEEDBACK_CLASS          = "feedback";
+const FOCUSED_FEEDBACK_CLASS  = "focused-feedback";
+const FEEDBACK_MODAL          = "#cb-feedback-modal";
+const FEEDBACK_FRAC           = "#cb-feedback-frac";
+const FEEDBACK_TEXTAREA       = "#cb-feedback-textarea";
+const FEEDBACK_NEXT           = "#cb-feedback-next";
+const FEEDBACK_PREV           = "#cb-feedback-prev";
+const MARK_ATOMIC             = false;
+const MARK_DEFAULT_TEXT       = "";
+const MARK_IN_HISTORY         = true;
+const MARK_SHARED             = true;
+const SHARED_HISTORY          = true;
+const MARK_TEXTAREA           = "#cb-mark-textarea";
 
 function CBFeedbackManager(fileManager) {
 
@@ -870,8 +874,11 @@ function CBFeedbackManager(fileManager) {
     fileManager.feedbackManager = this;
 
     this.feedbackTextArea  = $(FEEDBACK_TEXTAREA);
+    this.frac              = $(FEEDBACK_FRAC);
     this.manager           = fileManager;
     this.mark              = null;
+    this.doc               = null;
+    this.index             = null;
     this.markTextArea      = CodeMirror.fromTextArea($(MARK_TEXTAREA)[0]);
     this.modal             = $(FEEDBACK_MODAL);
 
@@ -881,12 +888,17 @@ function CBFeedbackManager(fileManager) {
 		             $.proxy(this.closeFeedback, this));
     $(this.modal).on("shown.bs.modal",
 		             $.proxy(this.openFeedback, this));
+    $(FEEDBACK_NEXT).click($.proxy(this.next, this));
+    $(FEEDBACK_PREV).click($.proxy(this.prev, this));
 }
 
 CBFeedbackManager.prototype.openFeedback = function() {
 
-    this.feedbackTextArea.focus();
     var range = this.mark.find();
+
+    this.mark.className = FOCUSED_FEEDBACK_CLASS;
+
+    this.feedbackTextArea.focus();
 
     this.feedbackTextArea[0].value = this.mark.title;
 
@@ -897,11 +909,15 @@ CBFeedbackManager.prototype.openFeedback = function() {
 
 CBFeedbackManager.prototype.closeFeedback = function(event) {
 
+    this.mark.className = FEEDBACK_CLASS;
     this.mark.doc.unlinkDoc(this.markTextArea.doc);
 
     this.mark.title                = this.feedbackTextArea[0].value;
     this.mark                      = null;
     this.feedbackTextArea[0].value = "";
+    this.doc                       = null;
+    this.index                     = null;
+    this.frac.text("");
 
     this.getCurrentEditor().editor.getInputField().focus();
 };
@@ -912,21 +928,19 @@ CBFeedbackManager.prototype.getCurrentEditor = function() {
 
 CBFeedbackManager.prototype.openMark = function() {
 
-    var doc   = this.getCurrentEditor().editor.doc;
-    var range = getSelectionRange(doc);
+    this.doc  = this.getCurrentEditor().editor.doc;
 
-    if (range === false)
-        return;
+    var range = getSelectionRange(this.doc);
 
-    var marks = doc.findMarks(range.begin, range.end);
-
-    if (marks.length === 0)
-        return;
+    var marks = this.doc.findMarks(range.begin, range.end);
 
     this.mark = marks[0];
 
     if (MARK_SHARED)
         this.mark = this.mark.primary;
+
+    this.index = this.findMarkIndex();
+    this.frac.text("" + (this.index + 1) + "/" + this.doc.getAllMarks().length);
 
     this.modal.modal("show");
 };
@@ -936,13 +950,11 @@ CBFeedbackManager.prototype.createMark = function(text) {
     if (typeof text === "undefined")
         text = "";
 
-    var doc   = this.getCurrentEditor().editor.doc;
-    var range = getSelectionRange(doc);
+    this.doc   = this.getCurrentEditor().editor.doc;
 
-    if (range === false)
-        return;
+    var range = getSelectionRange(this.doc);
 
-    var marks = doc.findMarks(range.begin, range.end);
+    var marks = this.doc.findMarks(range.begin, range.end);
 
     marks.forEach(function (mark) {
         if (MARK_SHARED)
@@ -950,16 +962,20 @@ CBFeedbackManager.prototype.createMark = function(text) {
         mark.clear();
     });
 
-    this.mark = doc.markText(range.begin, range.end,
-			                 {
+    this.mark = this.doc.markText(range.begin, range.end,
+			                      {
 			                     className:    FEEDBACK_CLASS,
 			                     atomic:       MARK_ATOMIC,
 			                     addToHistory: MARK_IN_HISTORY,
 			                     title:        text,
 			                     shared:       MARK_SHARED
-			                 });
+			                      });
+
     if (MARK_SHARED)
         this.mark = this.mark.primary;
+
+    this.index = this.findMarkIndex();
+    this.frac.text("" + (this.index + 1) + "/" + this.doc.getAllMarks().length);
 
     this.modal.modal("show");
 };
@@ -969,9 +985,6 @@ CBFeedbackManager.prototype.removeMarks = function() {
     var doc       = this.getCurrentEditor().editor.doc;
 
     var range = getSelectionRange(doc);
-
-    if (range === false)
-        return;
 
     var marks = doc.findMarks(range.begin, range.end);
 
@@ -984,14 +997,11 @@ CBFeedbackManager.prototype.removeMarks = function() {
 
 CBFeedbackManager.prototype.mergeMarks = function() {
 
-    var doc       = this.getCurrentEditor().editor.doc;
+    this.doc  = this.getCurrentEditor().editor.doc;
 
-    var range = getSelectionRange(doc);
+    var range = getSelectionRange(this.doc);
 
-    if (range === false)
-        return;
-
-    var marks     = doc.findMarks(range.begin, range.end);
+    var marks     = this.doc.findMarks(range.begin, range.end);
     var feedbacks = [];
 
     if (marks.length === 0)
@@ -1004,7 +1014,7 @@ CBFeedbackManager.prototype.mergeMarks = function() {
         mark.clear();
     });
 
-    this.mark = doc.markText(range.begin, range.end,
+    this.mark = this.doc.markText(range.begin, range.end,
 			                 {
 			                     className:    FEEDBACK_CLASS,
 			                     atomic:       MARK_ATOMIC,
@@ -1016,6 +1026,9 @@ CBFeedbackManager.prototype.mergeMarks = function() {
     if (MARK_SHARED)
         this.mark = this.mark.primary;
 
+    this.index = this.findMarkIndex();
+    this.frac.text("" + (this.index + 1) + "/" + this.doc.getAllMarks().length);
+
     this.modal.modal("show");
 };
 
@@ -1024,19 +1037,69 @@ CBFeedbackManager.prototype.markClicked = function(event) {
     if (this.mark !== null)
         return;
 
-    var doc   = this.getCurrentEditor().editor.doc;
-    var pos   = doc.getCursor();
-    var marks = doc.findMarksAt(pos, pos);
+    this.doc   = this.getCurrentEditor().editor.doc;
+
+    var pos    = this.doc.getCursor();
+    var marks  = this.doc.findMarksAt(pos, pos);
 
     if (marks.length === 0)
         return;
 
+    this.mark = marks[0];
+
     if (MARK_SHARED)
-        this.mark = marks[0].primary;
-    else
-        this.mark = marks[0];
+        this.mark = this.mark.primary;
+
+    this.index = this.findMarkIndex();
+    this.frac.text("" + (this.index + 1) + "/" + this.doc.getAllMarks().length);
 
     this.modal.modal("show");
+};
+
+CBFeedbackManager.prototype.next = function() {
+    this.cycleMark(1);
+};
+
+CBFeedbackManager.prototype.prev = function() {
+    this.cycleMark(-1);
+};
+
+CBFeedbackManager.prototype.cycleMark = function(i) {
+
+    if (i !== 1 && i !== -1)
+        return;
+
+    this.mark.title = this.feedbackTextArea[0].value;
+    this.mark.className = FEEDBACK_CLASS;
+
+    var marks = this.doc.getAllMarks();
+
+    this.index = (this.index + i + marks.length) % marks.length;
+    this.frac.text("" + (this.index + 1) + "/" + marks.length);
+
+    this.mark = marks[this.index];
+    this.mark.className = FOCUSED_FEEDBACK_CLASS;
+
+    var range = this.mark.find();
+
+    this.feedbackTextArea[0].value = this.mark.title;
+
+    this.mark.doc.unlinkDoc(this.markTextArea.doc);
+    this.markTextArea.swapDoc(this.mark.doc.linkedDoc({sharedHist: SHARED_HISTORY,
+						                               from:       range.from.line - CONTEXT_PADDING,
+						                               to:         range.to.line + CONTEXT_PADDING + 1}));
+};
+
+CBFeedbackManager.prototype.findMarkIndex = function() {
+
+    var marks = this.doc.getAllMarks();
+
+    for (var i = 0; i < marks.length; i++) {
+        if (this.mark == marks[i])
+            return i;
+    }
+
+    return -1;
 };
 
 /**
@@ -1091,8 +1154,6 @@ CBFeedbackManager.prototype.deserializeMarks = function(cm, marks) {
 			             title:        mark.title
 		             });
     }
-
-
 }
 
 /**
@@ -1121,7 +1182,7 @@ function getSelectionRange(doc) {
     }
 
     if (range.begin.line === range.end.line && range.begin.ch === range.end.ch) // Begin and end same pos
-        return false;
+        range.end.ch += 1;
 
     return range;
 }

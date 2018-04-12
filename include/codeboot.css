@@ -928,6 +928,10 @@ div.tab-pane {
     background-color: #E7A55577;
 }
 
+.focused-feedback {
+    background-color: #7DB6D577;
+}
+
 #cb-feedback-textarea {
     min-width:100%;
     resize:none;
