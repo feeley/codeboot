@@ -95,7 +95,7 @@ CodeBoot.prototype.createCodeEditor = function (node, fileEditor) {
 
     // Add to extraKeys the macros binding
     for (key in this.macros) {
-        options.extraKeys[key] = function() {cb.insertMacro(cb.macros[key]);};
+        options.extraKeys[key] = (function(v) {var value = v; return function() {cb.insertMacro(value);};})(this.macros[key]);
     }
 
     var editor = CodeMirror.fromTextArea(node, options);
