@@ -169,9 +169,10 @@ CodeBoot.prototype.setupEventHandlers = function () {
         var $item = $(event.currentTarget);
         var filename = $item.attr('data-cb-filename');
 
-        if (filename === void 0) {
-            cb.fs.newFile();
-        } else {
+        // Generate two files sometime
+        if (filename !== void 0) {
+           //  cb.fs.newFile();
+        // } else {
             cb.fs.openFile(filename);
 
         }

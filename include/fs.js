@@ -343,9 +343,7 @@ CBFileManager.prototype.rebuildFileMenu = function () {
 
     var item = $('<a id="cb-file-new" class="dropdown-item" href="#"><strong>New</strong></a>');
 
-    item.on('click', function (event) {
-        self.newFile();
-    });
+    item.on('click', $.proxy(this.newFile, this, void 0));
 
     $('#cb-file-selection').append(item);
 
