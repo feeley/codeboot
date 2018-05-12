@@ -564,7 +564,7 @@ body[data-cb-lang-level="novice"] .cb-code-error {
     background-color: #eb48ff;
 }
 
-body[data-cb-lang-level="standard"] .cb-code-error {
+body[data-cb-lang-level="standard"] .cb-code-error,
     background-color: #eb48ff;
 }
 
@@ -1111,4 +1111,19 @@ div.tab-pane {
 
 .popover.value-bubble .arrow {
     left: 13px !important;
+}
+
+
+
+
+.sidenav {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    background-color: white;
+    overflow-x: hidden;
+    padding-top: 20px;
 }

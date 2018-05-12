@@ -20,12 +20,29 @@
   </head>
 
   <!---------------------------------------------------------------------------->
-  <body class="cb-hide-header cb-hide-playground cb-hide-footer" data-cb-lang-level="novice" onunload="cb.unload();">
+  <body class="cb-hide-header cb-hide-playground cb-hide-footer"
+        data-cb-lang-level="novice"
+        onunload="cb.unload();">
+
+
+    <!-- Side Navigation for Correction -->
+    <div id="cb-sidenav" class="sidenav">
+      <div class="container">
+        <div id="cb-accordion">
+        </div>
+        <button class="btn btn-primary" type="button">Submit</button>
+      </div>
+    </div>
+
+    <main>
+
+    <!-- Macro File Dialog -->
     <form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post">
       <fieldset style="display:none;">
         <input type="file" id="file-dialog" onchange="cb.handleFiles(this.files)">
       </fieldset>
     </form>
+
     <div id="cb-header"></div>
 
     <div id="cb-navbar">
@@ -35,7 +52,6 @@
       <div id="cb-navbar-controls">
 
         <!-- Menus -->
-
         <div id="cb-menu">
 
           <span id="cb-menu-brand">
@@ -79,9 +95,26 @@
 
               <div class="dropdown-divider"></div>
 
-              <h5 class="dropdown-header">Macros</h5>
-              <a id="load-macros" href="#" onclick="cb.loadMacrosDialog()" class="dropdown-item"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Macros</a>
-
+              <!-- Macro File Dialog Action -->
+              <h5 class="dropdown-header">Developer</h5>
+              <a href="#"
+                 class="dropdown-item" 
+                 onclick="cb.toggleNav()">
+                <span id="check-correction-mode"
+                      style="visibility: hidden;">
+                  <i class="fa fa-check"></i> 
+                </span>&nbsp;&nbsp;
+                Correction Mode
+              </a>
+              <a id="load-macros"
+                 href="#"
+                 onclick="cb.loadMacrosDialog()"
+                 class="dropdown-item">
+                <span style="visibility: hidden;">
+                  <i class="fa fa-check"></i>
+                </span>&nbsp;&nbsp;
+                Macros
+              </a>
             </div>
           </span>
 
@@ -176,6 +209,8 @@
     </div>
     
     <div id="cb-footer"></div>
+
+    </main>
     
     <!---------------------------------------------------------------------------->
 
@@ -244,6 +279,7 @@
     <script src="include/output.js"></script>
     <script src="include/jquery.visibility.js"></script>
     <script>cb.query(null);</script>
+    <script>cb.generateDEBUG();</script>
 
   </body>
 

@@ -321,7 +321,6 @@ CodeBoot.prototype.setLanguageLevel = function (level) {
         .css('visibility', 'hidden');
     $('a[data-cb-setting-level="' + level + '"] > span')
         .css('visibility', 'visible');
-    
 };
 
 CodeBoot.prototype.setDevMode = function (devMode) {
@@ -508,3 +507,101 @@ CodeBoot.prototype.handleFiles = function(files) {
 
     setTimeout(function() {reader.readAsText(json);}, 0);
 };
+
+
+CodeBoot.prototype.toggleNav = (function() {
+
+    var isOpen = false;
+
+    return function() {
+
+        if (isOpen)
+            cb.closeNav();
+        else
+            cb.openNav();
+
+        isOpen = !isOpen;
+    }
+}());
+
+const CORRECTION_WidTH = "250px";
+
+CodeBoot.prototype.closeNav = function() {
+    $("#cb-sidenav").width("0");
+    $("main").css("margin-left", "0");
+    $("#check-correction-mode").css("visibility", "hidden");
+}
+
+CodeBoot.prototype.openNav = function() {
+    $("#cb-sidenav").width(CORRECTION_WidTH);
+    $("main").css("margin-left", CORRECTION_WidTH);
+    $("#check-correction-mode").css("visibility", "visible");
+}
+
+
+const DEBUG =
+      {
+          students:
+          [
+              {
+                  id:"Bar",
+                  files:
+                  [
+                      {
+                          doc:"Hello World!",
+                          note:null,
+                          corrected:false
+                      }
+                  ]
+              },
+              {
+                  id:"Foo",
+                  files:
+                  [
+                      {
+                          doc:"FooBar3000",
+                          note:null,
+                          corrected:false
+                      }
+                  ]
+              }
+          ]
+      };
+
+CodeBoot.prototype.generateDEBUG = function() {
+
+    DEBUG.students.forEach(function(student) {
+        cb.addStudent(student);
+    });
+}
+
+
+CodeBoot.prototype.addStudent = (function() {
+
+    const card_template = '<div class="card"> <div class="card-header"> <h5 class="mb-0"> <button class="btn btn-link" data-toggle="collapse" aria-expanded="true"></button> </h5> </div> <div class="collapse" data-parent="#cb-accordion"> <div class="card-body"></div> </div></div>';
+
+   var accordion = $("#cb-accordion");
+
+    return function(student) {
+
+        var card = $(card_template);
+        var id  = "__" + student.id + "__";
+
+        card.find(".card-header")
+            .attr("id", "heading-" + id);
+
+        card.find(".card-header >  h5 > button")
+            .attr("data-target", "#" + id)
+            .attr("aria-controls", id)
+            .text(student.id);
+
+        card.find(".card-body")
+            .text(student.files[0].doc);
+
+        card.children("div:nth-child(2)")
+            .attr("id", id)
+            .attr("aria-labelledby", "heading-" + id);
+
+        accordion.append(card);
+    }
+}());

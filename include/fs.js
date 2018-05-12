@@ -36,7 +36,6 @@
  *
  * Contributors:
  * - Olivier Dion <olivier.dion@polymtl.ca>
- *
  */
 
 /* ----- UI helpers ----- */
@@ -1179,7 +1178,9 @@ function getSelectionRange(doc) {
         range.end   = {line:head.line,   ch:head.ch};
     }
 
-    if (range.begin.line === range.end.line && range.begin.ch === range.end.ch) // Begin and end same pos
+    // Begin and end at same position
+    if (range.begin.line === range.end.line &&
+        range.begin.ch === range.end.ch)
         range.end.ch += 1;
 
     return range;
