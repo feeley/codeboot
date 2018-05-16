@@ -61,18 +61,10 @@ const MARK_SHARED             = true;
 const SHARED_HISTORY          = true;
 const MARK_TEXTAREA           = "#cb-mark-textarea";
 
-function CBFeedbackManager(fileManager) {
-
-    if (typeof fileManager === "undefined") {
-        console.error("CBFeedback' editors manager undefined");
-        return;
-    }
-
-    fileManager.feedbackManager = this;
+function CBFeedbackManager() {
 
     this.feedbackTextArea  = $(FEEDBACK_TEXTAREA);
     this.frac              = $(FEEDBACK_FRAC);
-    this.manager           = fileManager;
     this.mark              = null;
     this.doc               = null;
     this.index             = null;
@@ -120,7 +112,7 @@ CBFeedbackManager.prototype.closeFeedback = function(event) {
 };
 
 CBFeedbackManager.prototype.getCurrentEditor = function() {
-    return this.manager.editorManager.editors[this.manager.editorManager.activated];
+    return cb.fs.editorManager.editors[cb.fs.editorManager.activated];
 };
 
 CBFeedbackManager.prototype.openMark = function() {
@@ -134,7 +126,7 @@ CBFeedbackManager.prototype.openMark = function() {
     this.mark = marks[0];
 
     if (MARK_SHARED)
-        this.mark = this.mark.primary;
+        this.mrak = this.mark.primary;
 
     this.index = this.findMarkIndex();
     this.frac.text("" + (this.index + 1) + "/" + this.doc.getAllMarks().length);
@@ -174,6 +166,7 @@ CBFeedbackManager.prototype.createMark = function(text) {
     this.index = this.findMarkIndex();
     this.frac.text("" + (this.index + 1) + "/" + this.doc.getAllMarks().length);
 
+    
     this.modal.modal("show");
 };
 
@@ -298,7 +291,6 @@ CBFeedbackManager.prototype.findMarkIndex = function() {
 
     return -1;
 };
-
 /**
  * Serialize a CodeMirror instance into an object.
  * The corresponding object as the following members:

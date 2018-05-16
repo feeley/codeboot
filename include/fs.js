@@ -149,6 +149,7 @@ CBFile.prototype.save = function () {
         var newContent = this.editor.getValue();
         if (newContent !== oldContent) {
             this.content = newContent;
+            this.feedbacks = cb.fm.serializeMarks(this.editor);
             this.stamp += 1;
         }
     }
@@ -166,7 +167,7 @@ CBFile.prototype.serialize = function () {
         stamp: this.stamp,
 
         // Feedback manager serializer
-        feedbacks:cb.fs.feedbackManager.serializeMarks(this.editor)
+        feedbacks:cb.fm.serializeMarks(this.editor)
     };
 
     return json;
@@ -182,17 +183,17 @@ CBFile.prototype.clone = function () {
     return other;
 };
 
-function CBFileManager() {
+function CBFileManager(rebuild) {
     this.editorManager = undefined;
     new CBFileEditorManager(this);
-    new CBFeedbackManager(this);
-    this.init();
+    this.init(rebuild);
 }
 
-CBFileManager.prototype.init = function () {
+CBFileManager.prototype.init = function (rebuild) {
     this.removeAllEditors();
     this.clear();
-    this.rebuildFileMenu();
+    if (rebuild === false)
+        this.rebuildFileMenu();
 };
 
 CBFileManager.prototype.clear = function () {
@@ -417,7 +418,7 @@ CBFileManager.prototype.addFileToMenu = function (file) {
     var children = $('#cb-file-selection').children();
     for (var i=2; i<children.length; i++) {
         var element = $(children.get(i));
-        if (filename < element.attr('data-cb-filename')) {
+        if (filename < element.attr(' data-cb-filename')) {
             item.insertBefore(element);
             return;
         }
@@ -730,7 +731,7 @@ CBFileEditor.prototype.enable = function () {
 
     file.fileManager.editorManager.add(this);
 
-    cb.fs.feedbackManager.deserializeMarks(editor, file.feedbacks);
+    cb.fm.deserializeMarks(editor, file.feedbacks);
 };
 
 // length of window (in ms) during which changes will be buffered
@@ -767,7 +768,7 @@ CBFileEditor.prototype.disable = function () {
 
     var file = this.file;
 
-    file.feedbacks = cb.fs.feedbackManager.serializeMarks(this);
+    file.feedbacks = cb.fm.serializeMarks(this);
 
     file.fileManager.editorManager.remove(this);
 };

@@ -36,8 +36,9 @@ function CodeBoot() {
     this.lastResult = null;
     this.lastResultRepresentation = null;
 
-    // Keys binded to macro.
-    this.macros = {"Ctrl-1":"Hello world!"};
+    this.savedFs = undefined;
+
+
 }
 
 var cb = new CodeBoot();
@@ -287,6 +288,17 @@ CodeBoot.prototype.main = function () {
     cb.repl = cb.createREPL();
 
     cb.fs = new CBFileManager();
+    cb.savedFs = cb.fs;
+
+    cb.mm = new CBMacrosManager();
+
+    cb.fm = new CBFeedbackManager();
+
+    cb.cm = new CBCorrectorManager();
+
+    // DEBUG
+    cb.cm.generateDEBUG();
+    //
 
     cb.setupEventHandlers();
 
@@ -477,131 +489,4 @@ CodeBoot.prototype.focusLastFocusedEditor = function () {
 }
 
 
-// this.fs.feedbackManager
-CodeBoot.prototype.insertMacro = function(value) {
-    setTimeout($.proxy(this.fs.feedbackManager.createMark(value), this), 0);
-};
 
-
-CodeBoot.prototype.loadMacrosDialog = function() {
-
-    $("#file-dialog").click();
-
-};
-
-CodeBoot.prototype.handleFiles = function(files) {
-
-    if (!files.length)
-        return;
-
-    var json = files[0];
-
-    if (json.type !== "application/json")
-        return;
-
-    var reader = new FileReader();
-
-    var self = this;
-
-    $(reader).on('loadend', function() {self.macros = JSON.parse(reader.result);});
-
-    setTimeout(function() {reader.readAsText(json);}, 0);
-};
-
-
-CodeBoot.prototype.toggleNav = (function() {
-
-    var isOpen = false;
-
-    return function() {
-
-        if (isOpen)
-            cb.closeNav();
-        else
-            cb.openNav();
-
-        isOpen = !isOpen;
-    }
-}());
-
-const CORRECTION_WidTH = "250px";
-
-CodeBoot.prototype.closeNav = function() {
-    $("#cb-sidenav").width("0");
-    $("main").css("margin-left", "0");
-    $("#check-correction-mode").css("visibility", "hidden");
-}
-
-CodeBoot.prototype.openNav = function() {
-    $("#cb-sidenav").width(CORRECTION_WidTH);
-    $("main").css("margin-left", CORRECTION_WidTH);
-    $("#check-correction-mode").css("visibility", "visible");
-}
-
-
-const DEBUG =
-      {
-          students:
-          [
-              {
-                  id:"Bar",
-                  files:
-                  [
-                      {
-                          doc:"Hello World!",
-                          note:null,
-                          corrected:false
-                      }
-                  ]
-              },
-              {
-                  id:"Foo",
-                  files:
-                  [
-                      {
-                          doc:"FooBar3000",
-                          note:null,
-                          corrected:false
-                      }
-                  ]
-              }
-          ]
-      };
-
-CodeBoot.prototype.generateDEBUG = function() {
-
-    DEBUG.students.forEach(function(student) {
-        cb.addStudent(student);
-    });
-}
-
-
-CodeBoot.prototype.addStudent = (function() {
-
-    const card_template = '<div class="card"> <div class="card-header"> <h5 class="mb-0"> <button class="btn btn-link" data-toggle="collapse" aria-expanded="true"></button> </h5> </div> <div class="collapse" data-parent="#cb-accordion"> <div class="card-body"></div> </div></div>';
-
-   var accordion = $("#cb-accordion");
-
-    return function(student) {
-
-        var card = $(card_template);
-        var id  = "__" + student.id + "__";
-
-        card.find(".card-header")
-            .attr("id", "heading-" + id);
-
-        card.find(".card-header >  h5 > button")
-            .attr("data-target", "#" + id)
-            .attr("aria-controls", id)
-            .text(student.id);
-
-        card.find(".card-body")
-            .text(student.files[0].doc);
-
-        card.children("div:nth-child(2)")
-            .attr("id", id)
-            .attr("aria-labelledby", "heading-" + id);
-
-        accordion.append(card);
-    }
-}());

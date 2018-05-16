@@ -30,7 +30,7 @@
       <div class="container">
         <div id="cb-accordion">
         </div>
-        <button class="btn btn-primary" type="button">Submit</button>
+        <button class="btn btn-primary" type="button">Submit</button> 
       </div>
     </div>
 
@@ -39,7 +39,7 @@
     <!-- Macro File Dialog -->
     <form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post">
       <fieldset style="display:none;">
-        <input type="file" id="file-dialog" onchange="cb.handleFiles(this.files)">
+        <input type="file" id="file-dialog" onchange="cb.mm.handleFiles(this.files)">
       </fieldset>
     </form>
 
@@ -99,7 +99,7 @@
               <h5 class="dropdown-header">Developer</h5>
               <a href="#"
                  class="dropdown-item" 
-                 onclick="cb.toggleNav()">
+                 onclick="cb.cm.toggleNav()">
                 <span id="check-correction-mode"
                       style="visibility: hidden;">
                   <i class="fa fa-check"></i> 
@@ -108,7 +108,7 @@
               </a>
               <a id="load-macros"
                  href="#"
-                 onclick="cb.loadMacrosDialog()"
+                 onclick="cb.mm.loadMacrosDialog()"
                  class="dropdown-item">
                 <span style="visibility: hidden;">
                   <i class="fa fa-check"></i>
@@ -272,6 +272,7 @@
     <script src="include/drawing.js"></script>
     <script src="include/actions.js"></script>
     <script src="include/editors.js"></script>
+    <script src="include/corrector.js"></script>
     <script src="include/feedback.js"></script>
     <script src="include/builtins.js"></script> 
     <script src="include/fs.js"></script>
@@ -280,7 +281,6 @@
     <script src="include/output.js"></script>
     <script src="include/jquery.visibility.js"></script>
     <script>cb.query(null);</script>
-    <script>cb.generateDEBUG();</script>
 
   </body>
 
