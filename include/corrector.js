@@ -1,7 +1,7 @@
 /*
  * Copyright 2018 Marc Feeley
  *
- * -- CBCorrectorManager File system --
+ * -- CodeBoot Corrector system --
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,6 +38,9 @@
  */
 
 
+/*============================================================================+
+ |                          CodeBoot Macros Manager                           |
+ +============================================================================*/
 const MACROS_FILE_DIALOG = "#file-dialog";
 
 
@@ -47,9 +50,11 @@ function CBMacrosManager() {
     this.macros = {"Ctrl-1":"Hello world!"};
 }
 
+
 CBMacrosManager.prototype.loadMacrosDialog = function() {
     $(MACROS_FILE_DIALOG).click();
 };
+
 
 CBMacrosManager.prototype.handleFiles = function(files) {
 
@@ -73,10 +78,80 @@ CBMacrosManager.prototype.handleFiles = function(files) {
 
 };
 
+
 CBMacrosManager.prototype.insertMacros = function(macro) {
     setTimeout($.proxy(cb.fm.createMark(macro), this), 0);
 };
 
+
+
+
+/*============================================================================+
+ |                         CodeBoot Corrector Manager                         |
+ +============================================================================*/
+const CORRECTION_WIDTH = "250px";
+const DEBUG =
+      {
+          students:
+          [
+              {
+                  id:"Bar",
+                  files:
+                  [
+                      {
+                          filename:"BAR",
+                          content:"BAR BAR BAR BAR",
+                          meta:
+                          [
+                              ["Timestamp", "2018/01/02"],
+                              ["Length", 15],
+                              ["Corrected", false],
+                              ["TODO", "Bar"]
+                          ]
+                      },
+
+                      {
+                          filename:"BAR2",
+                          content:"BAR2 BAR2 BAR2 BAR2",
+                          meta:
+                          [
+                              ["Timestamp", "2018/01/03"],
+                              ["Length", 19],
+                              ["Corrected", true],
+                              ["TODO", "Bar2"]
+                          ]
+                      }
+
+                  ]
+              },
+
+              {
+                  id:"Foo",
+                  files:
+                  [
+                      {
+                          filename:"FOO",
+                          content:"FOO FOO FOO FOO",
+                          meta:
+                          [
+                              ["Timestamp", "2018/03/02"],
+                              ["Length", 16],
+                              ["Corrected", true],
+                              ["TODO", "Very long long long long text"],
+                              ["Others", "Foo foo foo"]
+                          ]
+                      }
+                  ]
+              }
+          ]
+};
+
+function CBCorrectorManager() {
+
+    this.contexts       = {"main":cb.fs};
+    this.currentContext = "main";
+    this.lastContext    = "main";
+}
 
 
 CBCorrectorManager.prototype.toggleNav = (function() {
@@ -94,39 +169,6 @@ CBCorrectorManager.prototype.toggleNav = (function() {
     }
 }());
 
-const CORRECTION_WIDTH = "250px";
-const DEBUG =
-      {
-          students:
-          [
-              {
-                  id:"Bar",
-                  files:
-                  [
-                      {
-                          filename:"BAR",
-                          content:"BBBB"
-                      }
-                  ]
-              },
-              {
-                  id:"Foo",
-                  files:
-                  [
-                      {
-                          filename:"FOO",
-                          content:"FFFF"
-                      }
-                  ]
-              }
-          ]
-};
-
-function CBCorrectorManager() {
-
-    this.contexts = {"main":cb.fs};
-
-}
 
 CBCorrectorManager.prototype.closeNav = function() {
     $("#cb-sidenav").width("0");
@@ -135,13 +177,13 @@ CBCorrectorManager.prototype.closeNav = function() {
     this.switchContext("main");
 };
 
+
 CBCorrectorManager.prototype.openNav = function() {
     $("#cb-sidenav").width(CORRECTION_WIDTH);
     $("main").css("margin-left", CORRECTION_WIDTH);
     $("#check-correction-mode").css("visibility", "visible");
+    this.switchContext(this.lastContext);
 };
-
-
 
 
 CBCorrectorManager.prototype.createContext = function(student) {
@@ -154,8 +196,8 @@ CBCorrectorManager.prototype.createContext = function(student) {
         var file = new CBFile(fs, f.filename, f.content);
         fs.addFile(file);
     });
-
 };
+
 
 CBCorrectorManager.prototype.switchContext = function(id) {
 
@@ -170,7 +212,12 @@ CBCorrectorManager.prototype.switchContext = function(id) {
     }
 
     cb.fs.rebuildFileMenu();
+
+
+    this.lastContext    = this.currentContext;
+    this.currentContext = id;
 };
+
 
 CBCorrectorManager.prototype.addStudent = (function() {
 
@@ -184,16 +231,21 @@ CBCorrectorManager.prototype.addStudent = (function() {
         var id  = "__" + student.id + "__";
 
         card.find(".card-header")
-            .attr("id", "heading-" + id)
-            .click($.proxy(this.switchContext, this, student.id));
+            .attr("id", "heading-" + id);
 
         card.find(".card-header >  h5 > button")
             .attr("data-target", "#" + id)
             .attr("aria-controls", id)
-            .text(student.id);
+            .text(student.id)
+            .click($.proxy(this.switchContext, this, student.id));
 
-        card.find(".card-body")
-            .text(student.files[0].doc);
+        student.files.forEach(function(file) {
+
+            card.find(".card-body")
+                .append('<h5 class="card-subtitle mb-2 text-muted">' + file.filename + '</h5>')
+                .append('<p class="card-text">' + file.meta.map((m) => {return "<strong>" + m[0] + ":</strong> " + m[1];}).join("<br>") + '</p>')
+                .append("<hr>");
+        });
 
         card.children("div:nth-child(2)")
             .attr("id", id)

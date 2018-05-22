@@ -149,10 +149,11 @@ CBFile.prototype.save = function () {
         var newContent = this.editor.getValue();
         if (newContent !== oldContent) {
             this.content = newContent;
-            this.feedbacks = cb.fm.serializeMarks(this.editor);
             this.stamp += 1;
         }
     }
+
+    this.feedbacks = cb.fm.serializeMarks(this.editor);
 };
 
 CBFile.prototype.serialize = function () {
@@ -187,7 +188,7 @@ function CBFileManager() {
     this.editorManager = undefined;
     new CBFileEditorManager(this);
     //new CBFeedbackManager(this);
-    this.init(rebuild);
+    this.init();
 }
 
 CBFileManager.prototype.init = function () {
