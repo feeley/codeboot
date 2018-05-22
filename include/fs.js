@@ -183,17 +183,17 @@ CBFile.prototype.clone = function () {
     return other;
 };
 
-function CBFileManager(rebuild) {
+function CBFileManager() {
     this.editorManager = undefined;
     new CBFileEditorManager(this);
+    //new CBFeedbackManager(this);
     this.init(rebuild);
 }
 
-CBFileManager.prototype.init = function (rebuild) {
+CBFileManager.prototype.init = function () {
     this.removeAllEditors();
     this.clear();
-    if (rebuild === false)
-        this.rebuildFileMenu();
+    this.rebuildFileMenu();
 };
 
 CBFileManager.prototype.clear = function () {

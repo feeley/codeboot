@@ -200,7 +200,7 @@ CBCorrectorManager.prototype.addStudent = (function() {
             .attr("aria-labelledby", "heading-" + id);
 
         accordion.append(card);
-    }
+    };
 }());
 
 
