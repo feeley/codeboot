@@ -474,7 +474,7 @@ function cb_internal_getBounds($element) {
 }
 
 CodeBoot.prototype.focusREPL = function () {
-//    cb.replInput.focus();
+    //    cb.replInput.focus();
     cb.repl.focus();
 };
 
@@ -488,5 +488,59 @@ CodeBoot.prototype.focusLastFocusedEditor = function () {
     }
 }
 
+
+CodeBoot.prototype.fuzzy_search = function(text, search) {
+
+    var match = {score:0, match:text};
+    var pos = 0;
+
+    text = text.toLowerCase();
+    search = search.toLowerCase();
+
+    /* Calculate score base on fuzzy match */
+    for (var i=0; i < text.length && pos < search.length; ++i) {
+	
+	if (text[i] === search[pos]) {
+
+	    match.score += search.length - (i - pos);
+	    
+	    ++pos;
+	}
+    }
+
+
+    /* Remove score base on length text difference */
+    match.score -= Math.abs(search.length - pos);
+
+    return match;
+};
+
+
+const MAX_FUZZY_MATCH = 3;
+CodeBoot.prototype.get_fuzzy_match = function (name) {
+
+    var possible_match = Object.keys(cb.globalObject);
+
+    var matchs = [];
+
+    var min_score = 0;
+    
+    possible_match.forEach(function (pm) {
+	var match = cb.fuzzy_search(pm, name);
+	
+	if (match.score >= min_score) {
+	    min_score = match.score;
+	    matchs.push(match);
+	}
+    });
+
+
+
+    /* Sort match by their score */
+    matchs.sort(function (x, y) { return y.score - x.score; });
+
+
+    return matchs.map(function(m) { return m.match;}).slice(0, MAX_FUZZY_MATCH);    
+};
 
 

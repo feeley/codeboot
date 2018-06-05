@@ -100,26 +100,21 @@ const DEBUG =
                   [
                       {
                           filename:"BAR",
-                          content:"BAR BAR BAR BAR",
+                          content:"function BAR() {\n print('BAR');\n}",
                           meta:
-                          [
-                              ["Timestamp", "2018/01/02"],
-                              ["Length", 15],
-                              ["Corrected", false],
-                              ["TODO", "Bar"]
-                          ]
+			  [
+			      {"label":"corrected", "type":"bool", "value":true},
+			      {"label":"timestamp", "type":"date", "value":new Date(2018, 1, 3, 0, 0, 0, 0)}
+			  ]
                       },
-
                       {
                           filename:"BAR2",
-                          content:"BAR2 BAR2 BAR2 BAR2",
+                          content:"function BAR2() {\n prinnt('BAR2')\n}",
                           meta:
-                          [
-                              ["Timestamp", "2018/01/03"],
-                              ["Length", 19],
-                              ["Corrected", true],
-                              ["TODO", "Bar2"]
-                          ]
+			  [
+			      {"label":"corrected", "type":"bool", "value":false},
+			      {"label":"timestamp", "type":"date", "value":new Date(2018, 1, 3, 0, 0, 0, 0)}
+			  ]
                       }
 
                   ]
@@ -131,15 +126,12 @@ const DEBUG =
                   [
                       {
                           filename:"FOO",
-                          content:"FOO FOO FOO FOO",
+                          content:"function FOO() {\n print('Foo');\n}",
                           meta:
-                          [
-                              ["Timestamp", "2018/03/02"],
-                              ["Length", 16],
-                              ["Corrected", true],
-                              ["TODO", "Very long long long long text"],
-                              ["Others", "Foo foo foo"]
-                          ]
+			  [			
+			      {"label":"corrected", "type":"bool", "value":true},
+			      {"label":"timestamp", "type":"date", "value":new Date(2018, 1, 3, 0, 0, 0, 0)}
+			  ]
                       }
                   ]
               }
@@ -188,7 +180,7 @@ CBCorrectorManager.prototype.openNav = function() {
 
 CBCorrectorManager.prototype.createContext = function(student) {
 
-    var fs = new CBFileManager(false);
+    var fs = new CBFileManager();
 
     this.contexts[student.id] = fs;
 
@@ -243,7 +235,7 @@ CBCorrectorManager.prototype.addStudent = (function() {
 
             card.find(".card-body")
                 .append('<h5 class="card-subtitle mb-2 text-muted">' + file.filename + '</h5>')
-                .append('<p class="card-text">' + file.meta.map((m) => {return "<strong>" + m[0] + ":</strong> " + m[1];}).join("<br>") + '</p>')
+                .append('<p class="card-text">' + file.meta.map((m) => {return "<strong>" + m.label + ":</strong> " + m.value;}).join("<br>") + '</p>')
                 .append("<hr>");
         });
 

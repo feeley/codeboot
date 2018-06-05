@@ -707,11 +707,11 @@ CodeBoot.prototype.stopAnimation = function () {
     return id !== null; // returns true if a time-based animation was cancelled
 };
 
-CodeBoot.prototype.stop = function (reason) {
-
+CodeBoot.prototype.stop = function (reason, fuzzy_matchs) {
+    
     if (cb.programState.mode !== cb.modeStopped()) {
 
-        var msg = $('<span class="cb-repl-error"/>');
+        var msg   = $('<span class="cb-repl-error"/>');	
         var withStepCounter = cb.showingStepCounter();
 
         if (reason !== null) {
@@ -740,6 +740,13 @@ CodeBoot.prototype.stop = function (reason) {
         }
 
         cb.enterMode(cb.modeStopped());
+
+	if (typeof fuzzy_matchs !== "undefined") {
+	    
+	    msg.append($('<span class="cb-repl-error"></br>Did you mean: </span>'));
+	
+	    fuzzy_matchs.forEach(function(f) { msg.append($('<span class="cb-repl-error" style="font-weight:bold"></br>- ' + f + '</span>')); });
+	}
     }
 };
 
@@ -1123,6 +1130,7 @@ well_known_global['setTimeout'] = true;
 well_known_global['clearTimeout'] = true;
 well_known_global['readFile'] = true;
 well_known_global['writeFile'] = true;
+well_known_global['help'] = true;
 
 CodeBoot.prototype.execute = function (single_step) {
     if (false && cb.hideExecPoint()) { //TODO: find a better way... this causes too much flicker
@@ -1189,7 +1197,7 @@ CodeBoot.prototype.execute2 = function (single_step) {
         } else {
 
             if (rte.error !== null) {
-                cb.executionEndedWithError(String(rte.error));
+                cb.executionEndedWithError(String(rte.error), rte.fuzzy_matchs);
             } else {
                 cb.executionEndedWithResult(rte.getResult());
             }
@@ -1201,8 +1209,8 @@ CodeBoot.prototype.execute2 = function (single_step) {
     code_queue_check();
 };
 
-CodeBoot.prototype.executionEndedWithError = function (msg) {
-    cb.stop(msg);
+CodeBoot.prototype.executionEndedWithError = function (msg, fuzzy) {
+    cb.stop(msg, fuzzy);
 };
 
 CodeBoot.prototype.executionEndedWithResult = function (result) {

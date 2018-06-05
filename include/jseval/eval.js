@@ -209,7 +209,7 @@ jev.compile = function (source, options) {
     var s = new Scanner(port, opts.error, opts.container.start_line, opts.container.start_column);
     var p = new Parser(s, opts.warnings);
     var ast = filterAST(p.parse(), source);
-
+    
     if (detectEmpty) {
         if (ast instanceof Program) {
             var block = ast.block;
@@ -1627,10 +1627,17 @@ jev.compExpr = function (cte, ast) {
                     }
                 } else {
                     if (error_msg !== false) {
+
+			var fuzzy_matchs = cb.get_fuzzy_match(name);
+
+			if (fuzzy_matchs.length === 0)
+			    fuzzy_matchs = undefined;
+			
                         return jev.step_error(rte,
                                               cont,
                                               ast,
-                                              "cannot read the undeclared global variable " + name);
+                                              "cannot read the undeclared global variable " + name,
+					      fuzzy_matchs);
                     }
                 }
                 return jev.step_end(rte,
@@ -2810,10 +2817,11 @@ jev.step_end = function (rte, cont, ast, result) {
     }
 };
 
-jev.step_error = function (rte, cont, ast, error) {
+jev.step_error = function (rte, cont, ast, error, fuzzy_matchs) {
 
     rte.ast = ast;
     rte.error = error;
+    rte.fuzzy_matchs = fuzzy_matchs;
     rte.resume = null;
 
     return null;

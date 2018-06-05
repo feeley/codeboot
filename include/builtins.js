@@ -76,6 +76,18 @@ builtin_print.toString = function () {
 
 cb.setGlobal('print', builtin_print);
 
+
+function builtin_help() {
+    return;
+}
+
+builtin_help.toString = function () {
+    return Object.keys(cb.globalObject).sort().map((k)=>{return '- '+k;}).join('\n');
+}
+
+cb.setGlobal("help", builtin_help);
+    
+
 // alert
 
 function builtin_alert() {
