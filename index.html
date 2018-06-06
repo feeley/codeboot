@@ -14,8 +14,10 @@
     <link rel="stylesheet" href="include/font-awesome-4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="include/tippyjs-1.2.0/dist/tippy.css">
     <link rel="stylesheet" href="include/bootstrap-4.0.0-beta-dist/css/bootstrap.min.css">
+
     <link rel="stylesheet" href="include/CodeMirror/lib/codemirror.css">
     <link rel="stylesheet" href="include/codeboot.css">
+    <link rel="stylesheet" href="include/bootstrap-toggle-master/css/bootstrap-toggle.min.css">
 
   </head>
 
@@ -30,7 +32,7 @@
       <div class="container">
         <div id="cb-accordion"></div>
         <hr>
-        <button class="btn btn-primary" type="button">Submit</button> 
+        <button class="btn btn-primary" type="button">Submit</button>
       </div>
     </div>
 
@@ -39,7 +41,13 @@
     <!-- Macro File Dialog -->
     <form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post">
       <fieldset style="display:none;">
-        <input type="file" id="file-dialog" onchange="cb.mm.handleFiles(this.files)">
+        <input type="file" id="cb-macro-file-dialog" onchange="cb.mm.handleFiles(this.files)">
+      </fieldset>
+    </form>
+
+    <form id="correctorFile" name="correctorFile" enctype="multipart/form-data" method="post">
+      <fieldset style="display:none">
+	<input type="file" id="cb-corrector-file-dialog" onchange="cb.cm.handleFiles(this.files)">
       </fieldset>
     </form>
 
@@ -87,7 +95,7 @@
               <h5 class="dropdown-header">Editing</h5>
               <a href="#" class="dropdown-item" data-cb-setting-editor="line-numbers"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Show line numbers</a>
               <a href="#" class="dropdown-item" data-cb-setting-editor="large-font"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Large font</a>
-              
+
               <div class="dropdown-divider"></div>
 
               <h5 class="dropdown-header">Graphics</h5>
@@ -98,11 +106,11 @@
               <!-- Macro File Dialog Action -->
               <h5 class="dropdown-header">Developer</h5>
               <a href="#"
-                 class="dropdown-item" 
+                 class="dropdown-item"
                  onclick="cb.cm.toggleNav()">
                 <span id="check-correction-mode"
                       style="visibility: hidden;">
-                  <i class="fa fa-check"></i> 
+                  <i class="fa fa-check"></i>
                 </span>&nbsp;&nbsp;
                 Correction Mode
               </a>
@@ -115,6 +123,15 @@
                 </span>&nbsp;&nbsp;
                 Macros
               </a>
+	      <a id="load-correction-template"
+		 href="#"
+		 onclick="cb.cm.loadTemplateDialog()"
+		 class="dropdown-item">
+		<span style="visisbily:hidden;">
+		  <i class="fa fa-checl"></i>
+		</span>&nbsp;&nbsp;
+		Correction Template
+	      </a>
             </div>
           </span>
 
@@ -187,7 +204,7 @@
 			                ></textarea>
 	            </div>
 	            <br>
-	            <div class="row  cb-file-container">		      
+	            <div class="row  cb-file-container">
 		          <textarea class="form-control"
 			                id="cb-mark-textarea"
 			                rows="10"
@@ -196,8 +213,8 @@
 	          </div>
 	        </div>
             <div class="modal-footer">
-              <button type="button" id="cb-feedback-prev" class="btn btn-outline-primary">Prev</button>
-              <button type="button" id="cb-feedback-next" class="btn btn-outline-primary">Next</button>
+              <button type="button" id="cb-feedback-prev" class="btn btn-outline-primary">&lt;</button>
+              <button type="button" id="cb-feedback-next" class="btn btn-outline-primary">&gt;</button>
             </div>
 	      </div>
         </div>
@@ -207,11 +224,11 @@
     <div id="cb-editors">
       <ul id="cb-file-tabs" class="nav nav-tabs"></ul>
     </div>
-    
+
     <div id="cb-footer"></div>
 
     </main>
-    
+
     <!---------------------------------------------------------------------------->
 
     <!-- Hidden elements -->
@@ -274,13 +291,15 @@
     <script src="include/editors.js"></script>
     <script src="include/corrector.js"></script>
     <script src="include/feedback.js"></script>
-    <script src="include/builtins.js"></script> 
+    <script src="include/builtins.js"></script>
     <script src="include/fs.js"></script>
     <script src="include/storage.js"></script>
     <script src="include/tutorial.js"></script>
     <script src="include/output.js"></script>
     <script src="include/jquery.visibility.js"></script>
     <script>cb.query(null);</script>
+
+    <script src="include/bootstrap-toggle-master/js/bootstrap-toggle.min.js"></script>
 
   </body>
 

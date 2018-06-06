@@ -1,69 +1,6 @@
 // JavaScript builtins
 
-function importFromHost(global) {
-
-    var hostGlobalObject = (function () { return this; }());
-
-    if (global in hostGlobalObject) {
-        cb.setGlobal(global, hostGlobalObject[global]);
-    }
-}
-
-function exportToHost(global) {
-
-    var hostGlobalObject = (function () { return this; }());
-
-    hostGlobalObject[global] = function () {
-        var fn = cb.getGlobal(global);
-        return fn.apply(hostGlobalObject, arguments);
-    };
-}
-
-exportToHost('clic');
-exportToHost('init');
-
-function importStandardFromHost() {
-
-    importFromHost('NaN');
-    importFromHost('Infinity');
-    importFromHost('undefined');
-    importFromHost('parseInt');
-    importFromHost('parseFloat');
-    importFromHost('isNaN');
-    importFromHost('isFinite');
-    importFromHost('decodeURI');
-    importFromHost('encodeURI');
-    importFromHost('decodeURIComponent');
-    importFromHost('encodeURIComponent');
-
-    importFromHost('Object');
-    importFromHost('Function');
-    importFromHost('Array');
-    importFromHost('String');
-    importFromHost('Boolean');
-    importFromHost('Number');
-    importFromHost('Date');
-    importFromHost('RegExp');
-    importFromHost('Error');
-    importFromHost('EvalError');
-    importFromHost('RangeError');
-    importFromHost('ReferenceError');
-    importFromHost('SyntaxError');
-    importFromHost('TypeError');
-    importFromHost('URIError');
-
-    importFromHost('Math');
-    importFromHost('JSON');
-
-    importFromHost('document');
-    //importFromHost('alert');
-    //importFromHost('prompt');
-}
-
-importStandardFromHost();
-
 // print
-
 function builtin_print() {
     cb.addTranscriptREPL(Array.prototype.slice.call(arguments).join('') + '\n',
                          'cb-repl-output');
@@ -74,82 +11,67 @@ builtin_print.toString = function () {
     return 'function print(value) { ... }';
 };
 
-cb.setGlobal('print', builtin_print);
 
-
-function builtin_help() {
-    return;
-}
+function builtin_help() {}
 
 builtin_help.toString = function () {
-    return Object.keys(cb.globalObject).sort().map((k)=>{return '- '+k;}).join('\n');
+    return Object.keys(cb.builtins).sort().map((k)=>{return '- '+k;}).join('\n');
 }
 
-cb.setGlobal("help", builtin_help);
-    
 
 // alert
-
 function builtin_alert() {
-    var hostGlobalObject = (function () { return this; }());
-    return alert.apply(hostGlobalObject, arguments);
+    return alert.apply(cb.hostGlobalObject, arguments);
 }
 
 builtin_alert.toString = function () {
     return 'function alert(value) { ... }';
 };
 
-cb.setGlobal('alert', builtin_alert);
+
 
 // prompt
-
 function builtin_prompt() {
-    var hostGlobalObject = (function () { return this; }());
-    return prompt.apply(hostGlobalObject, arguments);
+    return prompt.apply(cb.hostGlobalObject, arguments);
 }
 
 builtin_prompt.toString = function () {
     return 'function prompt(value) { ... }';
 };
 
-cb.setGlobal('prompt', builtin_prompt);
+
 
 // confirm
-
 function builtin_confirm() {
-    var hostGlobalObject = (function () { return this; }());
-    return confirm.apply(hostGlobalObject, arguments);
+    return confirm.apply(cb.hostGlobalObject, arguments);
 }
 
 builtin_confirm.toString = function () {
     return 'function confirm(value) { ... }';
 };
 
-cb.setGlobal('confirm', builtin_confirm);
+
 
 // load
-
 builtin_load.toString = function () {
     return 'function load(filename) { ... }';
 };
 
-cb.setGlobal('load', builtin_load);
+
 
 // pause
-
 builtin_pause.toString = function () {
     return 'function pause() { ... }';
 };
 
-cb.setGlobal('pause', builtin_pause);
+
 
 // assert
-
 builtin_assert.toString = function () {
     return 'function assert(condition) { ... }';
 };
 
-cb.setGlobal('assert', builtin_assert);
+
 
 // setScreenMode
 
@@ -157,7 +79,7 @@ builtin_setScreenMode.toString = function () {
     return 'function setScreenMode(width, height) { ... }';
 };
 
-cb.setGlobal('setScreenMode', builtin_setScreenMode);
+
 
 // getScreenWidth
 
@@ -165,7 +87,7 @@ builtin_getScreenWidth.toString = function () {
     return 'function getScreenWidth() { ... }';
 };
 
-cb.setGlobal('getScreenWidth', builtin_getScreenWidth);
+
 
 // getScreenHeight
 
@@ -173,130 +95,111 @@ builtin_getScreenHeight.toString = function () {
     return 'function getScreenHeight() { ... }';
 };
 
-cb.setGlobal('getScreenHeight', builtin_getScreenHeight);
+
 
 // setPixel
-
 builtin_setPixel.toString = function () {
     return 'function setPixel(x, y, color) { ... }';
 };
 
-cb.setGlobal('setPixel', builtin_setPixel);
+
 
 // exportScreen
-
 builtin_exportScreen.toString = function () {
     return 'function exportScreen() { ... }';
 };
 
-cb.setGlobal('exportScreen', builtin_exportScreen);
+
 
 // cs
-
 builtin_cs.toString = function () {
     return 'function cs() { ... }';
 };
 
-cb.setGlobal('cs', builtin_cs);
+
 
 // pu
-
 builtin_pu.toString = function () {
     return 'function pu() { ... }';
 };
 
-cb.setGlobal('pu', builtin_pu);
+
 
 // pd
-
 builtin_pd.toString = function () {
     return 'function pd() { ... }';
 };
 
-cb.setGlobal('pd', builtin_pd);
+
 
 // st
-
 builtin_st.toString = function () {
     return 'function st() { ... }';
 };
 
-cb.setGlobal('st', builtin_st);
+
 
 // ht
-
 builtin_ht.toString = function () {
     return 'function ht() { ... }';
 };
 
-cb.setGlobal('ht', builtin_ht);
+
 
 // fd
-
 builtin_fd.toString = function () {
     return 'function fd(xdistance, ydistance) { ... }';
 };
 
-cb.setGlobal('fd', builtin_fd);
+
 
 // bk
-
 builtin_bk.toString = function () {
     return 'function bk(xdistance, ydistance) { ... }';
 };
 
-cb.setGlobal('bk', builtin_bk);
+
 
 // mv
-
 builtin_mv.toString = function () {
     return 'function mv(x, y) { ... }';
 };
 
-cb.setGlobal('mv', builtin_mv);
+
 
 // lt
-
 builtin_lt.toString = function () {
     return 'function lt(angle) { ... }';
 };
 
-cb.setGlobal('lt', builtin_lt);
+
 
 // rt
-
 builtin_rt.toString = function () {
     return 'function rt(angle) { ... }';
 };
 
-cb.setGlobal('rt', builtin_rt);
 
 // setpc
-
 builtin_setpc.toString = function () {
     return 'function setpc(r, g, b) { ... }';
 };
 
-cb.setGlobal('setpc', builtin_setpc);
 
 // setpw
-
 builtin_setpc.toString = function () {
     return 'function setpw(width) { ... }';
 };
 
-cb.setGlobal('setpw', builtin_setpw);
 
 // drawtext
-
 builtin_drawtext.toString = function () {
     return 'function drawtext(text) { ... }';
 };
 
-cb.setGlobal('drawtext', builtin_drawtext);
+
 
 // setTimeout
-
 function builtin_setTimeout(func, delay) {
     throw 'setTimeout must be called from codeBoot code';
 }
@@ -325,8 +228,6 @@ builtin_setTimeout._apply_ = function (rte, cont, this_, params) {
             throw 'delay parameter of setTimeout must be a number';
         }
 
-        var hostGlobalObject = (function () { return this; }());
-
         var f = function () {
             code_queue_add(
                 function (rte, cont) {
@@ -334,7 +235,7 @@ builtin_setTimeout._apply_ = function (rte, cont, this_, params) {
                 });
         };
 
-        var result = setTimeout.apply(hostGlobalObject, [f, delay]);
+        var result = setTimeout.apply(cb.hostGlobalObject, [f, delay]);
 
         return return_fn_body(rte, result);
     };
@@ -350,10 +251,7 @@ builtin_setTimeout._apply_ = function (rte, cont, this_, params) {
                         null);
 };
 
-cb.setGlobal('setTimeout', builtin_setTimeout);
-
 // clearTimeout
-
 function builtin_clearTimeout(timeoutID) {
     var hostGlobalObject = (function () { return this; }());
     return clearTimeout.apply(hostGlobalObject, [timeoutID]);
@@ -363,20 +261,121 @@ builtin_clearTimeout.toString = function () {
     return 'function clearTimeout(timeoutID) { ... }';
 };
 
-cb.setGlobal('clearTimeout', builtin_clearTimeout);
-
 // readFile
-
 builtin_readFile.toString = function () {
     return 'function readFile(filename) { ... }';
 };
 
-cb.setGlobal('readFile', builtin_readFile);
-
 // writeFile
-
 builtin_writeFile.toString = function () {
     return 'function writeFile(filename, content) { ... }';
 };
 
-cb.setGlobal('writeFile', builtin_writeFile);
+
+function __importFromHost(id) {
+    cb.builtins[id] = cb.hostGlobalObject[id];
+}
+
+
+function __exportToHost(id) {
+
+    cb.hostGlobalObject[id] = function () {
+	var fn = cb.getGlobal(id);
+	return fn.apply(cb.hostGlobalObject, arguments);
+    };
+}
+
+function __registerBuiltin(name, fn) {
+    cb.builtins[name] = fn;
+}
+
+CodeBoot.prototype.generateBuiltins = (function () {
+
+    /**
+     *  - To add a function to export to host:
+     *        Add the function' name to export_str.
+     */
+    var export_str = ['clic',
+		      'init'];
+
+    /**
+     *  - To add a function to import to host:
+     *        Add the function' name to import_str.
+     */
+    var import_str = ['NaN',
+		      'Infinity',
+		      'undefined',
+		      'parseInt',
+		      'parseFloat',
+		      'isNaN',
+		      'isFinite',
+		      'decodeURI',
+		      'encodeURI',
+		      'decodeURIComponent',
+		      'encodeURIComponent',
+		      'Object',
+		      'Function',
+		      'Array',
+		      'String',
+		      'Boolean',
+		      'Number',
+		      'Date',
+		      'RegExp',
+		      'Error',
+		      'EvalError',
+		      'RangeError',
+		      'ReferenceError',
+		      'SyntaxError',
+		      'TypeError',
+		      'URIError',
+		      'Math',
+		      'JSON',
+		      'document'];
+
+    /**
+     * - To add a builtin function:
+     *         Add an array with the name of the function at the first index and a
+     *         reference to the function to call at the second index.
+     */
+    var builtins = [['print', builtin_print],
+		    ['help', builtin_help],
+		    ['alert', builtin_alert],
+		    ['prompt', builtin_prompt],
+		    ['confirm', builtin_confirm],
+		    ['load', builtin_load],
+		    ['pause', builtin_pause],
+		    ['assert', builtin_assert],
+		    ['setScreenMode', builtin_setScreenMode],
+		    ['getScreenWidth', builtin_getScreenWidth],
+		    ['getScreenHeight', builtin_getScreenHeight],
+		    ['setPixel', builtin_setPixel],
+		    ['exportScreen', builtin_exportScreen],
+		    ['cs', builtin_cs],
+		    ['pu', builtin_pu],
+		    ['pd', builtin_pd],
+		    ['st', builtin_st],
+		    ['ht', builtin_ht],
+		    ['fd', builtin_fd],
+		    ['bk', builtin_bk],
+		    ['mv', builtin_mv],
+		    ['lt', builtin_lt],
+		    ['rt', builtin_rt],
+		    ['setpc', builtin_setpc],
+		    ['setpw', builtin_setpw],
+		    ['drawtext', builtin_drawtext],
+		    ['setTimeout', builtin_setTimeout],
+		    ['clearTimeout', builtin_clearTimeout],
+		    ['readFile', builtin_readFile],
+		    ['writeFile', builtin_writeFile]];
+
+    return function () {
+	export_str.forEach((id)=>{__exportToHost(id);});
+	import_str.forEach((id)=>{__importFromHost(id);});
+	builtins.forEach((fn)=>{__registerBuiltin(fn[0], fn[1]);});
+    };
+}());
+
+
+CodeBoot.prototype.clone = function(obj) {
+    return Object.assign({}, obj);
+};

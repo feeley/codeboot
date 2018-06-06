@@ -1630,14 +1630,16 @@ jev.compExpr = function (cte, ast) {
 
 			var fuzzy_matchs = cb.get_fuzzy_match(name);
 
-			if (fuzzy_matchs.length === 0)
-			    fuzzy_matchs = undefined;
+			if (fuzzy_matchs.length !== 0)
+			    fuzzy_matchs = '<p class="cb-repl-error"><br>Did you mean: </p>' + '<ul class="cb-repl-error">' +
+			    fuzzy_matchs.map(function(f) { return ('<li style="font-weight:bold;">' + f + '</li>');}).join('') + '</ul>';
+			else
+			    fuzzy_matchs = '';
 			
                         return jev.step_error(rte,
                                               cont,
                                               ast,
-                                              "cannot read the undeclared global variable " + name,
-					      fuzzy_matchs);
+                                              "Cannot read the undeclared global variable <strong>" + name + "</strong>" + fuzzy_matchs);
                     }
                 }
                 return jev.step_end(rte,
@@ -2817,11 +2819,10 @@ jev.step_end = function (rte, cont, ast, result) {
     }
 };
 
-jev.step_error = function (rte, cont, ast, error, fuzzy_matchs) {
+jev.step_error = function (rte, cont, ast, error) {
 
     rte.ast = ast;
     rte.error = error;
-    rte.fuzzy_matchs = fuzzy_matchs;
     rte.resume = null;
 
     return null;

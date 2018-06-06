@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2018 Marc Feeley
  *
@@ -41,7 +42,7 @@
 /*============================================================================+
  |                          CodeBoot Macros Manager                           |
  +============================================================================*/
-const MACROS_FILE_DIALOG = "#file-dialog";
+const MACROS_FILE_DIALOG = "#cb-macro-file-dialog";
 
 
 function CBMacrosManager() {
@@ -75,7 +76,6 @@ CBMacrosManager.prototype.handleFiles = function(files) {
     });
 
     setTimeout(function() {reader.readAsText(json);}, 0);
-
 };
 
 
@@ -89,6 +89,8 @@ CBMacrosManager.prototype.insertMacros = function(macro) {
 /*============================================================================+
  |                         CodeBoot Corrector Manager                         |
  +============================================================================*/
+const TEMPLATE_FILE_DIALOG ="#cb-corrector-file-dialog";
+
 const CORRECTION_WIDTH = "250px";
 const DEBUG =
       {
@@ -99,20 +101,18 @@ const DEBUG =
                   files:
                   [
                       {
-                          filename:"BAR",
-                          content:"function BAR() {\n print('BAR');\n}",
+                          filename:"foo.js",
+                          content:"function FOO() {\n print('FOO in Bar:foo!');\n}",
                           meta:
 			  [
-			      {"label":"corrected", "type":"bool", "value":true},
 			      {"label":"timestamp", "type":"date", "value":new Date(2018, 1, 3, 0, 0, 0, 0)}
 			  ]
                       },
                       {
-                          filename:"BAR2",
-                          content:"function BAR2() {\n prinnt('BAR2')\n}",
+                          filename:"foo2.js",
+                          content:"function FOO() {\n prinnt('FOO in Bar:foo2!');\n}",
                           meta:
 			  [
-			      {"label":"corrected", "type":"bool", "value":false},
 			      {"label":"timestamp", "type":"date", "value":new Date(2018, 1, 3, 0, 0, 0, 0)}
 			  ]
                       }
@@ -125,11 +125,10 @@ const DEBUG =
                   files:
                   [
                       {
-                          filename:"FOO",
-                          content:"function FOO() {\n print('Foo');\n}",
+                          filename:"foo.js",
+                          content:"function FOO() {\n print('FOO in Foo:foo!');\n}",
                           meta:
-			  [			
-			      {"label":"corrected", "type":"bool", "value":true},
+			  [
 			      {"label":"timestamp", "type":"date", "value":new Date(2018, 1, 3, 0, 0, 0, 0)}
 			  ]
                       }
@@ -140,10 +139,53 @@ const DEBUG =
 
 function CBCorrectorManager() {
 
-    this.contexts       = {"main":cb.fs};
+    this.contexts       = {"main":
+			   {
+			       fs:cb.fs,
+			       go:cb.globalObject
+			   }
+			  };
     this.currentContext = "main";
     this.lastContext    = "main";
+
+    this.correction_file = null;
 }
+
+
+CBCorrectorManager.prototype.loadTemplateDialog = function() {
+    $(TEMPLATE_FILE_DIALOG).click();
+};
+
+
+CBCorrectorManager.prototype.handleFiles = function(files) {
+
+    if (!files.length)
+        return;
+
+    var file = files[0];
+
+    var reader = new FileReader();
+
+    var self = this;
+
+    $(reader).on('loadend', function() {
+
+	for (key in self.contexts) {
+	    var fs = self.contexts[key].fs;
+	    var f = new CBFile(fs, file.name,
+			       reader.result);
+
+	    fs.addFile(f);
+
+	    if (fs == cb.fs)
+		f.editor.enable();
+	}
+
+	cb.fs.rebuildFileMenu();
+    });
+
+    setTimeout(function() {reader.readAsText(file);}, 0);
+};
 
 
 CBCorrectorManager.prototype.toggleNav = (function() {
@@ -182,29 +224,35 @@ CBCorrectorManager.prototype.createContext = function(student) {
 
     var fs = new CBFileManager();
 
-    this.contexts[student.id] = fs;
+    // Reference new file manager and create new global object context by cloning
+    // the main.
+    this.contexts[student.id] = {fs:fs,
+				 go:cb.clone(cb.builtins)};
 
     student.files.forEach(function(f) {
         var file = new CBFile(fs, f.filename, f.content);
         fs.addFile(file);
     });
+
+    if (this.correction_file !== null)
+	fs.addFile(new CBFile(fs, this.correction_file.filename, this.correction_file.content));
 };
 
 
 CBCorrectorManager.prototype.switchContext = function(id) {
 
-    var fs = this.contexts[id];
+    var context = this.contexts[id];
 
     cb.fs.editorManager.removeAllEditors();
 
-    cb.fs = fs;
+    cb.fs = context.fs;
+    cb.globalObject = context.go;
 
     for (file in cb.fs.files) {
-        cb.fs.files[file].editor.edit();
+        cb.fs.files[file].editor.enable();
     }
 
     cb.fs.rebuildFileMenu();
-
 
     this.lastContext    = this.currentContext;
     this.currentContext = id;
@@ -223,7 +271,8 @@ CBCorrectorManager.prototype.addStudent = (function() {
         var id  = "__" + student.id + "__";
 
         card.find(".card-header")
-            .attr("id", "heading-" + id);
+            .attr("id", "heading-" + id)
+	    .append('<input ' + 'data-onstyle="success" data-offstyle="danger" data-toggle="toggle" data-style="android" data-off="Not Corrected" data-on="Corrected" type="checkbox">');
 
         card.find(".card-header >  h5 > button")
             .attr("data-target", "#" + id)
@@ -235,7 +284,7 @@ CBCorrectorManager.prototype.addStudent = (function() {
 
             card.find(".card-body")
                 .append('<h5 class="card-subtitle mb-2 text-muted">' + file.filename + '</h5>')
-                .append('<p class="card-text">' + file.meta.map((m) => {return "<strong>" + m.label + ":</strong> " + m.value;}).join("<br>") + '</p>')
+	        .append('<p class="card-text">' + file.meta.map((m) => {return "<strong>" + m.label + ":</strong> " + m.value;}).join("<br>") + '</p>')
                 .append("<hr>");
         });
 

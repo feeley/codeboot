@@ -1,3 +1,4 @@
+
 // codeBoot state
 
 var normalStepDelay = 400; // milliseconds per step
@@ -7,9 +8,6 @@ function CodeBoot() {
     this.builtins = {};
 
     this.hostGlobalObject = (function () { return this; })();
-
-//    this.globalObject = {cb: this};
-    this.globalObject = {};
 
     this.programState = null;
 
@@ -37,8 +35,6 @@ function CodeBoot() {
     this.lastResultRepresentation = null;
 
     this.savedFs = undefined;
-
-
 }
 
 var cb = new CodeBoot();
@@ -287,6 +283,9 @@ CodeBoot.prototype.main = function () {
     cb.alerts = document.getElementById('alerts');
     cb.repl = cb.createREPL();
 
+    cb.generateBuiltins();
+    cb.globalObject = cb.clone(cb.builtins);
+
     cb.fs = new CBFileManager();
     cb.savedFs = cb.fs;
 
@@ -499,18 +498,17 @@ CodeBoot.prototype.fuzzy_search = function(text, search) {
 
     /* Calculate score base on fuzzy match */
     for (var i=0; i < text.length && pos < search.length; ++i) {
-	
+
 	if (text[i] === search[pos]) {
 
 	    match.score += search.length - (i - pos);
-	    
 	    ++pos;
 	}
     }
 
 
     /* Remove score base on length text difference */
-    match.score -= Math.abs(search.length - pos);
+    match.score -= Math.abs(text.length - search.length);
 
     return match;
 };
@@ -523,11 +521,11 @@ CodeBoot.prototype.get_fuzzy_match = function (name) {
 
     var matchs = [];
 
-    var min_score = 0;
-    
+    var min_score = 1;
+
     possible_match.forEach(function (pm) {
 	var match = cb.fuzzy_search(pm, name);
-	
+
 	if (match.score >= min_score) {
 	    min_score = match.score;
 	    matchs.push(match);
@@ -535,12 +533,11 @@ CodeBoot.prototype.get_fuzzy_match = function (name) {
     });
 
 
-
     /* Sort match by their score */
     matchs.sort(function (x, y) { return y.score - x.score; });
 
 
-    return matchs.map(function(m) { return m.match;}).slice(0, MAX_FUZZY_MATCH);    
+    return matchs.map(function(m) { return m.match;}).slice(0, MAX_FUZZY_MATCH);
 };
 
 

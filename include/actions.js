@@ -707,11 +707,11 @@ CodeBoot.prototype.stopAnimation = function () {
     return id !== null; // returns true if a time-based animation was cancelled
 };
 
-CodeBoot.prototype.stop = function (reason, fuzzy_matchs) {
-    
+CodeBoot.prototype.stop = function (reason) {
+
     if (cb.programState.mode !== cb.modeStopped()) {
 
-        var msg   = $('<span class="cb-repl-error"/>');	
+        var msg   = $('<span class="cb-repl-error"/>');
         var withStepCounter = cb.showingStepCounter();
 
         if (reason !== null) {
@@ -725,7 +725,8 @@ CodeBoot.prototype.stop = function (reason, fuzzy_matchs) {
             if (withStepCounter) {
                 reason += ' after ';
             }
-            msg.text(reason);
+
+            msg.html(reason);
         }
 
         if (withStepCounter) {
@@ -741,12 +742,6 @@ CodeBoot.prototype.stop = function (reason, fuzzy_matchs) {
 
         cb.enterMode(cb.modeStopped());
 
-	if (typeof fuzzy_matchs !== "undefined") {
-	    
-	    msg.append($('<span class="cb-repl-error"></br>Did you mean: </span>'));
-	
-	    fuzzy_matchs.forEach(function(f) { msg.append($('<span class="cb-repl-error" style="font-weight:bold"></br>- ' + f + '</span>')); });
-	}
     }
 };
 
@@ -779,7 +774,7 @@ CodeBoot.prototype.within = function (rect, viewport) {
 
     var x = (rect.left + rect.right) / 2;
     var y = (rect.top + rect.bottom) / 2;
- 
+
     //alert(x+','+y+'   '+viewport.left+','+(viewport.left+viewport.clientWidth)+','+viewport.top+','+(viewport.top+viewport.clientHeight));
 
     if (x < viewport.left) return false;
@@ -1197,7 +1192,7 @@ CodeBoot.prototype.execute2 = function (single_step) {
         } else {
 
             if (rte.error !== null) {
-                cb.executionEndedWithError(String(rte.error), rte.fuzzy_matchs);
+                cb.executionEndedWithError(String(rte.error));
             } else {
                 cb.executionEndedWithResult(rte.getResult());
             }
@@ -1209,8 +1204,8 @@ CodeBoot.prototype.execute2 = function (single_step) {
     code_queue_check();
 };
 
-CodeBoot.prototype.executionEndedWithError = function (msg, fuzzy) {
-    cb.stop(msg, fuzzy);
+CodeBoot.prototype.executionEndedWithError = function (msg) {
+    cb.stop(msg);
 };
 
 CodeBoot.prototype.executionEndedWithResult = function (result) {
@@ -1229,7 +1224,7 @@ CodeBoot.prototype.executionEndedWithResult = function (result) {
 };
 
 CodeBoot.prototype.executionHook = function () {
-};              
+};
 
 CodeBoot.prototype.run = function (single_step) {
 
@@ -1275,7 +1270,13 @@ CodeBoot.prototype.run = function (single_step) {
         code_gen = function () {
             var code = cb.compile_internal_file(filename);
             return function (rte, cont) {
-                cb.undeclareGlobals(rte);
+		/////////////////////////////////////////////////////
+		// Allow user to load multiple files without erasing
+		// previous definition in global scope.
+		// Uncomment to deactivate.
+		//
+                // cb.undeclareGlobals(rte);
+		/////////////////////////////////////////////////////
                 return code(rte, cont);
             };
         };
@@ -1843,6 +1844,7 @@ CodeBoot.prototype.syntaxError = function (loc, kind, msg) {
 };
 
 CodeBoot.prototype.errorMessage = function (loc, kind, msg) {
+
     var locText = '';
     if (cb.options.showLineNumbers && loc.container.toString() != '<REPL>') {
         locText = loc.toString('simple') + ': ';
