@@ -103,18 +103,31 @@ const DEBUG =
                       {
                           filename:"foo.js",
                           content:"function FOO() {\n print('FOO in Bar:foo!');\n}",
-                          meta:
-			  [
-			      {"label":"timestamp", "type":"date", "value":new Date(2018, 1, 3, 0, 0, 0, 0)}
-			  ]
+			  meta:
+			  {
+			      stamp:
+			      {
+				  value:"2018-06-12",
+				  type:"date"
+			      },
+			      note:
+			      {
+				  value:0,
+				  type:"number"
+			      }
+			  }
                       },
                       {
                           filename:"foo2.js",
                           content:"function FOO() {\n prinnt('FOO in Bar:foo2!');\n}",
                           meta:
-			  [
-			      {"label":"timestamp", "type":"date", "value":new Date(2018, 1, 3, 0, 0, 0, 0)}
-			  ]
+			  {
+			      stamp:
+			      {
+				  value:"2018-06-12",
+				  type:"date"
+			      },
+			  }
                       }
 
                   ]
@@ -128,9 +141,13 @@ const DEBUG =
                           filename:"foo.js",
                           content:"function FOO() {\n print('FOO in Foo:foo!');\n}",
                           meta:
-			  [
-			      {"label":"timestamp", "type":"date", "value":new Date(2018, 1, 3, 0, 0, 0, 0)}
-			  ]
+			  {
+			      stamp:
+			      {
+				  value:"2018-06-12",
+				  type:"date"
+			      },
+			  }
                       }
                   ]
               }
@@ -172,8 +189,10 @@ CBCorrectorManager.prototype.handleFiles = function(files) {
 
 	for (key in self.contexts) {
 	    var fs = self.contexts[key].fs;
-	    var f = new CBFile(fs, file.name,
-			       reader.result);
+	    var f = new CBFile(fs,
+			       file.name,
+			       reader.result,
+			       null);
 
 	    fs.addFile(f);
 
@@ -230,12 +249,20 @@ CBCorrectorManager.prototype.createContext = function(student) {
 				 go:cb.clone(cb.builtins)};
 
     student.files.forEach(function(f) {
-        var file = new CBFile(fs, f.filename, f.content);
+        var file = new CBFile(fs,
+			      f.filename,
+			      f.content,
+			      {meta:f.meta});
         fs.addFile(file);
     });
 
     if (this.correction_file !== null)
-	fs.addFile(new CBFile(fs, this.correction_file.filename, this.correction_file.content));
+	fs.addFile(new CBFile(fs,
+			      this.correction_file.filename,
+			      this.correction_file.content,
+			      null));
+
+    return fs.files;
 };
 
 
@@ -261,32 +288,55 @@ CBCorrectorManager.prototype.switchContext = function(id) {
 
 CBCorrectorManager.prototype.addStudent = (function() {
 
+    // WARNING: Arcane code is following
+
     const card_template = '<div class="card"> <div class="card-header"> <h5 class="mb-0"> <button class="btn btn-link" data-toggle="collapse" aria-expanded="true"></button> </h5> </div> <div class="collapse" data-parent="#cb-accordion"> <div class="card-body"></div> </div></div>';
 
     var accordion = $("#cb-accordion");
 
-    return function(student) {
+    return function(ID, files) {
 
         var card = $(card_template);
-        var id  = "__" + student.id + "__";
+        var id  = "__" + ID + "__";
+	var body = card.find(".card-body");
 
         card.find(".card-header")
-            .attr("id", "heading-" + id)
-	    .append('<input ' + 'data-onstyle="success" data-offstyle="danger" data-toggle="toggle" data-style="android" data-off="Not Corrected" data-on="Corrected" type="checkbox">');
+            .attr("id", "heading-" + id);
 
         card.find(".card-header >  h5 > button")
             .attr("data-target", "#" + id)
             .attr("aria-controls", id)
-            .text(student.id)
-            .click($.proxy(this.switchContext, this, student.id));
+	    .after('<input ' + 'data-onstyle="success" data-offstyle="danger" data-toggle="toggle" data-style="android" data-off="Not Corrected" data-on="Corrected" type="checkbox">')
+            .text(ID)
+            .click($.proxy(this.switchContext, this, ID));
 
-        student.files.forEach(function(file) {
+	for (key in files) {
 
-            card.find(".card-body")
-                .append('<h5 class="card-subtitle mb-2 text-muted">' + file.filename + '</h5>')
-	        .append('<p class="card-text">' + file.meta.map((m) => {return "<strong>" + m.label + ":</strong> " + m.value;}).join("<br>") + '</p>')
-                .append("<hr>");
-        });
+	    var file = files[key];
+
+	    body.append('<h5 class="card-subtitle mb-2 text-muted">' + file.filename + '</h5>');
+
+	    for (m in file.meta) {
+		var meta = $('<div><label>' + m + '</label>' + '<input style="width:90%;" type="' +   file.meta[m].type + '" value="' + file.meta[m].value + '"></div><br>');
+		// This is where all the magic happens... Plz refactor me.
+		var input = meta[0].children[1];
+		$(input).change((
+		    function() {
+			var f  = file;
+			var _m = m;
+			var __m = input;
+
+			return function() {
+			    f.meta[_m].value = __m.value;
+			};
+		    }
+		)());
+
+		body.append(meta);
+	    }
+
+	    body.append($('<hr>'));
+	}
 
         card.children("div:nth-child(2)")
             .attr("id", id)
@@ -300,7 +350,7 @@ CBCorrectorManager.prototype.addStudent = (function() {
 CBCorrectorManager.prototype.generateDEBUG = function() {
 
     for (var i = 0; i < DEBUG.students.length; i++) {
-        this.addStudent(DEBUG.students[i]);
-        this.createContext(DEBUG.students[i]);
+	var files = this.createContext(DEBUG.students[i]);
+        this.addStudent(DEBUG.students[i].id, files);
     }
 };

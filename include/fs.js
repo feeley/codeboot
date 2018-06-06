@@ -419,7 +419,7 @@ CBFileManager.prototype.addFileToMenu = function (file) {
     var children = $('#cb-file-selection').children();
     for (var i=2; i<children.length; i++) {
         var element = $(children.get(i));
-        if (filename < element.attr(' data-cb-filename')) {
+        if (filename < element.attr('data-cb-filename')) {
             item.insertBefore(element);
             return;
         }
