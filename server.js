@@ -41,17 +41,11 @@
 
 
 /*  =============================== Modules ================================  */
+
 const __express = require('express');
 const __path    = require('path');
 const __exec    = require('child_process').execFile;
 const __body    = require('body-parser');
-
-
-
-
-
-/*  ============================== Constants ===============================  */
-const PORT = 8080;
 
 
 
@@ -70,6 +64,7 @@ function absp(path) {
 
 
 /*  =============================== Routing ================================  */
+
 function route_root(req, res) {
 
     res.sendFile(absp("index.html"));
@@ -98,15 +93,15 @@ function route_download(req, res) {
 
 
 
-
-
 /*  ================================ Server ================================  */
+
 function initServer(server, config) {
-    
+
     config.stack.forEach((m) => server.use(m.route, m.handle));
     config.get.forEach((g) => server.get(g.route, g.handle));
     config.post.forEach((p) => server.post(p.route, p.handle));
 }
+
 
 function runServer(server, port) {
 
@@ -123,6 +118,7 @@ function main(server, config) {
     runServer(server, config.port);
 }
 
+
 var cb_config = {
 
     port:8080,
@@ -136,7 +132,9 @@ var cb_config = {
 	   {route:"", handle:__body.urlencoded({extended:false})}]
 };
 
+
 var cb_server = __express();
+
 
 main(cb_server,
      cb_config);
