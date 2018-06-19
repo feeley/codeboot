@@ -1,5 +1,3 @@
 #!/bin/sh
 
-echo "Content-Type: text/html"
-echo ""
-sed -e "s#<script>cb.query(null);</script>#<script>cb.query(\"$QUERY_STRING\");</script>#" index.html
+sed -e "s#<script>cb.query(null);</script>#<script>cb.query(\"$1\");</script>#" index.html

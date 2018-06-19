@@ -1,3 +1,43 @@
+/*
+ * Copyright 2018 Marc Feeley
+ *
+ * -- CodeBoot Bultins --
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ * may be used to endorse or promote products derived from this software without
+ * specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER INxk
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * CodeBoot Builtins Refractored
+ *
+ * Authors:
+ * - Olivier Dion <olivier.dion@polymtl.ca>
+ */
+
+
 // JavaScript builtins
 
 // print
@@ -295,78 +335,78 @@ CodeBoot.prototype.generateBuiltins = (function () {
      *  - To add a function to export to host:
      *        Add the function' name to export_str.
      */
-    var export_str = ['clic',
-		      'init'];
+    const export_str = ['clic',
+			'init'];
 
     /**
      *  - To add a function to import to host:
      *        Add the function' name to import_str.
      */
-    var import_str = ['NaN',
-		      'Infinity',
-		      'undefined',
-		      'parseInt',
-		      'parseFloat',
-		      'isNaN',
-		      'isFinite',
-		      'decodeURI',
-		      'encodeURI',
-		      'decodeURIComponent',
-		      'encodeURIComponent',
-		      'Object',
-		      'Function',
-		      'Array',
-		      'String',
-		      'Boolean',
-		      'Number',
-		      'Date',
-		      'RegExp',
-		      'Error',
-		      'EvalError',
-		      'RangeError',
-		      'ReferenceError',
-		      'SyntaxError',
-		      'TypeError',
-		      'URIError',
-		      'Math',
-		      'JSON',
-		      'document'];
+    const import_str = ['NaN',
+			'Infinity',
+			'undefined',
+			'parseInt',
+			'parseFloat',
+			'isNaN',
+			'isFinite',
+			'decodeURI',
+			'encodeURI',
+			'decodeURIComponent',
+			'encodeURIComponent',
+			'Object',
+			'Function',
+			'Array',
+			'String',
+			'Boolean',
+			'Number',
+			'Date',
+			'RegExp',
+			'Error',
+			'EvalError',
+			'RangeError',
+			'ReferenceError',
+			'SyntaxError',
+			'TypeError',
+			'URIError',
+			'Math',
+			'JSON',
+			'document'];
 
     /**
      * - To add a builtin function:
      *         Add an array with the name of the function at the first index and a
      *         reference to the function to call at the second index.
      */
-    var builtins = [['print', builtin_print],
-		    ['help', builtin_help],
-		    ['alert', builtin_alert],
-		    ['prompt', builtin_prompt],
-		    ['confirm', builtin_confirm],
-		    ['load', builtin_load],
-		    ['pause', builtin_pause],
-		    ['assert', builtin_assert],
-		    ['setScreenMode', builtin_setScreenMode],
-		    ['getScreenWidth', builtin_getScreenWidth],
-		    ['getScreenHeight', builtin_getScreenHeight],
-		    ['setPixel', builtin_setPixel],
-		    ['exportScreen', builtin_exportScreen],
-		    ['cs', builtin_cs],
-		    ['pu', builtin_pu],
-		    ['pd', builtin_pd],
-		    ['st', builtin_st],
-		    ['ht', builtin_ht],
-		    ['fd', builtin_fd],
-		    ['bk', builtin_bk],
-		    ['mv', builtin_mv],
-		    ['lt', builtin_lt],
-		    ['rt', builtin_rt],
-		    ['setpc', builtin_setpc],
-		    ['setpw', builtin_setpw],
-		    ['drawtext', builtin_drawtext],
-		    ['setTimeout', builtin_setTimeout],
-		    ['clearTimeout', builtin_clearTimeout],
-		    ['readFile', builtin_readFile],
-		    ['writeFile', builtin_writeFile]];
+    const builtins = [['print', builtin_print],
+		      ['help', builtin_help],
+		      ['alert', builtin_alert],
+		      ['prompt', builtin_prompt],
+		      ['confirm', builtin_confirm],
+		      ['load', builtin_load],
+		      ['pause', builtin_pause],
+		      ['assert', builtin_assert],
+		      ['setScreenMode', builtin_setScreenMode],
+		      ['getScreenWidth', builtin_getScreenWidth],
+		      ['getScreenHeight', builtin_getScreenHeight],
+		      ['setPixel', builtin_setPixel],
+		      ['exportScreen', builtin_exportScreen],
+		      ['cs', builtin_cs],
+		      ['pu', builtin_pu],
+		      ['pd', builtin_pd],
+		      ['st', builtin_st],
+		      ['ht', builtin_ht],
+		      ['fd', builtin_fd],
+		      ['bk', builtin_bk],
+		      ['mv', builtin_mv],
+		      ['lt', builtin_lt],
+		      ['rt', builtin_rt],
+		      ['setpc', builtin_setpc],
+		      ['setpw', builtin_setpw],
+		      ['drawtext', builtin_drawtext],
+		      ['setTimeout', builtin_setTimeout],
+		      ['clearTimeout', builtin_clearTimeout],
+		      ['readFile', builtin_readFile],
+		      ['writeFile', builtin_writeFile]];
 
     return function () {
 	export_str.forEach((id)=>{__exportToHost(id);});

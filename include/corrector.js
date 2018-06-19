@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2018 Marc Feeley
  *
@@ -32,7 +31,7 @@
  */
 
 /*
- * CBCorrectorManager Assignement Correction system
+ * CBCorrectorManager Correction system
  *
  * Authors:
  * - Olivier Dion <olivier.dion@polymtl.ca>

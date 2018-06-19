@@ -1747,6 +1747,7 @@ CodeBoot.prototype.urlGet = function (url) {
                                  'cb-repl-error');
         }
     });
+    
     return content;
 };
 

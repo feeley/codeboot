@@ -166,7 +166,6 @@ CBFeedbackManager.prototype.createMark = function(text) {
     this.index = this.findMarkIndex();
     this.frac.text("" + (this.index + 1) + "/" + this.doc.getAllMarks().length);
 
-    
     this.modal.modal("show");
 };
 

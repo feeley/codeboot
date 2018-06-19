@@ -1628,7 +1628,7 @@ jev.compExpr = function (cte, ast) {
                 } else {
                     if (error_msg !== false) {
 
-			var fuzzy_matchs = cb.get_fuzzy_match(name);
+			var fuzzy_matchs = cb.fuzzySearch(name);
 
 			if (fuzzy_matchs.length !== 0)
 			    fuzzy_matchs = '<p class="cb-repl-error"><br>Did you mean: </p>' + '<ul class="cb-repl-error">' +
