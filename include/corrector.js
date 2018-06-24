@@ -31,7 +31,7 @@
  */
 
 /*
- * CBCorrectorManager Correction system
+ * corrector.js
  *
  * Authors:
  * - Olivier Dion <olivier.dion@polymtl.ca>
@@ -39,119 +39,11 @@
 
 
 /*============================================================================+
- |                          CodeBoot Macros Manager                           |
- +============================================================================*/
-const MACROS_FILE_DIALOG = "#cb-macro-file-dialog";
-
-
-function CBMacrosManager() {
-
-    // Keys binded to macro.
-    this.macros = {"Ctrl-1":"Hello world!"};
-}
-
-
-CBMacrosManager.prototype.loadMacrosDialog = function() {
-    $(MACROS_FILE_DIALOG).click();
-};
-
-
-CBMacrosManager.prototype.handleFiles = function(files) {
-
-    if (!files.length)
-        return;
-
-    var json = files[0];
-
-    if (json.type !== "application/json")
-        return;
-
-    var reader = new FileReader();
-
-    var self = this;
-
-    $(reader).on('loadend', function() {
-        self.macros = JSON.parse(reader.result);
-    });
-
-    setTimeout(function() {reader.readAsText(json);}, 0);
-};
-
-
-CBMacrosManager.prototype.insertMacros = function(macro) {
-    setTimeout($.proxy(cb.fm.createMark(macro), this), 0);
-};
-
-
-
-
-/*============================================================================+
  |                         CodeBoot Corrector Manager                         |
  +============================================================================*/
 const TEMPLATE_FILE_DIALOG ="#cb-corrector-file-dialog";
-
 const CORRECTION_WIDTH = "250px";
-const DEBUG =
-      {
-          students:
-          [
-              {
-                  id:"Bar",
-                  files:
-                  [
-                      {
-                          filename:"foo.js",
-                          content:"function FOO() {\n print('FOO in Bar:foo!');\n}",
-			  meta:
-			  {
-			      stamp:
-			      {
-				  value:"2018-06-12",
-				  type:"date"
-			      },
-			      note:
-			      {
-				  value:0,
-				  type:"number"
-			      }
-			  }
-                      },
-                      {
-                          filename:"foo2.js",
-                          content:"function FOO() {\n prinnt('FOO in Bar:foo2!');\n}",
-                          meta:
-			  {
-			      stamp:
-			      {
-				  value:"2018-06-12",
-				  type:"date"
-			      },
-			  }
-                      }
 
-                  ]
-              },
-
-              {
-                  id:"Foo",
-                  files:
-                  [
-                      {
-                          filename:"foo.js",
-                          content:"function FOO() {\n print('FOO in Foo:foo!');\n}",
-                          meta:
-			  {
-			      stamp:
-			      {
-				  value:"2018-06-12",
-				  type:"date"
-			      },
-			  }
-                      }
-                  ]
-              }
-          ]
-};
 
 function CBCorrectorManager() {
 
@@ -345,6 +237,68 @@ CBCorrectorManager.prototype.addStudent = (function() {
     };
 }());
 
+
+const DEBUG =
+      {
+          students:
+          [
+              {
+                  id:"Bar",
+                  files:
+                  [
+                      {
+                          filename:"foo.js",
+                          content:"function FOO() {\n print('FOO in Bar:foo!');\n}",
+			  meta:
+			  {
+			      stamp:
+			      {
+				  value:"2018-06-12",
+				  type:"date"
+			      },
+			      note:
+			      {
+				  value:0,
+				  type:"number"
+			      }
+			  }
+                      },
+                      {
+                          filename:"foo2.js",
+                          content:"function FOO() {\n prinnt('FOO in Bar:foo2!');\n}",
+                          meta:
+			  {
+			      stamp:
+			      {
+				  value:"2018-06-12",
+				  type:"date"
+			      },
+			  }
+                      }
+
+                  ]
+              },
+
+              {
+                  id:"Foo",
+                  files:
+                  [
+                      {
+                          filename:"foo.js",
+                          content:"function FOO() {\n print('FOO in Foo:foo!');\n}",
+                          meta:
+			  {
+			      stamp:
+			      {
+				  value:"2018-06-12",
+				  type:"date"
+			      },
+			  }
+                      }
+                  ]
+              }
+          ]
+};
 
 CBCorrectorManager.prototype.generateDEBUG = function() {
 

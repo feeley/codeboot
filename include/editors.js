@@ -93,17 +93,34 @@ CodeBoot.prototype.createCodeEditor = function (node, fileEditor) {
         //,viewportMargin: Infinity
     };
 
-    // Add to extraKeys the macros binding
 
-    for (key in cb.mm.macros) {
+    // Add Macros binding
+    cb.mm.macros.forEach((macro) => {
 
-        options.extraKeys[key] = (function(m) {
-            var macro = m;
-            return function() {
-                cb.mm.insertMacros(macro);
-            };
-        })(cb.mm.macros[key]);
-    }
+	options.extraKeys[macro.kbd] = (function () {
+
+	    var str = "var func = function (cm) {" +
+		 macro.action +
+		"(";
+
+	    if (typeof macro.param === 'string')
+		str += '"'+macro.param+'"';
+	    else if (macro.param !== undefined)
+		str += macro.param;
+
+	    str += ");}";
+
+	    try {
+		eval(str);
+		return func;
+	    }
+	    catch (e) {
+		console.error('Error in Macros expension evaluation.', e);
+		return undefined;
+	    }
+
+	})();
+    });
 
     var editor = CodeMirror.fromTextArea(node, options);
 

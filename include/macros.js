@@ -1,7 +1,7 @@
 /*
  * Copyright 2018 Marc Feeley
  *
- * -- CodeBoot Fuzzy Search --
+ * -- CodeBoot Macros system --
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -31,71 +31,49 @@
  */
 
 /*
- * fuzzy.js
+ * macros.js
  *
  * Authors:
  * - Olivier Dion <olivier.dion@polymtl.ca>
  */
 
 
-const MAX_FUZZY_MATCH = 3;
+/*============================================================================+
+ |                          CodeBoot Macros Manager                           |
+ +============================================================================*/
+const MACROS_FILE_DIALOG = "#cb-macro-file-dialog";
 
 
-/*  ========================== Internal Use Only ===========================  */
+function CBMacrosManager() {
 
-function __fuzzy_search(text, search) {
-
-    var match = {score:0, match:text};
-    var pos = 0;
-
-    text = text.toLowerCase();
-    search = search.toLowerCase();
-
-    /* Calculate score base on fuzzy match */
-    for (var i=0; i < text.length && pos < search.length; ++i) {
-
-	if (text[i] === search[pos]) {
-
-	    match.score += search.length - (i - pos);
-	    ++pos;
-	}
-    }
+    // Keys binded to macro.
+    this.macros = [{kbd:"Ctrl-1", action:"cb.fm.createMark",
+		    param:"Mauvaise Indentation"}];
+}
 
 
-    /* Remove score base on length text difference */
-    match.score -= Math.abs(text.length - search.length);
-
-    return match;
+CBMacrosManager.prototype.loadMacrosDialog = function() {
+    $(MACROS_FILE_DIALOG).click();
 };
 
 
+CBMacrosManager.prototype.handleFiles = function(files) {
 
+    if (!files.length)
+        return;
 
-/*  ========================== Usable Prototypes ===========================  */
+    var json = files[0];
 
-CodeBoot.prototype.fuzzySearch = function (name) {
+    if (json.type !== "application/json")
+        return;
 
-    var possible_match = Object.keys(cb.globalObject);
+    var reader = new FileReader();
 
-    var matchs = [];
+    var self = this;
 
-    var min_score = 1;
-
-    possible_match.forEach(function (pm) {
-
-	var match = __fuzzy_search(pm, name);
-
-	if (match.score >= min_score) {
-	    min_score = match.score;
-	    matchs.push(match);
-	}
+    $(reader).on('loadend', function() {
+        self.macros = JSON.parse(reader.result);
     });
 
-
-    /* Sort match by their score */
-    matchs.sort(function (x, y) { return y.score - x.score; });
-
-
-    return matchs.map(function(m) { return m.match;}).slice(0, MAX_FUZZY_MATCH);
+    setTimeout(function() {reader.readAsText(json);}, 0);
 };
-
