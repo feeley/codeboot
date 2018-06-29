@@ -30,6 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 /*
  * builtins.js
  *
@@ -52,10 +53,36 @@ builtin_print.toString = function () {
 };
 
 
-function builtin_help() {}
+// help
+function builtin_help() {
+
+    var builtins = Object.values(arguments);
+
+    if (builtins.length === 0) {
+
+	cb.addTranscriptREPL(Object.keys(cb.builtins).sort().map((k)=>{return k;}).join('\n'), 'cb-repl-output');
+
+    }
+
+    else {
+
+	builtins.forEach((v) => {
+
+	    var temp = cb.builtins[v];
+
+	    if (temp !== undefined)
+		cb.addTranscriptREPL(temp.toString() + '\n', 'cb-repl-output');
+	    else
+		cb.addTranscriptREPL("No help for " + v + "\n", 'cb-repl-error');
+	});
+
+    }
+
+    cb.programState.rte.setp_limit = -1;
+}
 
 builtin_help.toString = function () {
-    return Object.keys(cb.builtins).sort().map((k)=>{return '- '+k;}).join('\n');
+    return "function help(values) { ... }";
 }
 
 
