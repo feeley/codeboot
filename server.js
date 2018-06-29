@@ -47,7 +47,46 @@ const __path    = require('path');
 const __exec    = require('child_process').execFile;
 const __body    = require('body-parser');
 
+const EINTERNAL = 500;
 
+const EXIT_SUCCESS = 0;
+const EXIT_FAIL    = 1
+const EXIT_SIGINT  = 2;
+const EXIT_SIGUSR1 = 3;
+const EXIT_SIGUSR2 = 4;
+const EXIT_EXCEPT  = 5;
+
+const EXIT_MESSAGE = [
+    "EXIT_SUCCESS",
+    "EXIT_FAIL",
+    "EXIT_SIGINT",
+    "EXIT_SIGUSR1",
+    "EXIT_SIGUSR2",
+    "EXIT_EXCEPT"
+];
+
+
+
+
+var cb_config = {
+
+    port:8080,
+
+    get:[{route:"/", handle:route_root},
+	     {route:"/query.cgi", handle:route_query_cgi},
+         {route:"/feedback.cgi", handle:route_feedback_cgi}],
+
+    post:[{route:"/download", handle:route_download},
+          {route:"/corrector.cgi", handle:route_corrector_cgi}],
+
+    stack:[{route:"/include", handle:__express.static(absp("include"))},
+           {route:"/feedbacks", handle:__express.static(absp("feedbacks"))},
+           {route:"/scripts", handle:__express.static(absp("scripts"))},
+	       {route:"", handle:__body.urlencoded({extended:false})}]
+};
+
+
+var cb_server = __express();
 
 
 /*  ================================ Utils =================================  */
@@ -58,6 +97,24 @@ const __body    = require('body-parser');
 function absp(path) {
 
     return __path.join(__dirname + "/" + path);
+}
+
+
+function log(message) {
+
+    var timestamp = new Date();
+
+    console.log(message);
+
+    __exec(absp("scripts/log.cgi"), [absp("log"), timestamp, message], function (error, stdout, stderr) {
+
+        if (error !== null) {
+            console.error(error);
+        }
+    });
+
+    //__fs.appendFileSync(absp(CBLOG), (timestamp + '\n' +
+      //                                message + '\n\n'));
 }
 
 
@@ -74,8 +131,15 @@ function route_query_cgi(req, res) {
 
     var query_string = "REPLAY=" + req.query["REPLAY"];
 
-    __exec(absp("query.cgi"), [query_string], (error, stdout, stderr) => {
-	res.send(stdout);
+    __exec(absp("scripts/query.cgi"), [query_string], (error, stdout, stderr) => {
+
+        if (error !== null) {
+            log(error);
+            res.status(EINTERNAL).sendFile(absp("index.html"));
+        }
+        else {
+            res.send(stdout);
+        }
     });
 }
 
@@ -90,51 +154,78 @@ function route_download(req, res) {
     res.send(content);
 }
 
+function route_feedback_cgi(req, res) {
+
+    var sha1_id = "feedbacks/" + req.query["id"] + ".html";
+
+    __exec(absp("scripts/feedback.cgi"), [sha1_id], function (error, stdout, stderr) {
+
+        if (error !== null) {
+            log(error);
+            res.status(EINTERNAL).sendFile(absp("index.html"));
+        }
+        else {
+            res.send(stdout);
+        }
+    });
+}
+
+function route_corrector_cgi(req, res) {
+
+}
+
 
 
 
 /*  ================================ Server ================================  */
 
-function initServer(server, config) {
+function init_server() {
 
-    config.stack.forEach((m) => server.use(m.route, m.handle));
-    config.get.forEach((g) => server.get(g.route, g.handle));
-    config.post.forEach((p) => server.post(p.route, p.handle));
+    cb_config.stack.forEach((m) => cb_server.use(m.route, m.handle));
+    cb_config.get.forEach((g) => cb_server.get(g.route, g.handle));
+    cb_config.post.forEach((p) => cb_server.post(p.route, p.handle));
 }
 
 
-function runServer(server, port) {
+function run_server() {
 
-    server.listen(port,
-		  () => {
-		      console.log("CodeBoot is listening on port " + port);
-		  });
+    var port = cb_config.port;
+
+    log("Starting server...");
+
+    cb_server.listen(port,
+		             () => {log("CodeBoot is listening on port " + port);});
 }
 
 
-function main(server, config) {
+function main() {
 
-    initServer(server, config);
-    runServer(server, config.port);
+    init_server();
+    run_server();
 }
 
 
-var cb_config = {
+function at_exit(exit_code) {
 
-    port:8080,
+    if (exit_code === undefined)
+        process.exit(EXIT_FAIL);
 
-    get:[{route:"/", handle:route_root},
-	 {route:"/query.cgi", handle:route_query_cgi}],
+    var message = "Shutting down server... ";
 
-    post:[{route:"/download", handle:route_download}],
+    log(message + EXIT_MESSAGE[exit_code]);
 
-    stack:[{route:"/include", handle:__express.static(absp("include"))},
-	   {route:"", handle:__body.urlencoded({extended:false})}]
-};
+    process.exit(exit_code);
+}
+
+function config_process() {
+    process.stdin.resume();
+    process.on("SIGINT", () => {at_exit(EXIT_SIGINT);});
+    process.on("SIGUSR1", at_exit.bind(null, EXIT_SIGUSR1));
+    process.on("SIGUSR2", at_exit.bind(null, EXIT_SIGUSR2));
+    process.on("uncaughException", at_exit.bind(null, EXIT_EXCEPT));
+}
 
 
-var cb_server = __express();
+config_process();
 
-
-main(cb_server,
-     cb_config);
+main();
