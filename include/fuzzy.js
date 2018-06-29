@@ -45,6 +45,9 @@ const MAX_FUZZY_MATCH = 3;
 
 function __fuzzy_search(text, search) {
 
+
+    // todo: levenstein fuzzy_search
+
     var match = {score:0, match:text};
     var pos = 0;
 
