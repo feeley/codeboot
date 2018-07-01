@@ -237,18 +237,50 @@ CBCorrectorManager.prototype.addStudent = (function() {
     };
 }());
 
-CBCorrectorManager.prototype.exportFile = function(cm, metadata) {
+CBCorrectorManager.prototype.exportFile = function(file, metadata) {
 
-    var data = {html:cm.getWrapperElement().outerHTML, metadata:""};
-
-    for (var key in metadata) {
-	data.metadata += key + " : " + metadata[key] + "\n";
-    }
+    var data = {content:file.editor.editor.doc.getValue(),
+		filename:file.filename,
+		feedbacks:cb.fm.serializeMarks(file.editor)};
 
     $.post("/export_file",
-	   data,
-	   function (data) {
-	       metadata["sha1"] = data;
-	       console.log(data);
-	   });
+	   {raw:JSON.stringify(data)},
+	   function (_data) {
+	       metadata["sha1"] = _data;
+	   },
+	  "text");
+}
+
+
+CodeBoot.prototype.feedback = function(f) {
+
+    cb.saved_feedback = f;
+};
+
+
+CodeBoot.prototype.handle_feedback = function () {
+
+    var f = cb.saved_feedback;
+
+    if (f === null)
+	return;
+
+    f = JSON.parse(f);
+
+    var name = f.filename;
+
+    cb.fs.newFile(name);
+
+    var doc = cb.fs.getByName(name).editor.editor.doc;
+
+    doc.setValue(f.content);
+
+    var feedbacks = f.feedbacks;
+
+    for (var i=0; i<feedbacks.length; ++i) {
+
+	var tmp = feedbacks[i];
+
+	cb.fm.createMark(tmp.title, {begin:tmp.from, end:tmp.to}, false);
+    }
 }

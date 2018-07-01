@@ -126,7 +126,7 @@ CBFeedbackManager.prototype.openMark = function() {
     this.mark = marks[0];
 
     if (MARK_SHARED)
-        this.mrak = this.mark.primary;
+        this.mark = this.mark.primary;
 
     this.index = this.findMarkIndex();
     this.frac.text("" + (this.index + 1) + "/" + this.doc.getAllMarks().length);
@@ -134,14 +134,15 @@ CBFeedbackManager.prototype.openMark = function() {
     this.modal.modal("show");
 };
 
-CBFeedbackManager.prototype.createMark = function(text) {
+CBFeedbackManager.prototype.createMark = function(text, range, show) {
 
     if (typeof text === "undefined")
         text = "";
 
     this.doc   = this.getCurrentEditor().editor.doc;
 
-    var range = getSelectionRange(this.doc);
+    if (typeof range === "undefined")
+	range = getSelectionRange(this.doc);
 
     var marks = this.doc.findMarks(range.begin, range.end);
 
@@ -166,7 +167,8 @@ CBFeedbackManager.prototype.createMark = function(text) {
     this.index = this.findMarkIndex();
     this.frac.text("" + (this.index + 1) + "/" + this.doc.getAllMarks().length);
 
-    this.modal.modal("show");
+    if (show !== false)
+	this.modal.modal("show");
 };
 
 CBFeedbackManager.prototype.removeMarks = function() {
@@ -222,9 +224,6 @@ CBFeedbackManager.prototype.mergeMarks = function() {
 };
 
 CBFeedbackManager.prototype.markClicked = function(event) {
-
-    if (this.mark !== null)
-        return;
 
     this.doc   = this.getCurrentEditor().editor.doc;
 
@@ -284,8 +283,9 @@ CBFeedbackManager.prototype.findMarkIndex = function() {
     var marks = this.doc.getAllMarks();
 
     for (var i = 0; i < marks.length; i++) {
-        if (this.mark == marks[i])
-            return i;
+        if (this.mark == marks[i]) {
+	    return i;
+	}
     }
 
     return -1;

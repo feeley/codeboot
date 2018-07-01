@@ -33,7 +33,7 @@
 
 
 /*
- * CodeBoot Server
+ * CodeBoot Debuging Server
  *
  * Authors:
  * - Olivier Dion <olivier.dion@polymtl.ca>
@@ -165,10 +165,12 @@ function route_feedback_cgi(req, res) {
 
     var sha1_id = "feedbacks/" + req.query["ID"] + ".html";
 
+
+
     exec_script("feedback.cgi", [sha1_id], function (error, stdout, stderr) {
 
-        if (error !== null) {
-            log(error);
+        if (stderr) {
+            log(stderr);
             res.status(EINTERNAL).sendFile(root("index.html"));
         }
         else {
@@ -179,10 +181,10 @@ function route_feedback_cgi(req, res) {
 
 function route_export_file(req, res) {
 
-    exec_script("import_file.cgi", [req.body.metadata, req.body.html], function (error, stdout, stderr) {
+    exec_script("import_file.cgi", [req.body.raw], function (error, stdout, stderr) {
 
-	if (error !== null) {
-	    log(error);
+	if (stderr) {
+	    log(stderr);
 	    res.status(EINTERNAL).send("EINTERNAL");
 	}
 	else {

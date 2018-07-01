@@ -305,6 +305,7 @@ CodeBoot.prototype.main = function () {
     cb.focusREPL();
 
     cb.handle_query();
+    cb.handle_feedback();
 };
 
 $(document).ready(function () {
