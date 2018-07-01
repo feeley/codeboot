@@ -1,2 +1,2 @@
-#!/bin/bash
-echo "$2 : $3" >> $1/codeboot.log
+#!/bin/sh
+echo "`date` : $1" >> $CB_LOG

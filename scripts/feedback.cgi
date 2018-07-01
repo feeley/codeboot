@@ -1,2 +1,2 @@
-#!/bin/bash
+#!/bin/sh
 cat $1

@@ -295,10 +295,6 @@ CodeBoot.prototype.main = function () {
 
     cb.cm = new CBCorrectorManager();
 
-    // DEBUG
-    cb.cm.generateDEBUG();
-    //
-
     cb.setupEventHandlers();
 
     cb.loadSession();

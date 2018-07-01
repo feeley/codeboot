@@ -237,73 +237,18 @@ CBCorrectorManager.prototype.addStudent = (function() {
     };
 }());
 
+CBCorrectorManager.prototype.exportFile = function(cm, metadata) {
 
-const DEBUG =
-      {
-          students:
-          [
-              {
-                  id:"Bar",
-                  files:
-                  [
-                      {
-                          filename:"foo.js",
-                          content:"function FOO() {\n print('FOO in Bar:foo!');\n}",
-			  meta:
-			  {
-			      stamp:
-			      {
-				  value:"2018-06-12",
-				  type:"date"
-			      },
-			      note:
-			      {
-				  value:0,
-				  type:"number"
-			      }
-			  }
-                      },
-                      {
-                          filename:"foo2.js",
-                          content:"function FOO() {\n prinnt('FOO in Bar:foo2!');\n}",
-                          meta:
-			  {
-			      stamp:
-			      {
-				  value:"2018-06-12",
-				  type:"date"
-			      },
-			  }
-                      }
+    var data = {html:cm.getWrapperElement().outerHTML, metadata:""};
 
-                  ]
-              },
-
-              {
-                  id:"Foo",
-                  files:
-                  [
-                      {
-                          filename:"foo.js",
-                          content:"function FOO() {\n print('FOO in Foo:foo!');\n}",
-                          meta:
-			  {
-			      stamp:
-			      {
-				  value:"2018-06-12",
-				  type:"date"
-			      },
-			  }
-                      }
-                  ]
-              }
-          ]
-};
-
-CBCorrectorManager.prototype.generateDEBUG = function() {
-
-    for (var i = 0; i < DEBUG.students.length; i++) {
-	var files = this.createContext(DEBUG.students[i]);
-        this.addStudent(DEBUG.students[i].id, files);
+    for (var key in metadata) {
+	data.metadata += key + " : " + metadata[key] + "\n";
     }
-};
+
+    $.post("/export_file",
+	   data,
+	   function (data) {
+	       metadata["sha1"] = data;
+	       console.log(data);
+	   });
+}
