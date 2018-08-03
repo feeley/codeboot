@@ -81,12 +81,14 @@ const PORT = process.env.CB_PORT;
 
 var cb_config = {
 
-    get:[{route:"/", handle:route_root},
-	 {route:"/query.cgi", handle:route_query_cgi},
-         {route:"/feedbacks", handle:route_feedback_cgi}],
+    get:[
+	{route:"/", handle:route_root},
+	{route:"/query.cgi", handle:route_query_cgi},
+        {route:"/feedbacks", handle:route_feedback_cgi},
+	{route:"/corrector", handle:route_corrector_cgi},
+	],
 
     post:[{route:"/download", handle:route_download},
-          {route:"/corrector", handle:route_corrector_cgi},
 	  {route:"/export_file", handle:route_export_file}],
 
     stack:[{route:"/include", handle:__express.static(root("include"))},
@@ -129,6 +131,9 @@ function log(message) {
 
 /*  =============================== Routing ================================  */
 
+
+/*  --------------------------------- GET ----------------------------------  */
+
 function route_root(req, res) {
 
     res.sendFile(root("index.html"));
@@ -150,22 +155,9 @@ function route_query_cgi(req, res) {
     });
 }
 
-function route_download(req, res) {
-
-    var content  = req.body.content;
-    var filename = req.body.filename;
-
-    res.setHeader('Content-Type', 'text/javascript');
-    res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
-    res.setHeader("Content-Length", content.length);
-    res.send(content);
-}
-
 function route_feedback_cgi(req, res) {
 
-    var sha1_id = "feedbacks/" + req.query["ID"] + ".html";
-
-
+    var sha1_id = req.query["ID"];
 
     exec_script("feedback.cgi", [sha1_id], function (error, stdout, stderr) {
 
@@ -179,28 +171,42 @@ function route_feedback_cgi(req, res) {
     });
 }
 
+function route_corrector_cgi(req, res) {
+
+    res.sendFile(root("index2.html"));
+}
+
+
+
+/*  --------------------------------- POST ---------------------------------  */
+
+function route_download(req, res) {
+
+    var content  = req.body.content;
+    var filename = req.body.filename;
+
+    res.setHeader('Content-Type', 'text/javascript');
+    res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
+    res.setHeader("Content-Length", content.length);
+    res.send(content);
+}
+
+
 function route_export_file(req, res) {
 
-    exec_script("import_file.cgi", [req.body.raw], function (error, stdout, stderr) {
+    exec_script("export_file.cgi", [req.body.raw], function (error, stdout, stderr) {
 
 	if (stderr) {
 	    log(stderr);
 	    res.status(EINTERNAL).send("EINTERNAL");
 	}
 	else {
-	    var link = "localhost:8080/feedbacks?ID=" + stdout;
-
-	    res.status(OK).send(link);
+	    res.status(OK).send(stdout);
 	}
     });
 
 
 }
-
-function route_corrector_cgi(req, res) {
-
-}
-
 
 
 

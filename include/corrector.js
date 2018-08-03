@@ -42,17 +42,15 @@
  |                         CodeBoot Corrector Manager                         |
  +============================================================================*/
 const TEMPLATE_FILE_DIALOG ="#cb-corrector-file-dialog";
+const IMPORT_FILE_DIALOG = "#cb-import-file-dialog";
 const CORRECTION_WIDTH = "250px";
 
 
 function CBCorrectorManager() {
 
-    this.contexts       = {"main":
-			   {
-			       fs:cb.fs,
-			       go:cb.globalObject
-			   }
-			  };
+    this.main = {fs:cb.fs, go:cb.globalObject};
+    this.contexts = {"main":this.main};
+
     this.currentContext = "main";
     this.lastContext    = "main";
 
@@ -64,7 +62,14 @@ CBCorrectorManager.prototype.loadTemplateDialog = function() {
     $(TEMPLATE_FILE_DIALOG).click();
 };
 
+CBCorrectorManager.prototype.importFileDialog = function() {
+    $(IMPORT_FILE_DIALOG).click();
+};
 
+
+/*
+ * File dialog
+ */
 CBCorrectorManager.prototype.handleFiles = function(files) {
 
     if (!files.length)
@@ -130,7 +135,15 @@ CBCorrectorManager.prototype.openNav = function() {
 };
 
 
-CBCorrectorManager.prototype.createContext = function(student) {
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+const CM_WAIT_TIME = 250;
+
+CBCorrectorManager.prototype.createContext = async function(student) {
 
     var fs = new CBFileManager();
 
@@ -139,13 +152,21 @@ CBCorrectorManager.prototype.createContext = function(student) {
     this.contexts[student.id] = {fs:fs,
 				 go:cb.clone(cb.builtins)};
 
-    student.files.forEach(function(f) {
+    // Wait until all files have been loaded
+    while (student.sem)
+	await delay(CM_WAIT_TIME);
+
+    for (var i=0; i<student.files.length; ++i) {
+
+	var f = student.files[i];
+
         var file = new CBFile(fs,
 			      f.filename,
 			      f.content,
 			      {meta:f.meta});
+
         fs.addFile(file);
-    });
+    }
 
     if (this.correction_file !== null)
 	fs.addFile(new CBFile(fs,
@@ -185,10 +206,12 @@ CBCorrectorManager.prototype.addStudent = (function() {
 
     var accordion = $("#cb-accordion");
 
-    return function(ID, files) {
+    return function(student) {
+
+	this.createContext(student);
 
         var card = $(card_template);
-        var id  = "__" + ID + "__";
+        var id  = student.id;
 	var body = card.find(".card-body");
 
         card.find(".card-header")
@@ -198,17 +221,17 @@ CBCorrectorManager.prototype.addStudent = (function() {
             .attr("data-target", "#" + id)
             .attr("aria-controls", id)
 	    .after('<input ' + 'data-onstyle="success" data-offstyle="danger" data-toggle="toggle" data-style="android" data-off="Not Corrected" data-on="Corrected" type="checkbox">')
-            .text(ID)
-            .click($.proxy(this.switchContext, this, ID));
+            .text(id)
+            .click($.proxy(this.switchContext, this, id));
 
-	for (key in files) {
+	for (var i=0; i<student.files.length; ++i) {
 
-	    var file = files[key];
+	    var file = student.files[i];
 
 	    body.append('<h5 class="card-subtitle mb-2 text-muted">' + file.filename + '</h5>');
 
-	    for (m in file.meta) {
-		var meta = $('<div><label>' + m + '</label>' + '<input style="width:90%;" type="' +   file.meta[m].type + '" value="' + file.meta[m].value + '"></div><br>');
+	    for (var m in file.meta) {
+		var meta = $('<div><label>' + m + '</label>' + '<input style="width:90%;" type="' +   file.meta[m].type + '" value="' + file.meta[m].value + '"' + (file.meta[m].readonly === true ? "readonly":"") + '></div><br>');
 		// This is where all the magic happens... Plz refactor me.
 		var input = meta[0].children[1];
 		$(input).change((
@@ -237,7 +260,9 @@ CBCorrectorManager.prototype.addStudent = (function() {
     };
 }());
 
-CBCorrectorManager.prototype.exportFile = function(file, metadata) {
+
+
+CBCorrectorManager.prototype.exportFile = function(file) {
 
     var data = {content:file.editor.editor.doc.getValue(),
 		filename:file.filename,
@@ -246,10 +271,107 @@ CBCorrectorManager.prototype.exportFile = function(file, metadata) {
     $.post("/export_file",
 	   {raw:JSON.stringify(data)},
 	   function (_data) {
-	       metadata["sha1"] = _data;
+	       file.meta["sha1"] = _data;
 	   },
 	  "text");
+};
+
+
+/**************************************************************************
+ *Here we receive the files imported by the corrector. This		  *
+ *algorithm assume thaht the following standard hasn't			  *
+ *changed. StudiUM give a .zip to the corrector, which is then		  *
+ *unzipped. The corrector selects the folder that she wants to		  *
+ *correct. Here's an example of such a tree.				  *
+ *									  *
+ *.									  *
+ *|									  *
+ *|-- ([A-Z][a-z]+\s[A-Z][a-z]+)_([0-9])+_assignsubmission_file_/\w+(\.js)*
+ *|									  *
+ *|-- Olivier Dion_12925471_assignsubmission_file_/fichier1.js		  *
+ *|									  *
+ *|-- Olivier Dion_12925471_assignsubmission_file_/fichier2.js		  *
+ *									  *
+ *Remark that only files ending with .js will be imported.		  *
+ *									  *
+ *									  *
+ *The parser will parse the first regex group, which is the "first	  *
+ *name 'space' last name" of the student. Creating a new context	  *
+ *for each new student or pushing new files to the context if the	  *
+ *student already existed. To avoid ambiguity between similar name,	  *
+ *the second group, which is "the number of the assignation" will	  *
+ *be use to match with a context. Finally, file not ending with the	  *
+ *extension .js are ignored. Although, this can be adjust with the	  *
+ *value of CM_JS_ONLY.	               					  *
+ **************************************************************************/
+
+const CM_JS_ONLY = true;
+
+CBCorrectorManager.prototype.importFiles = function(files) {
+
+    var students = {};
+
+    for (var i=0; i<files.length; ++i) {
+
+	var file = files[i];
+
+	let student_id = file.webkitRelativePath.split('/')[1];
+
+	/* We skip none js files */
+	if (CM_JS_ONLY && (file.name.slice(-3) !== ".js"))
+	    continue;
+
+	/* Student doesn't exist yet */
+	if ((typeof students[student_id]) === "undefined")
+	    students[student_id] = new Student(student_id, file);
+
+	/* Else, we push the file to the list of files of the student */
+	else
+	    students[student_id].pushFile(file);
+    }
+
+    /* Now we have all are students, we can create context for them */
+    for (var key in students) {
+	this.addStudent(students[key]);
+    }
+};
+
+
+
+function Student(id, file) {
+    this.id = id;
+    this.files = [];
+    this.sem = 0;		/* Semaphore */
+
+    if (file)
+	this.pushFile(file);
 }
+
+Student.prototype.pushFile = function(file) {
+
+    var reader = new FileReader();
+
+    var _file = {
+	meta: {
+	    note: {type:"number", value:0},
+	    sha1: {type:"string", value:"", readonly:true},
+	}
+    };
+
+    var self = this;
+
+    this.files.push(_file);
+
+    $(reader).on("loadend", function (e) {
+	_file.filename = file.name;
+	_file.content  = reader.result;
+	--self.sem;
+    });
+
+    ++this.sem;
+    reader.readAsText(file);
+};
+
 
 
 CodeBoot.prototype.feedback = function(f) {
@@ -283,4 +405,6 @@ CodeBoot.prototype.handle_feedback = function () {
 
 	cb.fm.createMark(tmp.title, {begin:tmp.from, end:tmp.to}, false);
     }
-}
+};
+
+

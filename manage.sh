@@ -2,15 +2,16 @@
 
 
 # Global Variable
-NODEJS=""
 PID=-1
 
 
 # Exported Variables
+export NODEJS=""
+export ZCAT=""
 export CB_TOP_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 export CB_INCLUDE="$CB_TOP_DIR/include"
 export CB_SCRIPTS="$CB_TOP_DIR/scripts"
-export CB_SERVER="$CB_TOP_DIR/$(find server -maxdepth 1 -name *server*)"
+export CB_SERVER="$CB_TOP_DIR/$(find server -maxdepth 1 -name cb-server.js)"
 export CB_LOG="/tmp/codeboot.log"
 export CB_FEEDBACKS="$CB_TOP_DIR/feedbacks"
 export CB_PORT=8080
@@ -22,7 +23,20 @@ VERBOSE=0
 START=0
 DAEMON=0
 KILL=0
+LOG=0
 
+usage() {
+    echo "$(basename "%$0") [-h] [-v] [-s] [-d] [-k] [-l] [-p] -- Manage CodeBoot Server
+
+    Usage:
+    	-h Show this help message
+	-v Explain what is being done
+	-s Start server
+	-d Run server as daemon
+	-l Run the server with log
+	-k Kill an existing server"
+    exit 0
+}
 
 while getopts ":hvsdlkp:" option; do
     case $option in
@@ -44,20 +58,6 @@ while getopts ":hvsdlkp:" option; do
 done
 
 
-
-usage() {
-    echo "$(basename "%$0") [-h] [-v] [-s] [-d] [-k] [-l] [-p] -- Manage CodeBoot Server
-
-    Usage:
-    	-h Show this help message
-	-v Explain what is being done
-	-s Start server
-	-d Run server as daemon
-	-l Run the server with log
-	-k Kill an existing server"
-    exit 0
-}
-
 start_server() {
 
     init_feedback
@@ -78,6 +78,12 @@ start_server() {
     lookup_nodejs
     if [ $? -ne 0 ]; then
 	echo >&2 "Can not find NodeJS"
+	exit 1
+    fi
+
+    find_zcat
+    if [ $? -ne 0 ]; then
+	echo >&2 "Can not find zcat"
 	exit 1
     fi
 
@@ -106,20 +112,28 @@ lookup_nodejs() {
 
     verbose "Looking up for NodeJS"
 
-    which node &> /dev/null
-    if [ $? -eq 0 ]; then
-	NODEJS=$(which node)
-	return 0
+    NODEJS=$(which node 2> /dev/null)
+    if [ $? -ne 0 ]; then
+	NODEJS=$(which nodejs 2> /dev/null)
+
+	return $?
     fi
 
-    which nodejs &> /dev/null
-    if [ $? -eq 0 ]; then
-	NODEJS=$(which nodejs)
-	return 0
-    fi
-
-    return 1
+    return 0
 }
+
+find_zcat() {
+
+    ZCAT=$(which zcat 2> /dev/null) 
+    if [ $? -ne 0 ]; then
+	ZCAT=$(which gzcat 2> /dev/null)
+
+	return $?
+    fi
+
+    return 0
+}
+
 
 
 prompt_for_restart() {
