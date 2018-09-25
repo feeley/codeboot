@@ -1,3 +1,4 @@
+
 // codeBoot state
 
 var normalStepDelay = 400; // milliseconds per step
@@ -7,9 +8,6 @@ function CodeBoot() {
     this.builtins = {};
 
     this.hostGlobalObject = (function () { return this; })();
-
-//    this.globalObject = {cb: this};
-    this.globalObject = {};
 
     this.programState = null;
 
@@ -36,13 +34,7 @@ function CodeBoot() {
     this.lastResult = null;
     this.lastResultRepresentation = null;
 
-
-    // Keys binded to macro. CB accepts only a maximum of 10 macros.
-    this.bindedMacros = new Array(10);
-
-    for(var i = 0; i < 10; ++i) {
-	this.bindedMacros[i] = "Ctrl-" + i; // Default binded to Ctrl-0...Ctrl-9
-    }
+    this.savedFs = undefined;
 }
 
 var cb = new CodeBoot();
@@ -174,10 +166,12 @@ CodeBoot.prototype.setupEventHandlers = function () {
         var $item = $(event.currentTarget);
         var filename = $item.attr('data-cb-filename');
 
-        if (filename === void 0) {
-            cb.fs.newFile();
-        } else {
+        // Generate two files sometime
+        if (filename !== void 0) {
+           //  cb.fs.newFile();
+        // } else {
             cb.fs.openFile(filename);
+
         }
 
         return true;
@@ -289,7 +283,17 @@ CodeBoot.prototype.main = function () {
     cb.alerts = document.getElementById('alerts');
     cb.repl = cb.createREPL();
 
+    cb.generateBuiltins();
+    cb.globalObject = cb.clone(cb.builtins);
+
     cb.fs = new CBFileManager();
+    cb.savedFs = cb.fs;
+
+    cb.mm = new CBMacrosManager();
+
+    cb.fm = new CBFeedbackManager();
+
+    cb.cm = new CBCorrectorManager();
 
     cb.setupEventHandlers();
 
@@ -301,6 +305,7 @@ CodeBoot.prototype.main = function () {
     cb.focusREPL();
 
     cb.handle_query();
+    cb.handle_feedback();
 };
 
 $(document).ready(function () {
@@ -324,7 +329,6 @@ CodeBoot.prototype.setLanguageLevel = function (level) {
         .css('visibility', 'hidden');
     $('a[data-cb-setting-level="' + level + '"] > span')
         .css('visibility', 'visible');
-    
 };
 
 CodeBoot.prototype.setDevMode = function (devMode) {
@@ -466,7 +470,7 @@ function cb_internal_getBounds($element) {
 }
 
 CodeBoot.prototype.focusREPL = function () {
-//    cb.replInput.focus();
+    //    cb.replInput.focus();
     cb.repl.focus();
 };
 
@@ -480,16 +484,4 @@ CodeBoot.prototype.focusLastFocusedEditor = function () {
     }
 }
 
-// this.fs.feedbackManager
 
-CodeBoot.prototype.unbindMacro = function(index) {
-    
-};
-
-CodeBoot.prototype.bindMacro = function(index) {
-    
-};
-
-CodeBoot.prototype.importMacrosKeysBinding = function(file) {
-    
-};

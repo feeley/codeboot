@@ -46,7 +46,13 @@
 
     <form id="correctorFile" name="correctorFile" enctype="multipart/form-data" method="post">
       <fieldset style="display:none">
-	<input type="file" id="cb-corrector-file-dialog" onchange="cb.cm.handleFiles(this.files)">
+	<input type="file" id="cb-corrector-file-dialog" onchange="cb.cm.handleFiles(this.files)" directory multiple>
+      </fieldset>
+    </form>
+
+    <form id="import-file" name="import-file" enctype="multipart/form-data" method="post">
+      <fieldset style="display:none">
+	<input type="file" id="cb-import-file-dialog" onchange="cb.cm.importFiles(this.files)" webkitdirectory mozdirectory msdirectory odirectory directory multiple>
       </fieldset>
     </form>
 
@@ -100,6 +106,47 @@
               <h5 class="dropdown-header">Graphics</h5>
               <a href="#" class="dropdown-item" data-cb-setting-graphics="show-window"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Show drawing window</a>
 
+              <div class="dropdown-divider"></div>
+
+              <!-- Macro File Dialog Action -->
+              <h5 class="dropdown-header">Developer</h5>
+              <a href="#"
+                 class="dropdown-item"
+                 onclick="cb.cm.toggleNav()">
+                <span id="check-correction-mode"
+                      style="visibility: hidden;">
+                  <i class="fa fa-check"></i>
+                </span>&nbsp;&nbsp;
+                Correction Mode
+              </a>
+              <a id="load-macros"
+                 href="#"
+                 onclick="cb.mm.loadMacrosDialog()"
+                 class="dropdown-item">
+                <span style="visibility: hidden;">
+                  <i class="fa fa-check"></i>
+                </span>&nbsp;&nbsp;
+                Macros
+              </a>
+	      <a id="load-correction-template"
+		 href="#"
+		 onclick="cb.cm.loadTemplateDialog()"
+		 class="dropdown-item">
+		<span style="visibility: hidden;">
+		  <i class="fa fa-check"></i>
+		</span>&nbsp;&nbsp;
+		Correction Template
+	      </a>
+
+	      <a id="import-files-option"
+		 href="#"
+		 onclick="cb.cm.importFileDialog()"
+		 class="dropdown-item">
+		<span style="visibility: hidden;">
+		  <i class="fa fa-check"></i>
+		</span>&nbsp;&nbsp;
+		Import Files
+	      </a>
             </div>
           </span>
 

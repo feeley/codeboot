@@ -711,7 +711,7 @@ CodeBoot.prototype.stop = function (reason) {
 
     if (cb.programState.mode !== cb.modeStopped()) {
 
-        var msg = $('<span class="cb-repl-error"/>');
+        var msg   = $('<span class="cb-repl-error"/>');
         var withStepCounter = cb.showingStepCounter();
 
         if (reason !== null) {
@@ -725,7 +725,8 @@ CodeBoot.prototype.stop = function (reason) {
             if (withStepCounter) {
                 reason += ' after ';
             }
-            msg.text(reason);
+
+            msg.html(reason);
         }
 
         if (withStepCounter) {
@@ -740,6 +741,7 @@ CodeBoot.prototype.stop = function (reason) {
         }
 
         cb.enterMode(cb.modeStopped());
+
     }
 };
 
@@ -772,7 +774,7 @@ CodeBoot.prototype.within = function (rect, viewport) {
 
     var x = (rect.left + rect.right) / 2;
     var y = (rect.top + rect.bottom) / 2;
- 
+
     //alert(x+','+y+'   '+viewport.left+','+(viewport.left+viewport.clientWidth)+','+viewport.top+','+(viewport.top+viewport.clientHeight));
 
     if (x < viewport.left) return false;
@@ -1123,6 +1125,7 @@ well_known_global['setTimeout'] = true;
 well_known_global['clearTimeout'] = true;
 well_known_global['readFile'] = true;
 well_known_global['writeFile'] = true;
+well_known_global['help'] = true;
 
 CodeBoot.prototype.execute = function (single_step) {
     if (false && cb.hideExecPoint()) { //TODO: find a better way... this causes too much flicker
@@ -1221,7 +1224,7 @@ CodeBoot.prototype.executionEndedWithResult = function (result) {
 };
 
 CodeBoot.prototype.executionHook = function () {
-};              
+};
 
 CodeBoot.prototype.run = function (single_step) {
 
@@ -1267,7 +1270,13 @@ CodeBoot.prototype.run = function (single_step) {
         code_gen = function () {
             var code = cb.compile_internal_file(filename);
             return function (rte, cont) {
-                cb.undeclareGlobals(rte);
+		/////////////////////////////////////////////////////
+		// Allow user to load multiple files without erasing
+		// previous definition in global scope.
+		// Uncomment to deactivate.
+		//
+                // cb.undeclareGlobals(rte);
+		/////////////////////////////////////////////////////
                 return code(rte, cont);
             };
         };
@@ -1738,6 +1747,7 @@ CodeBoot.prototype.urlGet = function (url) {
                                  'cb-repl-error');
         }
     });
+    
     return content;
 };
 
@@ -1835,6 +1845,7 @@ CodeBoot.prototype.syntaxError = function (loc, kind, msg) {
 };
 
 CodeBoot.prototype.errorMessage = function (loc, kind, msg) {
+
     var locText = '';
     if (cb.options.showLineNumbers && loc.container.toString() != '<REPL>') {
         locText = loc.toString('simple') + ': ';
@@ -1857,3 +1868,5 @@ CodeBoot.prototype.redo = function (cm) {
 };
 
 cb.initProgramState();
+
+

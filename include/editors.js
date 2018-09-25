@@ -65,10 +65,10 @@ CodeBoot.prototype.createCodeEditor = function (node, fileEditor) {
             'Ctrl-L': function (cm) { cb.resetREPL(); },
             'Esc': function (cm) { cb.execStop(); },
             'Enter': function (cm) { if (cb.programState.mode === cb.modeStopped()) return CodeMirror.Pass; cb.execStep(); },
-            'Shift-Enter': function (cm) { cb.execStep(); },
-            'Ctrl-M': function(cm) { cb.fs.editorManager.fileManager.feedbackManager.createMark(); },
-            'Shift-Ctrl-M': function(cm) { cb.fs.editorManager.fileManager.feedbackManager.mergeMarks(); },
-            'Ctrl-D': function(cm) { cb.fs.editorManager.fileManager.feedbackManager.removeMarks(); },
+            'Ctrl-M': function(cm) { cb.fm.createMark(); },
+            'Ctrl-O': function(cm) { cb.fm.openMark(); },
+            'Shift-Ctrl-M': function(cm) { cb.fm.mergeMarks(); },
+            'Ctrl-D': function(cm) { cb.fm.removeMarks(); },
             'F5' : function (cm) { cb.execStep(); },
             'F6' : function (cm) { cb.execAnimate(); },
             'F7' : function (cm) { cb.execEval(); },
@@ -92,14 +92,33 @@ CodeBoot.prototype.createCodeEditor = function (node, fileEditor) {
         //,viewportMargin: Infinity
     };
 
-    // Add to extraKeys the macros binding
-    this.bindedMacros.forEach(function (e, i) {
-        options.extraKeys[e] = function(cm) { cb.fs.editorManager.fileManager.feedbackManager.insertMacro(i); }
+    // Add Macros binding
+    cb.mm.macros.forEach((macro) => {
+
+        options.extraKeys[macro.kbd] = (function () {
+
+            var str = "var func = function (cm) {" +
+                 macro.action +
+                "(";
+
+            if (typeof macro.param === 'string')
+                str += '"'+macro.param+'"';
+            else if (macro.param !== undefined)
+                str += macro.param;
+
+            str += ");}";
+
+            try {
+                eval(str);
+                return func;
+            }
+            catch (e) {
+                console.error('Error in Macros expension evaluation.', e);
+                return undefined;
+            }
+
+        })();
     });
-
-    console.log(options.extraKeys);
-
-
 
     var editor = CodeMirror.fromTextArea(node, options);
 
@@ -116,6 +135,7 @@ cb.loadFile = function (cm, f) {
     cb_internal_readTextFile(f, function(contents) {
         cm.setValue(contents);
     });
+
 };
 
 function cb_internal_readTextFile(f, callback) {
