@@ -20,7 +20,7 @@ function CodeBoot() {
 
     this.saveInProgress = false;
     this.lastFocusedEditor = null;
-    this.allowLosingFocus = true; // Allow focus on feedback modal
+    this.allowLosingFocus = false; // don't allow focus on feedback modal
     this.options = {
         showLineNumbers: false,
         largeFont: false
