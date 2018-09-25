@@ -1,14 +1,29 @@
+CodeBoot.prototype.getState = function () {
+    try {
+        return localStorage['codeboot'];
+    } catch (e) {
+        return null;
+    }
+};
+
+CodeBoot.prototype.setState = function (value) {
+    try {
+        localStorage['codeboot'] = value;
+    } catch (e) {
+    }
+};
+
 CodeBoot.prototype.clearSession = function () {
     localStorage.removeItem('codeboot');
 };
 
 CodeBoot.prototype.saveSession = function () {
     var state = cb.serializeState();
-    localStorage['codeboot'] = JSON.stringify(state);
+    cb.setState(JSON.stringify(state));
 };
 
 CodeBoot.prototype.loadSession = function () {
-    var state = localStorage['codeboot'];
+    var state = cb.getState();
     if (state) {
         cb.fs.init();
         cb.restoreState(JSON.parse(state));
