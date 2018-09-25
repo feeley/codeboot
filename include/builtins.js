@@ -269,7 +269,7 @@ cb.setGlobal('setpc', builtin_setpc);
 
 // setpw
 
-builtin_setpc.toString = function () {
+builtin_setpw.toString = function () {
     return 'function setpw(width) { ... }';
 };
 
