@@ -63,13 +63,13 @@ CodeBoot.prototype.createCodeEditor = function (node, fileEditor) {
             // },
 
             'Ctrl-L': function (cm) { cb.resetREPL(); },
-            'Esc': function (cm) { cb.execStop(); },
-            'Enter': function (cm) { if (cb.programState.mode === cb.modeStopped()) return CodeMirror.Pass; cb.execStep(); },
-            'Shift-Enter': function (cm) { cb.execStep(); },
-            'F5' : function (cm) { cb.execStep(); },
-            'F6' : function (cm) { cb.execAnimate(); },
-            'F7' : function (cm) { cb.execEval(); },
-            'F8' : function (cm) { cb.execStop(); }
+            'Esc': function (cm) { cb.eventStop(); },
+            'Enter': function (cm) { if (cb.programState.mode === cb.modeStopped()) return CodeMirror.Pass; cb.eventStep(); },
+            'Shift-Enter': function (cm) { cb.eventStep(); },
+            'F5' : function (cm) { cb.eventStep(); },
+            'F6' : function (cm) { cb.eventAnimate(); },
+            'F7' : function (cm) { cb.eventEval(); },
+            'F8' : function (cm) { cb.eventStop(); }
         },
 
         onDragEvent: function(cm, event) {
@@ -329,13 +329,13 @@ CodeBoot.prototype.createREPL = function () {
                 cm.cb.history.next();
                 return true;
             },
-            'Esc': function (cm) { cb.execStop(); },
-            'Enter': function (cm) { cb.execStepOrEval(); },
-            'Shift-Enter': function (cm) { cb.execStep(); },
-            'F5' : function (cm) { cb.execStep(); },
-            'F6' : function (cm) { cb.execAnimate(); },
-            'F7' : function (cm) { cb.execEval(); },
-            'F8' : function (cm) { cb.execStop(); }
+            'Esc': function (cm) { cb.eventStop(); },
+            'Enter': function (cm) { cb.eventEval(); },
+            'Shift-Enter': function (cm) { cb.eventStep(); },
+            'F5' : function (cm) { cb.eventStep(); },
+            'F6' : function (cm) { cb.eventAnimate(); },
+            'F7' : function (cm) { cb.eventEval(); },
+            'F8' : function (cm) { cb.eventStop(); }
         },
         //viewportMargin: Infinity,
         lineWrapping: true

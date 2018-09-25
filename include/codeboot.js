@@ -300,8 +300,10 @@ $(document).ready(function () {
 });
 
 CodeBoot.prototype.eventStep = function (event) {
-    cb.execStep();
-    cb.focusLastFocusedEditor();
+    setTimeout(function () {
+        cb.execStep();
+        cb.focusLastFocusedEditor();
+    }, 0);
 };
 
 CodeBoot.prototype.setLanguageLevel = function (level) {
@@ -429,18 +431,24 @@ CodeBoot.prototype.setShowDrawingWindow = function (show) {
 // Execution events
 
 CodeBoot.prototype.eventAnimate = function () {
-    cb.execAnimate();
-    cb.focusLastFocusedEditor();
+    setTimeout(function () {
+        cb.execAnimate();
+        cb.focusLastFocusedEditor();
+    }, 0);
 };
 
 CodeBoot.prototype.eventEval = function () {
-    cb.execEval();
-    cb.focusLastFocusedEditor();
+    setTimeout(function () {
+        cb.execEval();
+        cb.focusLastFocusedEditor();
+    }, 0);
 };
 
 CodeBoot.prototype.eventStop = function () {
-    cb.execStop();
-    cb.focusLastFocusedEditor();
+    setTimeout(function () {
+        cb.execStop();
+        cb.focusLastFocusedEditor();
+    }, 0);
 };
 
 function cb_internal_getBounds($element) {
