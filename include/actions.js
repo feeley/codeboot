@@ -1106,6 +1106,7 @@ well_known_global['getScreenWidth'] = true;
 well_known_global['getScreenHeight'] = true;
 well_known_global['setPixel'] = true;
 well_known_global['exportScreen'] = true;
+well_known_global['getMouse'] = true;
 well_known_global['cs'] = true;
 well_known_global['pu'] = true;
 well_known_global['pd'] = true;
@@ -1436,8 +1437,8 @@ builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
         var pixels = new cb.output.PixelGrid(divNode, {
             rows: height,
             cols: width,
-            pixelSize: (pixSize >= 3) ? pixSize-1 : pixSize,
-            borderWidth: (pixSize >= 3) ? 1 : 0,
+            pixelSize: (pixSize >= 5) ? pixSize-1 : pixSize,
+            borderWidth: (pixSize >= 5) ? 1 : 0,
         });
 
 
@@ -1601,6 +1602,30 @@ builtin_exportScreen._apply_ = function (rte, cont, this_, params) {
 
     return exec_fn_body(code,
                         builtin_exportScreen,
+                        rte,
+                        cont,
+                        this_,
+                        params,
+                        [],
+                        null,
+                        null);
+};
+
+function builtin_getMouse() {
+    throw 'unimplemented';///////////////////////////
+}
+
+builtin_getMouse._apply_ = function (rte, cont, this_, params) {
+
+    var code = function (rte, cont) {
+        var pos = cb.mousePos;
+        if (cb.screenPixels)
+            pos = cb.screenPixels.pageToRelative(pos);
+        return return_fn_body(rte, { x: pos.x, y: pos.y, down: cb.mouseDown });
+    };
+
+    return exec_fn_body(code,
+                        builtin_getMouse,
                         rte,
                         cont,
                         this_,

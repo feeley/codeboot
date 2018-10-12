@@ -35,6 +35,10 @@ function CodeBoot() {
     this.lastSource = null;
     this.lastResult = null;
     this.lastResultRepresentation = null;
+
+    this.screenPixels = null;
+    this.mousePos = { x: 0, y: 0 };
+    this.mouseDown = false;
 }
 
 var cb = new CodeBoot();
@@ -218,6 +222,18 @@ CodeBoot.prototype.setupEventHandlers = function () {
     $('#cb-exec-btn-stop').on('click', function (event) {
         $('#cb-exec-btn-stop').tooltip('hide');
         cb.eventStop();
+    });
+
+    $('body').on('mousemove', function (event) {
+        cb.mousePos = { x: event.pageX, y: event.pageY };
+    });
+
+    $('body').on('mousedown', function (event) {
+        cb.mouseDown = true;
+    });
+
+    $('body').on('mouseup', function (event) {
+        cb.mouseDown = false;
     });
 
     $(function () {

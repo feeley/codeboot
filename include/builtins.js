@@ -179,6 +179,14 @@ builtin_exportScreen.toString = function () {
 
 cb.setGlobal('exportScreen', builtin_exportScreen);
 
+// getMouse
+
+builtin_getMouse.toString = function () {
+    return 'function getMouse() { ... }';
+};
+
+cb.setGlobal('getMouse', builtin_getMouse);
+
 // cs
 
 builtin_cs.toString = function () {
