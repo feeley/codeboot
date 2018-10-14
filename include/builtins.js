@@ -65,8 +65,10 @@ importStandardFromHost();
 // print
 
 function builtin_print() {
-    cb.addTranscriptREPL(Array.prototype.slice.call(arguments).join('') + '\n',
-                         'cb-repl-output');
+    var args = Array.prototype.slice.call(arguments).map(function (x) {
+        return (typeof x === 'object') ? cb.printedRepresentation(x) : x;
+    });
+    cb.addTranscriptREPL(args.join('') + '\n', 'cb-repl-output');
     cb.programState.rte.step_limit = -1; // force exit of trampoline
 }
 
@@ -170,6 +172,14 @@ builtin_setPixel.toString = function () {
 };
 
 cb.setGlobal('setPixel', builtin_setPixel);
+
+// fillRectangle
+
+builtin_fillRectangle.toString = function () {
+    return 'function fillRectangle(x, y, width, height, color) { ... }';
+};
+
+cb.setGlobal('fillRectangle', builtin_fillRectangle);
 
 // exportScreen
 

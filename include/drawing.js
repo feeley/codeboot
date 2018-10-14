@@ -6,12 +6,18 @@ function dom_create_canvas(id, width, height) {
   c.style.border = '2px solid #eef';
   c.style.padding = '1px';
   var ctx = c.getContext('2d');
-  ctx.translate(width/2, height/2);
-  ctx.scale(1, -1);
   ctx.lineCap = 'butt';
   ctx.font = '10px Courier';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  return c;
+}
+
+function dom_create_canvas_cartesian(id, width, height) {
+  var c = dom_create_canvas(id, width, height);
+  var ctx = c.getContext('2d');
+  ctx.translate(width/2, height/2);
+  ctx.scale(1, -1);
   return c;
 }
 
@@ -48,6 +54,11 @@ function dom_line_to(context, x0, y0, x1, y1) {
   context.moveTo(x0, y0);
   context.lineTo(x1, y1);
   context.stroke();
+}
+
+function dom_fill_rect(context, x, y, w, h, color) {
+  context.fillStyle = color;
+  context.fillRect(x, y, w, h);
 }
 
 function dom_set_color(context, color) {
@@ -100,14 +111,14 @@ function dom_remove_children(parent) {
 
 function DrawingWindow(id, width, height) {
 
-  this.turtle_canvas = dom_create_canvas(id+'-turtle', width, height);
+  this.turtle_canvas = dom_create_canvas_cartesian(id+'-turtle', width, height);
   this.turtle_context = dom_canvas_context(this.turtle_canvas);
   this.turtle_canvas.style.position = 'absolute';
-  this.drawing_canvas = dom_create_canvas(id+'-drawing', width, height);
+  this.drawing_canvas = dom_create_canvas_cartesian(id+'-drawing', width, height);
   this.drawing_canvas.style.position = 'absolute';
   this.drawing_canvas.style.boxShadow = '0 0 10px #999';
   this.drawing_context = dom_canvas_context(this.drawing_canvas);
-  this.grid_canvas = dom_create_canvas(id+'-grid', width, height);
+  this.grid_canvas = dom_create_canvas_cartesian(id+'-grid', width, height);
   this.grid_context = dom_canvas_context(this.grid_canvas);
 
   dom_set_color(this.grid_context, '#eef');
@@ -166,7 +177,7 @@ DrawingWindow.prototype.excursion = function (thunk) {
   return result;
 };
 
-DrawingWindow.prototype.cs = function (width, height) {
+DrawingWindow.prototype.cs = function () {
   dom_clear(this.drawing_canvas);
   this.turtle_height = 0;
   this.pen_height = 0;
@@ -327,6 +338,7 @@ function showing_drawing_window() {
 }
 
 function show_drawing_window() {
+  $('#cb-pixels-window').css('display', 'none');
   $('#cb-drawing-window').css('display', 'inline');
   var parent = document.getElementById('cb-drawing-window');
   dom_remove_children(parent);
@@ -346,9 +358,13 @@ function hide_drawing_window() {
 function update_playground_visibility() {
   var drawing_window_visible =
       $('#cb-drawing-window').css('display') !== 'none';
-  $('a[data-cb-setting-graphics="show-window"] > span')
+  var pixels_window_visible =
+      $('#cb-pixels-window').css('display') !== 'none';
+  $('a[data-cb-setting-graphics="show-drawing-window"] > span')
         .css('visibility', drawing_window_visible ? 'visible' : 'hidden');
-  if (drawing_window_visible || $('#b').html() !== '') {
+  $('a[data-cb-setting-graphics="show-pixels-window"] > span')
+        .css('visibility', pixels_window_visible ? 'visible' : 'hidden');
+  if (drawing_window_visible || pixels_window_visible || $('#b').html() !== '') {
       $('body').removeClass('cb-hide-playground');
   } else {
       $('body').addClass('cb-hide-playground');
@@ -474,4 +490,163 @@ function builtin_drawtext(text) {
     throw 'drawtext expects 1 parameter';
   drawing_window.drawtext(text);
   ensure_showing_drawing_window();
+}
+
+function PixelsWindow(id, width, height, scale) {
+
+  var grid_thickness = (scale >= 5) ? 1 : 0;
+
+  this.width = width;
+  this.height = height;
+  this.scale = scale;
+
+  this.pixels_canvas = dom_create_canvas(id+'-pixels', width*scale, height*scale);
+  this.pixels_canvas.style.boxShadow = '0 0 10px #999';
+  this.pixels_context = dom_canvas_context(this.pixels_canvas);
+  this.grid_canvas = dom_create_canvas(id+'-grid', width*scale, height*scale);
+  this.grid_canvas.style.position = 'absolute';
+  this.grid_context = dom_canvas_context(this.grid_canvas);
+
+  if (grid_thickness > 0) {
+
+    dom_set_color(this.grid_context, '#eef');
+    dom_set_thickness(this.grid_context, grid_thickness);
+
+    for (var x=0; x<=width; x++) {
+      dom_line_to(this.grid_context, x*scale, 0, x*scale, height*scale);
+    }
+
+    for (var y=0; y<=height; y++) {
+      dom_line_to(this.grid_context, 0, y*scale, width*scale, y*scale);
+    }
+  }
+
+  this.pixels = [];
+
+  for (var i=0; i<height; i++) {
+    this.pixels[i] = Array(width).fill('#000000');
+  }
+}
+
+PixelsWindow.prototype.toDataURL = function () {
+
+    var w = this.pixels_canvas.width;
+    var h = this.pixels_canvas.height;
+    var c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    var ctx = c.getContext('2d');
+
+    ctx.fillStyle = 'rgba(255,255,255,1)';
+    ctx.fillRect(0,0,w,h);
+
+    ctx.drawImage(this.pixels_canvas, 0, 0);
+    ctx.drawImage(this.grid_canvas, 0, 0);
+
+    return c.toDataURL();
+};
+
+PixelsWindow.prototype.screenshot = function () {
+    window.open(pixels_window.toDataURL());
+};
+
+PixelsWindow.prototype.fill_rect = function (x, y, w, h, color) {
+  var ctx = this.pixels_context;
+  var scale = this.scale;
+  dom_fill_rect(ctx, x*scale, y*scale, w*scale, h*scale, color);
+  for (var i=0; i<h; i++) {
+    var row = this.pixels[y+i];
+    for (var j=0; j<w; j++) {
+      row[x+j] = color;
+    }
+  }
+};
+
+PixelsWindow.prototype.clear = function () {
+  this.fill_rect(0, 0, this.width, this.height, '#000000');
+};
+
+PixelsWindow.prototype.setScreenMode = function (width, height, scale) {
+  if (scale === void 0) scale = 1;
+  hide_pixels_window();
+  create_pixels_window(width, height, scale);
+  ensure_showing_pixels_window();
+};
+
+PixelsWindow.prototype.fillRectangle = function (x, y, w, h, color) {
+  this.fill_rect(x, y, w, h, color);
+  ensure_showing_pixels_window();
+};
+
+PixelsWindow.prototype.clearScreen = function () {
+  this.fillRectangle(0, 0, this.width, this.height, '#000000');
+};
+
+PixelsWindow.prototype.setPixel = function (x, y, color) {
+  this.fillRectangle(x, y, 1, 1, color);
+};
+
+PixelsWindow.prototype.exportScreen = function () {
+  return this.pixels.map(function (row) { return row.join(''); }).join('\n');
+};
+
+var pixels_window;
+
+function create_pixels_window(width, height, scale) {
+  pixels_window = new PixelsWindow('cb-pixels-window', width, height, scale);
+  pixels_window.clear();
+}
+
+function init_pixels_window(small) {
+  if (small) {
+    create_pixels_window(200, 200, 1);
+  } else {
+    create_pixels_window(360, 240, 1);
+  }
+}
+
+init_pixels_window(false);
+
+function showing_pixels_window() {
+  return $('#cb-pixels-window').is(':visible');
+}
+
+function show_pixels_window() {
+  $('#cb-drawing-window').css('display', 'none');
+  $('#cb-pixels-window').css('display', 'inline');
+  var parent = document.getElementById('cb-pixels-window');
+  dom_remove_children(parent);
+  parent.appendChild(pixels_window.grid_canvas);
+  parent.appendChild(pixels_window.pixels_canvas);
+  update_playground_visibility();
+}
+
+function hide_pixels_window() {
+  var parent = document.getElementById('cb-pixels-window');
+  dom_remove_children(parent);
+  $('#cb-pixels-window').css('display', 'none');
+  update_playground_visibility();
+}
+
+function ensure_showing_pixels_window() {
+  if (!showing_pixels_window()) {
+    show_pixels_window();
+  }
+}
+
+PixelsWindow.prototype.pageToRelative = function (coord) {
+  var rect = getCoords(this.pixels_canvas);
+  var scale = this.scale;
+  var x = Math.max(0,
+                   Math.min(this.width-1,
+                            Math.floor((coord.x - rect.x - 3)/scale)));
+  var y = Math.max(0,
+                   Math.min(this.height-1,
+                            Math.floor((coord.y - rect.y - 3)/scale)));
+    return { x: x, y: y };
+};
+
+function getCoords(elem) {
+    var rect = elem.getBoundingClientRect();
+    return { x: rect.left + pageXOffset, y: rect.top + pageYOffset };
 }

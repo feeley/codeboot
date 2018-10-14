@@ -437,6 +437,7 @@ CodeBoot.prototype.replay = function () {
             } else if (command.charAt(j+1) === 'C') {
                 cb.fs.removeAllEditors();
                 drawing_window.cs();
+                pixels_window.clear();
                 j += 2;
             } else {
                 // unknown command
@@ -1105,6 +1106,7 @@ well_known_global['setScreenMode'] = true;
 well_known_global['getScreenWidth'] = true;
 well_known_global['getScreenHeight'] = true;
 well_known_global['setPixel'] = true;
+well_known_global['fillRectangle'] = true;
 well_known_global['exportScreen'] = true;
 well_known_global['getMouse'] = true;
 well_known_global['cs'] = true;
@@ -1264,6 +1266,7 @@ CodeBoot.prototype.run = function (single_step) {
         cb.replaceInputREPL(source);
 
         drawing_window.cs(); /* clear drawing window when running file */
+        pixels_window.clear();
 
         code_gen = function () {
             var code = cb.compile_internal_file(filename);
@@ -1411,43 +1414,30 @@ builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
             throw 'setScreenMode expects 2 parameters';
         }
 
+        var max_width = 360;
+        var max_height = 240;
         var width = params[0];
         var height = params[1];
 
         if (typeof width !== 'number' ||
             Math.floor(width) !== width ||
             width < 1 ||
-            width > 300) {
-            throw 'width parameter of setScreenMode must be a positive integer no greater than 300';
+            width > max_width) {
+            throw 'width parameter of setScreenMode must be a positive integer no greater than ' + max_width;
         }
 
         if (typeof height !== 'number' ||
             Math.floor(height) !== height ||
             height < 1 ||
-            height > 100) {
-            throw 'height parameter of setScreenMode must be a positive integer no greater than 100';
+            height > max_height) {
+            throw 'height parameter of setScreenMode must be a positive integer no greater than ' + max_height;
         }
 
-        var pixSize = Math.min(10,
-                               Math.floor(300 / width + 1),
-                               Math.floor(150 / height + 1));
+        var scale = Math.min(20,
+                             Math.floor(max_width / width),
+                             Math.floor(max_height / height));
 
-        var divNode = document.createElement('div');
-
-        var pixels = new cb.output.PixelGrid(divNode, {
-            rows: height,
-            cols: width,
-            pixelSize: (pixSize >= 5) ? pixSize-1 : pixSize,
-            borderWidth: (pixSize >= 5) ? 1 : 0,
-        });
-
-
-        pixels.clear(pixels.black);
-
-        cb.addLineWidgetTranscriptREPL(divNode);
-        cb.screenPixels = pixels;
-        cb.screenWidth = width;
-        cb.screenHeight = height;
+        pixels_window.setScreenMode(width, height, scale);
 
         return return_fn_body(rte, void 0);
     };
@@ -1463,8 +1453,6 @@ builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
                         null);
 };
 
-cb.screenWidth = 0;
-
 function builtin_getScreenWidth() {
     throw 'unimplemented';///////////////////////////
 }
@@ -1472,7 +1460,7 @@ function builtin_getScreenWidth() {
 builtin_getScreenWidth._apply_ = function (rte, cont, this_, params) {
 
     var code = function (rte, cont) {
-        return return_fn_body(rte, cb.screenWidth);
+        return return_fn_body(rte, pixels_window.width);
     };
 
     return exec_fn_body(code,
@@ -1486,8 +1474,6 @@ builtin_getScreenWidth._apply_ = function (rte, cont, this_, params) {
                         null);
 };
 
-cb.screenHeight = 0;
-
 function builtin_getScreenHeight() {
     throw 'unimplemented';///////////////////////////
 }
@@ -1495,7 +1481,7 @@ function builtin_getScreenHeight() {
 builtin_getScreenHeight._apply_ = function (rte, cont, this_, params) {
 
     var code = function (rte, cont) {
-        return return_fn_body(rte, cb.screenHeight);
+        return return_fn_body(rte, pixels_window.height);
     };
 
     return exec_fn_body(code,
@@ -1508,6 +1494,28 @@ builtin_getScreenHeight._apply_ = function (rte, cont, this_, params) {
                         null,
                         null);
 };
+
+function convertRGB(rgb) {
+
+  if (typeof rgb !== 'object' ||
+      rgb === null ||
+      !('r' in rgb) ||
+      typeof rgb.r !== 'number' ||
+      Math.floor(rgb.r) !== rgb.r ||
+      rgb.r < 0 || rgb.r > 255 ||
+      !('g' in rgb) ||
+      typeof rgb.g !== 'number' ||
+      Math.floor(rgb.g) !== rgb.g ||
+      rgb.g < 0 || rgb.g > 255 ||
+      !('b' in rgb) ||
+      typeof rgb.b !== 'number' ||
+      Math.floor(rgb.b) !== rgb.b ||
+      rgb.b < 0 || rgb.b > 255) {
+    return null;
+  }
+
+  return '#' + ((((((1<<8)+rgb.r)<<8)+rgb.g)<<8)+rgb.b).toString(16).slice(1);
+}
 
 function builtin_setPixel(x, y, color) {
     throw 'unimplemented';///////////////////////////
@@ -1523,51 +1531,102 @@ builtin_setPixel._apply_ = function (rte, cont, this_, params) {
 
         var x = params[0];
         var y = params[1];
-        var color = params[2];
+        var color = convertRGB(params[2]);
 
         if (typeof x !== 'number' ||
             Math.floor(x) !== x ||
             x < 0 ||
-            x >= cb.screenWidth) {
-            throw 'x parameter of setPixel must be a positive integer less than ' + cb.screenWidth;
+            x >= pixels_window.width) {
+            throw 'x parameter of setPixel must be a positive integer less than ' + pixels_window.width;
         }
 
         if (typeof y !== 'number' ||
             Math.floor(y) !== y ||
             y < 0 ||
-            y >= cb.screenHeight) {
-            throw 'y parameter of setPixel must be a positive integer less than ' + cb.screenHeight;
+            y >= pixels_window.height) {
+            throw 'y parameter of setPixel must be a positive integer less than ' + pixels_window.height;
         }
 
-        if (typeof color !== 'object' ||
-            color === null ||
-            !('r' in color) ||
-            typeof color.r !== 'number' ||
-            Math.floor(color.r) !== color.r ||
-            color.r < 0 || color.r > 255 ||
-            !('g' in color) ||
-            typeof color.g !== 'number' ||
-            Math.floor(color.g) !== color.g ||
-            color.g < 0 || color.g > 255 ||
-            !('b' in color) ||
-            typeof color.b !== 'number' ||
-            Math.floor(color.b) !== color.b ||
-            color.b < 0 || color.b > 255) {
+        if (color === null) {
             throw 'color parameter of setPixel must be a RGB structure';
         }
 
-        cb.screenPixels.setPixel(x,
-                                 y,
-                                 '#' +
-                                 (256+color.r).toString(16).slice(1) +
-                                 (256+color.g).toString(16).slice(1) +
-                                 (256+color.b).toString(16).slice(1));
+        pixels_window.setPixel(x, y, color);
 
         return return_fn_body(rte, void 0);
     };
 
     return exec_fn_body(code,
                         builtin_setPixel,
+                        rte,
+                        cont,
+                        this_,
+                        params,
+                        [],
+                        null,
+                        null);
+};
+
+function builtin_fillRectangle(x, y, color) {
+    throw 'unimplemented';///////////////////////////
+}
+
+builtin_fillRectangle._apply_ = function (rte, cont, this_, params) {
+
+    var code = function (rte, cont) {
+
+        if (params.length !== 5) {
+            throw 'fillRectangle expects 5 parameters';
+        }
+
+        var x = params[0];
+        var y = params[1];
+        var w = params[2];
+        var h = params[3];
+        var color = convertRGB(params[4]);
+
+        if (typeof x !== 'number' ||
+            Math.floor(x) !== x ||
+            x < 0 ||
+            x >= pixels_window.width) {
+            throw 'x parameter of fillRectangle must be a positive integer less than ' + pixels_window.width;
+        }
+
+        if (typeof y !== 'number' ||
+            Math.floor(y) !== y ||
+            y < 0 ||
+            y >= pixels_window.height) {
+            throw 'y parameter of fillRectangle must be a positive integer less than ' + pixels_window.height;
+        }
+
+        var max_width = pixels_window.width - x;
+        var max_height = pixels_window.height - y;
+
+        if (typeof w !== 'number' ||
+            Math.floor(w) !== w ||
+            w < 0 ||
+            w > max_width) {
+            throw 'width parameter of fillRectangle must be a positive integer less than ' + (max_width+1);
+        }
+
+        if (typeof h !== 'number' ||
+            Math.floor(h) !== h ||
+            h < 0 ||
+            h > max_height) {
+            throw 'height parameter of fillRectangle must be a positive integer less than ' + (max_height+1);
+        }
+
+        if (color === null) {
+            throw 'color parameter of fillRectangle must be a RGB structure';
+        }
+
+        pixels_window.fillRectangle(x, y, w, h, color);
+
+        return return_fn_body(rte, void 0);
+    };
+
+    return exec_fn_body(code,
+                        builtin_fillRectangle,
                         rte,
                         cont,
                         this_,
@@ -1584,20 +1643,7 @@ function builtin_exportScreen() {
 builtin_exportScreen._apply_ = function (rte, cont, this_, params) {
 
     var code = function (rte, cont) {
-        if (!('screenPixels' in cb)) {
-            return return_fn_body(rte, null);
-        }
-
-        var pixels = [];
-
-        for(var i = 0; i<cb.screenHeight; i++) {
-            pixels.push([]);
-            for(var j = 0; j<cb.screenWidth; j++) {
-                pixels[i].push(cb.screenPixels.pixels[i][j]);
-            }
-        }
-
-        return return_fn_body(rte, pixels.map(function(e) { return e.join(''); }).join('\n'));
+        return return_fn_body(rte, pixels_window.exportScreen());
     };
 
     return exec_fn_body(code,
@@ -1618,9 +1664,7 @@ function builtin_getMouse() {
 builtin_getMouse._apply_ = function (rte, cont, this_, params) {
 
     var code = function (rte, cont) {
-        var pos = cb.mousePos;
-        if (cb.screenPixels)
-            pos = cb.screenPixels.pageToRelative(pos);
+        pos = pixels_window.pageToRelative(cb.mousePos);
         return return_fn_body(rte, { x: pos.x, y: pos.y, down: cb.mouseDown });
     };
 

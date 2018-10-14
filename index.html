@@ -36,7 +36,7 @@
       <div id="cb-menu">
 
         <span id="cb-menu-brand">
-          <button class="btn btn-secondary cb-button" type="button" id="cb-menu-brand-btn" data-toggle="modal" data-target="#cb-about-box">codeBoot v2.0<span id="cb-menu-brand-btn-mode"></span></button>
+          <button class="btn btn-secondary cb-button" type="button" id="cb-menu-brand-btn" data-toggle="modal" data-target="#cb-about-box">codeBoot v2.1<span id="cb-menu-brand-btn-mode"></span></button>
         </span>
 
         <span id="cb-menu-file" class="dropdown">
@@ -72,7 +72,8 @@
             <div class="dropdown-divider"></div>
 
             <h5 class="dropdown-header">Graphics</h5>
-            <a href="#" class="dropdown-item" data-cb-setting-graphics="show-window"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Show drawing window</a>
+            <a href="#" class="dropdown-item" data-cb-setting-graphics="show-drawing-window"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Show drawing window</a>
+            <a href="#" class="dropdown-item" data-cb-setting-graphics="show-pixels-window"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Show pixels window</a>
 
           </div>
         </span>
@@ -122,7 +123,8 @@
       <textarea id="cb-repl"></textarea>
     </div>
     <div id="cb-playground">
-      <div id="cb-drawing-window" onclick="drawing_window.screenshot();"></div>
+      <div id="cb-drawing-window" ondblclick="drawing_window.screenshot();"></div>
+      <div id="cb-pixels-window" ondblclick="pixels_window.screenshot();"></div>
       <div id="b"></div>
     </div>
   </div>
@@ -197,7 +199,6 @@
 <script src="include/fs.js"></script>
 <script src="include/storage.js"></script>
 <script src="include/tutorial.js"></script>
-<script src="include/output.js"></script>
 <script src="include/jquery.visibility.js"></script>
 <script>cb.query(null);</script>
 
