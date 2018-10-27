@@ -1664,8 +1664,17 @@ function builtin_getMouse() {
 builtin_getMouse._apply_ = function (rte, cont, this_, params) {
 
     var code = function (rte, cont) {
-        pos = pixels_window.pageToRelative(cb.mousePos);
-        return return_fn_body(rte, { x: pos.x, y: pos.y, down: cb.mouseDown });
+        var state;
+        if (showing_drawing_window()) {
+            var pos = drawing_window.pageToRelative(cb.mousePos);
+            state = { x: pos.x, y: pos.y, down: cb.mouseDown };
+        } else if (showing_pixels_window()) {
+            var pos = pixels_window.pageToRelative(cb.mousePos);
+            state = { x: pos.x, y: pos.y, down: cb.mouseDown };
+        } else {
+            state = { x: cb.mousePos.x, y: cb.mousePos.y, down: cb.mouseDown };
+        }
+        return return_fn_body(rte, state);
     };
 
     return exec_fn_body(code,

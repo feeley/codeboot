@@ -316,6 +316,20 @@ DrawingWindow.prototype.drawtext = function (text) {
   ctx.restore();
 };
 
+DrawingWindow.prototype.pageToRelative = function (coord) {
+    var rect = getCoords(this.drawing_canvas);
+    var w = this.drawing_canvas.width;
+    var h = this.drawing_canvas.height;
+    var x = Math.max(0, Math.min(w, coord.x - rect.x - 3)) - w/2;
+    var y = h/2 - Math.max(0, Math.min(h, coord.y - rect.y - 3));
+    return { x: x, y: y };
+};
+
+function getCoords(elem) {
+    var rect = elem.getBoundingClientRect();
+    return { x: rect.left + pageXOffset, y: rect.top + pageYOffset };
+}
+
 var drawing_window;
 
 function create_drawing_window(width, height) {
