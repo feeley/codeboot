@@ -1,42 +1,48 @@
 /* ----- UI helpers ----- */
 
-CodeBoot.prototype.makeCloseButton = function () {
+CodeBootVM.prototype.makeCloseButton = function () {
+    var vm = this;
     return $('<button/>')
         .addClass('close')
         .append('<i class="fa fa-close"></i>');
 }
 
-CodeBoot.prototype.makeDeleteButton = function () {
+CodeBootVM.prototype.makeDeleteButton = function () {
+    var vm = this;
     return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Delete file"/>')
         .addClass('close')
         .append('<i class="fa fa-trash-o"></i>');
 }
 
-CodeBoot.prototype.makeShareButton = function () {
+CodeBootVM.prototype.makeShareButton = function () {
+    var vm = this;
     return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Share file"/>')
         .addClass('close')
         .append('<i class="fa fa-share"></i>');
 }
 
-CodeBoot.prototype.makeDownloadButton = function () {
+CodeBootVM.prototype.makeDownloadButton = function () {
+    var vm = this;
     return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Download file"/>')
         .addClass('close')
         .append('<i class="fa fa-download"></i>');
 }
 
-CodeBoot.prototype.makeEmailButton = function () {
+CodeBootVM.prototype.makeEmailButton = function () {
+    var vm = this;
     return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Send codeBoot link by email"/>')
         .addClass('close')
         .append('<i class="fa fa-envelope"></i>');
 }
 
-CodeBoot.prototype.makeCopyButton = function () {
+CodeBootVM.prototype.makeCopyButton = function () {
+    var vm = this;
     return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Copy codeBoot link to clipboard"/>')
         .addClass('close')
         .append('<svg width="14" height="16" version="1.1" viewBox="0 0 14 16"><path fill-rule="evenodd" d="M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z"></path></svg>');
 };
 
-CodeBoot.prototype.scrollTo = function (elementOrSelector) {
+CodeBootVM.prototype.scrollTo = function (elementOrSelector) {
     var elementOffset = $(elementOrSelector).position().top;
     $('#cb-editors').animate({scrollTop: elementOffset}, 400);
 };
@@ -44,233 +50,314 @@ CodeBoot.prototype.scrollTo = function (elementOrSelector) {
 /* ----- Internal file system ----- */
 
 var BUILTIN_FILES = {
-        'sample/hello.js' : '// This program prints a famous greeting\n' +
-                            '\n' +
-                            'print("Hello, world!\\n");\n',
-        'sample/fact.js'  : '// This program prints the factorial of 5\n' +
-                            '\n' +
-                            'var fact = function (n) {\n' +
-                            '    if (n <= 1) {\n' +
-                            '        return 1;\n' +
-                            '    } else {\n' +
-                            '        return n * fact(n-1);\n' +
-                            '    }\n' +
-                            '};\n' +
-                            '\n' +
-                            'print(fact(5));\n',
-        'sample/sqrt2.js' : '// This program computes the square root of 2 without using Math.sqrt\n' +
-                            '\n' +
-                            'var n = 2;\n' +
-                            'var a = n; // approximation of sqrt(n)\n' +
-                            '\n' +
-                            'do {\n' +
-                            '    a = (a + n/a) / 2;\n' +
-                            '} while (a != (a + n/a) / 2);\n' +
-                            '\n' +
-                            'print(a);\n',
-};
 
-var NEW_FILE_DEFAULT_CONTENT = '// Enter JavaScript code here';
+    'sample/hello.js' :
+        '// This program prints a famous greeting\n' +
+        '\n' +
+        'print("Hello, world!");\n',
+
+    'sample/hello.py' :
+        '# This program prints a famous greeting\n' +
+        '\n' +
+        'print("Hello, world!")\n',
+
+    'sample/sqrt2.js' :
+        '// This program computes the square root of 2 without using Math.sqrt\n' +
+        '\n' +
+        'var n = 2;       // number whose square root is to be computed\n' +
+        'var approx = n;  // first approximation of sqrt(n)\n' +
+        '\n' +
+        'for (;;) {\n' +
+        '    next = (approx + n/approx) / 2;  // improve approximation\n' +
+        '    if (next == approx)              // stop when no improvement\n' +
+        '        break;\n' +
+        '}\n' +
+        '\n' +
+        'print(approx);  // print square root of n\n',
+
+    'sample/sqrt2.py' :
+        '# This program computes the square root of 2 without using math.sqrt\n' +
+        '\n' +
+        'n = 2       # number whose square root is to be computed\n' +
+        'approx = n  # first approximation of sqrt(n)\n' +
+        '\n' +
+        'while True:\n' +
+        '    next = (approx + n/approx) / 2  # improve approximation\n' +
+        '    if next == approx:              # stop when no improvement\n' +
+        '        break\n' +
+        '    approx = next\n' +
+        '\n' +
+        'print(approx)  # print square root of n\n'
+};
 
 BUILTIN_FILES = {};
 NEW_FILE_DEFAULT_CONTENT = '';
 
-function CBFile(fileManager, filename, content, opts) {
+function CodeBootFile(fs, filename, content, opts) {
 
-    this.fileManager = fileManager;
-    this.filename = filename;
-    this.content = (content !== (void 0)) ? content : NEW_FILE_DEFAULT_CONTENT;
-    this.cursor = null;
-    this.stamp = 0;
-    this.editor = undefined;
+    var file = this;
 
-    new CBFileEditor(this); // initializes this.editor
+    file.fs = fs;
+    file.filename = filename;
+    file.content = (content !== undefined) ? content : NEW_FILE_DEFAULT_CONTENT;
+    file.cursor = null;
+    file.stamp = 0;
+    file.editor = undefined;
+
+    new CodeBootFileEditor(file); // initializes file.editor
 
     if (opts) {
         for (var prop in opts) {
-            this[prop] = opts[prop];
+            file[prop] = opts[prop];
         }
     }
 }
 
-CBFile.prototype.getContent = function () {
-    if (this.editor.isEnabled()) {
-        return this.editor.getValue();
+CodeBootFile.prototype.getContent = function () {
+    var file = this;
+    if (file.editor.isEnabled()) {
+        return file.editor.getValue();
     } else {
-        return this.content;
+        return file.content;
     }
 };
 
-CBFile.prototype.setContent = function (content) {
-    this.content = content;
-    this.editor.setValue(content);
+CodeBootFile.prototype.setContent = function (content) {
+    var file = this;
+    file.content = content;
+    file.editor.setValue(content);
 };
 
-CBFile.prototype.save = function () {
-    if (this.editor.isEnabled()) {
-        var oldContent = this.content;
-        var newContent = this.editor.getValue();
+CodeBootFile.prototype.save = function () {
+    var file = this;
+    if (file.editor.isEnabled()) {
+        var oldContent = file.content;
+        var newContent = file.editor.getValue();
         if (newContent !== oldContent) {
-            this.content = newContent;
-            this.stamp += 1;
+            file.content = newContent;
+            file.stamp += 1;
         }
     }
 };
 
-CBFile.prototype.serialize = function () {
+CodeBootFile.prototype.serialize = function () {
+    var file = this;
     var json = {
-        filename: this.filename,
-        content: this.getContent(),
-        cursor: this.cursor === null ?
+        filename: file.filename,
+        content: file.getContent(),
+        cursor: file.cursor === null ?
                 {line: 0, ch: 0} :
-                {line: this.cursor.line, ch: this.cursor.ch},
-        stamp: this.stamp
+                {line: file.cursor.line, ch: file.cursor.ch},
+        stamp: file.stamp
     };
     return json;
 };
 
-CBFile.prototype.clone = function () {
-    var other = new CBFile(this.fileManager, this.filename, this.content);
-    for (var prop in this) {
-        if (Object.prototype.hasOwnProperty.call(this, prop)) {
-            other[prop] = this[prop];
+CodeBootFile.prototype.clone = function () {
+    var file = this;
+    var other = new CodeBootFile(file.fs, file.filename, file.content);
+    for (var prop in file) {
+        if (Object.prototype.hasOwnProperty.call(file, prop)) {
+            other[prop] = file[prop];
         }
     }
     return other;
 };
 
-function CBFileManager() {
-    this.editorManager = undefined;
-    new CBFileEditorManager(this);
-    this.init();
+function CodeBootFileSystem(vm) {
+
+    var fs = this;
+
+    fs.vm = vm;
+    fs.editorManager = undefined;
+    new CodeBootFileEditorManager(fs);
+    fs.init();
 }
 
-CBFileManager.prototype.init = function () {
-    this.removeAllEditors();
-    this.clear();
-    this.rebuildFileMenu();
+CodeBootFileSystem.prototype.init = function () {
+
+    var fs = this;
+
+    fs.removeAllEditors();
+    fs.clear();
+    fs.rebuildFileMenu();
 };
 
-CBFileManager.prototype.clear = function () {
-    this.builtins = {};
-    this.files = Object.create(this.builtins);
-    this._loadBuiltins();
+CodeBootFileSystem.prototype.clear = function () {
+
+    var fs = this;
+
+    fs.builtins = {};
+    fs.files = Object.create(fs.builtins);
+    fs._loadBuiltins();
 };
 
-CBFileManager.prototype._loadBuiltins = function () {
+CodeBootFileSystem.prototype._loadBuiltins = function () {
+
+    var fs = this;
+
     for (var filename in BUILTIN_FILES) {
-        var f = new CBFile(this, filename, BUILTIN_FILES[filename]);
-        this.builtins[filename] = f;
+        var f = new CodeBootFile(fs, filename, BUILTIN_FILES[filename]);
+        fs.builtins[filename] = f;
     };
 };
 
-CBFileManager.prototype._asFilename = function (fileOrFilename) {
+CodeBootFileSystem.prototype._asFilename = function (fileOrFilename) {
+
+    var fs = this;
+
     if (typeof fileOrFilename === 'string') return fileOrFilename;
     return fileOrFilename.filename;
 };
 
-CBFileManager.prototype._asFile = function (fileOrFilename) {
+CodeBootFileSystem.prototype._asFile = function (fileOrFilename) {
+
+    var fs = this;
+
     if (typeof fileOrFilename !== 'string') return fileOrFilename;
-    return this.getByName(fileOrFilename);
+    return fs.getByName(fileOrFilename);
 };
 
-CBFileManager.prototype.isBuiltin = function (fileOrFilename) {
-    var filename = this._asFilename(fileOrFilename);
-    return Object.prototype.hasOwnProperty.call(this.builtins, filename);
+CodeBootFileSystem.prototype.isBuiltin = function (fileOrFilename) {
+
+    var fs = this;
+    var filename = fs._asFilename(fileOrFilename);
+
+    return Object.prototype.hasOwnProperty.call(fs.builtins, filename);
 };
 
-CBFileManager.prototype.addFile = function (f) {
-    this.files[f.filename] = f;
+CodeBootFileSystem.prototype.addFile = function (f) {
+
+    var fs = this;
+
+    fs.files[f.filename] = f;
 };
 
-CBFileManager.prototype.hasFile = function (fileOrFilename) {
-    var filename = this._asFilename(fileOrFilename);
-    return Object.prototype.hasOwnProperty.call(this.files, filename) ||
-           Object.prototype.hasOwnProperty.call(this.builtins, filename);
+CodeBootFileSystem.prototype.hasFile = function (fileOrFilename) {
+
+    var fs = this;
+    var filename = fs._asFilename(fileOrFilename);
+
+    return Object.prototype.hasOwnProperty.call(fs.files, filename) ||
+           Object.prototype.hasOwnProperty.call(fs.builtins, filename);
 };
 
-CBFileManager.prototype.generateUniqueFilename = function () {
+CodeBootFileSystem.prototype.generateUniqueFilename = function () {
+
+    var fs = this;
     var prefix = 'untitled';
+
     for (var index = 1; ; index++) {
         var candidateName = prefix + (index===1 ? '' : index) + '.js';
-        if (!this.hasFile(candidateName)) {
+        if (!fs.hasFile(candidateName)) {
             return candidateName;
         }
     }
 };
 
-CBFileManager.prototype.getByName = function (filename) {
-    if (!this.hasFile(filename)) {
+CodeBootFileSystem.prototype.getByName = function (filename) {
+
+    var fs = this;
+
+    if (!fs.hasFile(filename)) {
         throw 'File not found: "' + filename + '"';
     }
-    var file = this.files[filename];
-    if (!Object.prototype.hasOwnProperty.call(this.files, filename)) {
+
+    var file = fs.files[filename];
+
+    if (!Object.prototype.hasOwnProperty.call(fs.files, filename)) {
         // This is a builtin file, make an editable copy
         file = file.clone();
-        this.files[filename] = file;
+        fs.files[filename] = file;
     }
+
     return file;
 };
 
-CBFileManager.prototype.deleteFile = function (fileOrFilename) {
-    var filename = this._asFilename(fileOrFilename);
-    if (this.hasFile(filename)) {
-        delete this.files[filename];
+CodeBootFileSystem.prototype.deleteFile = function (fileOrFilename) {
+
+    var fs = this;
+    var filename = fs._asFilename(fileOrFilename);
+
+    if (fs.hasFile(filename)) {
+        delete fs.files[filename];
         return true;
     }
 
     return false;
 };
 
-CBFileManager.prototype.renameFile = function (fileOrFilename, newFilename) {
-    if (this.hasFile(newFilename)) {
+CodeBootFileSystem.prototype.renameFile = function (fileOrFilename, newFilename) {
+
+    var fs = this;
+
+    if (fs.hasFile(newFilename)) {
         throw 'File already exists: "' + newFilename + '"';
     }
-    var file = this._asFile(fileOrFilename);
-    delete this.files[file.filename];
+
+    var file = fs._asFile(fileOrFilename);
+
+    delete fs.files[file.filename];
     file.filename = newFilename;
-    this.addFile(file);
+    fs.addFile(file);
 };
 
-CBFileManager.prototype.getContent = function (fileOrFilename) {
-    var file = this._asFile(fileOrFilename);
+CodeBootFileSystem.prototype.getContent = function (fileOrFilename) {
+
+    var fs = this;
+    var file = fs._asFile(fileOrFilename);
+
     return file.getContent();
 };
 
-CBFileManager.prototype.getEditor = function (fileOrFilename) {
-    return this._asFile(fileOrFilename).editor.editor;
+CodeBootFileSystem.prototype.getEditor = function (fileOrFilename) {
+
+    var fs = this;
+
+    return fs._asFile(fileOrFilename).editor.editor;
 };
 
-CBFileManager.prototype.setContent = function (fileOrFilename, content) {
-    var file = this._asFile(fileOrFilename);
+CodeBootFileSystem.prototype.setContent = function (fileOrFilename, content) {
+
+    var fs = this;
+    var file = fs._asFile(fileOrFilename);
+
     file.setContent(content);
 };
 
-CBFileManager.prototype.each = function (callback, selector) {
+CodeBootFileSystem.prototype.each = function (callback, selector) {
+
+    var fs = this;
+
     if (!selector) selector = function (f) { return true; };
-    for (var filename in this.files) {
 
-        if (!this.hasFile(filename)) continue; // Prune Object method name
+    for (var filename in fs.files) {
 
-        var file = this.getByName(filename);
+        if (!fs.hasFile(filename)) continue; // Prune Object method name
+
+        var file = fs.getByName(filename);
         if (selector(file)) {
             callback(file);
         }
     }
 };
 
-CBFileManager.prototype.forEachEditor = function (callback) {
-    this.editorManager.editors.forEach(callback);
+CodeBootFileSystem.prototype.forEachEditor = function (callback) {
+
+    var fs = this;
+
+    fs.editorManager.editors.forEach(callback);
 };
 
-CBFileManager.prototype.serialize = function () {
+CodeBootFileSystem.prototype.serialize = function () {
+
+    var fs = this;
     var json = [];
-    var self = this;
     var isUserFile = function (file) {
-        return Object.prototype.hasOwnProperty.call(self.files, file.filename);
+        return Object.prototype.hasOwnProperty.call(fs.files, file.filename);
     };
 
-    this.each(function (file) {
+    fs.each(function (file) {
         json.push(file.serialize());
     },
     isUserFile);
@@ -278,39 +365,43 @@ CBFileManager.prototype.serialize = function () {
     return json;
 };
 
-CBFileManager.prototype.restore = function (json) {
-    this.clear();
+CodeBootFileSystem.prototype.restore = function (json) {
+
+    var fs = this;
+
+    fs.clear();
+
     for (var i = 0; i < json.length; i++) {
         var fileProps = json[i];
-        var file = new CBFile(this, fileProps.filename, fileProps.content, fileProps);
-        this.addFile(file);
+        var file = new CodeBootFile(fs, fileProps.filename, fileProps.content, fileProps);
+        fs.addFile(file);
     }
 };
 
-CBFileManager.prototype.rebuildFileMenu = function () {
+CodeBootFileSystem.prototype.rebuildFileMenu = function () {
 
-    var self = this;
+    var fs = this;
 
     $('#cb-file-selection').empty();
 
     var item = $('<a id="cb-file-new" class="dropdown-item" href="#"><strong>New</strong></a>');
 
     item.on('click', function (event) {
-        self.newFile();
+        fs.newFile();
     });
 
     $('#cb-file-selection').append(item);
 
     $('#cb-file-selection').append($('<div class="dropdown-divider"></div>'));
 
-    this.each(function (file) {
-        self.addFileToMenu(file);
+    fs.each(function (file) {
+        fs.addFileToMenu(file);
     });
 };
 
-CBFileManager.prototype.addFileToMenu = function (file) {
+CodeBootFileSystem.prototype.addFileToMenu = function (file) {
 
-    var self = this;
+    var fs = this;
     var filename = file.filename;
 
     var item = $('<a class="dropdown-item" href="#"/>');
@@ -324,9 +415,9 @@ CBFileManager.prototype.addFileToMenu = function (file) {
 
     var buttons =$('<span/>').addClass('cb-file-buttons');
 
-    if (!this.isBuiltin(file)) {
+    if (!fs.isBuiltin(file)) {
 
-        var deleteButton = cb.makeDeleteButton();
+        var deleteButton = fs.vm.makeDeleteButton();
 
         deleteButton.on('click', function (event) {
 
@@ -337,7 +428,7 @@ CBFileManager.prototype.addFileToMenu = function (file) {
             if (reallyDelete) {
                 file.editor.disable();
                 item.remove();
-                self.deleteFile(file);
+                fs.deleteFile(file);
             }
 
             return false;
@@ -346,7 +437,7 @@ CBFileManager.prototype.addFileToMenu = function (file) {
         buttons.append(deleteButton);
     }
 
-    var downloadButton = cb.makeDownloadButton();
+    var downloadButton = fs.vm.makeDownloadButton();
 
     downloadButton.on('click', function (event) {
         $('#cb-file-selection').dropdown('toggle');
@@ -357,7 +448,7 @@ CBFileManager.prototype.addFileToMenu = function (file) {
 
     buttons.append(downloadButton);
 
-    var emailButton = cb.makeEmailButton();
+    var emailButton = fs.vm.makeEmailButton();
 
     emailButton.on('click', function (event) {
         $('#cb-file-selection').dropdown('toggle');
@@ -383,17 +474,17 @@ CBFileManager.prototype.addFileToMenu = function (file) {
     $('#cb-file-selection').append(item);
 };
 
-CBFile.prototype.download = function () {
+CodeBootFile.prototype.download = function () {
     var file = this;
     var filename = file.filename;
     var content = file.content;
     $('#cb-form-download-content').val(content);
     $('#cb-form-download-filename').val(filename);
-//    cb.saveInProgress = true;
+//    vm.saveInProgress = true;
     $('#cb-form-download').submit();
 };
 
-CBFile.prototype.email = function () {
+CodeBootFile.prototype.email = function () {
     var file = this;
     var filename = file.filename;
     var content = file.content;
@@ -405,109 +496,138 @@ CBFile.prototype.email = function () {
     if (w) w.close();
 };
 
-CBFileManager.prototype.openFile = function (fileOrFilename) {
+CodeBootFileSystem.prototype.openFile = function (fileOrFilename) {
 
-    var file = this._asFile(fileOrFilename);
+    var fs = this;
+    var file = fs._asFile(fileOrFilename);
 
     file.editor.edit();
 };
 
-CBFileManager.prototype.newFile = function (filename) {
+CodeBootFileSystem.prototype.newFile = function (filename) {
+
+    var fs = this;
 
     if (filename === void 0) {
-        filename = this.generateUniqueFilename();
+        filename = fs.generateUniqueFilename();
     }
 
-    var file = new CBFile(this, filename);
+    var file = new CodeBootFile(fs, filename);
 
-    this.addFile(file);
-    this.addFileToMenu(file);
+    fs.addFile(file);
+    fs.addFileToMenu(file);
 
     file.editor.edit();
 
     return filename;
 };
 
-CBFileManager.prototype.openFileExistingOrNew = function (filename) {
+CodeBootFileSystem.prototype.openFileExistingOrNew = function (filename) {
 
-    if (this.hasFile(filename)) {
-        this.openFile(filename);
+    var fs = this;
+
+    if (fs.hasFile(filename)) {
+        fs.openFile(filename);
         return true;
     } else {
-        this.newFile(filename);
+        fs.newFile(filename);
         return false;
     }
 };
 
-CBFileManager.prototype.removeAllEditors = function () {
-    this.editorManager.removeAllEditors();
+CodeBootFileSystem.prototype.removeAllEditors = function () {
+    var fs = this;
+    fs.editorManager.removeAllEditors();
 };
 
 //-----------------------------------------------------------------------------
 
-function CBFileEditorManager(fileManager) {
-    fileManager.editorManager = this;
-    this.fileManager = fileManager;
-    this.editors = [];
-    this.activated = -1;
+function CodeBootFileEditorManager(fs) {
+
+    var fem = this;
+
+    fs.editorManager = fem;
+    fem.fs = fs;
+    fem.editors = [];
+    fem.activated = -1;
 }
 
-CBFileEditorManager.prototype.isActivated = function (editor) {
-    return (this.activated >= 0 && this.editors[this.activated] === editor);
+CodeBootFileEditorManager.prototype.isActivated = function (editor) {
+
+    var fem = this;
+
+    return (fem.activated >= 0 && fem.editors[fem.activated] === editor);
+
 };
 
-CBFileEditorManager.prototype.indexOf = function (editor) {
-    for (var i=this.editors.length-1; i>=0; i--) {
-        if (this.editors[i] === editor) {
+CodeBootFileEditorManager.prototype.indexOf = function (editor) {
+
+    var fem = this;
+
+    for (var i=fem.editors.length-1; i>=0; i--) {
+        if (fem.editors[i] === editor) {
             return i;
         }
     }
     return -1;
 };
 
-CBFileEditorManager.prototype.activate = function (editor) {
+CodeBootFileEditorManager.prototype.activate = function (editor) {
+
+    var fem = this;
 
     if (editor.isActivated()) return; // already activated
 
-    var i = this.indexOf(editor);
+    var i = fem.indexOf(editor);
 
     if (i < 0) return; // not a valid editor
 
-    if (this.activated >= 0) {
+    if (fem.activated >= 0) {
         // deactivate currently activated editor
-        this.editors[this.activated].deactivatePresentation();
+        fem.editors[fem.activated].deactivatePresentation();
     }
 
     editor.activatePresentation(); // activate editor
 
-    this.activated = i; // remember it is activated
+    fem.activated = i; // remember it is activated
 };
 
-CBFileEditorManager.prototype.add = function (editor) {
-    this.editors.push(editor);
-    if (this.activated < 0) {
-        this.show(); // show editors
+CodeBootFileEditorManager.prototype.add = function (editor) {
+
+    var fem = this;
+
+    fem.editors.push(editor);
+
+    if (fem.activated < 0) {
+        fem.show(); // show editors
         editor.activate(); // activate editor
     } else {
         editor.deactivatePresentation(); // deactivate editor
     }
 };
 
-CBFileEditorManager.prototype.setReadOnlyAllEditors = function (readOnly) {
-    for (var i=0; i<this.editors.length; i++) {
-        this.editors[i].setReadOnly(readOnly);
+CodeBootFileEditorManager.prototype.setReadOnlyAllEditors = function (readOnly) {
+
+    var fem = this;
+
+    for (var i=0; i<fem.editors.length; i++) {
+        fem.editors[i].setReadOnly(readOnly);
     }
 };
 
-CBFileEditorManager.prototype.removeAllEditors = function () {
-    while (this.editors.length > 0) {
-        this.remove(this.editors[this.editors.length-1]);
+CodeBootFileEditorManager.prototype.removeAllEditors = function () {
+
+    var fem = this;
+
+    while (fem.editors.length > 0) {
+        fem.remove(fem.editors[fem.editors.length-1]);
     }
 };
 
-CBFileEditorManager.prototype.remove = function (editor) {
+CodeBootFileEditorManager.prototype.remove = function (editor) {
 
-    var i = this.indexOf(editor);
+    var fem = this;
+    var i = fem.indexOf(editor);
 
     if (i < 0) return; // not a valid editor
 
@@ -521,102 +641,134 @@ CBFileEditorManager.prototype.remove = function (editor) {
     editor.fileContainer = null;
     editor.editor = null;
 
-    this.editors.splice(i, 1); // remove from editors
+    fem.editors.splice(i, 1); // remove from editors
 
-    if (i === this.activated) {
-        this.activated = -1;
+    if (i === fem.activated) {
+        fem.activated = -1;
         // need to activate some other editor
-        if (i < this.editors.length) {
-            this.editors[i].activate();
+        if (i < fem.editors.length) {
+            fem.editors[i].activate();
         } else if (i > 0) {
-            this.editors[i-1].activate();
+            fem.editors[i-1].activate();
         } else {
             // no other editor to activate
-            this.hide();
-            cb.focusREPL();
+            fem.hide();
+            vm.focusREPL();
         }
-    } else if (i < this.activated) {
-        this.activated--;
+    } else if (i < fem.activated) {
+        fem.activated--;
     }
 };
 
-CBFileEditorManager.prototype.show = function () {
+CodeBootFileEditorManager.prototype.show = function () {
+    var fem = this;
     $('#cb-editors').css('display', 'flex');
 };
 
-CBFileEditorManager.prototype.hide = function () {
+CodeBootFileEditorManager.prototype.hide = function () {
+    var fem = this;
     $('#cb-editors').css('display', 'none');
 };
 
 //-----------------------------------------------------------------------------
 
-function CBFileEditor(file) {
-    file.editor = this;
-    this.file = file;
-    this.fileTab = null;
-    this.fileTabLabel = null;
-    this.fileTabCloseButton = null;
-    this.fileContainer = null;
-    this.editor = null;
+function CodeBootFileEditor(file) {
+
+    var fe = this;
+
+    fe.file = file;
+    fe.fileTab = null;
+    fe.fileTabLabel = null;
+    fe.fileTabCloseButton = null;
+    fe.fileContainer = null;
+    fe.editor = null;
+    file.editor = fe;
 }
 
-CBFileEditor.prototype.isActivated = function () {
-    var fileManager = this.file.fileManager;
-    return fileManager.editorManager.isActivated(this);
+CodeBootFileEditor.prototype.isActivated = function () {
+
+    var fe = this;
+    var fs = fe.file.fs;
+
+    return fs.editorManager.isActivated(fe);
 };
 
-CBFileEditor.prototype.activate = function () {
-    var fileManager = this.file.fileManager;
-    fileManager.editorManager.activate(this);
+CodeBootFileEditor.prototype.activate = function () {
+
+    var fe = this;
+    var fs = fe.file.fs;
+
+    fs.editorManager.activate(fe);
 };
 
-CBFileEditor.prototype.activatePresentation = function () {
-    this.fileTab.addClass('active');
-    this.fileContainer.css('display', 'inline');
-    this.editor.refresh();
+CodeBootFileEditor.prototype.activatePresentation = function () {
+
+    var fe = this;
+
+    fe.fileTab.addClass('active');
+    fe.fileContainer.css('display', 'inline');
+    fe.editor.refresh();
 };
 
-CBFileEditor.prototype.deactivatePresentation = function () {
-    this.fileTab.removeClass('active');
-    this.fileContainer.css('display', 'none');
+CodeBootFileEditor.prototype.deactivatePresentation = function () {
+
+    var fe = this;
+
+    fe.fileTab.removeClass('active');
+    fe.fileContainer.css('display', 'none');
 };
 
-CBFileEditor.prototype.removePresentation = function () {
-    this.fileTab.remove();
-    this.fileContainer.remove();
+CodeBootFileEditor.prototype.removePresentation = function () {
+
+    var fe = this;
+
+    fe.fileTab.remove();
+    fe.fileContainer.remove();
 };
 
-CBFileEditor.prototype.isEnabled = function () {
-    return this.editor !== null;
+CodeBootFileEditor.prototype.isEnabled = function () {
+
+    var fe = this;
+
+    return fe.editor !== null;
 };
 
-CBFileEditor.prototype.getValue = function () {
-    if (this.isEnabled()) {
-        return this.editor.getValue();
+CodeBootFileEditor.prototype.getValue = function () {
+
+    var fe = this;
+
+    if (fe.isEnabled()) {
+        return fe.editor.getValue();
     } else {
         return '';
     }
 };
 
-CBFileEditor.prototype.setValue = function (val) {
-    if (this.isEnabled()) {
-        this.editor.setValue(val);
+CodeBootFileEditor.prototype.setValue = function (val) {
+
+    var fe = this;
+
+    if (fe.isEnabled()) {
+        fe.editor.setValue(val);
     }
 };
 
-CBFileEditor.prototype.edit = function () {
-    this.enable();
-    this.activate();
-    this.editor.focus();
+CodeBootFileEditor.prototype.edit = function () {
+
+    var fe = this;
+
+    fe.enable();
+    fe.activate();
+    fe.editor.focus();
 };
 
-CBFileEditor.prototype.enable = function () {
+CodeBootFileEditor.prototype.enable = function () {
 
-    if (this.isEnabled()) return; // noop if currently enabled
+    var fe = this;
 
-    var self = this;
+    if (fe.isEnabled()) return; // noop if currently enabled
 
-    var file = this.file;
+    var file = fe.file;
     var filename = file.filename;
 
     // create file tab
@@ -625,7 +777,7 @@ CBFileEditor.prototype.enable = function () {
 
     //fileTab.attr('data-cb-filename', filename);
 
-    var fileTabCloseButton = cb.makeCloseButton();
+    var fileTabCloseButton = fe.file.fs.vm.makeCloseButton();
     var fileTabLabel = $('<span class="tab-label"/>').text(filename);
 
     fileTab.append(fileTabCloseButton).append(fileTabLabel);
@@ -647,7 +799,7 @@ CBFileEditor.prototype.enable = function () {
 
     // create code editor
 
-    var editor = cb.createCodeEditor(textarea.get(0), file);
+    var editor = fe.file.fs.vm.createCodeEditor(textarea.get(0), file);
 
     editor.setValue(file.content);
 
@@ -678,81 +830,86 @@ CBFileEditor.prototype.enable = function () {
 
     // remember each element for quick access
 
-    this.fileTab = fileTab;
-    this.fileTabLabel = fileTabLabel;
-    this.fileTabCloseButton = fileTabCloseButton;
-    this.fileContainer = fileContainer;
-    this.editor = editor;
+    fe.fileTab = fileTab;
+    fe.fileTabLabel = fileTabLabel;
+    fe.fileTabCloseButton = fileTabCloseButton;
+    fe.fileContainer = fileContainer;
+    fe.editor = editor;
 
-    this.normalTabEvents();
+    fe.normalTabEvents();
 
-    file.fileManager.editorManager.add(this);
+    file.fs.editorManager.add(fe);
 };
 
 // length of window (in ms) during which changes will be buffered
 var SAVE_DELAY = 300;
 
-CBFileEditor.prototype.normalTabEvents = function () {
+CodeBootFileEditor.prototype.normalTabEvents = function () {
 
-    var self = this;
+    var fe = this;
 
-    this.fileTab.on('click', function (event) {
-        self.edit();
+    fe.fileTab.on('click', function (event) {
+        fe.edit();
     });
 
-    this.fileTab.on('dblclick', function (event) {
-        self.rename();
+    fe.fileTab.on('dblclick', function (event) {
+        fe.rename();
     });
 
-    this.fileTabCloseButton.on('click', function (event) {
-        self.disable();
+    fe.fileTabCloseButton.on('click', function (event) {
+        fe.disable();
     });
 
-    this.fileTabCloseButton.css('display', 'inline');
+    fe.fileTabCloseButton.css('display', 'inline');
 };
 
-CBFileEditor.prototype.renameTabEvents = function () {
-    this.fileTab.off('click');
-    this.fileTab.off('dblclick');
-    this.fileTabCloseButton.css('display', 'none');
+CodeBootFileEditor.prototype.renameTabEvents = function () {
+    var fe = this;
+    fe.fileTab.off('click');
+    fe.fileTab.off('dblclick');
+    fe.fileTabCloseButton.css('display', 'none');
 };
 
-CBFileEditor.prototype.disable = function () {
+CodeBootFileEditor.prototype.disable = function () {
 
-    if (!this.isEnabled()) return; // noop if currently not enabled
+    var fe = this;
 
-    var file = this.file;
+    if (!fe.isEnabled()) return; // noop if currently not enabled
 
-    file.fileManager.editorManager.remove(this);
+    var file = fe.file;
+
+    file.fs.editorManager.remove(fe);
 };
 
-CBFileEditor.prototype.rename = function () {
+CodeBootFileEditor.prototype.rename = function () {
 
-    if (!this.isEnabled()) return; // noop if currently not enabled
+    var fe = this;
 
-    var lastFocusedEditor = cb.lastFocusedEditor;
-    cb.lastFocusedEditor = null; // allow focus to leave editor
+    if (!fe.isEnabled()) return; // noop if currently not enabled
 
-    var editor = this;
-    var oldFilename = editor.file.filename;
+    var lastFocusedEditor = fe.file.fs.vm.lastFocusedEditor;
+    fe.file.fs.vm.lastFocusedEditor = null; // allow focus to leave editor
+
+    var oldFilename = fe.file.filename;
     var inputBox = $('<input type="text" class="cb-rename-box"/>');
+
     inputBox.val(oldFilename);
-    editor.fileTabLabel.empty();
-    editor.fileTabLabel.append(inputBox);
+    fe.fileTabLabel.empty();
+    fe.fileTabLabel.append(inputBox);
 
     var resetTabTo = function (filename) {
         inputBox.remove();
-        editor.fileTabLabel.text(filename);
-        editor.normalTabEvents();
-        cb.lastFocusedEditor = lastFocusedEditor;
-        cb.focusLastFocusedEditor();
+        fe.fileTabLabel.text(filename);
+        fe.normalTabEvents();
+        fe.file.fs.vm.lastFocusedEditor = lastFocusedEditor;
+        fe.file.fs.vm.focusLastFocusedEditor();
     };
 
     var resetTabToOldFilename = function () {
         resetTabTo(oldFilename);
     };
 
-    editor.renameTabEvents();
+    fe.renameTabEvents();
 
     inputBox.focusout(function (event) {
         resetTabToOldFilename();
@@ -764,16 +921,16 @@ CBFileEditor.prototype.rename = function () {
             var newFilename = inputBox.val();
             if (newFilename !== oldFilename) {
 
-                if (editor.file.fileManager.hasFile(newFilename)) {
+                if (fe.file.fs.hasFile(newFilename)) {
                     alert('Filename already in use');
                     resetTabToOldFilename();
                     return;
                 }
 
-                editor.file.fileManager.renameFile(oldFilename, newFilename);
+                fe.file.fs.renameFile(oldFilename, newFilename);
             }
             resetTabTo(newFilename);
-            editor.file.fileManager.rebuildFileMenu(); // TODO: inefficient
+            fe.file.fs.rebuildFileMenu(); // TODO: inefficient
         } else if (event.keyCode == 27) {
             // Escape pressed, reset
             resetTabToOldFilename();
@@ -783,8 +940,9 @@ CBFileEditor.prototype.rename = function () {
     inputBox.focus();
 };
 
-CBFileEditor.prototype.setReadOnly = function (readOnly) {
-    this.editor.setOption('readOnly', readOnly);
+CodeBootFileEditor.prototype.setReadOnly = function (readOnly) {
+    var fe = this;
+    fe.editor.setOption('readOnly', readOnly);
 };
 
 //-----------------------------------------------------------------------------

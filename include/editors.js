@@ -1,54 +1,66 @@
-CodeBoot.prototype.initEditor = function (editor, node, history, fileEditor) {
+CodeBootVM.prototype.initEditor = function (editor, node, history, fileEditor) {
+
+    var vm = this;
+
     editor.cb = {};
     editor.cb.node = node;
+    editor.cb.vm = vm;  // TODO: was CodeBoot.prototype.get_vm(node);
     editor.cb.history = history;
     editor.cb.fileEditor = fileEditor;
     editor.cb.widgets = [];
     editor.cb.transcriptMarker = null;
-    cb.setTranscriptMarker(editor, cb.beginningOfEditor());
+    vm.setTranscriptMarker(editor, vm.beginningOfEditor());
 };
 
-CodeBoot.prototype.trackEditorFocus = function (editor, focus) {
+CodeBootVM.prototype.trackEditorFocus = function (editor, focus) {
+
+    var vm = this;
+
     if (focus) {
-        cb.lastFocusedEditor = editor;
-        if (editor === cb.repl) {
-            $('body').addClass('cb-focus-repl');
+        vm.lastFocusedEditor = editor;
+        if (editor === vm.repl) {
+            vm.elem.classList.add('cb-focus-repl');
         } else {
-            $('body').removeClass('cb-focus-repl');
+            vm.elem.classList.remove('cb-focus-repl');
         }
-    } else if (!cb.allowLosingFocus) {
+    } else if (!vm.allowLosingFocus) {
         setTimeout(function () {
-            cb.focusLastFocusedEditor();
+            vm.focusLastFocusedEditor();
         }, 0);
     }
 };
 
-CodeBoot.prototype.initEditorFocusHandling = function (editor) {
+CodeBootVM.prototype.initEditorFocusHandling = function (editor) {
+
+    var vm = this;
 
     editor.on('focus', function (cm, event) {
-        cb.trackEditorFocus(editor, true);
+        vm.trackEditorFocus(editor, true);
     });
 
     editor.on('blur', function (cm, event) {
-        cb.trackEditorFocus(editor, false);
+        vm.trackEditorFocus(editor, false);
     });
 };
 
-CodeBoot.prototype.initEditorScrollHandling = function (editor) {
+CodeBootVM.prototype.initEditorScrollHandling = function (editor) {
+
+    var vm = this;
 
     editor.on('scroll', function (cm) {
-        cb.updatePopupPos();
+        vm.updatePopupPos();
     });
 
 };
 
-CodeBoot.prototype.createCodeEditor = function (node, fileEditor) {
+CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
 
+    var vm = this;
     var options = {
         value: '',
         mode: 'javascript',
         indentUnit: 4,       // Indent with 4 spaces
-        lineNumbers:  cb.options.showLineNumbers,   // Show line numbers
+        lineNumbers:  vm.options.showLineNumbers,   // Show line numbers
         cursorScrollMargin: 0,
         gutters: ['CodeMirror-linenumbers', 'cb-file-cm-gutter'],
         fixedGutter: false,
@@ -62,15 +74,15 @@ CodeBoot.prototype.createCodeEditor = function (node, fileEditor) {
             //    cm.commentRange(!isComment, cm.getCursor(true), cm.getCursor(false));
             // },
 
-            'Ctrl-L': function (cm) { cb.resetREPL(); },
-            'Esc': function (cm) { cb.eventStop(); },
-            'Enter': function (cm) { if (cb.programState.mode === cb.modeStopped()) return CodeMirror.Pass; cb.eventStep(); },
-            'Shift-Enter': function (cm) { cb.eventStep(); },
-            'Shift-Ctrl-Enter': function (cm) { cb.eventEval(); },
-            'F5' : function (cm) { cb.eventStep(); },
-            'F6' : function (cm) { cb.eventAnimate(); },
-            'F7' : function (cm) { cb.eventEval(); },
-            'F8' : function (cm) { cb.eventStop(); }
+            'Ctrl-L': function (cm) { cm.cb.vm.resetREPL(); },
+            'Esc': function (cm) { cm.cb.vm.eventStop(); },
+            'Enter': function (cm) { if (cm.cb.vm.ui.mode === cm.cb.vm.modeStopped()) return CodeMirror.Pass; cm.cb.vm.eventStep(); },
+            'Shift-Enter': function (cm) { cm.cb.vm.eventStep(); },
+            'Shift-Ctrl-Enter': function (cm) { cm.cb.vm.eventEval(); },
+            'F5' : function (cm) { cm.cb.vm.eventStep(); },
+            'F6' : function (cm) { cm.cb.vm.eventAnimate(); },
+            'F7' : function (cm) { cm.cb.vm.eventEval(); },
+            'F8' : function (cm) { cm.cb.vm.eventStop(); }
         },
 
         onDragEvent: function(cm, event) {
@@ -79,7 +91,7 @@ CodeBoot.prototype.createCodeEditor = function (node, fileEditor) {
                 event.preventDefault();
                 var dt = event.dataTransfer;
                 var files = dt.files;
-                cb.loadFile(cm, files[0]);
+                cm.cb.vm.editFileFromRealFS(cm, files[0]);
                 return true;
             } else if (event.type === 'dragover') {
                 event.stopPropagation();
@@ -92,40 +104,46 @@ CodeBoot.prototype.createCodeEditor = function (node, fileEditor) {
 
     var editor = CodeMirror.fromTextArea(node, options);
 
-    cb.initEditor(editor, node, null, fileEditor);
-    cb.initEditorFocusHandling(editor);
-    cb.initEditorScrollHandling(editor);
+    vm.initEditor(editor, node, null, fileEditor);
+    vm.initEditorFocusHandling(editor);
+    vm.initEditorScrollHandling(editor);
 
     return editor;
 };
 
-cb.loadFile = function (cm, f) {
+CodeBootVM.prototype.editFileFromRealFS = function (cm, path) {
+
+    var vm = this;
+
     if (!cm) return;
 
-    cb_internal_readTextFile(f, function(contents) {
+    vm.readFileFromRealFSSync(path, function(contents) {
         cm.setValue(contents);
     });
 };
 
-function cb_internal_readTextFile(f, callback) {
+CodeBootVM.prototype.readFileFromRealFSSync = function (path, callback) {
+
+    var vm = this;
+
     if (typeof FileReader === 'undefined') {
-        cb.reportError('File is reader not supported by the browser');
+        vm.reportError('FileReader not supported by the browser');
         return;
     }
 
     var reader = new FileReader();
     reader.onerror = function (e) {
-        cb.reportError('Failed to read file');
+        vm.reportError('FileReader failed to read ' + path);
     };
     reader.onload = function(e) {
         callback(e.target.result);
     };
-    reader.readAsText(f);
+    reader.readAsText(path);
 }
 
-// ================================================================================
+//=============================================================================
 //                                       REPL
-// ================================================================================
+//=============================================================================
 
 function REPLHistoryManager() {
     this.history = [];
@@ -135,9 +153,9 @@ function REPLHistoryManager() {
 }
 
 REPLHistoryManager.prototype.setEditorValue = function (v) {
-    cb.setPromptREPL(true, v);
-    cb.repl.refresh();
-    CodeMirror.commands.goLineEnd(cb.repl);
+    vm.setPromptREPL(true, v);
+    vm.repl.refresh();
+    CodeMirror.commands.goLineEnd(vm.repl);
 };
 
 REPLHistoryManager.prototype.resetPos = function () {
@@ -157,7 +175,7 @@ REPLHistoryManager.prototype.previous = function () {
     var index = this.pos - 1;
     if (this.pos === this.history.length) {
         // Remember the current line to be able to restore it later, if needed
-        this.currentLine = cb.getInputREPL();
+        this.currentLine = vm.getInputREPL();
     }
     if (index >= 0) {
         // Restore previous history item
@@ -189,7 +207,7 @@ REPLHistoryManager.prototype.next = function () {
     }
 };
 
-CodeBoot.prototype.createREPLTranscript = function () {
+CodeBootVM.prototype.createREPLTranscript = function () {
 
     var options = {
         mode:  'javascript',
@@ -208,22 +226,22 @@ CodeBoot.prototype.createREPLTranscript = function () {
 
     var editor = CodeMirror(node, options);
 
-    cb.initEditor(editor, node, null, null);
-    cb.initEditorScrollHandling(editor);
+    vm.initEditor(editor, node, null, null);
+    vm.initEditorScrollHandling(editor);
 
-    return new CBTranscript(editor);
+    return new CodeBootTranscript(editor);
 };
 
-function CBTranscript(editor) {
+function CodeBootTranscript(editor) {
     this.editor = editor;
     this.is_empty = true;
     this.widgets = [];
 }
 
-CBTranscript.prototype.onTranscriptChanged = function () {
+CodeBootTranscript.prototype.onTranscriptChanged = function () {
 };
 
-CBTranscript.prototype.clear = function () {
+CodeBootTranscript.prototype.clear = function () {
     this.show(); // this seems to avoid initialization problems
     for (var i = 0; i < this.widgets.length; i++) {
         this.editor.removeLineWidget(this.widgets[i]);
@@ -234,19 +252,19 @@ CBTranscript.prototype.clear = function () {
     this.hide();
 };
 
-CBTranscript.prototype.show = function () {
+CodeBootTranscript.prototype.show = function () {
     $('#cb-repl-transcript').show();
     $('body').attr('data-cb-has-transcript', 'true');
     this.onTranscriptChanged();
 };
 
-CBTranscript.prototype.hide = function () {
+CodeBootTranscript.prototype.hide = function () {
     $('body').attr('data-cb-has-transcript', 'false');
     $('#cb-repl-transcript').hide();
     this.onTranscriptChanged();
 };
 
-CBTranscript.prototype.addTextLine = function (text, cssClass) {
+CodeBootTranscript.prototype.addTextLine = function (text, cssClass) {
     var editor = this.editor;
     text = removeTrailingNewline(text);
     // CodeMirror needs to be visible to the updates to the gutter to work...
@@ -272,12 +290,12 @@ CBTranscript.prototype.addTextLine = function (text, cssClass) {
         editor.setGutterMarker(line, 'cb-repl-cm-gutter', document.createTextNode('>'));
     this.is_empty = false;
 
-//    cb.scrollToEnd(this.editor);
+//    vm.scrollToEnd(this.editor);
 
     this.onTranscriptChanged();
 };
 
-CBTranscript.prototype.addLineWidget = function (textOrNode, cssClass) {
+CodeBootTranscript.prototype.addLineWidget = function (textOrNode, cssClass) {
     // CodeMirror needs to be visible to the updates to the gutter to work...
     if (this.is_empty) this.show();
 
@@ -294,12 +312,12 @@ CBTranscript.prototype.addLineWidget = function (textOrNode, cssClass) {
     var w = this.editor.addLineWidget(this.editor.lineCount() - 1, widget);
     this.widgets.push(w);
 
-//    cb.scrollToEnd(this.editor);
+//    vm.scrollToEnd(this.editor);
 
     this.onTranscriptChanged();
 };
 
-CBTranscript.prototype.addLine = function (text, cssClass) {
+CodeBootTranscript.prototype.addLine = function (text, cssClass) {
     var line;
 
     if (cssClass === 'transcript-input') {
@@ -309,7 +327,9 @@ CBTranscript.prototype.addLine = function (text, cssClass) {
     }
 };
 
-CodeBoot.prototype.createREPL = function () {
+CodeBootVM.prototype.createREPL = function () {
+
+    var vm = this;
 
     var options = {
         mode: 'javascript',
@@ -320,8 +340,8 @@ CodeBoot.prototype.createREPL = function () {
         gutters: ['CodeMirror-linenumbers', 'cb-repl-cm-gutter'],
         fixedGutter: false,
         extraKeys: {
-            'Ctrl-L': function (cm) { cb.resetREPL(); },
-            'Ctrl-\\': function (cm) { cb.toggleDevMode(); },
+            'Ctrl-L': function (cm) { cm.cb.vm.resetREPL(); },
+            'Ctrl-\\': function (cm) { cm.cb.vm.toggleDevMode(); },
             'Up': function (cm) {
                 cm.cb.history.previous();
                 return true;
@@ -330,14 +350,14 @@ CodeBoot.prototype.createREPL = function () {
                 cm.cb.history.next();
                 return true;
             },
-            'Esc': function (cm) { cb.eventStop(); },
-            'Enter': function (cm) { cb.eventEval(); },
-            'Shift-Enter': function (cm) { cb.eventStep(); },
-            'Shift-Ctrl-Enter': function (cm) { cb.eventEval(); },
-            'F5' : function (cm) { cb.eventStep(); },
-            'F6' : function (cm) { cb.eventAnimate(); },
-            'F7' : function (cm) { cb.eventEval(); },
-            'F8' : function (cm) { cb.eventStop(); }
+            'Esc': function (cm) { cm.cb.vm.eventStop(); },
+            'Enter': function (cm) { cm.cb.vm.eventEval(); },
+            'Shift-Enter': function (cm) { cm.cb.vm.eventStep(); },
+            'Shift-Ctrl-Enter': function (cm) { cm.cb.vm.eventEval(); },
+            'F5' : function (cm) { cm.cb.vm.eventStep(); },
+            'F6' : function (cm) { cm.cb.vm.eventAnimate(); },
+            'F7' : function (cm) { cm.cb.vm.eventEval(); },
+            'F8' : function (cm) { cm.cb.vm.eventStop(); }
         },
         //viewportMargin: Infinity,
         lineWrapping: true
@@ -346,9 +366,9 @@ CodeBoot.prototype.createREPL = function () {
     var node = document.getElementById('cb-repl');
     var editor = CodeMirror.fromTextArea(node, options);
 
-    cb.initEditor(editor, node, new REPLHistoryManager(), null);
-    cb.initEditorFocusHandling(editor);
-    cb.initEditorScrollHandling(editor);
+    vm.initEditor(editor, node, new REPLHistoryManager(), null);
+    vm.initEditorFocusHandling(editor);
+    vm.initEditorScrollHandling(editor);
 
     editor.focus();
 
@@ -356,66 +376,75 @@ CodeBoot.prototype.createREPL = function () {
     return editor;
 };
 
+// TODO: remove
 var count = 0;
 function startBG() {
     setTimeout(function () {
         count++;
-        cb.addSingleLineTranscriptREPL('count='+count+'\n','cb-transcript');
+        vm.addSingleLineTranscriptREPL('count='+count+'\n','cb-transcript');
         startBG();
     }, 1000);
 }
 
-CodeBoot.prototype.acceptInputREPL = function () {
+CodeBootVM.prototype.acceptInputREPL = function () {
 
-    var editor = cb.repl;
+    var vm = this;
+    var editor = vm.repl;
 
-    editor.replaceRange('\n', cb.endOfEditor(), cb.endOfEditor());
+    editor.replaceRange('\n', vm.endOfEditor(), vm.endOfEditor());
 
-    cb.setReadOnlyTranscriptREPL(cb.endOfEditor());
+    vm.setReadOnlyTranscriptREPL(vm.endOfEditor());
 
-    cb.setPromptREPL(false);
+    vm.setPromptREPL(false);
 
-    cb.scrollToEndREPL();
+    vm.scrollToEndREPL();
 };
 
-CodeBoot.prototype.inputPosREPL = function () {
-    var editor = cb.repl;
+CodeBootVM.prototype.inputPosREPL = function () {
+    var vm = this;
+    var editor = vm.repl;
     var transcriptPos = editor.cb.transcriptMarker.find();
-    return transcriptPos ? transcriptPos.to : cb.beginningOfEditor();
+    return transcriptPos ? transcriptPos.to : vm.beginningOfEditor();
 };
 
-CodeBoot.prototype.getInputREPL = function () {
-    var editor = cb.repl;
-    return editor.getRange(cb.inputPosREPL(), cb.endOfEditor());
+CodeBootVM.prototype.getInputREPL = function () {
+    var vm = this;
+    var editor = vm.repl;
+    return editor.getRange(vm.inputPosREPL(), vm.endOfEditor());
 };
 
-CodeBoot.prototype.setInputREPL = function (text) {
+CodeBootVM.prototype.setInputREPL = function (text) {
 
-    var editor = cb.repl;
+    var vm = this;
+    var editor = vm.repl;
 
-    cb.replaceInputREPL(text);
+    vm.replaceInputREPL(text);
 
-    editor.setCursor(cb.endOfEditor());
+    editor.setCursor(vm.endOfEditor());
 
 //TODO: deprecated
 //    cm.setValue(text);
 //    cm.setCursor(0, text.length);
 };
 
-CodeBoot.prototype.replaceInputREPL = function (text) {
-    var editor = cb.repl;
-    editor.replaceRange(text, cb.inputPosREPL(), cb.endOfEditor());
+CodeBootVM.prototype.replaceInputREPL = function (text) {
+    var vm = this;
+    var editor = vm.repl;
+    editor.replaceRange(text, vm.inputPosREPL(), vm.endOfEditor());
 };
 
-CodeBoot.prototype.resetREPL = function () {
-    var editor = cb.repl;
+CodeBootVM.prototype.resetREPL = function () {
+    var vm = this;
+    var editor = vm.repl;
     editor.setValue('');
-    cb.setTranscriptMarker(editor, cb.beginningOfEditor());
-    cb.setPromptREPL();
-    cb.repl.cb.history.resetPos();
+    vm.setTranscriptMarker(editor, vm.beginningOfEditor());
+    vm.setPromptREPL();
+    vm.repl.cb.history.resetPos();
 };
 
-CodeBoot.prototype.setTranscriptMarker = function (editor, endPos) {
+CodeBootVM.prototype.setTranscriptMarker = function (editor, endPos) {
+
+    var vm = this;
 
     if (editor.cb.transcriptMarker) {
         editor.cb.transcriptMarker.clear();
@@ -424,26 +453,28 @@ CodeBoot.prototype.setTranscriptMarker = function (editor, endPos) {
 
     editor.cb.transcriptMarker =
         editor.markText(
-            cb.beginningOfEditor(),
+            vm.beginningOfEditor(),
             endPos,
             { className: 'cb-transcript',
               readOnly: true} );
 };
 
-CodeBoot.prototype.setReadOnlyTranscriptREPL = function (endPos) {
-    var editor = cb.repl;
-    cb.setTranscriptMarker(editor, endPos);
+CodeBootVM.prototype.setReadOnlyTranscriptREPL = function (endPos) {
+    var vm = this;
+    var editor = vm.repl;
+    vm.setTranscriptMarker(editor, endPos);
 };
 
 var default_prompt = '>';
 
-CodeBoot.prototype.setPromptREPL = function (prompt, text) {
+CodeBootVM.prototype.setPromptREPL = function (prompt, text) {
 
-    var editor = cb.repl;
+    var vm = this;
+    var editor = vm.repl;
 
     if (text === void 0) text = '';
 
-    cb.setInputREPL(text);
+    vm.setInputREPL(text);
 
     if (prompt === void 0) prompt = true;
 
@@ -455,43 +486,46 @@ CodeBoot.prototype.setPromptREPL = function (prompt, text) {
         editor.setGutterMarker(line, 'cb-repl-cm-gutter', null);
     }
 
-    cb.scrollToEndREPL();
+    vm.scrollToEndREPL();
 };
 
-CodeBoot.prototype.scrollToEnd = function (editor) {
+CodeBootVM.prototype.scrollToEnd = function (editor) {
+    var vm = this;
     CodeMirror.commands.goDocEnd(editor);
 };
 
-CodeBoot.prototype.scrollToEndREPL = function () {
-    var editor = cb.repl;
-    cb.scrollToEnd(editor);
+CodeBootVM.prototype.scrollToEndREPL = function () {
+    var vm = this;
+    var editor = vm.repl;
+    vm.scrollToEnd(editor);
 };
 
-CodeBoot.prototype.nextLineStart = function (pos) {
+CodeBootVM.prototype.nextLineStart = function (pos) {
     return { line: pos.line+1, ch: 0 };
 };
 
-CodeBoot.prototype.beginningOfEditor = function () {
+CodeBootVM.prototype.beginningOfEditor = function () {
     return { line: 0, ch: 0 };
 };
 
-CodeBoot.prototype.endOfEditor = function () {
+CodeBootVM.prototype.endOfEditor = function () {
     return { line: Infinity, ch: 0 };
 };
 
-CodeBoot.prototype.addSingleLineTranscriptREPL = function (text, cssClass) {
+CodeBootVM.prototype.addSingleLineTranscriptREPL = function (text, cssClass) {
 
-    var editor = cb.repl;
+    var vm = this;
+    var editor = vm.repl;
     var transcriptPos = editor.cb.transcriptMarker.find();
-    var pos = transcriptPos ? transcriptPos.to : cb.beginningOfEditor();
+    var pos = transcriptPos ? transcriptPos.to : vm.beginningOfEditor();
 
     editor.replaceRange(text, pos); //TODO: why is this so slow?
 
-    editor.markText(pos, cb.nextLineStart(pos), { className: cssClass });
+    editor.markText(pos, vm.nextLineStart(pos), { className: cssClass });
 
-    cb.setReadOnlyTranscriptREPL(cb.nextLineStart(pos));
+    vm.setReadOnlyTranscriptREPL(vm.nextLineStart(pos));
 
-    cb.scrollToEndREPL();
+    vm.scrollToEndREPL();
 
 //    if (editor.lineInfo(line).gutterMarkers) {
 //        // Oops, CodeMirror moved the gutter down instead of appending a blank line
@@ -504,29 +538,30 @@ CodeBoot.prototype.addSingleLineTranscriptREPL = function (text, cssClass) {
 
 //    this.is_empty = false;
 
-//    cb.scrollToEnd(this.editor);
+//    vm.scrollToEnd(this.editor);
 
 //    this.onTranscriptChanged();
 
 };
 
-CodeBoot.prototype.addLineWidgetTranscriptREPL = function (widget, cssClass) {
+CodeBootVM.prototype.addLineWidgetTranscriptREPL = function (widget, cssClass) {
 
-    var editor = cb.repl;
+    var vm = this;
+    var editor = vm.repl;
     var transcriptPos = editor.cb.transcriptMarker.find();
-    var pos = transcriptPos ? transcriptPos.to : cb.beginningOfEditor();
+    var pos = transcriptPos ? transcriptPos.to : vm.beginningOfEditor();
     var w = editor.addLineWidget(pos.line-1, widget);
-//    var w = editor.addWidget(cb.lastLinePos(cb.repl), widget, false);
+//    var w = editor.addWidget(vm.lastLinePos(vm.repl), widget, false);
 //    var w = editor.addLineWidget(editor.lineCount() - 2, widget);
     editor.cb.widgets.push(w);
 
 
-//    cb.scrollToEnd(editor);
+//    vm.scrollToEnd(editor);
 
 //    editor.onTranscriptChanged();
 };
 
-CodeBoot.prototype.addTranscriptREPL = function (text, cssClass) {
+CodeBootVM.prototype.addTranscriptREPL = function (text, cssClass) {
     if (text.length > 0 && text.indexOf('\n') === text.length-1) {
         /* optimize for single newline at end */
         this.addSingleLineTranscriptREPL(text, cssClass);

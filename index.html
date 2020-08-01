@@ -21,7 +21,8 @@
 
 <!---------------------------------------------------------------------------->
 
-<body class="cb-hide-header cb-hide-playground cb-hide-footer" data-cb-lang-level="novice" onunload="cb.unload();">
+<body>
+<div class="cb-vm" data-cb-lang="py-novice" onunload="cb.unload();">
 
   <div id="cb-header"></div>
 
@@ -36,23 +37,28 @@
       <div id="cb-menu">
 
         <span id="cb-menu-brand">
-          <button class="btn btn-secondary cb-button" type="button" id="cb-menu-brand-btn" data-toggle="modal" data-target="#cb-about-box">codeBoot v2.1<span id="cb-menu-brand-btn-mode"></span></button>
+          <button class="btn btn-secondary cb-button" type="button" id="cb-menu-brand-btn" data-toggle="modal" data-target="#cb-about-box"><span class="cb-lang-img-on-dark">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;codeBoot v3.0<span id="cb-menu-brand-btn-mode"></span></button>
         </span>
 
         <span id="cb-menu-file" class="dropdown">
-          <button class="btn btn-secondary cb-button" type="button" id="cb-menu-file-btn" data-toggle="dropdown">&nbsp;&nbsp;<i class="fa fa-file">&nbsp;</i></button>
+          <button class="btn btn-secondary cb-button" type="button" id="cb-menu-file-btn" data-toggle="dropdown">&nbsp;&nbsp;<i class="fa fa-file"></i>&nbsp;</button>
           <div id="cb-file-selection" class="dropdown-menu">
           </div>
         </span>
 
         <span id="cb-menu-settings" class="dropdown">
 
-          <button class="btn btn-secondary cb-button" type="button" id="cb-menu-settings-btn" data-toggle="dropdown">&nbsp;&nbsp;<i class="fa fa-cogs"></i>&nbsp;</button>
+          <button id="cb-menu-settings-btn" class="btn btn-secondary cb-button" type="button" data-toggle="dropdown">&nbsp;&nbsp;<i class="fa fa-cogs"></i>&nbsp;</button>
           <div class="dropdown-menu">
 
-            <h5 class="dropdown-header">Language level</h5>
-            <a href="#" class="dropdown-item" data-cb-setting-level="novice"><span><i class="fa fa-check"></i></span>&nbsp;&nbsp;Novice</a>
-            <a href="#" class="dropdown-item" data-cb-setting-level="standard"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Standard</a>
+            <h5 class="dropdown-header">Language</h5>
+
+            <div id="cb-menu-settings-lang">
+              <a href="#" class="dropdown-item" data-cb-setting-lang="js-novice"><span><i class="fa fa-check"></i></span>&nbsp;&nbsp;<img src="include/lang/js/js-img-black.svg" width="20px"></i>&nbsp;&nbsp;JavaScript (novice)</a>
+              <a href="#" class="dropdown-item" data-cb-setting-lang="js-standard"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;<img src="include/lang/js/js-img-color.svg" width="20px"></i>&nbsp;&nbsp;JavaScript (standard)</a>
+              <a href="#" class="dropdown-item" data-cb-setting-lang="py-novice"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;<img src="include/lang/py/py-img-black.svg" width="20px"></i>&nbsp;&nbsp;Python (novice)</a>
+              <a href="#" class="dropdown-item" data-cb-setting-lang="py-standard"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;<img src="include/lang/py/py-img-color.svg" width="20px"></i>&nbsp;&nbsp;Python (standard)</a>
+            </div>
 
             <div class="dropdown-divider"></div>
 
@@ -122,7 +128,7 @@
     <div id="cb-repl-container">
       <textarea id="cb-repl"></textarea>
     </div>
-    <div id="cb-playground">
+    <div class="cb-playground">
       <div id="cb-drawing-window" ondblclick="drawing_window.screenshot();"></div>
       <div id="cb-pixels-window" ondblclick="pixels_window.screenshot();"></div>
       <div id="b"></div>
@@ -155,8 +161,8 @@
           <li><a href="http://jquery.com/" target="_blank">jQuery</a></li>
           <li><a href="http://codemirror.net/" target="_blank">CodeMirror</a></li>
         </ul>
-        <p>The code is freely <a href="https://github.com/feeley/codeboot" target="_blank">available on Github</a>. Feel free
-          to <a href="https://github.com/feeley/codeboot/issues/new" target="_blank">report issues</a> or contribute.</p>
+        <p>The code is freely <a href="https://github.com/udem-dlteam/codeboot" target="_blank">available on Github</a>. Feel free
+          to <a href="https://github.com/udem-dlteam/codeboot/issues/new" target="_blank">report issues</a> or contribute.</p>
       </div>
     </div>
   </div>
@@ -183,24 +189,32 @@
 <script src="include/CodeMirror/addon/comment/comment.js"></script>
 <script src="include/CodeMirror/mode/javascript/javascript.js"></script>
 
-<script src="include/jseval/system.js"></script>
-<script src="include/jseval/num.js"></script>
-<script src="include/jseval/scanner.js"></script>
-<script src="include/jseval/parser.js"></script>
-<script src="include/jseval/pp.js"></script>
-<script src="include/jseval/ast-passes.js"></script>
-<script src="include/jseval/eval.js"></script>
+<script src="include/lang.js"></script>
+
+<script src="include/lang/js/js.js"></script>
+<script src="include/lang/js/system.js"></script>
+<script src="include/lang/js/num.js"></script>
+<script src="include/lang/js/scanner.js"></script>
+<script src="include/lang/js/parser.js"></script>
+<script src="include/lang/js/pp.js"></script>
+<script src="include/lang/js/ast-passes.js"></script>
+<script src="include/lang/js/eval.js"></script>
+<script src="include/lang/js/builtins.js"></script>
+
+<script src="include/lang/py/py.js"></script>
+<script src="include/lang/py/pyinterp.js"></script>
 
 <script src="include/codeboot.js"></script>
 <script src="include/drawing.js"></script>
 <script src="include/actions.js"></script>
 <script src="include/editors.js"></script>
-<script src="include/builtins.js"></script>
 <script src="include/fs.js"></script>
 <script src="include/storage.js"></script>
 <script src="include/tutorial.js"></script>
 <script src="include/jquery.visibility.js"></script>
-<script>cb.query(null);</script>
+<script>//cb_query(null);</script>
+
+</div>
 
 </body>
 

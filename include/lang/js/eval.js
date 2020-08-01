@@ -33,8 +33,6 @@ jev.newGlobalRTE = function (options) {
         globalObject = options.globalObject;
     }
 
-//    globalObject = {print: print, Object: Object};
-
     return new jev.RTE(globalObject,
                        null,
                        new jev.RTFrame(globalObject,
@@ -95,7 +93,7 @@ jev.RTE.prototype.step = function (nb_steps) {
 
 jev.eval = function (source, options) {
 
-    var code = jev.compile(source, options);
+    var code = jev.compile(source, undefined, options);
 
     return jev.run(code, options);
 };
@@ -154,7 +152,7 @@ SourceContainer.prototype.toString = function () {
     return this.tostr;
 };
 
-jev.compile = function (source, options) {
+jev.compile = function (source, container, options) {
 
     var error = function (loc, kind, msg) {
         if (kind !== "warning") {
@@ -162,10 +160,10 @@ jev.compile = function (source, options) {
         }
     };
 
-    var languageLevel = (typeof options === "object" &&
-                         options.languageLevel !== void 0)
-                        ? options.languageLevel
-                        : "novice";
+    var level = (typeof options === "object" &&
+                 options.level !== void 0)
+                ? options.level
+                : "novice";
 
     var detectEmpty = (typeof options === "object" &&
                        options.detectEmpty !== void 0)
@@ -179,9 +177,8 @@ jev.compile = function (source, options) {
 
     var opts = {
                  container:
-                   (typeof options === "object" &&
-                    options.container !== void 0)
-                   ? options.container
+                   container !== void 0
+                   ? container
                    : new SourceContainer(source, "<string>", 1, 1),
 
                  error:
@@ -195,14 +192,14 @@ jev.compile = function (source, options) {
                     options.warnings !== void 0)
                    ? options.warnings
                    : {
-                       autosemicolon: languageLevel === "novice",
+                       autosemicolon: level === "novice",
                        non_integer: false,
                        division: false,
                        equality: false
                      },
 
-                 languageLevel:
-                   languageLevel
+                 level:
+                   level
                };
 
     var port = new String_input_port(source, opts.container);
@@ -234,7 +231,7 @@ jev.compile = function (source, options) {
         ast: false,
         nojs: false,
         simplify: true,
-        languageLevel: languageLevel
+        level: level
     };
 
     return jev.compStatement(cte, ast_normalize(ast, options));
@@ -1528,7 +1525,7 @@ jev.compExpr = function (cte, ast) {
 
         var id_str = ast.id.toString()
         var access = jev.cte_access(cte, id_str);
-        var error_msg = (cte.options.languageLevel === "novice")
+        var error_msg = (cte.options.level === "novice")
                         ? "cannot read the undefined variable " + id_str
                         : false;
 
@@ -2186,7 +2183,7 @@ jev.pure_op1_to_semfn = function (cte, op) {
 
 jev.assign_op1_to_semfn = function (cte, op) {
 
-    if (cte.options.languageLevel === "novice") {
+    if (cte.options.level === "novice") {
 
         switch (op) {
         case "delete x": return jev.sem_delete_x;
@@ -2213,7 +2210,7 @@ jev.pure_op2_to_semfn = function (cte, op) {
 
   switch (op) {
   case "x [ y ]":
-      return (cte.options.languageLevel === "novice")
+      return (cte.options.level === "novice")
              ? jev.sem_prop_index_with_getter_check
              : jev.sem_prop_index;
   case "x . y": return jev.sem_prop_access;
@@ -2243,7 +2240,7 @@ jev.pure_op2_to_semfn = function (cte, op) {
 
 jev.assign_op2_to_semfn = function (cte, op) {
 
-    if (cte.options.languageLevel === "novice") {
+    if (cte.options.level === "novice") {
 
         switch (op) {
         case "var x = y": return jev.sem_var_x_equal_y;
@@ -2657,18 +2654,29 @@ jev.sem_getter_check = function (rte, cont, ast, x, y) {
 };
 
 jev.sem_bounds_check = function (rte, cont, ast, x, y) {
-    if (typeof x === "object" && x instanceof Array) {
-        if (!(typeof y === "number" && y === Math.floor(y))) {
+    if (typeof y === "number") {
+        // assume this is an array or string indexing operation
+        if (!(typeof x === "object" && x instanceof Array || typeof x === "string")) {
             return jev.step_error(rte,
                                   cont,
                                   ast,
-                                  "array index must be an integer");
+                                  "array or string expected");
+        } else if (y !== Math.floor(y)) {
+            return jev.step_error(rte,
+                                  cont,
+                                  ast,
+                                  "index must be an integer");
         } else if (!(y >= 0 && y < x.length)) {
             return jev.step_error(rte,
                                   cont,
                                   ast,
-                                  "array index is out of bounds");
+                                  "index is out of bounds");
         }
+    } else if (typeof x === "object" && x instanceof Array || typeof x === "string") {
+        return jev.step_error(rte,
+                              cont,
+                              ast,
+                              "index must be an integer");
     }
     return true;
 };

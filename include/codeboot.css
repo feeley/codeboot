@@ -58,53 +58,56 @@ body {
     background-color: #e0e0e0;
 }
 
-/* novice navbar is blue */
-body[data-cb-lang-level="novice"] #cb-navbar-controls {
+/* default navbar is orange taint */
+#cb-navbar-controls {
+    background-color: #D7AF84;
+    background-color: #7db6d5; /* use same color */
+}
+
+/* default repl is orange taint */
+#cb-repl-container {
+    border: 0;
+    background-color: #F5EBE0;
+    background-color: #e0f0f6; /* use same color */
+}
+
+/* exec control button for standard repl is orange taint */
+[data-cb-lang$="-standard"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary,
+[data-cb-lang$="-standard"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:focus,
+[data-cb-lang$="-standard"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:active {
+    background-color: #FAF5F0;
+    background-color: #d0e6f1; /* use same color */
+}
+[data-cb-lang$="-standard"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:hover {
+    background-color: #F5ECE0;
+    background-color: #afd3e6; /* use same color */
+}
+
+/* novice navbar is blue taint */
+[data-cb-lang$="-novice"] #cb-navbar-controls {
     background-color: #7db6d5;
 }
 
-/* novice repl is blue */
-body[data-cb-lang-level="novice"] #cb-repl-container {
-    border: 0;
+/* novice repl is blue taint */
+[data-cb-lang$="-novice"] #cb-repl-container {
     background-color: #e0f0f6;
 }
 
 /* exec control button for standard repl is blue */
-body[data-cb-lang-level="novice"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary,
-body[data-cb-lang-level="novice"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:focus,
-body[data-cb-lang-level="novice"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:active {
+[data-cb-lang$="-novice"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary,
+[data-cb-lang$="-novice"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:focus,
+[data-cb-lang$="-novice"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:active {
     background-color: #d0e6f1;
 }
-body[data-cb-lang-level="novice"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:hover {
+[data-cb-lang$="-novice"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:hover {
     background-color: #afd3e6;
 }
 
-/* standard navbar is red */
-body[data-cb-lang-level="standard"] #cb-navbar-controls {
-    background-color: #e7a555;
-}
-
-/* standard repl is red */
-body[data-cb-lang-level="standard"] #cb-repl-container {
-    border: 0;
-    background-color: #f7e1c6;
-}
-
-/* exec control button for standard repl is red */
-body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary,
-body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:focus,
-body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:active {
-    background-color: #f4d7b3;
-}
-body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-button.btn-secondary:hover {
-    background-color: #f0c897;
-}
-
-#cb-playground {
+.cb-playground {
     width: 384px;
 }
 
-.cb-hide-playground #cb-playground {
+.cb-hide-playground .cb-playground {
     display: none;
 }
 
@@ -500,71 +503,110 @@ body[data-cb-lang-level="standard"].cb-focus-repl #cb-exec-controls-buttons .cb-
     color: black;
 }
 
-body[data-cb-lang-level="novice"] .cb-repl-error,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-keyword,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-atom,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-number,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-def,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-variable,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-punctuation,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-property,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-operator,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-variable-2,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-variable-3,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-type,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-comment,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-string,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-string-2,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-meta,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-qualifier,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-builtin,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-bracket,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-tag,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-attribute,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-hr,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-link,
-body[data-cb-lang-level="novice"] .cb-repl-error.cm-error {
+[data-cb-lang$="-novice"] .cb-repl-error,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-keyword,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-atom,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-number,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-def,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-variable,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-punctuation,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-property,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-operator,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-variable-2,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-variable-3,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-type,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-comment,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-string,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-string-2,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-meta,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-qualifier,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-builtin,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-bracket,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-tag,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-attribute,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-hr,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-link,
+[data-cb-lang$="-novice"] .cb-repl-error.cm-error {
     color: #eb48ff;
     font-family: Times;
     font-style: italic;
 }
 
-body[data-cb-lang-level="standard"] .cb-repl-error,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-keyword,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-atom,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-number,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-def,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-variable,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-punctuation,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-property,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-operator,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-variable-2,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-variable-3,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-type,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-comment,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-string,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-string-2,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-meta,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-qualifier,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-builtin,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-bracket,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-tag,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-attribute,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-hr,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-link,
-body[data-cb-lang-level="standard"] .cb-repl-error.cm-error {
+[data-cb-lang$="-standard"] .cb-repl-error,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-keyword,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-atom,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-number,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-def,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-variable,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-punctuation,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-property,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-operator,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-variable-2,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-variable-3,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-type,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-comment,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-string,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-string-2,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-meta,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-qualifier,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-builtin,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-bracket,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-tag,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-attribute,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-hr,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-link,
+[data-cb-lang$="-standard"] .cb-repl-error.cm-error {
     color: #eb48ff;
     font-family: Times;
     font-style: italic;
+}
+
+[data-cb-lang="js-novice"] .cb-lang-img-on-lightzzz {
+  background: url(lang/js/js-img-black.svg) no-repeat;
+}
+
+[data-cb-lang="js-novice"] .cb-lang-img-on-darkzzz {
+  background: url(lang/js/js-img-white.svg) no-repeat;
+}
+
+[data-cb-lang="js-standard"] .cb-lang-img-on-lightzzz,
+[data-cb-lang="js-standard"] .cb-lang-img-on-darkzzz {
+  background: url(lang/js/js-img-color.svg) no-repeat;
+}
+
+[data-cb-lang="py-novice"] .cb-lang-img-on-lightzzz {
+  background: url(lang/py/py-img-black.svg) no-repeat;
+}
+
+[data-cb-lang="py-novice"] .cb-lang-img-on-darkzzz {
+  background: url(lang/py/py-img-white.svg) no-repeat;
+}
+
+[data-cb-lang="py-standard"] .cb-lang-img-on-lightzzz,
+[data-cb-lang="py-standard"] .cb-lang-img-on-darkzzz {
+  background: url(lang/py/py-img-color.svg) no-repeat;
+}
+
+[data-cb-lang="scm-novice"] .cb-lang-img-on-lightzzz {
+  background: url(lang/scm/scm-img-black.svg) no-repeat;
+}
+
+[data-cb-lang="scm-novice"] .cb-lang-img-on-darkzzz {
+  background: url(lang/scm/scm-img-white.svg) no-repeat;
+}
+
+[data-cb-lang="scm-standard"] .cb-lang-img-on-lightzzz,
+[data-cb-lang="scm-standard"] .cb-lang-img-on-darkzzz {
+  background: url(lang/scm/scm-img-color.svg) no-repeat;
 }
 
 /*------------------------- Error messages --------------------------*/
 
-body[data-cb-lang-level="novice"] .cb-code-error {
+[data-cb-lang$="-novice"] .cb-code-error {
     background-color: #eb48ff;
 }
 
-body[data-cb-lang-level="standard"] .cb-code-error {
+[data-cb-lang$="-standard"] .cb-code-error {
     background-color: #eb48ff;
 }
 

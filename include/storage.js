@@ -1,45 +1,57 @@
-CodeBoot.prototype.getState = function () {
+CodeBootVM.prototype.storageId = function () {
+    var vm = this;
+    return 'codeboot3'; //TODO: one state per VM
+};
+
+CodeBootVM.prototype.getStorage = function () {
+    var vm = this;
     try {
-        return localStorage['codeboot'];
+        return localStorage[vm.storageId()];
     } catch (e) {
         return null;
     }
 };
 
-CodeBoot.prototype.setState = function (value) {
+CodeBootVM.prototype.setStorage = function (value) {
+    var vm = this;
     try {
-        localStorage['codeboot'] = value;
+        localStorage[vm.storageId()] = value;
     } catch (e) {
     }
 };
 
-CodeBoot.prototype.clearSession = function () {
-    localStorage.removeItem('codeboot');
+CodeBootVM.prototype.clearStorage = function () {
+    var vm = this;
+    localStorage.removeItem(vm.storageId());
 };
 
-CodeBoot.prototype.saveSession = function () {
-    var state = cb.serializeState();
-    cb.setState(JSON.stringify(state));
+CodeBootVM.prototype.saveSession = function () {
+    var vm = this;
+    var state = vm.serializeState();
+    vm.setStorage(JSON.stringify(state));
 };
 
-CodeBoot.prototype.loadSession = function () {
-    var state = cb.getState();
+CodeBootVM.prototype.loadSession = function () {
+    var vm = this;
+    var state = vm.getStorage();
     if (state) {
-        cb.fs.init();
-        cb.restoreState(JSON.parse(state));
+        vm.fs.init();
+        vm.restoreState(JSON.parse(state));
     }
 };
 
-CodeBoot.prototype.serializeState = function () {
+CodeBootVM.prototype.serializeState = function () {
+    var vm = this;
     var state = {
         tabs: [],
         repl: {
             history: undefined
         },
-        languageLevel: cb.languageLevel,
-        devMode: cb.devMode,
-        animationSpeed: cb.animationSpeed,
-        options: cb.options
+        lang: vm.lang.getId(),
+        level: vm.level,
+//        devMode: vm.devMode,
+        animationSpeed: vm.animationSpeed,
+        options: vm.options
     };
 
     state.repl.history = cb.repl.cb.history.serializeState();
@@ -81,7 +93,7 @@ CodeBoot.prototype.restoreState = function (state) {
     }) || failed;
 
     failed = cb_internal_attempt(function () {
-        cb.setLanguageLevel(state.languageLevel || 'novice');
+//        cb.vms['#cb-vm-1'].setLang(state.language || 'js-novice');
     }) || failed;
 
     failed = cb_internal_attempt(function () {
@@ -93,7 +105,7 @@ CodeBoot.prototype.restoreState = function (state) {
     }) || failed;
 
     failed = cb_internal_attempt(function () {
-        cb.setShowLineNumbers(!!state.options.showLineNumbers);
+        cb.vms['#cb-vm-1'].setShowLineNumbers(!!state.options.showLineNumbers);
     }) || failed;
 
     failed = cb_internal_attempt(function () {

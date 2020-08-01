@@ -21,7 +21,7 @@ function main() {
             jev.eval(str,
                      {
                          container: new SourceContainer(str, filename, 1, 1),
-                         languageLevel: "standard"
+                         level: "standard"
                      });
 
         } catch (e) {
