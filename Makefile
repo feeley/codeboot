@@ -1,8 +1,9 @@
+ZIPI_REPO = https://github.com/udem-dlteam/zipi
 ZIPI_BRANCH = master
 PYTHON38 = python3
 
 zipi:
-	git clone https://github.com/udem-dlteam/zipi $@
+	git clone $(ZIPI_REPO) $@
 	cd zipi && git checkout $(ZIPI_BRANCH)
 
 .PHONY: zipi-pull
