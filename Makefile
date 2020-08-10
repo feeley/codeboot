@@ -1,5 +1,9 @@
+ZIPI_BRANCH = master
+PYTHON38 = python3
+
 zipi:
-	git clone --single-branch --branch zp_tests https://github.com/belmarca/zipi $@
+	git clone https://github.com/udem-dlteam/zipi $@
+	cd zipi && git checkout $(ZIPI_BRANCH)
 
 .PHONY: zipi-pull
 zipi-pull: zipi
@@ -14,7 +18,9 @@ pyinterp: zipi-pull
 	cp --backup=numbered zipi/etc/bootstrap/_tmpdir/pyinterp.js ./include/lang/py/pyinterp.js
 	@echo "Done."
 
-
 .PHONY: serve
 serve: pyinterp
 	python3 -m http.server 8999 --bind 127.0.0.1
+
+clean:
+	rm -rf ./zipi
