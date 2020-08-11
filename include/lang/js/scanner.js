@@ -21,12 +21,12 @@
 //-----------------------------------------------------------------------------
 
 
-function Scanner(port, error, line, column)
+function Scanner(port, error, line0, column0)
 {
     this.port             = port;
     this.error            = error;
-    this.current_line     = (line === void 0) ? 0 : line-1;
-    this.current_char_pos = (column === void 0) ? 0 : column-1;
+    this.current_line     = (line0 === void 0) ? 0 : line0;
+    this.current_char_pos = (column0 === void 0) ? 0 : column0;
     this.current_line_pos = 0;
     this.peeked_char      = null;
     this.peeked_char_pos  = null;
@@ -153,8 +153,8 @@ Scanner.prototype.fill_window = function (n)
                      ? this.current_char_pos
                      : this.peeked_char_pos;
             this.pos_window[i] =
-                line_and_column_to_position(this.current_line,
-                                            cp - this.current_line_pos);
+                line0_and_column0_to_position(this.current_line,
+                                              cp - this.current_line_pos);
             this.char_window[i] = this.get_char();
             i++;
         }
@@ -1344,80 +1344,6 @@ function Token(cat, value, loc)
 Token.prototype.toString = function ()
 {
     return this.value.toString();
-};
-
-
-var LINE_SHIFT = 16;
-
-
-function line_and_column_to_position(line, column)
-{
-    return line + (column << LINE_SHIFT);
-}
-
-
-function position_to_line(pos)
-{
-    return (pos & ((1 << LINE_SHIFT) - 1)) + 1;
-}
-
-
-function position_to_column(pos)
-{
-    return (pos >>> LINE_SHIFT) + 1;
-}
-
-
-function position_to_char_offset(loc, pos)
-{
-    var source = loc.container.source;
-    var line = position_to_line(pos) - loc.container.start_line;
-    var column = position_to_column(pos);
-
-    if (line === 0)
-        return column - loc.container.start_column;
-
-    for (var offs=0; offs<source.length; offs++)
-    {
-        if (source.charCodeAt(offs) === EOL_CH &&
-            --line === 0)
-            return offs + column;
-    }
-
-    return 0;
-}
-
-
-function Location(container, start_pos, end_pos) {
-    this.container = container;
-    this.start_pos = start_pos;
-    this.end_pos   = end_pos;
-}
-
-
-// method join(loc1, loc2)
-
-Location.prototype.join = function (loc) {
-    return new Location(this.container, this.start_pos, loc.end_pos);
-};
-
-
-// method toString(format)
-
-Location.prototype.toString = function(format) {
-
-    if (format === "simple") {
-        return "At line " +
-               position_to_line(this.start_pos) +
-               " in \"" + this.container.toString() + "\"";
-    } else {
-        return "\"" + this.container.toString() + "\"@" +
-               position_to_line(this.start_pos) + "." +
-               position_to_column(this.start_pos) +
-               "-" +
-               position_to_line(this.end_pos) + "." +
-               position_to_column(this.end_pos);
-    }
 };
 
 

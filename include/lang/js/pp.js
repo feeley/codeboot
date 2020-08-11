@@ -1067,8 +1067,8 @@ function loc_to_Location(loc)
         error("illformed location");
 
     return new Location(container,
-                        line_and_column_to_position(start_line, start_column),
-                        line_and_column_to_position(end_line, end_column));
+                        line0_and_column0_to_position(start_line, start_column),
+                        line0_and_column0_to_position(end_line, end_column));
 }
 
 function generate_html_listing(input_filenames, options)

@@ -20,7 +20,7 @@ function main() {
 
             jev.eval(str,
                      {
-                         container: new SourceContainer(str, filename, 1, 1),
+                         container: new SourceContainer(str, filename, 0, 0),
                          level: "standard"
                      });
 

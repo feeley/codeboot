@@ -121,37 +121,6 @@ jev.runSetup = function (code, options) {
     return rte;
 };
 
-//TODO: move to jev
-function SourceContainerInternalFile(source, tostr, start_line, start_column, stamp) {
-
-    this.source = source;
-    this.tostr = tostr;
-    this.start_line = start_line;
-    this.start_column = start_column;
-    this.stamp = stamp;
-
-}
-
-//TODO: move to jev
-SourceContainerInternalFile.prototype.toString = function () {
-    return this.tostr;
-};
-
-//TODO: move to jev
-function SourceContainer(source, tostr, start_line, start_column) {
-
-    this.source = source;
-    this.tostr = tostr;
-    this.start_line = start_line;
-    this.start_column = start_column;
-
-}
-
-//TODO: move to jev
-SourceContainer.prototype.toString = function () {
-    return this.tostr;
-};
-
 jev.compile = function (source, container, options) {
 
     var error = function (loc, kind, msg) {
@@ -179,7 +148,7 @@ jev.compile = function (source, container, options) {
                  container:
                    container !== void 0
                    ? container
-                   : new SourceContainer(source, "<string>", 1, 1),
+                   : new SourceContainer(source, "<string>", 0, 0),
 
                  error:
                    (typeof options === "object" &&
@@ -203,7 +172,7 @@ jev.compile = function (source, container, options) {
                };
 
     var port = new String_input_port(source, opts.container);
-    var s = new Scanner(port, opts.error, opts.container.start_line, opts.container.start_column);
+    var s = new Scanner(port, opts.error, opts.container.start_line0, opts.container.start_column0);
     var p = new Parser(s, opts.warnings);
     var ast = filterAST(p.parse(), source);
 
@@ -1435,8 +1404,8 @@ jev.compExpr = function (cte, ast) {
         var code_body = jev.compStatements(fn_cte, ast, ast.body);
 
         var loc = ast.loc;
-        var start_char_offs = position_to_char_offset(loc, loc.start_pos);
-        var end_char_offs = position_to_char_offset(loc, loc.end_pos);
+        //var start_char_offs = position_to_char_offset(loc, loc.start_pos);
+        //var end_char_offs = position_to_char_offset(loc, loc.end_pos);
 
         return function (rte, cont) {
 

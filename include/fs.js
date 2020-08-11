@@ -1,50 +1,8 @@
 /* ----- UI helpers ----- */
 
-CodeBootVM.prototype.makeCloseButton = function () {
-    var vm = this;
-    return $('<button/>')
-        .addClass('close')
-        .append('<i class="fa fa-close"></i>');
-}
-
-CodeBootVM.prototype.makeDeleteButton = function () {
-    var vm = this;
-    return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Delete file"/>')
-        .addClass('close')
-        .append('<i class="fa fa-trash-o"></i>');
-}
-
-CodeBootVM.prototype.makeShareButton = function () {
-    var vm = this;
-    return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Share file"/>')
-        .addClass('close')
-        .append('<i class="fa fa-share"></i>');
-}
-
-CodeBootVM.prototype.makeDownloadButton = function () {
-    var vm = this;
-    return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Download file"/>')
-        .addClass('close')
-        .append('<i class="fa fa-download"></i>');
-}
-
-CodeBootVM.prototype.makeEmailButton = function () {
-    var vm = this;
-    return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Send codeBoot link by email"/>')
-        .addClass('close')
-        .append('<i class="fa fa-envelope"></i>');
-}
-
-CodeBootVM.prototype.makeCopyButton = function () {
-    var vm = this;
-    return $('<button data-toggle="tooltip" data-delay="750" data-animation="false" data-placement="bottom" title="Copy codeBoot link to clipboard"/>')
-        .addClass('close')
-        .append('<svg width="14" height="16" version="1.1" viewBox="0 0 14 16"><path fill-rule="evenodd" d="M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z"></path></svg>');
-};
-
 CodeBootVM.prototype.scrollTo = function (elementOrSelector) {
     var elementOffset = $(elementOrSelector).position().top;
-    $('#cb-editors').animate({scrollTop: elementOffset}, 400);
+    $('.cb-editors').animate({scrollTop: elementOffset}, 400);
 };
 
 /* ----- Internal file system ----- */
@@ -102,9 +60,8 @@ function CodeBootFile(fs, filename, content, opts) {
     file.content = (content !== undefined) ? content : NEW_FILE_DEFAULT_CONTENT;
     file.cursor = null;
     file.stamp = 0;
-    file.editor = undefined;
 
-    new CodeBootFileEditor(file); // initializes file.editor
+    new CodeBootFileEditor(file); // initializes file.fe
 
     if (opts) {
         for (var prop in opts) {
@@ -114,25 +71,31 @@ function CodeBootFile(fs, filename, content, opts) {
 }
 
 CodeBootFile.prototype.getContent = function () {
+
     var file = this;
-    if (file.editor.isEnabled()) {
-        return file.editor.getValue();
+
+    if (file.fe.isEnabled()) {
+        return file.fe.getValue();
     } else {
         return file.content;
     }
 };
 
 CodeBootFile.prototype.setContent = function (content) {
+
     var file = this;
+
     file.content = content;
-    file.editor.setValue(content);
+    file.fe.setValue(content);
 };
 
 CodeBootFile.prototype.save = function () {
+
     var file = this;
-    if (file.editor.isEnabled()) {
+
+    if (file.fe.isEnabled()) {
         var oldContent = file.content;
-        var newContent = file.editor.getValue();
+        var newContent = file.fe.getValue();
         if (newContent !== oldContent) {
             file.content = newContent;
             file.stamp += 1;
@@ -141,7 +104,9 @@ CodeBootFile.prototype.save = function () {
 };
 
 CodeBootFile.prototype.serialize = function () {
+
     var file = this;
+
     var json = {
         filename: file.filename,
         content: file.getContent(),
@@ -150,18 +115,36 @@ CodeBootFile.prototype.serialize = function () {
                 {line: file.cursor.line, ch: file.cursor.ch},
         stamp: file.stamp
     };
+
     return json;
 };
 
 CodeBootFile.prototype.clone = function () {
+
     var file = this;
     var other = new CodeBootFile(file.fs, file.filename, file.content);
+
     for (var prop in file) {
         if (Object.prototype.hasOwnProperty.call(file, prop)) {
             other[prop] = file[prop];
         }
     }
+
     return other;
+};
+
+CodeBootFile.prototype.setReadOnly = function (enableReadOnly) {
+
+    var file = this;
+    var vm = file.fs.vm;
+
+    file.fe.editor.markText(vm.beginningOfEditor(),
+                            vm.endOfEditor(),
+                            {
+                                readOnly: enableReadOnly,
+                                inclusiveLeft: true,
+                                inclusiveRight: true
+                            });
 };
 
 function CodeBootFileSystem(vm) {
@@ -169,9 +152,10 @@ function CodeBootFileSystem(vm) {
     var fs = this;
 
     fs.vm = vm;
-    fs.editorManager = undefined;
-    new CodeBootFileEditorManager(fs);
-    fs.init();
+
+    new CodeBootFileEditorManager(fs); // initializes fs.fem
+
+    vm.fs = fs;
 }
 
 CodeBootFileSystem.prototype.init = function () {
@@ -246,13 +230,14 @@ CodeBootFileSystem.prototype.generateUniqueFilename = function () {
 
     var fs = this;
     var prefix = 'untitled';
+    var candidateName;
 
     for (var index = 1; ; index++) {
-        var candidateName = prefix + (index===1 ? '' : index) + '.js';
-        if (!fs.hasFile(candidateName)) {
-            return candidateName;
-        }
+        candidateName = prefix + (index===1 ? '' : index) + fs.vm.lang.getExts()[0];
+        if (!fs.hasFile(candidateName)) break;
     }
+
+    return candidateName;
 };
 
 CodeBootFileSystem.prototype.getByName = function (filename) {
@@ -314,7 +299,7 @@ CodeBootFileSystem.prototype.getEditor = function (fileOrFilename) {
 
     var fs = this;
 
-    return fs._asFile(fileOrFilename).editor.editor;
+    return fs._asFile(fileOrFilename).fe.editor;
 };
 
 CodeBootFileSystem.prototype.setContent = function (fileOrFilename, content) {
@@ -346,7 +331,7 @@ CodeBootFileSystem.prototype.forEachEditor = function (callback) {
 
     var fs = this;
 
-    fs.editorManager.editors.forEach(callback);
+    fs.fem.editors.forEach(callback);
 };
 
 CodeBootFileSystem.prototype.serialize = function () {
@@ -382,96 +367,148 @@ CodeBootFileSystem.prototype.rebuildFileMenu = function () {
 
     var fs = this;
 
-    $('#cb-file-selection').empty();
+    fs.vm.forEachElem('.cb-file-selection', function (elem) {
 
-    var item = $('<a id="cb-file-new" class="dropdown-item" href="#"><strong>New</strong></a>');
+        elem.innerHTML = ''; // remove children
 
-    item.on('click', function (event) {
-        fs.newFile();
-    });
+        var item = fs.newMenuItem(elem, 'cb-file-new dropdown-item', 'New file');
 
-    $('#cb-file-selection').append(item);
+        elem.appendChild(item);
 
-    $('#cb-file-selection').append($('<div class="dropdown-divider"></div>'));
+        item.addEventListener('click', function (event) {
+            fs.newFile();
+        });
 
-    fs.each(function (file) {
-        fs.addFileToMenu(file);
+        fs.each(function (file) {
+            fs.addFileToMenu(elem, file);
+        });
     });
 };
 
-CodeBootFileSystem.prototype.addFileToMenu = function (file) {
+CodeBootFileSystem.prototype.newMenuItem = function (elem, cls, text) {
+
+    var item = document.createElement('a');
+    item.className = cls;
+    item.href = '#';
+
+    var span = document.createElement('span');
+    span.innerText = text;
+
+    item.appendChild(span);
+
+    return item;
+};
+
+CodeBootFileSystem.prototype.addDividerToMenu = function (elem) {
+
+    var item = document.createElement('div');
+    item.className = 'dropdown-divider';
+
+    elem.appendChild(item);
+
+    return item;
+};
+
+CodeBootFileSystem.prototype.addButton = function (buttons, title, html, onClick) {
+
+    var button = document.createElement('button');
+
+    button.className = 'close';
+    button.setAttribute('data-toggle', 'tooltip');
+    button.setAttribute('data-delay', '750');
+    button.setAttribute('data-animation', 'false');
+    button.setAttribute('data-placement', 'bottom');
+    button.setAttribute('data-title', title);
+
+    button.innerHTML = html;
+
+    button.addEventListener('click', onClick);
+
+    buttons.appendChild(button);
+
+    return button;
+};
+
+CodeBootFileSystem.prototype.addFileToMenu = function (elem, file) {
 
     var fs = this;
+    var vm = fs.vm;
     var filename = file.filename;
 
-    var item = $('<a class="dropdown-item" href="#"/>');
-    item.attr('data-cb-filename', filename);
-
-    item.on('click', function (event) {
-        file.editor.edit();
-    });
-
-    item.append($('<span/>').text(filename));
-
-    var buttons =$('<span/>').addClass('cb-file-buttons');
-
-    if (!fs.isBuiltin(file)) {
-
-        var deleteButton = fs.vm.makeDeleteButton();
-
-        deleteButton.on('click', function (event) {
-
-            $(deleteButton).tooltip('hide');
-
-            var reallyDelete = confirm('Delete file "' + file.filename + '"? This cannot be undone.');
-
-            if (reallyDelete) {
-                file.editor.disable();
-                item.remove();
-                fs.deleteFile(file);
-            }
-
-            return false;
-        });
-
-        buttons.append(deleteButton);
+    function dismissMenu() {
+        elem.classList.remove('show');
     }
 
-    var downloadButton = fs.vm.makeDownloadButton();
+    if (elem.childNodes && elem.childNodes.length == 1) {
+        fs.addDividerToMenu(elem);
+    }
 
-    downloadButton.on('click', function (event) {
-        $('#cb-file-selection').dropdown('toggle');
-        $(downloadButton).tooltip('hide');
-        file.download();
-        return false;
+    var item = fs.newMenuItem(elem, 'dropdown-item', filename);
+
+    item.setAttribute('data-cb-filename', filename);
+
+    item.addEventListener('click', function (event) {
+        event.stopPropagation();
+        dismissMenu();
+        file.fe.edit();
     });
 
-    buttons.append(downloadButton);
+    var buttons = document.createElement('span');
+    buttons.className = 'cb-file-buttons';
 
-    var emailButton = fs.vm.makeEmailButton();
+    if (!fs.isBuiltin(file)) {
+        fs.addButton(buttons,
+                     'Delete file',
+                     vm.SVG['trash'],
+                     function (event) {
+                         event.stopPropagation();
+                         dismissMenu();
+                         file.delete();
+                     });
+    }
 
-    emailButton.on('click', function (event) {
-        $('#cb-file-selection').dropdown('toggle');
-        $(emailButton).tooltip('hide');
-        file.email();
-        return false;
-    });
+    fs.addButton(buttons,
+                 'Download file',
+                 vm.SVG['download'],
+                 function (event) {
+                     event.stopPropagation();
+                     dismissMenu();
+                     file.download();
+                 });
 
-    buttons.append(emailButton);
+    fs.addButton(buttons,
+                 'Email file',
+                 vm.SVG['mail'],
+                 function (event) {
+                     event.stopPropagation();
+                     dismissMenu();
+                     file.email();
+                 });
 
     item.append(buttons);
 
-    // Keep the menu sorted
-    var children = $('#cb-file-selection').children();
-    for (var i=2; i<children.length; i++) {
-        var element = $(children.get(i));
-        if (filename < element.attr('data-cb-filename')) {
-            item.insertBefore(element);
+    var nodes = elem.childNodes;
+
+    for (var i=2; i<nodes.length; i++) {
+        var e = nodes[i];
+        if (filename < e.getAttribute('data-cb-filename')) {
+            elem.insertBefore(item, e);
             return;
         }
     }
 
-    $('#cb-file-selection').append(item);
+    elem.appendChild(item);
+};
+
+CodeBootFile.prototype.delete = function () {
+    var file = this;
+    var filename = file.filename;
+    if (confirm('Delete file "' + filename + '"? This cannot be undone.')) {
+        var fs = file.fs;
+        file.fe.disable();
+        fs.deleteFile(file);
+        fs.rebuildFileMenu();
+    }
 };
 
 CodeBootFile.prototype.download = function () {
@@ -501,25 +538,25 @@ CodeBootFileSystem.prototype.openFile = function (fileOrFilename) {
     var fs = this;
     var file = fs._asFile(fileOrFilename);
 
-    file.editor.edit();
+    file.fe.edit();
 };
 
-CodeBootFileSystem.prototype.newFile = function (filename) {
+CodeBootFileSystem.prototype.newFile = function (filename, content, opts) {
 
     var fs = this;
 
-    if (filename === void 0) {
+    if (filename === undefined) {
         filename = fs.generateUniqueFilename();
     }
 
-    var file = new CodeBootFile(fs, filename);
+    var file = new CodeBootFile(fs, filename, content, opts);
 
     fs.addFile(file);
-    fs.addFileToMenu(file);
+    fs.rebuildFileMenu();
 
-    file.editor.edit();
+    file.fe.edit();
 
-    return filename;
+    return file;
 };
 
 CodeBootFileSystem.prototype.openFileExistingOrNew = function (filename) {
@@ -537,7 +574,7 @@ CodeBootFileSystem.prototype.openFileExistingOrNew = function (filename) {
 
 CodeBootFileSystem.prototype.removeAllEditors = function () {
     var fs = this;
-    fs.editorManager.removeAllEditors();
+    fs.fem.removeAllEditors();
 };
 
 //-----------------------------------------------------------------------------
@@ -546,39 +583,39 @@ function CodeBootFileEditorManager(fs) {
 
     var fem = this;
 
-    fs.editorManager = fem;
+    fs.fem = fem;
     fem.fs = fs;
     fem.editors = [];
     fem.activated = -1;
 }
 
-CodeBootFileEditorManager.prototype.isActivated = function (editor) {
+CodeBootFileEditorManager.prototype.isActivated = function (fe) {
 
     var fem = this;
 
-    return (fem.activated >= 0 && fem.editors[fem.activated] === editor);
+    return (fem.activated >= 0 && fem.editors[fem.activated] === fe);
 
 };
 
-CodeBootFileEditorManager.prototype.indexOf = function (editor) {
+CodeBootFileEditorManager.prototype.indexOf = function (fe) {
 
     var fem = this;
 
     for (var i=fem.editors.length-1; i>=0; i--) {
-        if (fem.editors[i] === editor) {
+        if (fem.editors[i] === fe) {
             return i;
         }
     }
     return -1;
 };
 
-CodeBootFileEditorManager.prototype.activate = function (editor) {
+CodeBootFileEditorManager.prototype.activate = function (fe) {
 
     var fem = this;
 
-    if (editor.isActivated()) return; // already activated
+    if (fe.isActivated()) return; // already activated
 
-    var i = fem.indexOf(editor);
+    var i = fem.indexOf(fe);
 
     if (i < 0) return; // not a valid editor
 
@@ -587,22 +624,20 @@ CodeBootFileEditorManager.prototype.activate = function (editor) {
         fem.editors[fem.activated].deactivatePresentation();
     }
 
-    editor.activatePresentation(); // activate editor
+    fe.activatePresentation(); // activate editor
 
     fem.activated = i; // remember it is activated
 };
 
-CodeBootFileEditorManager.prototype.add = function (editor) {
+CodeBootFileEditorManager.prototype.add = function (fe) {
 
     var fem = this;
 
-    fem.editors.push(editor);
+    fem.editors.push(fe);
 
     if (fem.activated < 0) {
         fem.show(); // show editors
-        editor.activate(); // activate editor
-    } else {
-        editor.deactivatePresentation(); // deactivate editor
+        fe.activate(); // activate editor
     }
 };
 
@@ -624,22 +659,25 @@ CodeBootFileEditorManager.prototype.removeAllEditors = function () {
     }
 };
 
-CodeBootFileEditorManager.prototype.remove = function (editor) {
+CodeBootFileEditorManager.prototype.remove = function (fe) {
 
     var fem = this;
-    var i = fem.indexOf(editor);
+    var i = fem.indexOf(fe);
 
     if (i < 0) return; // not a valid editor
 
-    editor.file.save();
+    fe.file.save();
 
-    editor.removePresentation();
+    fe.removePresentation();
 
-    editor.fileTab = null;
-    editor.fileTabLabel = null;
-    editor.fileTabCloseButton = null;
-    editor.fileContainer = null;
-    editor.editor = null;
+    fe.fileTab = null;
+    fe.fileTabLabel = null;
+    fe.fileTabCloseButton = null;
+    fe.fileContainer = null;
+    fe.editor = null;
+    fe.fileTabClickHandler = null;
+    fe.fileTabDblClickHandler = null;
+    fe.fileTabCloseHandler = null;
 
     fem.editors.splice(i, 1); // remove from editors
 
@@ -653,7 +691,7 @@ CodeBootFileEditorManager.prototype.remove = function (editor) {
         } else {
             // no other editor to activate
             fem.hide();
-            vm.focusREPL();
+            fem.fs.vm.replFocus();
         }
     } else if (i < fem.activated) {
         fem.activated--;
@@ -661,13 +699,21 @@ CodeBootFileEditorManager.prototype.remove = function (editor) {
 };
 
 CodeBootFileEditorManager.prototype.show = function () {
+
     var fem = this;
-    $('#cb-editors').css('display', 'flex');
+
+    fem.fs.vm.withElem('.cb-editors', function (elem) {
+        elem.style.display = 'flex';
+    });
 };
 
 CodeBootFileEditorManager.prototype.hide = function () {
+
     var fem = this;
-    $('#cb-editors').css('display', 'none');
+
+    fem.fs.vm.withElem('.cb-editors', function (elem) {
+        elem.style.display = 'none';
+    });
 };
 
 //-----------------------------------------------------------------------------
@@ -682,7 +728,10 @@ function CodeBootFileEditor(file) {
     fe.fileTabCloseButton = null;
     fe.fileContainer = null;
     fe.editor = null;
-    file.editor = fe;
+    fe.fileTabClickHandler = null;
+    fe.fileTabDblClickHandler = null;
+    fe.fileTabCloseHandler = null;
+    file.fe = fe;
 }
 
 CodeBootFileEditor.prototype.isActivated = function () {
@@ -690,7 +739,7 @@ CodeBootFileEditor.prototype.isActivated = function () {
     var fe = this;
     var fs = fe.file.fs;
 
-    return fs.editorManager.isActivated(fe);
+    return fs.fem.isActivated(fe);
 };
 
 CodeBootFileEditor.prototype.activate = function () {
@@ -698,15 +747,15 @@ CodeBootFileEditor.prototype.activate = function () {
     var fe = this;
     var fs = fe.file.fs;
 
-    fs.editorManager.activate(fe);
+    fs.fem.activate(fe);
 };
 
 CodeBootFileEditor.prototype.activatePresentation = function () {
 
     var fe = this;
 
-    fe.fileTab.addClass('active');
-    fe.fileContainer.css('display', 'inline');
+    fe.fileTab.classList.add('active');
+    fe.fileContainer.style.display = 'inline';
     fe.editor.refresh();
 };
 
@@ -714,16 +763,24 @@ CodeBootFileEditor.prototype.deactivatePresentation = function () {
 
     var fe = this;
 
-    fe.fileTab.removeClass('active');
-    fe.fileContainer.css('display', 'none');
+    fe.fileTab.classList.remove('active');
+    fe.fileContainer.style.display = 'none';
 };
 
 CodeBootFileEditor.prototype.removePresentation = function () {
 
     var fe = this;
+    var vm = fe.file.fs.vm;
 
-    fe.fileTab.remove();
-    fe.fileContainer.remove();
+    // remove file tab and file container
+
+    vm.withElem('.cb-file-tabs', function (elem) {
+        elem.removeChild(fe.fileTab);
+    });
+
+    vm.withElem('.cb-editors', function (elem) {
+        elem.removeChild(fe.fileContainer);
+    });
 };
 
 CodeBootFileEditor.prototype.isEnabled = function () {
@@ -770,6 +827,62 @@ CodeBootFileEditor.prototype.enable = function () {
 
     var file = fe.file;
     var filename = file.filename;
+    var fs = file.fs;
+    var vm = fs.vm;
+
+    // create file tab
+
+    var fileTab = document.createElement('li');
+    fileTab.className = 'cb-file-tab nav-link';
+
+    var fileTabCloseButton =
+        fs.addButton(fileTab,
+                     'Close',
+                     vm.SVG['close'],
+                     function (event) { fs.fem.remove(fe); return false; });
+
+    var fileTabLabel = document.createElement('span');
+    fileTabLabel.className = 'tab-label';
+    fileTabLabel.innerText = filename;
+
+    fileTab.appendChild(fileTabLabel);
+
+    // create file container
+
+    var fileContainer = document.createElement('div');
+    fileContainer.className = 'cb-file-container';
+
+    var textarea = document.createElement('textarea');
+    textarea.className = 'cb-file-editor';
+
+    fileContainer.appendChild(textarea);
+
+    // add file tab and file container
+
+    vm.withElem('.cb-file-tabs', function (elem) {
+        elem.appendChild(fileTab);
+    });
+
+    vm.withElem('.cb-editors', function (elem) {
+        elem.appendChild(fileContainer);
+    });
+
+    // create code editor
+
+    var editor = fe.file.fs.vm.createCodeEditor(textarea, file);
+
+    editor.setValue(file.content);
+
+    if (file.cursor) {
+        editor.setCursor(file.cursor);
+    }
+
+    fileContainer.addEventListener('click', function (event) {
+        editor.focus();
+    });
+
+/*
+
 
     // create file tab
 
@@ -794,8 +907,8 @@ CodeBootFileEditor.prototype.enable = function () {
 
     // add file tab and file container to page
 
-    $('#cb-file-tabs').append(fileTab);
-    $('#cb-editors').append(fileContainer);
+    $('.cb-file-tabs').append(fileTab);
+    $('.cb-editors').append(fileContainer);
 
     // create code editor
 
@@ -827,6 +940,7 @@ CodeBootFileEditor.prototype.enable = function () {
     fileContainer.on('click', function (event) {
         editor.focus();
     });
+*/
 
     // remember each element for quick access
 
@@ -836,9 +950,23 @@ CodeBootFileEditor.prototype.enable = function () {
     fe.fileContainer = fileContainer;
     fe.editor = editor;
 
+    fe.fileTabClickHandler = function (event) {
+        if (fe.isEnabled()) fe.edit();
+    };
+
+    fe.fileTabDblClickHandler = function (event) {
+        if (fe.isEnabled()) fe.rename();
+    };
+
+    fe.fileTabCloseHandler = function (event) {
+        if (fe.isEnabled()) fe.disable();
+    };
+
+    fe.fileTabCloseButton.addEventListener('click', fe.fileCloseHandler);
+
     fe.normalTabEvents();
 
-    file.fs.editorManager.add(fe);
+    file.fs.fem.add(fe);
 };
 
 // length of window (in ms) during which changes will be buffered
@@ -848,26 +976,18 @@ CodeBootFileEditor.prototype.normalTabEvents = function () {
 
     var fe = this;
 
-    fe.fileTab.on('click', function (event) {
-        fe.edit();
-    });
-
-    fe.fileTab.on('dblclick', function (event) {
-        fe.rename();
-    });
-
-    fe.fileTabCloseButton.on('click', function (event) {
-        fe.disable();
-    });
-
-    fe.fileTabCloseButton.css('display', 'inline');
+    fe.fileTab.addEventListener('click', fe.fileTabClickHandler);
+    fe.fileTab.addEventListener('dblclick', fe.fileTabDblClickHandler);
+    fe.fileTabCloseButton.style.display = 'inline';
 };
 
 CodeBootFileEditor.prototype.renameTabEvents = function () {
+
     var fe = this;
-    fe.fileTab.off('click');
-    fe.fileTab.off('dblclick');
-    fe.fileTabCloseButton.css('display', 'none');
+
+    fe.fileTab.removeEventListener('click', fe.fileTabClickHandler);
+    fe.fileTab.removeEventListener('dblclick', fe.fileTabDblClickHandler);
+    fe.fileTabCloseButton.style.display = 'none';
 };
 
 CodeBootFileEditor.prototype.disable = function () {
@@ -878,7 +998,7 @@ CodeBootFileEditor.prototype.disable = function () {
 
     var file = fe.file;
 
-    file.fs.editorManager.remove(fe);
+    file.fs.fem.remove(fe);
 };
 
 CodeBootFileEditor.prototype.rename = function () {
@@ -891,49 +1011,74 @@ CodeBootFileEditor.prototype.rename = function () {
     fe.file.fs.vm.lastFocusedEditor = null; // allow focus to leave editor
 
     var oldFilename = fe.file.filename;
-    var inputBox = $('<input type="text" class="cb-rename-box"/>');
+    var inputBox = document.createElement('input');
+    inputBox.className = 'cb-rename-box';
+    inputBox.value = oldFilename;
 
-    inputBox.val(oldFilename);
-    fe.fileTabLabel.empty();
-    fe.fileTabLabel.append(inputBox);
+    fe.fileTabLabel.innerText = '';
+    fe.fileTabLabel.appendChild(inputBox);
 
-    var resetTabTo = function (filename) {
-        inputBox.remove();
-        fe.fileTabLabel.text(filename);
+    function resetTabTo(filename) {
+        if (inputBox) {
+            fe.fileTabLabel.removeChild(inputBox);
+        }
+        fe.fileTabLabel.innerText = filename;
         fe.normalTabEvents();
         fe.file.fs.vm.lastFocusedEditor = lastFocusedEditor;
         fe.file.fs.vm.focusLastFocusedEditor();
-    };
+    }
 
-    var resetTabToOldFilename = function () {
+    function resetTabToOldFilename() {
+        inputBox.value = oldFilename;
+        inputBox = null;
         resetTabTo(oldFilename);
-    };
+    }
 
-    fe.renameTabEvents();
+    function doneRenaming() {
+        if (inputBox) {
 
-    inputBox.focusout(function (event) {
-        resetTabToOldFilename();
-    });
+            var newFilename = inputBox.value;
 
-    inputBox.keypress(function (event) {
-        if (event.keyCode == 13) {
-            // Enter pressed, perform renaming
-            var newFilename = inputBox.val();
             if (newFilename !== oldFilename) {
 
+                if (newFilename === '') {
+                    alert('Filename must not be empty');
+                    resetTabToOldFilename();
+                    return;
+                }
+
                 if (fe.file.fs.hasFile(newFilename)) {
-                    alert('Filename already in use');
+                    alert('Filename must not be an existing file');
                     resetTabToOldFilename();
                     return;
                 }
 
                 fe.file.fs.renameFile(oldFilename, newFilename);
             }
+
             resetTabTo(newFilename);
-            fe.file.fs.rebuildFileMenu(); // TODO: inefficient
-        } else if (event.keyCode == 27) {
-            // Escape pressed, reset
+        }
+
+        fe.file.fs.rebuildFileMenu();
+    }
+
+    fe.renameTabEvents();
+
+    inputBox.addEventListener('focusout', function (event) {
+        doneRenaming();
+    });
+
+    inputBox.addEventListener('keydown', function (event) {
+        if (event.keyCode === 27) {
+            event.stopPropagation();
             resetTabToOldFilename();
+        }
+    });
+
+    inputBox.addEventListener('keypress', function (event) {
+        if (event.keyCode === 13) {
+            event.stopPropagation();
+            doneRenaming();
         }
     });
 

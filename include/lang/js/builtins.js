@@ -9,16 +9,16 @@ var lang = this;
 
 function importFromHost(id) {
 
-    if (CodeBoot.prototype.hasHostGlobal(id)) {
-        lang.setGlobal(id, CodeBoot.prototype.getHostGlobal(id));
+    if (lang.vm.hasHostGlobal(id)) {
+        lang.setGlobal(id, lang.vm.getHostGlobal(id));
     }
 }
 
 function exportToHost(id, lang) {
 
-    CodeBoot.prototype.setHostGlobal(id, function () {
+    lang.vm.setHostGlobal(id, function () {
         var fn = lang.getGlobal(id);
-        return fn.apply(CodeBoot.prototype.hostGlobalObject, arguments);
+        return fn.apply(lang.vm.hostGlobalObject, arguments);
     });
 }
 
@@ -68,7 +68,7 @@ importStandardFromHost();
 // alert
 
 function builtin_alert() {
-    return alert.apply(hostGlobalObject, arguments);
+    return alert.apply(lang.vm.hostGlobalObject, arguments);
 }
 
 builtin_alert.toString = function () {
@@ -80,7 +80,7 @@ lang.setGlobal('alert', builtin_alert);
 // prompt
 
 function builtin_prompt() {
-    return prompt.apply(hostGlobalObject, arguments);
+    return prompt.apply(lang.vm.hostGlobalObject, arguments);
 }
 
 builtin_prompt.toString = function () {
@@ -92,7 +92,7 @@ lang.setGlobal('prompt', builtin_prompt);
 // confirm
 
 function builtin_confirm() {
-    return confirm.apply(hostGlobalObject, arguments);
+    return confirm.apply(lang.vm.hostGlobalObject, arguments);
 }
 
 builtin_confirm.toString = function () {
@@ -107,7 +107,7 @@ function builtin_print() {
     var args = Array.prototype.slice.call(arguments).map(function (x) {
         return (typeof x === 'object') ? lang.printedRepresentation(x) : x;
     });
-    lang.vm.addTranscriptREPL(args.join('') + '\n', 'cb-repl-output');
+    lang.vm.replAddTranscript(args.join('') + '\n', 'cb-repl-output');
     lang.rt.rte.step_limit = -1; // force exit of trampoline
 }
 
@@ -715,7 +715,7 @@ builtin_setTimeout._apply_ = function (rte, cont, this_, params) {
                 });
         };
 
-        var result = setTimeout.apply(hostGlobalObject, [f, delay]);
+        var result = setTimeout.apply(lang.vm.hostGlobalObject, [f, delay]);
 
         return return_fn_body(rte, result);
     };
@@ -736,7 +736,7 @@ lang.setGlobal('setTimeout', builtin_setTimeout);
 // clearTimeout
 
 function builtin_clearTimeout(timeoutID) {
-    return clearTimeout.apply(hostGlobalObject, [timeoutID]);
+    return clearTimeout.apply(lang.vm.hostGlobalObject, [timeoutID]);
 }
 
 builtin_clearTimeout.toString = function () {

@@ -1,19 +1,29 @@
 CodeBootVM.prototype.storageId = function () {
+
     var vm = this;
+
     return 'codeboot3'; //TODO: one state per VM
 };
 
 CodeBootVM.prototype.getStorage = function () {
+
     var vm = this;
+
     try {
-        return localStorage[vm.storageId()];
+        var storage = localStorage[vm.storageId()];
+        if (storage)
+            return storage;
+        else
+            return null;
     } catch (e) {
         return null;
     }
 };
 
 CodeBootVM.prototype.setStorage = function (value) {
+
     var vm = this;
+
     try {
         localStorage[vm.storageId()] = value;
     } catch (e) {
@@ -21,27 +31,34 @@ CodeBootVM.prototype.setStorage = function (value) {
 };
 
 CodeBootVM.prototype.clearStorage = function () {
+
     var vm = this;
+
     localStorage.removeItem(vm.storageId());
 };
 
 CodeBootVM.prototype.saveSession = function () {
+
     var vm = this;
     var state = vm.serializeState();
+
     vm.setStorage(JSON.stringify(state));
 };
 
 CodeBootVM.prototype.loadSession = function () {
+
     var vm = this;
     var state = vm.getStorage();
+
     if (state) {
-        vm.fs.init();
         vm.restoreState(JSON.parse(state));
     }
 };
 
 CodeBootVM.prototype.serializeState = function () {
+
     var vm = this;
+
     var state = {
         tabs: [],
         repl: {
@@ -105,11 +122,11 @@ CodeBoot.prototype.restoreState = function (state) {
     }) || failed;
 
     failed = cb_internal_attempt(function () {
-        cb.vms['#cb-vm-1'].setShowLineNumbers(!!state.options.showLineNumbers);
+        //cb.vms['#cb-vm-1'].setShowLineNumbers(!!state.options.showLineNumbers);
     }) || failed;
 
     failed = cb_internal_attempt(function () {
-        cb.setLargeFont(!!state.options.largeFont);
+        //cb.setLargeFont(!!state.options.largeFont);
     }) || failed;
 
     if (state.files) {
@@ -135,6 +152,6 @@ CodeBoot.prototype.restoreState = function (state) {
     }
 
     if (failed) {
-        cb.reportError('Failed to restore state');
+        vm.reportError('Failed to restore state');
     }
 };

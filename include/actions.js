@@ -30,34 +30,11 @@ CodeBootVM.prototype.setupDrop = function (elem, handler) {
     elem.addEventListener('drop', onDrop);
 };
 
-CodeBootVM.prototype.addAlert = function (text, title, kind) {
-
-    var vm = this;
-    var alertDiv = $('<div/>').addClass('alert');
-
-    if (kind) alertDiv.addClass('alert-' + kind);
-    alertDiv.text(text);
-    if (title) {
-        alertDiv.prepend($('<strong/>').text(title), ' ');
-    }
-    alertDiv.prepend('<button class="close" data-dismiss="alert">&times;</button>');
-    $(vm.alerts).append(alertDiv);
-};
-
-CodeBootVM.prototype.reportError = function (text, title) {
+CodeBootVM.prototype.reportError = function (text) {
 
     var vm = this;
 
-    if (title === undefined) title = 'Error!';
-    vm.addAlert(text, title, 'error');
-};
-
-CodeBootVM.prototype.reportWarning = function (text, title) {
-
-    var vm = this;
-
-    if (title === undefined) title = 'Warning!';
-    vm.addAlert(text, title);
+    alert(text);
 };
 
 function removeTrailingNewline(text) {
@@ -69,9 +46,9 @@ function removeTrailingNewline(text) {
 }
 
 function position_to_line_ch(pos) {
-    return { line: position_to_line(pos)-1,
-             ch: position_to_column(pos)-1
-           };
+    var line0 = position_to_line0(pos);
+    var column0 = position_to_column0(pos);
+    return { line: line0, ch: column0 };
 }
 
 CodeBootVM.prototype.codeHighlight = function (loc, cssClass, markEnd) {
@@ -100,18 +77,31 @@ CodeBootVM.prototype.codeHighlight = function (loc, cssClass, markEnd) {
 
     var end = position_to_line_ch(loc.end_pos);
     var start = position_to_line_ch(loc.start_pos);
-    var allMarker = editor.markText(start, end, { 'className': cssClass });
-    allMarker.cb_editor = editor;
+    var allMarker = null;
+    var endMarker = null;
+    var eol = null;
 
-    if (markEnd) {
-        start.line = end.line;
-        start.ch = end.ch-1;
-        var endMarker = editor.markText(start, end, { 'className': cssClass+'-end' });
-        endMarker.cb_editor = editor;
-        return { all: allMarker, end: endMarker };
+    if (start.line === end.line && start.ch < 0 && end.ch <= 0) {
+
+        if (end.ch < 0) return;
+
+        eol = editor.addLineClass(end.line-1, 'text', cssClass+'-eol');
+
     } else {
-        return { all: allMarker, end: null };
+
+        allMarker = editor.markText(start, end, { 'className': cssClass });
+        allMarker.cb_editor = editor;
+
+        if (markEnd) {
+            // mark the last character (useful for pointing bubble to it)
+            start.line = end.line;
+            start.ch = end.ch-1;
+            endMarker = editor.markText(start, end, { 'className': cssClass+'-end' });
+            endMarker.cb_editor = editor;
+        }
     }
+
+    return { editor: editor, all: allMarker, eol: eol, end: endMarker };
 };
 
 function editor_URL(content, filename) {
@@ -212,7 +202,7 @@ CodeBootVM.prototype.replay = function () {
                 j += 2;
             } else if (command.charAt(j+1) === 'P') {
                 if (str !== '') {
-                    vm.setInputREPL(str);
+                    vm.replSetInput(str);
                     vm.repl.refresh();
                     vm.repl.focus();
                 } else {
@@ -221,7 +211,7 @@ CodeBootVM.prototype.replay = function () {
                 }
             } else if (command.charAt(j+1) === 'S') {
                 if (str !== '') {
-                    vm.setInputREPL(str);
+                    vm.replSetInput(str);
                     vm.repl.refresh();
                     vm.repl.focus();
                 } else {
@@ -230,7 +220,7 @@ CodeBootVM.prototype.replay = function () {
                 }
             } else if (command.charAt(j+1) === 'A') {
                 if (str !== '') {
-                    vm.setInputREPL(str);
+                    vm.replSetInput(str);
                     vm.repl.refresh();
                     vm.repl.focus();
                 } else {
@@ -268,7 +258,7 @@ CodeBootVM.prototype.replay = function () {
             }
         } else {
             if (str !== '') {
-                vm.setInputREPL(str);
+                vm.replSetInput(str);
                 if (j === command.length) {
                     vm.showTryMeTooltip();
                 }
@@ -284,10 +274,10 @@ CodeBootVM.prototype.replay = function () {
 };
 
 CodeBootVM.prototype.showTryMeTooltip = function (filename) {
-    $('#cb-exec-controls-buttons').tooltip('show');
+    $('.cb-exec-controls-buttons').tooltip('show');
 
     // Auto hide the tooltip after 2 secs
-    setTimeout(function () { $('#cb-exec-controls-buttons').tooltip('hide'); }, 2000);
+    setTimeout(function () { $('.cb-exec-controls-buttons').tooltip('hide'); }, 2000);
 };
 
 CodeBootVM.prototype.modeStopped = function () {
@@ -330,28 +320,42 @@ CodeBootVM.prototype.code_queue_service = function () {
     }
 };
 
+// Step counter
+
+CodeBootVM.prototype.updateStepCounter = function () {
+    var vm = this;
+    if (vm.ui.execStepCounter) {
+        vm.ui.execStepCounter.innerText = vm.textStepCounter();
+    }
+};
+
 CodeBootVM.prototype.showingStepCounter = function () {
     var vm = this;
-    return $('#cb-exec-step-counter').is(':visible');
+    if (vm.ui.execStepCounter)
+        return vm.ui.execStepCounter.style.display !== 'none';
+    else
+        return false;
 };
 
 CodeBootVM.prototype.showStepCounter = function () {
     var vm = this;
-    var counter = $('#cb-exec-step-counter');
-    counter.css('display', 'inline');
-    counter.text(vm.textStepCounter());
+    if (vm.ui.execStepCounter) {
+        vm.ui.execStepCounter.style.display = 'inline';
+        vm.updateStepCounter();
+    }
 };
 
 CodeBootVM.prototype.hideStepCounter = function () {
     var vm = this;
-    var counter = $('#cb-exec-step-counter');
-    counter.css('display', 'none');
+    if (vm.ui.execStepCounter) {
+        vm.ui.execStepCounter.style.display = 'none';
+    }
 };
 
 CodeBootVM.prototype.textStepCounter = function () {
     var vm = this;
     var count = vm.lang.getStepCount();
-    return + count + ' step' + (count>1 ? 's' : '');
+    return count + ' step' + (count>1 ? 's' : '');
 };
 
 CodeBootVM.prototype.updatePopupPos = function () {
@@ -367,6 +371,43 @@ CodeBootVM.prototype.updatePopupPos = function () {
     }
 };
 
+/*
+CodeBootVM.prototype.hasDisplayNone = function (selector) {
+    var vm = this;
+    var result = true;
+    vm.forEachElem(selector, function (elem) {
+        if (elem.style.display !== 'none') result = false;
+    });
+    return result;
+};
+
+CodeBootVM.prototype.setText = function (selector, text) {
+    var vm = this;
+    vm.forEachElem(selector, function (elem) {
+        elem.innerText = text;
+    });
+};
+
+*/
+
+CodeBootVM.prototype.setDisplay = function (selector, display) {
+
+    var vm = this;
+
+    vm.forEachElem(selector, function (elem) {
+        elem.style.display = display;
+    });
+};
+
+CodeBootVM.prototype.replSetReadOnly = function (val) {
+
+    var vm = this;
+
+    if (!vm.repl) return;
+
+    vm.repl.setOption('readOnly', val);
+};
+
 CodeBootVM.prototype.enterMode = function (newMode) {
 
     var vm = this;
@@ -378,34 +419,19 @@ CodeBootVM.prototype.enterMode = function (newMode) {
 
     var isStopped = newMode === vm.modeStopped();
     var isStepping = newMode === vm.modeStepping();
-    var isAnimating = newMode === vm.modeAnimating();
-    var isAnimatingSleeping = newMode === vm.modeAnimatingSleeping();
+    var isAnimating = !(isStopped || isStepping);
 
     // Show either play-1, pause or play-pause
 
-    if (isStopped) {
-        $('#cb-exec-img-play-1'    ).css('display', 'none');
-        $('#cb-exec-img-pause'     ).css('display', 'none');
-        $('#cb-exec-img-play-pause').css('display', 'inline');
-    } else if (isAnimating || isAnimatingSleeping) {
-        $('#cb-exec-img-play-1'    ).css('display', 'none');
-        $('#cb-exec-img-pause'     ).css('display', 'inline');
-        $('#cb-exec-img-play-pause').css('display', 'none');
-    } else {
-        $('#cb-exec-img-play-1'    ).css('display', 'inline');
-        $('#cb-exec-img-pause'     ).css('display', 'none');
-        $('#cb-exec-img-play-pause').css('display', 'none');
-    }
+    vm.setDisplay('.cb-exec-play-1',     isStepping  ? 'inline' : 'none');
+    vm.setDisplay('.cb-exec-pause',      isAnimating ? 'inline' : 'none');
+    vm.setDisplay('.cb-exec-play-pause', isStopped   ? 'inline' : 'none');
 
-    if (isStopped) {
-        $('body').removeClass('cb-mode-running');
-        vm.repl.setOption('readOnly', false);
-        vm.fs.editorManager.setReadOnlyAllEditors(false);
-    } else {
-        $('body').addClass('cb-mode-running');
-        vm.repl.setOption('readOnly', true);
-        vm.fs.editorManager.setReadOnlyAllEditors(true);
-    }
+    var running = !isStopped;
+
+    vm.setClass('cb-mode-running', running);
+    vm.replSetReadOnly(running);
+    vm.fs.fem.setReadOnlyAllEditors(running);
 
     if (isStopped) {
 
@@ -414,13 +440,13 @@ CodeBootVM.prototype.enterMode = function (newMode) {
         vm.hideExecPoint();
         vm.hideStepCounter();
         vm.lang.stopExecution();
-        vm.setPromptREPL();
+        vm.replSetPrompt(true);
         //TODO: interferes?
         //vm.repl.focus();
     } else {
         // Update step counter
         if (vm.showingStepCounter()) {
-            vm.showStepCounter(vm.lang.getStepCount());
+            vm.updateStepCounter();
         }
     }
 
@@ -577,7 +603,7 @@ CodeBootVM.prototype.stop = function (reason) {
             }
 
             if (reason !== null || withStepCounter) {
-                vm.addLineWidgetTranscriptREPL(msg.get(0));
+                vm.replAddLineWidgetTranscript(msg.get(0));
             }
         }
 
@@ -593,21 +619,30 @@ CodeBootVM.prototype.showError = function (loc) {
 
     vm.ui.errorMark = vm.codeHighlight(loc, 'cb-code-error', false);
 
-    vm.scrollToMarker(vm.ui.errorMark.all);
+    if (vm.ui.errorMark)
+        vm.scrollToMarker(vm.ui.errorMark.all);
 };
 
 CodeBootVM.prototype.hide_error = function () {
+
     var vm = this;
-    if (vm.ui.errorMark !== null) {
-        vm.clearMarker(vm.ui.errorMark);
+    var mark = vm.ui.errorMark;
+
+    if (mark) {
+        vm.clearMarker(mark);
         vm.ui.errorMark = null;
     }
 };
 
 CodeBootVM.prototype.clearMarker = function (marker) {
+
     var vm = this;
+
     if (marker.all !== null) {
         marker.all.clear();
+    }
+    if (marker.eol !== null) {
+        marker.editor.removeLineClass(marker.eol, 'text');
     }
     if (marker.end !== null) {
         marker.end.clear();
@@ -661,18 +696,21 @@ CodeBootVM.prototype.scrollToMarker = function (marker, editor) {
     }
 };
 
-function CodeBootExecPointBubble() {
-    this.tip  = null;
-    this.elem = null;
+function CodeBootExecPointBubble(vm) {
+
+    var bubble = this;
+
+    bubble.vm   = vm;
+    bubble.tip  = null;
+    bubble.elem = null;
 };
 
 CodeBootExecPointBubble.prototype.isVisible = function () {
 
-    if (this.tip !== null) {
-        var popper = this.tip.getPopperElement(this.elem);
-        if (popper !== null) {
-            return popper.style.visibility !== 'hidden';
-        }
+    var bubble = this;
+
+    if (bubble.tip !== null) {
+        return !bubble.tip.hidden;
     }
 
     return false;
@@ -680,104 +718,79 @@ CodeBootExecPointBubble.prototype.isVisible = function () {
 
 CodeBootExecPointBubble.prototype.show = function () {
 
-    if (this.tip !== null) {
-        var popper = this.tip.getPopperElement(this.elem);
-        if (popper !== null) {
-            this.tip.show(popper);
-        }
-    }
+    var bubble = this;
 
+    if (bubble.tip !== null) {
+        bubble.tip.show();
+    }
 };
 
 CodeBootExecPointBubble.prototype.hide = function () {
 
-    if (this.tip !== null) {
-        var popper = this.tip.getPopperElement(this.elem);
-        if (popper !== null) {
-            this.tip.hide(popper);
-        }
-    }
+    var bubble = this;
 
+    if (bubble.tip !== null) {
+        bubble.tip.hide();
+    }
 };
 
 CodeBootExecPointBubble.prototype.destroy = function () {
 
-    if (this.tip !== null) {
-        var popper = this.tip.getPopperElement(this.elem);
-        if (popper !== null) {
-            this.tip.destroy(popper);
-        }
+    var bubble = this;
+
+    if (bubble.tip !== null) {
+        bubble.tip.destroy();
     }
 
-    this.tip  = null;
-    this.elem = null;
-
+    bubble.tip  = null;
+    bubble.elem = null;
 };
 
-CodeBootExecPointBubble.prototype.replaceContent = function (html) {
+CodeBootExecPointBubble.prototype.setContent = function (html) {
 
-    if (this.tip !== null) {
-        var popper = this.tip.getPopperElement(this.elem);
-        if (popper !== null) {
-            var contentElem = popper.querySelector('.tippy-tooltip-content');
-            if (contentElem !== null) {
-                contentElem.innerHTML = html;
-            }
-        }
+    var bubble = this;
+
+    if (bubble.tip !== null) {
+        bubble.tip.setContent(html);
     }
-
 };
 
 CodeBootVM.prototype.execPointCodeElement = function () {
 
-    var elems = [].slice.call(document.querySelectorAll('.cb-exec-point-code-end'),-1);
+    var vm = this;
 
-    if (elems.length === 0)
-        return null;
-    else
-        return elems[0];
+    return vm.root.querySelector('.cb-exec-point-code-end');
 };
 
 CodeBootExecPointBubble.prototype.attachTo = function (elem, html) {
 
+    var bubble = this;
+
     if (elem === null) return;
 
-    var _this = this;
-
-    if (this.elem === null || this.elem !== elem) {
+    if (bubble.elem === null || bubble.elem !== elem) {
 
         /* create a new bubble */
 
-        if (this.elem !== null)
-            this.destroy();
+        if (bubble.elem !== null)
+            bubble.destroy();
 
-        //count++; $('#cb-menu-brand-btn').text(count);
         var tip = tippy(elem, {
-            html: '#cb-exec-point-bubble-template',
-            theme: 'cb-exec-point-bubble',
-            position: 'bottom-start',
+            appendTo: bubble.vm.root,
+            allowHTML: true,
+            placement: 'bottom-start',
+            maxWidth: 9999,
             trigger: 'manual',
-            sticky: 'true',
-            zIndex: 999, /* just under dropdown menu */
-            arrow: true,
-            interactive: true,
-            duration: 0,
-            popperOptions: {
-                modifiers: {
-                    flip: {
-                        enabled: true
-                    }
-                }
-            }
+            hideOnClick: false,
+            theme: 'cb-exec-point-bubble',
         });
 
-        this.tip = tip;
-        this.elem = elem;
+        bubble.tip = tip;
+        bubble.elem = elem;
     }
 
-    this.replaceContent(html);
-    setTimeout(function () { _this.show(); }, 0);
-
+    bubble.setContent(html);
+    setTimeout(function () { bubble.show(); }, 0);
 };
 
 CodeBootVM.prototype.hideExecPoint = function () {
@@ -812,9 +825,8 @@ CodeBootVM.prototype.showExecPoint = function () {
     var loc = vm.lang.getLocation();
     vm.ui.execPointMark = vm.codeHighlight(loc, 'cb-exec-point-code', true);
 
-    if (vm.ui.execPointMark !== null) {
+    if (vm.ui.execPointMark)
         vm.scrollToMarker(vm.ui.execPointMark.end);
-    }
 
     var value = vm.lang.getResult();
     var $container;
@@ -825,10 +837,12 @@ CodeBootVM.prototype.showExecPoint = function () {
     }
 
     if ($container !== null &&
-        !$('.cb-exec-point-code-end').last().isInView($container)) {
+       true //TODO: fix    !$('.cb-exec-point-code-end').last().isInView($container)
+       ) {
         var filename = loc.container.toString();
         vm.fs.openFile(filename);
-        vm.scrollTo(vm.getFileContainerFor(filename));
+        var file = vm.fs._asFile(filename);
+        vm.scrollTo(file.fe.fileContainer);
     }
 
     vm.ui.execPointBubble.attachTo(
@@ -898,8 +912,9 @@ CodeBootVM.prototype.execute2 = function (single_step) {
                     newMode = vm.modeAnimatingSleeping();
                 }
             } else {
-                if (vm.showingStepCounter() ||
-                    vm.lang.getStepCount() >= stepChunk) {
+                if (vm.showingStepCounter()) {
+                    vm.updateStepCounter();
+                } else if (vm.lang.getStepCount() >= stepChunk) {
                     vm.showStepCounter();
                 }
                 newMode = vm.modeAnimating();
@@ -936,7 +951,7 @@ CodeBootVM.prototype.executionEndedWithResult = function (result) {
     console.log(result);
     console.log(vm.lastResultRepresentation);
     if (result !== void 0) {
-        vm.addTranscriptREPL(vm.lastResultRepresentation + '\n',
+        vm.replAddTranscript(vm.lastResultRepresentation + '\n',
                              'cb-repl-result');
     }
 
@@ -958,7 +973,7 @@ CodeBootVM.prototype.run = function (single_step) {
 
         /* running REPL input */
 
-        source = vm.getInputREPL();
+        source = vm.replGetInput();
 
         if (false && source.trim() === '') {
             if (vm.lang.isExecuting()) {
@@ -972,7 +987,9 @@ CodeBootVM.prototype.run = function (single_step) {
             }
         }
 
-        var line = vm.inputPosREPL().line;
+        var line = vm.replInputPos().line;
+
+        vm.replAcceptInput();
 
         compile = function () {
             return vm.compile_repl_expression(source, line+1, 1);
@@ -984,9 +1001,13 @@ CodeBootVM.prototype.run = function (single_step) {
 
         var filename = vm.lastFocusedEditor.cb.fileEditor.filename;
 
-        source = 'load("' + filename + '")';
-
-        vm.replaceInputREPL(source);
+        if (vm.root.hasAttribute('data-cb-runable-code')) {
+            source = '';
+        } else {
+            source = 'load("' + filename + '")';
+            vm.replReplaceInput(source);
+            vm.replAcceptInput();
+        }
 
         drawing_window.cs(); /* clear drawing window when running file */
         pixels_window.clear();
@@ -997,9 +1018,9 @@ CodeBootVM.prototype.run = function (single_step) {
     }
 
     if (source.trim() !== '')
-        vm.repl.cb.history.add(source);
+        vm.replAddHistory(source);
 
-    vm.acceptInputREPL();
+//    vm.replAcceptInput();
 
     vm.run_setup_and_execute(compile, single_step);
 };
@@ -1061,7 +1082,7 @@ function writeFileInternal(filename, content) {
 CodeBootVM.prototype.compile_repl_expression = function (source, line, ch) {
     var vm = this;
     return vm.compile(source,
-                      new SourceContainer(source, '<REPL>', line, ch),
+                      new SourceContainer(source, '<REPL>', line-1, ch-1),
                       false); // preserve execution state
 };
 
@@ -1103,7 +1124,7 @@ CodeBootVM.prototype.getURL = function (url) {
             content = data;
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            vm.addTranscriptREPL('Failed to load remote ressource\n',
+            vm.replAddTranscript('Failed to load remote ressource\n',
                                  'cb-repl-error');
         }
     });
@@ -1117,7 +1138,7 @@ CodeBootVM.prototype.compile_url_file = function (url, reboot) {
     if (source === undefined) source = '';
 
     return vm.compile(source,
-                      new SourceContainer(source, url, 1, 1),
+                      new SourceContainer(source, url, 0, 0),
                       reboot);
 };
 
@@ -1130,7 +1151,7 @@ CodeBootVM.prototype.compile_internal_file = function (filename, reboot) {
     var source = state.content;
 
     return vm.compile(source,
-                      new SourceContainerInternalFile(source, filename, 1, 1, state.stamp),
+                      new SourceContainerInternalFile(source, filename, 0, 0, state.stamp),
                       reboot);
 };
 
@@ -1186,7 +1207,7 @@ CodeBootVM.prototype.errorMessage = function (loc, kind, msg) {
     var vm = this;
     var locText = '';
 
-    if (vm.options.showLineNumbers && loc.container.toString() !== '<REPL>') {
+    if (vm.showLineNumbers && loc.container.toString() !== '<REPL>') {
         locText = loc.toString('simple') + ': ';
     }
 
@@ -1198,7 +1219,7 @@ CodeBootVM.prototype.displayError = function (loc, kind, msg) {
     var vm = this;
 
     vm.showError(loc);
-    vm.addTranscriptREPL(vm.errorMessage(loc, kind, msg) + '\n',
+    vm.replAddTranscript(vm.errorMessage(loc, kind, msg) + '\n',
                          'cb-repl-error');
 };
 
