@@ -14,9 +14,11 @@ pyinterp: zipi-pull
 	@echo "Running make on the parser..."
 	cd zipi/parser && $(MAKE)
 	@echo "Running make on zp..."
-	cd zipi/etc/bootstrap && $(MAKE) copy_files && $(PYTHON38) zp.py -f _tmpdir/pyinterp.py
+	cd zipi/etc/bootstrap && $(MAKE) pyinterp
+	@echo "Backing up old pyinterp.js..."
+	cp ./include/lang/py/pyinterp.js ./include/lang/py/pyinterp.js.bk
 	@echo "Copying pyinterp.js..."
-	cp --backup=numbered zipi/etc/bootstrap/_tmpdir/pyinterp.js ./include/lang/py/pyinterp.js
+	cp zipi/etc/bootstrap/_tmpdir/pyinterp.js ./include/lang/py/pyinterp.js
 	@echo "Done."
 
 .PHONY: serve
