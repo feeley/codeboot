@@ -244,7 +244,7 @@ function position_within_container(pos, container) {
     var line0 = position_to_line0(pos);
     var column0 = position_to_column0(pos);
 
-    if (line0 === container.start_line0)
+    if (line0 === 0)
         column0 += container.start_column0;
 
     line0 += container.start_line0;
@@ -310,4 +310,30 @@ Location.prototype.toString = function(format) {
                position_to_line(loc.end_pos) + "." +
                position_to_column(loc.end_pos);
     }
+};
+
+Lang.prototype.absoluteLocation = function (container,
+                                            start_line0,
+                                            start_column0,
+                                            end_line0,
+                                            end_column0) {
+
+    var start_pos = line0_and_column0_to_position(start_line0, start_column0);
+    var end_pos = line0_and_column0_to_position(end_line0, end_column0);
+
+    return new Location(container, start_pos, end_pos);
+};
+
+Lang.prototype.relativeLocation = function (container,
+                                            start_line0,
+                                            start_column0,
+                                            end_line0,
+                                            end_column0) {
+
+    var start_pos = line0_and_column0_to_position(start_line0, start_column0);
+    var end_pos = line0_and_column0_to_position(end_line0, end_column0);
+
+    return new Location(container,
+                        position_within_container(start_pos, container),
+                        position_within_container(end_pos, container));
 };

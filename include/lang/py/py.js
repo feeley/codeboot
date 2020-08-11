@@ -102,11 +102,17 @@ LangPy.prototype.compile = function (source, container, reboot) {
 
     }
 
-    function syntaxError(c, start_pos, end_pos, msg) {
+    function syntaxError(start_line0,
+                         start_column0,
+                         end_line0,
+                         end_column0,
+                         msg) {
 
-        var loc = new Location(container,
-                               position_within_container(start_pos, container),
-                               position_within_container(end_pos, container));
+        var loc = lang.relativeLocation(container,
+                                        start_line0,
+                                        start_column0,
+                                        end_line0,
+                                        end_column0);
 
         lang.vm.syntaxError(loc, 'syntax error', msg);
     }
@@ -167,7 +173,6 @@ LangPy.prototype.continueExecution = function (steps) {
                 lang.rt.cont = null;
                 break;
             }
-            console.log(state);
             lang.rt.stepCount++;
             lang.rt.ast = state[0];
             lang.rt.msg = state[1];
@@ -207,13 +212,11 @@ LangPy.prototype.getLocation = function () {
     var lang = this;
     var ast = lang.rt.ast;
 
-    var container = ast.container;
-    var start_pos = line0_and_column0_to_position(ast.lineno-1, ast.col_offset);
-    var end_pos = line0_and_column0_to_position(ast.end_lineno-1, ast.end_col_offset);
-
-    return new Location(container,
-                        position_within_container(start_pos, container),
-                        position_within_container(end_pos, container));
+    return lang.absoluteLocation(ast.container,
+                                 ast.lineno-1,
+                                 ast.col_offset,
+                                 ast.end_lineno-1,
+                                 ast.end_col_offset);
 };
 
 LangPy.prototype.stopExecution = function () {
