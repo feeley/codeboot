@@ -606,7 +606,7 @@ CodeBootVM.prototype.replAddSingleLineTranscript = function (text, cssClass) {
 
     if (!editor) return;
 
-    vm.setDisplay('.cb-console', 'inline');
+    vm.setDisplay('.cb-console', 'block');
 
     var transcriptPos = editor.cb.transcriptMarker.find();
     var pos = transcriptPos ? transcriptPos.to : vm.beginningOfEditor();

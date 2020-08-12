@@ -134,8 +134,6 @@ function CodeBootVM(cb, root, opts) {
 
     vm.lastExecEvent = 'stop';
 
-    //vm.alerts = undefined;
-
     vm.repl = null;
 
     vm.lastAST = null;
@@ -165,9 +163,9 @@ function CodeBootVM(cb, root, opts) {
 
     vm.setLang(id_and_level);
 
-    vm.initRoot();
+    var initLast = vm.initRoot();
 
-    //vm.alerts = document.getElementById('alerts');
+    vm.initUI();
 
     vm.setLangUI();
 
@@ -196,6 +194,8 @@ function CodeBootVM(cb, root, opts) {
                          ? opts.animationSpeed
                          : (root.getAttribute('data-cb-animation-speed') ||
                             'normal'));
+
+    initLast();
 };
 
 CodeBootVM.prototype.initUI = function () {
@@ -539,7 +539,7 @@ CodeBootVM.prototype.consoleHTML = function (display) {
     var vm = this;
 
     return '\
-<div class="cb-console" style="display: ' + display + ';">\
+<div class="cb-console"' + (display ? '' : ' style="display: none;"') + '>\
   <div class="cb-repl-container">\
     <textarea class="cb-repl"></textarea>\
   </div>\
@@ -576,10 +576,22 @@ CodeBootVM.prototype.initRoot = function () {
 
     var vm = this;
     var nChildren = vm.root.childNodes.length;
+    var content = null;
+
+    function initLast() {
+        if (content !== null) {
+
+            var file = vm.fs.newFile(undefined, content);
+
+            file.setReadOnly(true);
+
+            vm.setClass('cb-read-only', true);
+        }
+    }
 
     if (vm.root.tagName === 'PRE') {
 
-        var content = vm.root.innerText;
+        content = vm.root.innerText;
         var elem = document.createElement('div');
 
         elem.className = 'cb-vm';
@@ -587,33 +599,21 @@ CodeBootVM.prototype.initRoot = function () {
         elem.innerHTML =
             vm.execControlsHTML() +
             vm.editorsHTML(false) +
-            vm.consoleHTML('inline');
+            vm.consoleHTML(false);
 
         vm.root.replaceWith(elem);
         vm.root = elem;
 
         vm.setAttribute('data-cb-runable-code', true);
 
-        vm.initUI();
-
-        var file = vm.fs.newFile(undefined, content);
-
-        file.setReadOnly(true);
-
-        vm.setClass('cb-read-only', true);
-
-        return;
-    }
-    if (nChildren === 0) {
+    } else if (nChildren === 0) {
 
         vm.root.innerHTML =
             vm.headerHTML() +
             vm.navbarHTML() +
-            vm.consoleHTML('inline') +
+            vm.consoleHTML(true) +
             vm.editorsHTML(true) +
             vm.footerHTML();
-
-        vm.initUI();
 
     } else if (nChildren === 1) {
 
@@ -621,28 +621,19 @@ CodeBootVM.prototype.initRoot = function () {
 
         if (child.tagName === 'PRE') {
 
-            var content = child.innerText;
+            content = child.innerText;
 
             vm.root.innerHTML =
                 vm.execControlsHTML() +
                 vm.editorsHTML(false) +
-                vm.consoleHTML('none');
+                vm.consoleHTML(false);
 
             vm.setAttribute('data-cb-runable-code', true);
 
-            vm.initUI();
-
-            var file = vm.fs.newFile(undefined, content);
-
-            file.setReadOnly(true);
-
-            vm.setClass('cb-read-only', true);
-        } else {
-            vm.initUI();
         }
-    } else {
-        vm.initUI();
     }
+
+    return initLast;
 };
 
 function escape_HTML(text) {
