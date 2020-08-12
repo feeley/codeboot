@@ -778,7 +778,7 @@ CodeBootExecPointBubble.prototype.attachTo = function (elem, html) {
         var tip = tippy(elem, {
             appendTo: bubble.vm.root,
             allowHTML: true,
-            placement: 'bottom-start',
+            placement: 'bottom-end',
             maxWidth: 9999,
             trigger: 'manual',
             hideOnClick: false,
