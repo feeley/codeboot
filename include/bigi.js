@@ -144,11 +144,12 @@ function bigi_from_float(n) {
     return bigi_from_digs(digs);
 }
 
-function bigi_to_float(bigi) {
+function bigi_to_float(bigi, exact) {
 
     // Converts a bigi to a floating point integer value.  If the
     // number cannot be represented exactly (loss of significant
-    // bits), false is returned.
+    // bits), false is returned when exact is true, otherwise a close
+    // floating point value is returned (possibly Infinity).
 
     var digs = bigi_to_digs(bigi);
     var len = digs.length;
@@ -162,8 +163,9 @@ function bigi_to_float(bigi) {
             var d = digs[i--];
             var x = n * bigi_radix + d;
 
-            if (Math.floor(x / bigi_radix) !== n ||
-                x % bigi_radix !== d)
+            if (exact &&
+                (Math.floor(x / bigi_radix) !== n ||
+                 x % bigi_radix !== d))
                 return false;
 
             n = x;
@@ -180,8 +182,9 @@ function bigi_to_float(bigi) {
             var d = digs[i--];
             var x = n * bigi_radix + d;
 
-            if (Math.floor(x / bigi_radix) !== n ||
-                ((x % bigi_radix) + bigi_radix) % bigi_radix !== d)
+            if (exact &&
+                (Math.floor(x / bigi_radix) !== n ||
+                 ((x % bigi_radix) + bigi_radix) % bigi_radix !== d))
                 return false;
 
             n = x;
@@ -261,14 +264,6 @@ function bigi_cmp(bigi_a, bigi_b) {
     return result;
 }
 
-function bigi_lt(bigi_a, bigi_b) {
-
-    // Compares two normalized bigis and returns true iff first
-    // is less than second.
-
-    return bigi_cmp(bigi_a, bigi_b) < 0;
-}
-
 function bigi_eq(bigi_a, bigi_b) {
 
     // Compares two normalized bigis and returns true iff first
@@ -291,12 +286,36 @@ function bigi_eq(bigi_a, bigi_b) {
     return true;
 }
 
+function bigi_lt(bigi_a, bigi_b) {
+
+    // Compares two normalized bigis and returns true iff first
+    // is less than second.
+
+    return bigi_cmp(bigi_a, bigi_b) < 0;
+}
+
+function bigi_le(bigi_a, bigi_b) {
+
+    // Compares two normalized bigis and returns true iff first
+    // is less than or equal to the second.
+
+    return bigi_cmp(bigi_a, bigi_b) <= 0;
+}
+
 function bigi_gt(bigi_a, bigi_b) {
 
     // Compares two normalized bigis and returns true iff first
     // is greater than second.
 
     return bigi_cmp(bigi_a, bigi_b) > 0;
+}
+
+function bigi_ge(bigi_a, bigi_b) {
+
+    // Compares two normalized bigis and returns true iff first
+    // is greater than or equal to the second.
+
+    return bigi_cmp(bigi_a, bigi_b) >= 0;
 }
 
 function bigi_abs(bigi_a) {
@@ -808,12 +827,18 @@ if ((function () { return this.BigInt; })()) {
 
     function bigi_instance(val) { return val instanceof BigInt; }
     function bigi_from_float(n) { return BigInt(n); } // n must be int. value
-    function bigi_to_float(bigi) { return Number(n); }
+    function bigi_to_float(bigi, exact) {
+        var val = Number(bigi);
+        if (exact && bigi != val) val = false;
+        return val;
+    }
     function bigi_nonneg(bigi) { return bigi >= 0; }
     function bigi_zero(bigi) { return bigi == 0; }
-    function bigi_lt(bigi_a, bigi_b) { return bigi_a < bigi_b; }
     function bigi_eq(bigi_a, bigi_b) { return bigi_a == bigi_b; }
+    function bigi_lt(bigi_a, bigi_b) { return bigi_a < bigi_b; }
+    function bigi_le(bigi_a, bigi_b) { return bigi_a <= bigi_b; }
     function bigi_gt(bigi_a, bigi_b) { return bigi_a > bigi_b; }
+    function bigi_ge(bigi_a, bigi_b) { return bigi_a >= bigi_b; }
     function bigi_abs(bigi_a) { return bigi_a<0 ? -bigi_a : bigi_a; }
     function bigi_neg(bigi_a) { return -bigi_a; }
     function bigi_add(bigi_a, bigi_b) { return bigi_a+bigi_b; }
