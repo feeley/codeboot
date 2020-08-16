@@ -200,7 +200,35 @@ function int_to_float(int_a, exact) {
     }
 }
 
-function int_nonneg(int_a) {
+function int_is_zero(int_a) {
+
+    // Tests if a normalized Int is zero.
+
+    var digs = int_to_digs(int_a);
+
+    return digs.length === 1 && digs[0] === 0;
+}
+
+function int_is_pos(int_a) {
+
+    // Tests if a normalized Int is positive.
+
+    var digs = int_to_digs(int_a);
+
+    return digs[digs.length-1] < int_radix_div2 &&
+           !(digs.length === 1 && digs[0] === 0);
+}
+
+function int_is_neg(int_a) {
+
+    // Tests if a normalized Int is negative.
+
+    var digs = int_to_digs(int_a);
+
+    return digs[digs.length-1] >= int_radix_div2;
+}
+
+function int_is_nonneg(int_a) {
 
     // Tests if a normalized Int is nonnegative.
 
@@ -209,26 +237,17 @@ function int_nonneg(int_a) {
     return digs[digs.length-1] < int_radix_div2;
 }
 
-function int_zero(int_a) {
-
-    // Tests if a normalized Int is zero.
-
-    var digs = int_to_digs(int_a);
-
-    return (digs.length === 1) && (digs[0] === 0);
-}
-
 function int_cmp(int_a, int_b) {
 
     // Compares two normalized Ints.  Returns -1, 0, or 1 if
     // int_a is respectively less than, equal, or greater than
     // int_b.
 
-    if (int_nonneg(int_a)) {
-        if (!int_nonneg(int_b))
+    if (int_is_nonneg(int_a)) {
+        if (!int_is_nonneg(int_b))
             return 1;
     } else {
-        if (int_nonneg(int_b))
+        if (int_is_nonneg(int_b))
             return -1;
     }
 
@@ -263,7 +282,7 @@ function int_cmp(int_a, int_b) {
         else
             result = 1;
 
-        if (!int_nonneg(int_a))
+        if (!int_is_nonneg(int_a))
             result = -result;
     }
 
@@ -333,7 +352,7 @@ function int_ge(int_a, int_b) {
 }
 
 function int_abs(int_a) {
-    if (int_nonneg(int_a))
+    if (int_is_nonneg(int_a))
         return int_a;
     else
         return int_neg(int_a);
@@ -418,12 +437,12 @@ function int_mul(int_a, int_b) {
 
     var neg = false;
 
-    if (!int_nonneg(int_a)) {
+    if (!int_is_nonneg(int_a)) {
         neg = !neg;
         int_a = int_neg(int_a);
     }
 
-    if (!int_nonneg(int_b)) {
+    if (!int_is_nonneg(int_b)) {
         neg = !neg;
         int_b = int_neg(int_b);
     }
@@ -460,7 +479,7 @@ function int_div(int_a, int_b) {
 
     var dm = int_divmod_nonneg(int_abs(int_a), int_abs(int_b));
 
-    if (int_nonneg(int_a) === int_nonneg(int_b))
+    if (int_is_nonneg(int_a) === int_is_nonneg(int_b))
         return dm[0];
     else
         return int_neg(dm[0]);
@@ -472,7 +491,7 @@ function int_mod(int_a, int_b) {
 
     var dm = int_divmod_nonneg(int_abs(int_a), int_abs(int_b));
 
-    if (int_nonneg(int_a))
+    if (int_is_nonneg(int_a))
         return dm[1];
     else
         return int_neg(dm[1]);
@@ -484,13 +503,13 @@ function int_divmod(int_a, int_b) {
 
     var dm = int_divmod_nonneg(int_abs(int_a), int_abs(int_b));
 
-    if (int_nonneg(int_a)) {
-        if (int_nonneg(int_b))
+    if (int_is_nonneg(int_a)) {
+        if (int_is_nonneg(int_b))
             return dm;
         else
             return [int_neg(dm[0]), dm[1]];
     } else {
-        if (int_nonneg(int_b))
+        if (int_is_nonneg(int_b))
             return [int_neg(dm[0]), int_neg(dm[1])];
         else
             return [dm[0], int_neg(dm[1])];
@@ -772,12 +791,12 @@ function int_to_string(int_a, radix) {
     if (radix === void 0)
         radix = 10;
 
-    if (int_zero(int_a))
+    if (int_is_zero(int_a))
         return "0";
 
     var sign;
 
-    if (int_nonneg(int_a)) {
+    if (int_is_nonneg(int_a)) {
         sign = "";
     } else {
         sign = "-";
@@ -786,7 +805,7 @@ function int_to_string(int_a, radix) {
 
     var int_rad = int_from_digs([radix]); // assumes radix < int_radix_div2
 
-    while (!int_zero(int_a)) {
+    while (!int_is_zero(int_a)) {
         var dm = int_divmod_nonneg(int_a, int_rad);
         var d = int_to_digs(dm[1])[0];
         str = int_digits.slice(d, d+1) + str;
@@ -880,8 +899,10 @@ if ((function () { return this.BigInt; })()) {
         if (exact && int_a != val) val = false;
         return val;
     }
-    function int_nonneg(int_a) { return int_a >= 0; }
-    function int_zero(int_a) { return int_a == 0; }
+    function int_is_zero(int_a) { return int_a == 0; }
+    function int_is_pos(int_a) { return int_a > 0; }
+    function int_is_neg(int_a) { return int_a < 0; }
+    function int_is_nonneg(int_a) { return int_a >= 0; }
     function int_eq(int_a, int_b) { return int_a == int_b; }
     function int_ne(int_a, int_b) { return int_a != int_b; }
     function int_lt(int_a, int_b) { return int_a < int_b; }
