@@ -292,6 +292,14 @@ function int_eq(int_a, int_b) {
     return true;
 }
 
+function int_ne(int_a, int_b) {
+
+    // Compares two normalized Ints and returns true iff first
+    // is not equal to second.
+
+    return !int_eq(int_a, int_b);
+}
+
 function int_lt(int_a, int_b) {
 
     // Compares two normalized Ints and returns true iff first
@@ -448,31 +456,50 @@ function int_mul(int_a, int_b) {
 
 function int_div(int_a, int_b) {
 
-    // Quotient of two normalized Ints.
+    // Division of two normalized Ints.
 
-    var qr = int_nonneg_quorem(int_abs(int_a), int_abs(int_b));
+    var dm = int_divmod_nonneg(int_abs(int_a), int_abs(int_b));
 
     if (int_nonneg(int_a) === int_nonneg(int_b))
-        return qr.quo;
+        return dm[0];
     else
-        return int_neg(qr.quo);
+        return int_neg(dm[0]);
 }
 
 function int_mod(int_a, int_b) {
 
     // Modulo of two normalized Ints.
 
-    var qr = int_nonneg_quorem(int_abs(int_a), int_abs(int_b));
+    var dm = int_divmod_nonneg(int_abs(int_a), int_abs(int_b));
 
     if (int_nonneg(int_a))
-        return qr.rem;
+        return dm[1];
     else
-        return int_neg(qr.rem);
+        return int_neg(dm[1]);
 }
 
-function int_nonneg_quorem(int_a, int_b) {
+function int_divmod(int_a, int_b) {
 
-    // Computes quotient and remainder of two nonnegative normalized
+    // Division and modulo of two normalized Ints.
+
+    var dm = int_divmod_nonneg(int_abs(int_a), int_abs(int_b));
+
+    if (int_nonneg(int_a)) {
+        if (int_nonneg(int_b))
+            return dm;
+        else
+            return [int_neg(dm[0]), dm[1]];
+    } else {
+        if (int_nonneg(int_b))
+            return [int_neg(dm[0]), int_neg(dm[1])];
+        else
+            return [dm[0], int_neg(dm[1])];
+    }
+}
+
+function int_divmod_nonneg(int_a, int_b) {
+
+    // Computes division and modulo of two nonnegative normalized
     // Ints.
 
     var digs_a = int_to_digs(int_a);
@@ -495,9 +522,8 @@ function int_nonneg_quorem(int_a, int_b) {
             n = n - q*d;
         }
 
-        return { quo: int_from_unnormalized_digs(digs),
-                 rem: int_from_digs([n]) // we know n fits in single digit
-               };
+        return [int_from_unnormalized_digs(digs),
+                int_from_digs([n])]; // we know n fits in single digit
     } else {
 
         // multi digit divisor case
@@ -649,7 +675,8 @@ function int_xor(int_a, int_b) {
 
 function int_shift(int_a, int_b) {
 
-    // Shifting a normalized Int.
+    // Shifting a normalized Int.  A positive int_b shifts to the left and
+    // a negative int_b shifts to the right.
 
     var digs_a = int_to_digs(int_a);
     var len_a = digs_a.length;
@@ -720,6 +747,20 @@ function int_shift(int_a, int_b) {
     }
 }
 
+function int_lshift(int_a, int_b) {
+
+    // Shifting a normalized Int to the left.
+
+    return int_shift(int_a, int_b);
+}
+
+function int_rshift(int_a, int_b) {
+
+    // Shifting a normalized Int to the right.
+
+    return int_shift(int_a, int_neg(int_b));
+}
+
 var int_digits = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 function int_to_string(int_a, radix) {
@@ -746,10 +787,10 @@ function int_to_string(int_a, radix) {
     var int_rad = int_from_digs([radix]); // assumes radix < int_radix_div2
 
     while (!int_zero(int_a)) {
-        var qr = int_nonneg_quorem(int_a, int_rad);
-        var d = int_to_digs(qr.rem)[0];
+        var dm = int_divmod_nonneg(int_a, int_rad);
+        var d = int_to_digs(dm[1])[0];
         str = int_digits.slice(d, d+1) + str;
-        int_a = qr.quo;
+        int_a = dm[0];
     }
 
     return sign + str;
@@ -842,6 +883,7 @@ if ((function () { return this.BigInt; })()) {
     function int_nonneg(int_a) { return int_a >= 0; }
     function int_zero(int_a) { return int_a == 0; }
     function int_eq(int_a, int_b) { return int_a == int_b; }
+    function int_ne(int_a, int_b) { return int_a != int_b; }
     function int_lt(int_a, int_b) { return int_a < int_b; }
     function int_le(int_a, int_b) { return int_a <= int_b; }
     function int_gt(int_a, int_b) { return int_a > int_b; }
@@ -853,12 +895,15 @@ if ((function () { return this.BigInt; })()) {
     function int_mul(int_a, int_b) { return int_a*int_b; }
     function int_div(int_a, int_b) { return int_a/int_b; } // integer div
     function int_mod(int_a, int_b) { return int_a%int_b; }
+    function int_divmod(int_a, int_b) { return [int_a/int_b, int_a%int_b]; }
     function int_not(int_a) { return ~int_a; }
     function int_and(int_a, int_b) { return int_a&int_b; }
     function int_or(int_a, int_b)  { return int_a|int_b; }
     function int_xor(int_a, int_b) { return int_a^int_b; }
     function int_and(int_a, int_b) { return int_a&int_b; }
     function int_shift(int_a, int_b) { return int_a<<int_b; }
+    function int_lshift(int_a, int_b) { return int_a<<int_b; }
+    function int_rshift(int_a, int_b) { return int_a>>int_b; }
     function int_to_string(int_a, radix) { return int_a.toString(radix); }
     function int_from_string_radix10(str) { return BigInt(str); }
     // function int_from_string(str, radix) // not a method of BigInt
