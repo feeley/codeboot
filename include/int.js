@@ -921,7 +921,6 @@ if (globalThis.BigInt) {
     function int_and(int_a, int_b) { return int_a&int_b; }
     function int_or(int_a, int_b)  { return int_a|int_b; }
     function int_xor(int_a, int_b) { return int_a^int_b; }
-    function int_and(int_a, int_b) { return int_a&int_b; }
     function int_shift(int_a, int_b) { return int_a<<int_b; }
     function int_lshift(int_a, int_b) { return int_a<<int_b; }
     function int_rshift(int_a, int_b) { return int_a>>int_b; }
