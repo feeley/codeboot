@@ -890,7 +890,7 @@ function int_from_substring(str, start, end, radix) {
 
 // use BigInt if available
 
-if ((function () { return this.BigInt; })()) {
+if (globalThis.BigInt) {
 
     function int_instance(val) { return val instanceof BigInt; }
     function int_from_float(n) { return BigInt(n); } // n must be int. value
