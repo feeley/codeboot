@@ -663,10 +663,9 @@ CodeBootVM.prototype.replAddTranscript = function (text, cssClass) {
             this.replAddSingleLineTranscript(text, cssClass);
         } else {
             var lines = text.split('\n');
-            for (var i=0; i<lines.length-1; i++) {
+            for (var i=0; i<lines.length; i++) {
                 this.replAddSingleLineTranscript(lines[i] + '\n', cssClass);
             }
-            //TODO: handle text after last newline
         }
     }
 };
