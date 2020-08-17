@@ -267,6 +267,7 @@ LangPy.prototype.initRunTimeState = function (code, reboot) {
 
     if (!lang.rt.rte || reboot) {
         lang.rt.rte = pyinterp.fresh_rte();
+        lang.rt.rte.vm = lang.vm;
     }
 
     return pyinterp.prepare_execution(code, lang.rt.rte);
