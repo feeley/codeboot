@@ -123,7 +123,7 @@ function int_from_float(n) {
 
     // Constructs a normalized Int from a floating point integer value.
 
-    if (!isFinite(n) || Math.floor(n) !== n)
+    if (!Number.isInteger(n))
         throw "int_from_float's parameter must be an integer value";
 
     var digs = [];  // Array accumulating digits with digs.push(digit)
