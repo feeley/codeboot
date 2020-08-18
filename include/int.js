@@ -123,7 +123,7 @@ function int_from_float(n) {
 
     // Constructs a normalized Int from a floating point integer value.
 
-    if (!isFinite(n) || Math.floor(n) !== n)
+    if (!Number.isInteger(n))
         throw "int_from_float's parameter must be an integer value";
 
     var digs = [];  // Array accumulating digits with digs.push(digit)
@@ -890,7 +890,7 @@ function int_from_substring(str, start, end, radix) {
 
 // use BigInt if available
 
-if ((function () { return this.BigInt; })()) {
+if (globalThis.BigInt) {
 
     function int_instance(val) { return val instanceof BigInt; }
     function int_from_float(n) { return BigInt(n); } // n must be int. value
@@ -921,7 +921,6 @@ if ((function () { return this.BigInt; })()) {
     function int_and(int_a, int_b) { return int_a&int_b; }
     function int_or(int_a, int_b)  { return int_a|int_b; }
     function int_xor(int_a, int_b) { return int_a^int_b; }
-    function int_and(int_a, int_b) { return int_a&int_b; }
     function int_shift(int_a, int_b) { return int_a<<int_b; }
     function int_lshift(int_a, int_b) { return int_a<<int_b; }
     function int_rshift(int_a, int_b) { return int_a>>int_b; }
