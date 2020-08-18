@@ -272,3 +272,9 @@ LangPy.prototype.initRunTimeState = function (code, reboot) {
 
     return pyinterp.prepare_execution(code, lang.rt.rte);
 };
+
+function print_stdout(msg, rte) {
+    console.log("PRINTING TO STDOUT");
+    console.log(msg);
+    rte.vm.replAddTranscript(msg, 'cb-repl-output');
+};
