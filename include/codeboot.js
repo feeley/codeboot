@@ -344,6 +344,7 @@ CodeBootVM.prototype.menuLangHTML = function () {
 ' + vm.menuSettingsLangHTML() + '\
   <div class="dropdown-divider"></div>\
   <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.0</a>\
+  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-help-box">Help</a>\
   </div>\
 </span>\
 ';

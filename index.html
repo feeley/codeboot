@@ -33,17 +33,49 @@
         <h4 class="modal-title">About codeBoot</h4>
       </div>
       <div class="modal-body">
-        <p>codeBoot is developped by Marc Feeley and Bruno Dufour using the following components:</p>
-        <ul>
-          <li><a href="http://github.com/twbs/bootstrap" target="_blank">Bootstrap</a></li>
-          <li><a href="http://jquery.com/" target="_blank">jQuery</a></li>
-          <li><a href="http://codemirror.net/" target="_blank">CodeMirror</a></li>
-        </ul>
-        <p>The code is freely <a href="https://github.com/udem-dlteam/codeboot" target="_blank">available on Github</a>. Feel free
-          to <a href="https://github.com/udem-dlteam/codeboot/issues/new" target="_blank">report issues</a> or contribute.</p>
+        <p>codeBoot was created by Marc Feeley and Bruno Dufour.  The following people have also contributed to its development:</p>
+        <blockquote>
+          Marc-André Bélanger,
+          Antoine Doucet,
+          Frédéric Hamel,
+          Nicolas Hurtubise,
+          Olivier Melançon,
+          Léonard Oest O'Leary,
+          Roselyne Painchaud
+        </blockquote>
       </div>
     </div>
   </div>
+</div>
+
+<div id="cb-help-box" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">codeBoot help</h4>
+      </div>
+      <div class="modal-body">
+
+        <h5>Console</h5>
+        <p>Enter a command at the console and then:</p>
+        <p> <kbd>Enter</kbd> : execute it fully and display result<p>
+        <p> <kbd>Shift</kbd> + <kbd>Enter</kbd> : execute the first step (continue with <kbd>Shift</kbd> + <kbd>Enter</kbd> or <kbd>Enter</kbd>)</p>
+        <p> <kbd>Esc</kbd> : stop the execution</p>
+
+        <h5>Editor</h5>
+        <p> <kbd>↑</kbd> / <kbd>Ctrl</kbd> + <kbd>P</kbd> : move cursor up</p>
+        <p> <kbd>↓</kbd> / <kbd>Ctrl</kbd> + <kbd>N</kbd> : move cursor down</p>
+        <p> <kbd>←</kbd> / <kbd>Ctrl</kbd> + <kbd>B</kbd> : move cursor left</p>
+        <p> <kbd>→</kbd> / <kbd>Ctrl</kbd> + <kbd>F</kbd> : move cursor right</p>
+        <p> <kbd>Enter</kbd> : insert line break, move to next line and smart indent</p>
+        <p> <kbd>Ctrl</kbd> + <kbd>J</kbd> : insert line break and move to next line</p>
+        <p> <kbd>Ctrl</kbd> + <kbd>O</kbd> : insert line break</p>
+        <p> <kbd>Shift</kbd> + <kbd>Enter</kbd> : execute the first step of current file (continue with <kbd>Shift</kbd> + <kbd>Enter</kbd> or <kbd>Enter</kbd>)</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <form id="cb-form-download" class="hide" action="download.php" method="post">
   <textarea id="cb-form-download-content" name="content"></textarea>
