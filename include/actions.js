@@ -883,7 +883,7 @@ CodeBootVM.prototype.execute2 = function (single_step) {
         }
         catch (e) {
             console.log(e);//TODO: remove
-            update_playground_visibility();
+            update_playground_visibility();//TODO: fix
             if (e !== false)
                 vm.stop(String(e));
             else
@@ -891,7 +891,7 @@ CodeBootVM.prototype.execute2 = function (single_step) {
             return;
         }
 
-        update_playground_visibility();
+        update_playground_visibility();//TODO: fix
 
         if (vm.ui.mode === vm.modeStepping()) {
             single_step = true;

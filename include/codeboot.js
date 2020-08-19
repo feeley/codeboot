@@ -7,11 +7,11 @@ document.addEventListener('DOMContentLoaded', function () {
 function CodeBoot() {
 
     var cb = this;
-
+/*
     window.addEventListener('beforeunload', function (event) {
         return cb.beforeunload(event);
     });
-
+*/
     cb.vms = {};
     cb.vmCount = 0;
 
@@ -237,6 +237,12 @@ CodeBootVM.prototype.UI = function (vm) {
     ui.stepDelay = 0;
     ui.mode = null;
     ui.code_queue = [];
+
+    ui.dw = new DrawingWindow(vm, 360, 240);
+    ui.pw = new PixelsWindow(vm, 360, 240, 1);
+
+    ui.dw.setShow(false);
+    ui.pw.setShow(false);
 
     vm.ui = ui;
 };
@@ -799,9 +805,9 @@ CodeBootVM.prototype.setupEventHandlers = function () {
                 vm.setLargeFont(!vm.largeFont);
             } else if (val = elem.getAttribute('data-cb-setting-graphics')) {
                 if (val === 'show-drawing-window') {
-                    vm.setShowDrawingWindow(!showing_drawing_window());
+                    vm.ui.dw.setShow(!vm.ui.dw.showing());
                 } else if (val === 'show-pixels-window') {
-                    vm.setShowPixelsWindow(!showing_pixels_window());
+                    vm.ui.pw.setShow(!vm.ui.pw.showing());
                 }
             }
 
@@ -1028,28 +1034,6 @@ CodeBootVM.prototype.setLargeFont = function (large) {
         });
 
         vm.stateChanged();
-    }
-};
-
-CodeBootVM.prototype.setShowDrawingWindow = function (show) {
-
-    var vm = this;
-
-    if (show) {
-        show_drawing_window();
-    } else {
-        hide_drawing_window();
-    }
-};
-
-CodeBootVM.prototype.setShowPixelsWindow = function (show) {
-
-    var vm = this;
-
-    if (show) {
-        show_pixels_window();
-    } else {
-        hide_pixels_window();
     }
 };
 

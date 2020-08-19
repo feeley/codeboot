@@ -1,28 +1,28 @@
-function dom_create_canvas(id, width, height) {
-  var c = document.createElement('canvas');
-  c.id = id;
-  c.width = width;
-  c.height = height;
-  c.style.border = '2px solid #eef';
-  c.style.padding = '1px';
-  var ctx = c.getContext('2d');
-  ctx.lineCap = 'butt';
-  ctx.font = '10px Courier';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  return c;
+function dom_create_canvas(cls, width, height) {
+    var c = document.createElement('canvas');
+    c.className = cls;
+    c.width = width;
+    c.height = height;
+    c.style.border = '2px solid #eef';
+    c.style.padding = '1px';
+    var ctx = c.getContext('2d');
+    ctx.lineCap = 'butt';
+    ctx.font = '10px Courier';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    return c;
 }
 
-function dom_create_canvas_cartesian(id, width, height) {
-  var c = dom_create_canvas(id, width, height);
-  var ctx = c.getContext('2d');
-  ctx.translate(width/2, height/2);
-  ctx.scale(1, -1);
-  return c;
+function dom_create_canvas_cartesian(cls, width, height) {
+    var c = dom_create_canvas(cls, width, height);
+    var ctx = c.getContext('2d');
+    ctx.translate(width/2, height/2);
+    ctx.scale(1, -1);
+    return c;
 }
 
 function dom_set_scale(context, x, y) {
-  context.scale(x, y);
+    context.scale(x, y);
 }
 
 function dom_set_rotation(context, angle) {
@@ -30,120 +30,130 @@ function dom_set_rotation(context, angle) {
 }
 
 function dom_reset_transform(context, x, y) {
-  context.setTransform(1, 0, 0, 1, x, y);
+    context.setTransform(1, 0, 0, 1, x, y);
 }
 
 function dom_set_translation(context, x, y) {
-  context.translate(x, y);
+    context.translate(x, y);
 }
 
 function dom_canvas_context(canvas) {
-  return canvas.getContext('2d');
+    return canvas.getContext('2d');
 }
 
 function dom_save(context) {
-  context.save();
+    context.save();
 }
 
 function dom_restore(context) {
-  context.restore();
+    context.restore();
 }
 
 function dom_line_to(context, x0, y0, x1, y1) {
-  context.beginPath();
-  context.moveTo(x0, y0);
-  context.lineTo(x1, y1);
-  context.stroke();
+    context.beginPath();
+    context.moveTo(x0, y0);
+    context.lineTo(x1, y1);
+    context.stroke();
 }
 
 function dom_fill_rect(context, x, y, w, h, color) {
-  context.fillStyle = color;
-  context.fillRect(x, y, w, h);
+    context.fillStyle = color;
+    context.fillRect(x, y, w, h);
 }
 
 function dom_set_color(context, color) {
-  context.strokeStyle = color;
+    context.strokeStyle = color;
 }
 
 function dom_set_thickness(context, width) {
-  context.lineWidth = width;
+    context.lineWidth = width;
 }
 
 function dom_clear(canvas) {
-  var ctx = canvas.getContext('2d');
-  ctx.clearRect(-canvas.width, -canvas.height, 2 * canvas.width, 2 * canvas.height);
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(-canvas.width, -canvas.height, 2 * canvas.width, 2 * canvas.height);
 }
 
 function dom_canvas_width(canvas) {
-  return canvas.width;
+    return canvas.width;
 }
 
 function dom_canvas_height(canvas) {
-  return canvas.height;
+    return canvas.height;
 }
 
 function dom_set_font(context, font) {
-  context.font = font;
+    context.font = font;
 }
 
 function dom_set_text_baseline(context, baseline) {
-  context.textBaseline = baseline;
+    context.textBaseline = baseline;
 }
 
 function dom_set_text_align(context, align) {
-  context.textAlign = align;
+    context.textAlign = align;
 }
 
 function dom_fill_text(context, text, x, y) {
-  context.fillText(text, x, y);
+    context.fillText(text, x, y);
 }
 
 function dom_measure_text(context, text) {
-  var box = context.measureText(text);
-  return [box.width, box.height];
+    var box = context.measureText(text);
+    return [box.width, box.height];
 }
 
 function dom_remove_children(parent) {
-  while (parent.hasChildNodes()) {
-    parent.removeChild(parent.firstChild);
-  }
+    while (parent.hasChildNodes()) {
+        parent.removeChild(parent.firstChild);
+    }
 }
 
-function DrawingWindow(id, width, height) {
+function DrawingWindow(vm, width, height) {
 
-  this.turtle_canvas = dom_create_canvas_cartesian(id+'-turtle', width, height);
-  this.turtle_context = dom_canvas_context(this.turtle_canvas);
-  this.turtle_canvas.style.position = 'absolute';
-  this.drawing_canvas = dom_create_canvas_cartesian(id+'-drawing', width, height);
-  this.drawing_canvas.style.position = 'absolute';
-  this.drawing_canvas.style.boxShadow = '0 0 10px #999';
-  this.drawing_context = dom_canvas_context(this.drawing_canvas);
-  this.grid_canvas = dom_create_canvas_cartesian(id+'-grid', width, height);
-  this.grid_context = dom_canvas_context(this.grid_canvas);
+    var dw = this;
 
-  dom_set_color(this.grid_context, '#eef');
+    dw.vm = vm;
+    dw.turtle_canvas = dom_create_canvas_cartesian('cb-turtle', width, height);
+    dw.turtle_context = dom_canvas_context(dw.turtle_canvas);
+    dw.turtle_canvas.style.position = 'absolute';
+    dw.drawing_canvas = dom_create_canvas_cartesian('cb-drawing', width, height);
+    dw.drawing_canvas.style.position = 'absolute';
+    dw.drawing_canvas.style.boxShadow = '0 0 10px #999';
+    dw.drawing_context = dom_canvas_context(dw.drawing_canvas);
+    dw.grid_canvas = dom_create_canvas_cartesian('cb-grid', width, height);
+    dw.grid_context = dom_canvas_context(dw.grid_canvas);
 
-  var w2 = width/2;
-  var h2 = height/2;
-  var grid_step = 10;
+    dom_set_color(dw.grid_context, '#eef');
 
-  for (var x=0; x<=w2; x+=grid_step) {
-    dom_set_thickness(this.grid_context, (x%(5*grid_step)===0)?2:1);
-    dom_line_to(this.grid_context, x, -h2, x, h2);
-    dom_line_to(this.grid_context, -x, -h2, -x, h2);
-  }
+    var w2 = width/2;
+    var h2 = height/2;
+    var grid_step = 10;
 
-  for (var y=0; y<=h2; y+=grid_step) {
-    dom_set_thickness(this.grid_context, (y%(5*grid_step)===0)?2:1);
-    dom_line_to(this.grid_context, -w2, y, w2, y);
-    dom_line_to(this.grid_context, -w2, -y, w2, -y);
-  }
+    for (var x=0; x<=w2; x+=grid_step) {
+        dom_set_thickness(dw.grid_context, (x%(5*grid_step)===0)?2:1);
+        dom_line_to(dw.grid_context, x, -h2, x, h2);
+        dom_line_to(dw.grid_context, -x, -h2, -x, h2);
+    }
+
+    for (var y=0; y<=h2; y+=grid_step) {
+        dom_set_thickness(dw.grid_context, (y%(5*grid_step)===0)?2:1);
+        dom_line_to(dw.grid_context, -w2, y, w2, y);
+        dom_line_to(dw.grid_context, -w2, -y, w2, -y);
+    }
+
+    dw.cs();
+
+    drawing_window = dw;//TODO: remove
 }
+
+var drawing_window;
 
 DrawingWindow.prototype.toDataURL = function () {
 
-    var w = this.drawing_canvas.width;
-    var h = this.drawing_canvas.height;
+    var dw = this;
+    var w = dw.drawing_canvas.width;
+    var h = dw.drawing_canvas.height;
     var c = document.createElement('canvas');
     c.width = w;
     c.height = h;
@@ -152,174 +162,193 @@ DrawingWindow.prototype.toDataURL = function () {
     ctx.fillStyle = 'rgba(255,255,255,1)';
     ctx.fillRect(0,0,w,h);
 
-    ctx.drawImage(this.grid_canvas, 0, 0);
-    ctx.drawImage(this.drawing_canvas, 0, 0);
-    ctx.drawImage(this.turtle_canvas, 0, 0);
+    ctx.drawImage(dw.grid_canvas, 0, 0);
+    ctx.drawImage(dw.drawing_canvas, 0, 0);
+    ctx.drawImage(dw.turtle_canvas, 0, 0);
 
     return c.toDataURL();
 };
 
 DrawingWindow.prototype.screenshot = function () {
-    window.open(drawing_window.toDataURL());
+    var dw = this;
+    window.open(dw.toDataURL());
 };
 
 DrawingWindow.prototype.excursion = function (thunk) {
-  var result;
-  var pos = this.pos;
-  var orient = this.orientation;
-  dom_save(this.drawing_context);
-  this.turtle_height++;
-  result = thunk();
-  dom_restore(this.drawing_context);
-  --this.turtle_height;
-  this.orientation = orient;
-  this.pos = pos;
-  return result;
+    var dw = this;
+    var result;
+    var pos = dw.pos;
+    var orient = dw.orientation;
+    dom_save(dw.drawing_context);
+    dw.turtle_height++;
+    result = thunk();
+    dom_restore(dw.drawing_context);
+    --dw.turtle_height;
+    dw.orientation = orient;
+    dw.pos = pos;
+    return result;
 };
 
 DrawingWindow.prototype.cs = function () {
-  dom_clear(this.drawing_canvas);
-  this.turtle_height = 0;
-  this.pen_height = 0;
-  this.orientation = 90;
-  this.pos = { x:0, y:0 };
-  this.draw_turtle();
-  this.set_color('#000');
-  this.set_thickness(1);
+    var dw = this;
+    dom_clear(dw.drawing_canvas);
+    dw.turtle_height = 0;
+    dw.pen_height = 0;
+    dw.orientation = 0;
+    dw.pos = { x:0, y:0 };
+    dw.draw_turtle();
+    dw.set_color('#000');
+    dw.set_thickness(1);
 };
 
 DrawingWindow.prototype.fd = function (xdistance, ydistance) {
-  if (ydistance === void 0) ydistance = 0;
-  var rad = Math.PI * (this.orientation / 180);
-  var x0 = this.pos.x;
-  var y0 = this.pos.y;
-  var x1 = x0 + xdistance * Math.cos(rad) - ydistance * Math.sin(rad);
-  var y1 = y0 + xdistance * Math.sin(rad) + ydistance * Math.cos(rad);
-  this.mv(x1, y1);
+    var dw = this;
+    if (ydistance === void 0) ydistance = 0;
+    var rad = Math.PI * (dw.orientation / 180);
+    var x0 = dw.pos.x;
+    var y0 = dw.pos.y;
+    var x1 = x0 + xdistance * Math.cos(rad) - ydistance * Math.sin(rad);
+    var y1 = y0 + xdistance * Math.sin(rad) + ydistance * Math.cos(rad);
+    dw.mv(x1, y1);
 };
 
 DrawingWindow.prototype.bk = function (xdistance, ydistance) {
-  if (ydistance === void 0) ydistance = 0;
-  this.fd(-xdistance,-ydistance);
+    var dw = this;
+    if (ydistance === void 0) ydistance = 0;
+    dw.fd(-xdistance,-ydistance);
 };
 
 DrawingWindow.prototype.mv = function (x, y) {
-  var x0 = this.pos.x;
-  var y0 = this.pos.y;
-  var x1 = x;
-  var y1 = y;
-  if (this.pen_height === 0) {
-    dom_line_to(this.drawing_context, x0, y0, x1, y1);
-  }
-  this.pos = { x:x1, y:y1 };
-  if (this.turtle_height === 0) {
-    this.draw_turtle();
-  }
+    var dw = this;
+    var x0 = dw.pos.x;
+    var y0 = dw.pos.y;
+    var x1 = x;
+    var y1 = y;
+    if (dw.pen_height === 0) {
+        dom_line_to(dw.drawing_context, x0, y0, x1, y1);
+    }
+    dw.pos = { x:x1, y:y1 };
+    if (dw.turtle_height === 0) {
+        dw.draw_turtle();
+    }
 };
 
 DrawingWindow.prototype.set_color = function (color) {
-  dom_set_color(this.drawing_context, color);
+    var dw = this;
+    dom_set_color(dw.drawing_context, color);
 };
 
 DrawingWindow.prototype.set_thickness = function (width) {
-  var ctx = this.drawing_context;
-  dom_set_font(ctx, (9+width) + 'px Courier');
-  dom_set_thickness(ctx, width);
+    var dw = this;
+    var ctx = dw.drawing_context;
+    dom_set_font(ctx, (9+width) + 'px Courier');
+    dom_set_thickness(ctx, width);
 };
 
 DrawingWindow.prototype.pu = function () {
-  this.pen_height++;
+    var dw = this;
+    dw.pen_height++;
 };
 
 DrawingWindow.prototype.pd = function () {
-  if (--this.pen_height <= 0) {
-    this.pen_height = 0;
-  }
+    var dw = this;
+    if (--dw.pen_height <= 0) {
+        dw.pen_height = 0;
+    }
 };
 
 DrawingWindow.prototype.triangle = function (h, base) {
-  var x = base/2;
-  var y = Math.sqrt(x*x + h*h);
-  var alpha = 180 * Math.asin(h/y) / Math.PI;
-  var beta = 2 * (90 - alpha);
-  this.lt(90);
-  this.pu(); this.fd(x); this.pd();
-  this.rt(180 - alpha);
-  this.fd(y);
-  this.rt(180 - beta);
-  this.fd(y);
-  this.rt(180 - alpha);
-  this.fd(2*x);
+    var dw = this;
+    var x = base/2;
+    var y = Math.sqrt(x*x + h*h);
+    var alpha = 180 * Math.asin(h/y) / Math.PI;
+    var beta = 2 * (90 - alpha);
+    dw.lt(90);
+    dw.pu(); dw.fd(x); dw.pd();
+    dw.rt(180 - alpha);
+    dw.fd(y);
+    dw.rt(180 - beta);
+    dw.fd(y);
+    dw.rt(180 - alpha);
+    dw.fd(2*x);
 };
 
 DrawingWindow.prototype.draw_turtle = function () {
-  var self = this;
-  self.excursion(function () {
-    var save_canvas = self.drawing_canvas;
-    var save_context = self.drawing_context;
-    var save_pen = self.pen_height;
-    self.pen_height = 0;
-    self.drawing_canvas = self.turtle_canvas;
-    self.drawing_context = self.turtle_context;
-    dom_clear(self.drawing_canvas);
-    self.set_color('#f00');
-    self.set_thickness(2);
-    self.triangle(15, 10);
-    self.drawing_canvas = save_canvas;
-    self.drawing_context = save_context;
-    self.pen_height = save_pen;
-  });
+    var dw = this;
+    dw.excursion(function () {
+        var save_canvas = dw.drawing_canvas;
+        var save_context = dw.drawing_context;
+        var save_pen = dw.pen_height;
+        dw.pen_height = 0;
+        dw.drawing_canvas = dw.turtle_canvas;
+        dw.drawing_context = dw.turtle_context;
+        dom_clear(dw.drawing_canvas);
+        dw.set_color('#f00');
+        dw.set_thickness(2);
+        dw.triangle(15, 10);
+        dw.drawing_canvas = save_canvas;
+        dw.drawing_context = save_context;
+        dw.pen_height = save_pen;
+    });
 };
 
 DrawingWindow.prototype.ht = function () {
-  if (this.turtle_height++ === 0) {
-    dom_clear(this.turtle_canvas);
-  }
+    var dw = this;
+    if (dw.turtle_height++ === 0) {
+        dom_clear(dw.turtle_canvas);
+    }
 };
 
 DrawingWindow.prototype.st = function () {
-  if (--this.turtle_height <= 0) {
-    this.turtle_height = 0;
-    this.draw_turtle();
-  }
+    var dw = this;
+    if (--dw.turtle_height <= 0) {
+        dw.turtle_height = 0;
+        dw.draw_turtle();
+    }
 };
 
 DrawingWindow.prototype.lt = function (angle) {
-  this.orientation += angle;
-  if (this.turtle_height === 0) {
-    this.draw_turtle();
-  }
+    var dw = this;
+    dw.orientation += angle;
+    if (dw.turtle_height === 0) {
+        dw.draw_turtle();
+    }
 };
 
 DrawingWindow.prototype.rt = function (angle) {
-  this.orientation -= angle;
-  if (this.turtle_height === 0) {
-    this.draw_turtle();
-  }
+    var dw = this;
+    dw.orientation -= angle;
+    if (dw.turtle_height === 0) {
+        dw.draw_turtle();
+    }
 };
 
 DrawingWindow.prototype.setpc = function (r, g, b) {
-  this.set_color('rgb('+Math.floor(r*255)+','+Math.floor(g*255)+','+Math.floor(b*255)+')');
+    var dw = this;
+    dw.set_color('rgb('+Math.floor(r*255)+','+Math.floor(g*255)+','+Math.floor(b*255)+')');
 };
 
 DrawingWindow.prototype.setpw = function (width) {
-  this.set_thickness(width);
+    var dw = this;
+    dw.set_thickness(width);
 };
 
 DrawingWindow.prototype.drawtext = function (text) {
-  var ctx = this.drawing_context;
-  ctx.save();
-  ctx.translate(this.pos.x, this.pos.y);
-  ctx.rotate(Math.PI*(this.orientation/180));
-  ctx.scale(1, -1);
-  dom_fill_text(ctx, text+'', 0, 0);
-  ctx.restore();
+    var dw = this;
+    var ctx = dw.drawing_context;
+    ctx.save();
+    ctx.translate(dw.pos.x, dw.pos.y);
+    ctx.rotate(Math.PI*(dw.orientation/180));
+    ctx.scale(1, -1);
+    dom_fill_text(ctx, text+'', 0, 0);
+    ctx.restore();
 };
 
 DrawingWindow.prototype.pageToRelative = function (coord) {
-    var rect = getCoords(this.drawing_canvas);
-    var w = this.drawing_canvas.width;
-    var h = this.drawing_canvas.height;
+    var dw = this;
+    var rect = getCoords(dw.drawing_canvas);
+    var w = dw.drawing_canvas.width;
+    var h = dw.drawing_canvas.height;
     var x = Math.max(0, Math.min(w, coord.x - rect.x - 3)) - w/2;
     var y = h/2 - Math.max(0, Math.min(h, coord.y - rect.y - 3));
     return { x: x, y: y };
@@ -330,222 +359,236 @@ function getCoords(elem) {
     return { x: rect.left + pageXOffset, y: rect.top + pageYOffset };
 }
 
-var drawing_window;
+DrawingWindow.prototype.setShow = function (show) {
 
-function create_drawing_window(width, height) {
-  drawing_window = new DrawingWindow('cb-drawing-window', width, height);
-  drawing_window.cs();
-}
+    var dw = this;
+    var vm = dw.vm;
 
-function init_drawing_window(small) {
-    if (small) {
-        create_drawing_window(200, 200);
+    vm.setCheckmark('data-cb-setting-graphics', 'show-drawing-window', show);
+
+    if (show) {
+        $('.cb-pixels-window').css('display', 'none');
+        $('.cb-drawing-window').css('display', 'inline');
+        var parent = document.querySelector('.cb-drawing-window');
+        dom_remove_children(parent);
+        parent.appendChild(drawing_window.drawing_canvas);
+        parent.appendChild(drawing_window.turtle_canvas);
+        parent.appendChild(drawing_window.grid_canvas);
+        update_playground_visibility();
     } else {
-        create_drawing_window(360, 240);
+        var parent = document.querySelector('.cb-drawing-window');
+        dom_remove_children(parent);
+        $('.cb-drawing-window').css('display', 'none');
+        update_playground_visibility();
+    }
+};
+
+function update_playground_visibility() {
+    var vm = this;
+    var drawing_window_visible =
+        $('.cb-drawing-window').css('display') !== 'none';
+    var pixels_window_visible =
+        $('.cb-pixels-window').css('display') !== 'none';
+    $('a[data-cb-setting-graphics="show-drawing-window"] > span')
+        .css('visibility', drawing_window_visible ? 'visible' : 'hidden');
+    $('a[data-cb-setting-graphics="show-pixels-window"] > span')
+        .css('visibility', pixels_window_visible ? 'visible' : 'hidden');
+    if (true || drawing_window_visible || pixels_window_visible || $('#b').html() !== '') {
+        document.body.setAttribute('data-cb-show-playground', '');
+    } else {
+        document.body.removeAttribute('data-cb-show-playground');
     }
 }
 
-init_drawing_window(false);
-
-function showing_drawing_window() {
-  return $('#cb-drawing-window').is(':visible');
+DrawingWindow.prototype.ensure_showing = function () {
+    var dw = this;
+    if (!dw.showing()) {
+        dw.setShow(true);
+    }
 }
 
-function show_drawing_window() {
-  $('#cb-pixels-window').css('display', 'none');
-  $('#cb-drawing-window').css('display', 'inline');
-  var parent = document.getElementById('cb-drawing-window');
-  dom_remove_children(parent);
-  parent.appendChild(drawing_window.drawing_canvas);
-  parent.appendChild(drawing_window.turtle_canvas);
-  parent.appendChild(drawing_window.grid_canvas);
-  update_playground_visibility();
-}
-
-function hide_drawing_window() {
-  var parent = document.getElementById('cb-drawing-window');
-  dom_remove_children(parent);
-  $('#cb-drawing-window').css('display', 'none');
-  update_playground_visibility();
-}
-
-function update_playground_visibility() {
-  var drawing_window_visible =
-      $('#cb-drawing-window').css('display') !== 'none';
-  var pixels_window_visible =
-      $('#cb-pixels-window').css('display') !== 'none';
-  $('a[data-cb-setting-graphics="show-drawing-window"] > span')
-        .css('visibility', drawing_window_visible ? 'visible' : 'hidden');
-  $('a[data-cb-setting-graphics="show-pixels-window"] > span')
-        .css('visibility', pixels_window_visible ? 'visible' : 'hidden');
-  if (drawing_window_visible || pixels_window_visible || $('#b').html() !== '') {
-      $('body').removeClass('cb-hide-playground');
-  } else {
-      $('body').addClass('cb-hide-playground');
-  }
-}
-
-function ensure_showing_drawing_window() {
-  if (!showing_drawing_window()) {
-    show_drawing_window();
-  }
+DrawingWindow.prototype.showing = function () {
+    return $('.cb-drawing-window').is(':visible');
 }
 
 function builtin_cs(width, height) {
-  if (width !== void 0 || height !== void 0) {
-    if (width === void 0 || height === void 0)
-      throw 'cs expects 0 or 2 parameters';
-    if (typeof width !== 'number')
-      throw 'width parameter of cs must be a number';
-    if (typeof height !== 'number')
-      throw 'height parameter of cs must be a number';
-    create_drawing_window(width, height);
-    show_drawing_window();
-  }
-  drawing_window.cs();
-  ensure_showing_drawing_window();
+    var dw = drawing_window;
+    var vm = dw.vm;
+    if (width !== void 0 || height !== void 0) {
+        if (width === void 0 || height === void 0)
+            throw 'cs expects 0 or 2 parameters';
+        if (typeof width !== 'number')
+            throw 'width parameter of cs must be a number';
+        if (typeof height !== 'number')
+            throw 'height parameter of cs must be a number';
+        dw = new DrawingWindow(vm, Math.max(50, Math.min(500, width)), Math.max(50, Math.min(500, height)));
+        dw.setShow(true);
+    }
+    dw.cs();
+    dw.ensure_showing();
 }
 
 function builtin_st() {
-  drawing_window.st();
-  ensure_showing_drawing_window();
+    var dw = drawing_window;
+    dw.st();
+    dw.ensure_showing();
 }
 
 function builtin_ht() {
-  drawing_window.ht();
-  ensure_showing_drawing_window();
+    var dw = drawing_window;
+    dw.ht();
+    dw.ensure_showing();
 }
 
 function builtin_pu() {
-  drawing_window.pu();
-  ensure_showing_drawing_window();
+    var dw = drawing_window;
+    dw.pu();
+    dw.ensure_showing();
 }
 
 function builtin_pd() {
-  drawing_window.pd();
-  ensure_showing_drawing_window();
+    var dw = drawing_window;
+    dw.pd();
+    dw.ensure_showing();
 }
 
 function builtin_fd(xdistance, ydistance) {
-  if (xdistance === void 0)
-    throw 'fd expects at least 1 parameter';
-  if (typeof xdistance !== 'number')
-    throw 'xdistance parameter of fd must be a number';
-  if (ydistance !== void 0 && typeof ydistance !== 'number')
-    throw 'ydistance parameter of fd must be a number';
-  drawing_window.fd(xdistance, ydistance);
-  ensure_showing_drawing_window();
+    var dw = drawing_window;
+    if (xdistance === void 0)
+        throw 'fd expects at least 1 parameter';
+    if (typeof xdistance !== 'number')
+        throw 'xdistance parameter of fd must be a number';
+    if (ydistance !== void 0 && typeof ydistance !== 'number')
+        throw 'ydistance parameter of fd must be a number';
+    dw.fd(xdistance, ydistance);
+    dw.ensure_showing();
 }
 
 function builtin_bk(xdistance, ydistance) {
-  if (xdistance === void 0)
-    throw 'bk expects at least 1 parameter';
-  if (typeof xdistance !== 'number')
-    throw 'xdistance parameter of bk must be a number';
-  if (ydistance !== void 0 && typeof ydistance !== 'number')
-    throw 'ydistance parameter of bk must be a number';
-  drawing_window.bk(xdistance, ydistance);
-  ensure_showing_drawing_window();
+    var dw = drawing_window;
+    if (xdistance === void 0)
+        throw 'bk expects at least 1 parameter';
+    if (typeof xdistance !== 'number')
+        throw 'xdistance parameter of bk must be a number';
+    if (ydistance !== void 0 && typeof ydistance !== 'number')
+        throw 'ydistance parameter of bk must be a number';
+    dw.bk(xdistance, ydistance);
+    dw.ensure_showing();
 }
 
 function builtin_mv(x, y) {
-  if (x === void 0 || y === void 0)
-    throw 'mv expects 2 parameters';
-  if (typeof x !== 'number')
-    throw 'x parameter of mv must be a number';
-  if (typeof y !== 'number')
-    throw 'y parameter of mv must be a number';
-  drawing_window.mv(x, y);
-  ensure_showing_drawing_window();
+    var dw = drawing_window;
+    if (x === void 0 || y === void 0)
+        throw 'mv expects 2 parameters';
+    if (typeof x !== 'number')
+        throw 'x parameter of mv must be a number';
+    if (typeof y !== 'number')
+        throw 'y parameter of mv must be a number';
+    dw.mv(x, y);
+    dw.ensure_showing();
 }
 
 function builtin_lt(angle) {
-  if (angle === void 0)
-    throw 'lt expects 1 parameter';
-  if (typeof angle !== 'number')
-    throw 'angle parameter of lt must be a number';
-  drawing_window.lt(angle);
-  ensure_showing_drawing_window();
+    var dw = drawing_window;
+    if (angle === void 0)
+        throw 'lt expects 1 parameter';
+    if (typeof angle !== 'number')
+        throw 'angle parameter of lt must be a number';
+    dw.lt(angle);
+    dw.ensure_showing();
 }
 
 function builtin_rt(angle) {
-  if (angle === void 0)
-    throw 'rt expects 1 parameter';
-  if (typeof angle !== 'number')
-    throw 'angle parameter of rt must be a number';
-  drawing_window.rt(angle);
-  ensure_showing_drawing_window();
+    var dw = drawing_window;
+    if (angle === void 0)
+        throw 'rt expects 1 parameter';
+    if (typeof angle !== 'number')
+        throw 'angle parameter of rt must be a number';
+    dw.rt(angle);
+    dw.ensure_showing();
 }
 
 function builtin_setpc(r, g, b) {
-  if (r === void 0 || g === void 0 || b === void 0)
-    throw 'setpc expects 3 parameters';
-  if (typeof r !== 'number')
-    throw 'r parameter of setpc must be a number';
-  if (typeof g !== 'number')
-    throw 'g parameter of setpc must be a number';
-  if (typeof b !== 'number')
-    throw 'b parameter of setpc must be a number';
-  drawing_window.setpc(r, g, b);
-  ensure_showing_drawing_window();
+    var dw = drawing_window;
+    if (r === void 0 || g === void 0 || b === void 0)
+        throw 'setpc expects 3 parameters';
+    if (typeof r !== 'number')
+        throw 'r parameter of setpc must be a number';
+    if (typeof g !== 'number')
+        throw 'g parameter of setpc must be a number';
+    if (typeof b !== 'number')
+        throw 'b parameter of setpc must be a number';
+    dw.setpc(r, g, b);
+    dw.ensure_showing();
 }
 
 function builtin_setpw(width) {
-  if (width === void 0)
-    throw 'setpw expects 1 parameter';
-  if (typeof width !== 'number')
-    throw 'width parameter of setpw must be a number';
-  drawing_window.setpw(width);
-  ensure_showing_drawing_window();
+    var dw = drawing_window;
+    if (width === void 0)
+        throw 'setpw expects 1 parameter';
+    if (typeof width !== 'number')
+        throw 'width parameter of setpw must be a number';
+    dw.setpw(width);
+    dw.ensure_showing();
 }
 
 function builtin_drawtext(text) {
-  if (text === void 0)
-    throw 'drawtext expects 1 parameter';
-  drawing_window.drawtext(text);
-  ensure_showing_drawing_window();
+    var dw = drawing_window;
+    if (text === void 0)
+        throw 'drawtext expects 1 parameter';
+    dw.drawtext(text);
+    dw.ensure_showing();
 }
 
-function PixelsWindow(id, width, height, scale) {
+function PixelsWindow(vm, width, height, scale) {
 
-  var grid_thickness = (scale >= 5) ? 1 : 0;
+    var pw = this;
+    var grid_thickness = (scale >= 5) ? 1 : 0;
 
-  this.width = width;
-  this.height = height;
-  this.scale = scale;
+    pw.vm = vm;
+    pw.width = width;
+    pw.height = height;
+    pw.scale = scale;
 
-  this.pixels_canvas = dom_create_canvas(id+'-pixels', width*scale, height*scale);
-  this.pixels_canvas.style.boxShadow = '0 0 10px #999';
-  this.pixels_context = dom_canvas_context(this.pixels_canvas);
-  this.grid_canvas = dom_create_canvas(id+'-grid', width*scale, height*scale);
-  this.grid_canvas.style.position = 'absolute';
-  this.grid_context = dom_canvas_context(this.grid_canvas);
+    pw.pixels_canvas = dom_create_canvas('cb-pixels', width*scale, height*scale);
+    pw.pixels_canvas.style.boxShadow = '0 0 10px #999';
+    pw.pixels_context = dom_canvas_context(pw.pixels_canvas);
+    pw.grid_canvas = dom_create_canvas('cb-grid', width*scale, height*scale);
+    pw.grid_canvas.style.position = 'absolute';
+    pw.grid_context = dom_canvas_context(pw.grid_canvas);
 
-  if (grid_thickness > 0) {
+    if (grid_thickness > 0) {
 
-    dom_set_color(this.grid_context, '#eef');
-    dom_set_thickness(this.grid_context, grid_thickness);
+        dom_set_color(pw.grid_context, '#eef');
+        dom_set_thickness(pw.grid_context, grid_thickness);
 
-    for (var x=0; x<=width; x++) {
-      dom_line_to(this.grid_context, x*scale, 0, x*scale, height*scale);
+        for (var x=0; x<=width; x++) {
+            dom_line_to(pw.grid_context, x*scale, 0, x*scale, height*scale);
+        }
+
+        for (var y=0; y<=height; y++) {
+            dom_line_to(pw.grid_context, 0, y*scale, width*scale, y*scale);
+        }
     }
 
-    for (var y=0; y<=height; y++) {
-      dom_line_to(this.grid_context, 0, y*scale, width*scale, y*scale);
+    pw.pixels = [];
+
+    for (var i=0; i<height; i++) {
+        pw.pixels[i] = Array(width).fill('#000000');
     }
-  }
 
-  this.pixels = [];
+    pw.clear();
 
-  for (var i=0; i<height; i++) {
-    this.pixels[i] = Array(width).fill('#000000');
-  }
+    pixels_window = pw;//TODO: remove
 }
+
+var pixels_window;
 
 PixelsWindow.prototype.toDataURL = function () {
 
-    var w = this.pixels_canvas.width;
-    var h = this.pixels_canvas.height;
+    var pw = this;
+    var w = pw.pixels_canvas.width;
+    var h = pw.pixels_canvas.height;
     var c = document.createElement('canvas');
     c.width = w;
     c.height = h;
@@ -554,109 +597,109 @@ PixelsWindow.prototype.toDataURL = function () {
     ctx.fillStyle = 'rgba(255,255,255,1)';
     ctx.fillRect(0,0,w,h);
 
-    ctx.drawImage(this.pixels_canvas, 0, 0);
-    ctx.drawImage(this.grid_canvas, 0, 0);
+    ctx.drawImage(pw.pixels_canvas, 0, 0);
+    ctx.drawImage(pw.grid_canvas, 0, 0);
 
     return c.toDataURL();
 };
 
 PixelsWindow.prototype.screenshot = function () {
-    window.open(pixels_window.toDataURL());
+    var pw = this;
+    window.open(pw.toDataURL());
 };
 
 PixelsWindow.prototype.fill_rect = function (x, y, w, h, color) {
-  var ctx = this.pixels_context;
-  var scale = this.scale;
-  dom_fill_rect(ctx, x*scale, y*scale, w*scale, h*scale, color);
-  for (var i=0; i<h; i++) {
-    var row = this.pixels[y+i];
-    for (var j=0; j<w; j++) {
-      row[x+j] = color;
+    var pw = this;
+    var ctx = pw.pixels_context;
+    var scale = pw.scale;
+    dom_fill_rect(ctx, x*scale, y*scale, w*scale, h*scale, color);
+    for (var i=0; i<h; i++) {
+        var row = pw.pixels[y+i];
+        for (var j=0; j<w; j++) {
+            row[x+j] = color;
+        }
     }
-  }
 };
 
 PixelsWindow.prototype.clear = function () {
-  this.fill_rect(0, 0, this.width, this.height, '#000000');
+    var pw = this;
+    pw.fill_rect(0, 0, pw.width, pw.height, '#000000');
 };
 
 PixelsWindow.prototype.setScreenMode = function (width, height, scale) {
-  if (scale === void 0) scale = 1;
-  hide_pixels_window();
-  create_pixels_window(width, height, scale);
-  ensure_showing_pixels_window();
+    var pw = this;
+    var vm = pw.vm;
+    if (scale === void 0) scale = 1;
+    pw.setShow(false);
+    pw = new PixelsWindow(vm, width, height, scale);
+    pw.ensure_showing();
 };
 
 PixelsWindow.prototype.fillRectangle = function (x, y, w, h, color) {
-  this.fill_rect(x, y, w, h, color);
-  ensure_showing_pixels_window();
+    var pw = this;
+    pw.fill_rect(x, y, w, h, color);
+    pw.ensure_showing();
 };
 
 PixelsWindow.prototype.clearScreen = function () {
-  this.fillRectangle(0, 0, this.width, this.height, '#000000');
+    var pw = this;
+    pw.fillRectangle(0, 0, pw.width, pw.height, '#000000');
 };
 
 PixelsWindow.prototype.setPixel = function (x, y, color) {
-  this.fillRectangle(x, y, 1, 1, color);
+    var pw = this;
+    pw.fillRectangle(x, y, 1, 1, color);
 };
 
 PixelsWindow.prototype.exportScreen = function () {
-  return this.pixels.map(function (row) { return row.join(''); }).join('\n');
+    var pw = this;
+    return pw.pixels.map(function (row) { return row.join(''); }).join('\n');
 };
 
-var pixels_window;
-
-function create_pixels_window(width, height, scale) {
-  pixels_window = new PixelsWindow('cb-pixels-window', width, height, scale);
-  pixels_window.clear();
+PixelsWindow.prototype.showing = function () {
+    return $('.cb-pixels-window').is(':visible');
 }
 
-function init_pixels_window(small) {
-  if (small) {
-    create_pixels_window(200, 200, 1);
-  } else {
-    create_pixels_window(360, 240, 1);
-  }
-}
+PixelsWindow.prototype.setShow = function (show) {
 
-init_pixels_window(false);
+    var pw = this;
+    var vm = pw.vm;
 
-function showing_pixels_window() {
-  return $('#cb-pixels-window').is(':visible');
-}
+    vm.setCheckmark('data-cb-setting-graphics', 'show-pixels-window', show);
 
-function show_pixels_window() {
-  $('#cb-drawing-window').css('display', 'none');
-  $('#cb-pixels-window').css('display', 'inline');
-  var parent = document.getElementById('cb-pixels-window');
-  dom_remove_children(parent);
-  parent.appendChild(pixels_window.grid_canvas);
-  parent.appendChild(pixels_window.pixels_canvas);
-  update_playground_visibility();
-}
+    if (show) {
+        $('.cb-drawing-window').css('display', 'none');
+        $('.cb-pixels-window').css('display', 'inline');
+        var parent = document.querySelector('.cb-pixels-window');
+        dom_remove_children(parent);
+        parent.appendChild(pixels_window.grid_canvas);
+        parent.appendChild(pixels_window.pixels_canvas);
+        update_playground_visibility();
+    } else {
+        var parent = document.querySelector('.cb-pixels-window');
+        dom_remove_children(parent);
+        $('.cb-pixels-window').css('display', 'none');
+        update_playground_visibility();
+    }
+};
 
-function hide_pixels_window() {
-  var parent = document.getElementById('cb-pixels-window');
-  dom_remove_children(parent);
-  $('#cb-pixels-window').css('display', 'none');
-  update_playground_visibility();
-}
-
-function ensure_showing_pixels_window() {
-  if (!showing_pixels_window()) {
-    show_pixels_window();
-  }
+PixelsWindow.prototype.ensure_showing = function () {
+    var pw = this;
+    if (!pw.showing()) {
+        pw.setShow(true);
+    }
 }
 
 PixelsWindow.prototype.pageToRelative = function (coord) {
-  var rect = getCoords(this.pixels_canvas);
-  var scale = this.scale;
-  var x = Math.max(0,
-                   Math.min(this.width-1,
-                            Math.floor((coord.x - rect.x - 3)/scale)));
-  var y = Math.max(0,
-                   Math.min(this.height-1,
-                            Math.floor((coord.y - rect.y - 3)/scale)));
+    var pw = this;
+    var rect = getCoords(pw.pixels_canvas);
+    var scale = pw.scale;
+    var x = Math.max(0,
+                     Math.min(pw.width-1,
+                              Math.floor((coord.x - rect.x - 3)/scale)));
+    var y = Math.max(0,
+                     Math.min(pw.height-1,
+                              Math.floor((coord.y - rect.y - 3)/scale)));
     return { x: x, y: y };
 };
 
