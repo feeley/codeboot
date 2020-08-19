@@ -119,6 +119,15 @@ function int_from_unnormalized_digs(digs) {
     return int_from_digs(digs);
 }
 
+function is_Int_or_BigInt(n) {
+  if (globalThis.BigInt) {
+    return n.constructor === Int || n.constructor === BigInt;
+  }
+  else {
+    return n.constructor === Int;
+  }
+};
+
 function int_from_float(n) {
 
     // Constructs a normalized Int from a floating point integer value.
