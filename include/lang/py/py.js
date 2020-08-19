@@ -229,9 +229,13 @@ LangPy.prototype.stopExecution = function () {
 LangPy.prototype.executionStateHTML = function () {
 
     var lang = this;
+    var result = lang.rt.msg;
+    var resultHTML = '' === result
+                    ?  '<i>no value</i>'
+                    : lang.printedRepresentation(result, 'HTML');
 
     return '<div class="cb-exec-point-bubble-value">' +
-           lang.rt.msg +
+           resultHTML +
            '</div>' +
            '<div class="cb-exec-point-bubble-context">' +
            '***unknown context***' +
@@ -252,9 +256,17 @@ LangPy.prototype.printedRepresentation = function (obj, format) {
 LangPy.prototype.objectRepresentation = function (obj, format, limit) {
 
     var lang = this;
-    var text = String(obj);
 
-    return { text: text, len: text.length };
+    var xform = function (str) {
+        var text;
+        if (format === 'HTML') {
+            text = escape_HTML(str);
+        } else {
+            text = str;
+        }
+        return { text: text, len: str.length };
+    };
+    return xform(String(obj));
 };
 
 //-----------------------------------------------------------------------------
