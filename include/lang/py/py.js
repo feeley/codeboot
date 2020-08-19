@@ -231,7 +231,7 @@ LangPy.prototype.executionStateHTML = function () {
     var lang = this;
     var result = lang.rt.msg;
     var resultHTML = '' === result
-                    ?  '<i>no value</i>'
+                    ? '<i>no value</i>'
                     : lang.printedRepresentation(result, 'HTML');
 
     return '<div class="cb-exec-point-bubble-value">' +
@@ -266,7 +266,7 @@ LangPy.prototype.objectRepresentation = function (obj, format, limit) {
         }
         return { text: text, len: str.length };
     };
-    return xform(String(obj));
+    return xform(obj);
 };
 
 //-----------------------------------------------------------------------------
