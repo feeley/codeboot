@@ -64,7 +64,7 @@ function int_instance(val) {
 
     // Test if a value is a Int instance.
 
-    return val instanceof Int;
+    return val.constructor === Int;
 
     // Alternative implementations:
     // return val instanceof Array; // when an Int is simply an array
@@ -892,7 +892,7 @@ function int_from_substring(str, start, end, radix) {
 
 if (globalThis.BigInt) {
 
-    function int_instance(val) { return val instanceof BigInt; }
+    function int_instance(val) { return val.constructor === BigInt; }
     function int_from_float(n) { return BigInt(n); } // n must be int. value
     function int_to_float(int_a, exact) {
         var val = Number(int_a);
