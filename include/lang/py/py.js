@@ -262,11 +262,13 @@ LangPy.prototype.objectRepresentation = function (obj, format, limit) {
 LangPy.prototype.initRunTimeState = function (code, reboot) {
 
     var lang = this;
+    // default 'trace' option to false
+    var options = { trace: false };
 
     console.log('LangPy.initRunTimeState reboot='+reboot);
 
     if (!lang.rt.rte || reboot) {
-        lang.rt.rte = pyinterp.fresh_rte();
+        lang.rt.rte = pyinterp.fresh_rte(options);
         lang.rt.rte.vm = lang.vm;
     }
 
