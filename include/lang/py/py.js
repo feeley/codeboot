@@ -242,12 +242,46 @@ LangPy.prototype.executionStateHTML = function () {
                     ? '<i>no value</i>'
                     : lang.printedRepresentation(result, 'HTML');
 
+    var contextHTML = lang.contextHTML();
+
     return '<div class="cb-exec-point-bubble-value">' +
            resultHTML +
            '</div>' +
            '<div class="cb-exec-point-bubble-context">' +
-           '***unknown context***' +
+            contextHTML +
            '</div>';
+};
+
+LangPy.prototype.contextHTML = function () {
+
+    var lang = this;
+    var ctx = lang.rt.ctx;
+    var rte = ctx.rte;
+    var globals = rte.globals;
+    var locals = rte.locals;
+
+    var seen = {};
+    var result = [];
+
+    var add = function (id, val) {
+        if (!Object.hasOwnProperty.call(seen, id) && !id.startsWith('__')) {
+            result.push('<div class="cb-exec-point-bubble-binding"><span class="cb-code-font">' + id + '</span>: ' + lang.printedRepresentation(val, 'HTML') + '</div>');
+            seen[id] = true;
+        }
+    };
+    if (locals !== pyinterp.absent) {
+        Object.getOwnPropertyNames(locals).forEach(function (id) {
+            var value = pyinterp.om_simple_repr(ctx, locals[id]);
+            add(id, value);
+        });
+    }
+
+    Object.getOwnPropertyNames(globals).forEach(function (id) {
+        var value = pyinterp.om_simple_repr(ctx, globals[id]);
+        add(id, value);
+    });
+
+    return result.join('');
 };
 
 LangPy.prototype.printedRepresentation = function (obj, format) {
