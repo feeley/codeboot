@@ -176,11 +176,12 @@ LangPy.prototype.continueExecution = function (steps) {
                 break;
             }
             lang.rt.stepCount++;
-            lang.rt.ast = state[0];
-            lang.rt.msg = state[1];
-            lang.rt.error = state[2];
-            lang.rt.cont = state[3];
-            lang.rt.ctx = state[4];
+            lang.rt.ast = state.ast;
+            lang.rt.msg = state.msg;
+            lang.rt.display_result = state.display_result;
+            lang.rt.error = state.error;
+            lang.rt.cont = state.cont;
+            lang.rt.ctx = state.ctx;
         }
     }
 };
@@ -202,7 +203,11 @@ LangPy.prototype.isEndedWithResult = function () {
 
 LangPy.prototype.getResult = function () {
     var lang = this;
-    return lang.rt.msg;
+    if (lang.rt.display_result) {
+        return lang.rt.msg;
+    } else {
+        return void 0;
+    }
 };
 
 LangPy.prototype.getError = function () {
@@ -269,7 +274,7 @@ LangPy.prototype.objectRepresentation = function (obj, format, limit) {
         }
         return { text: text, len: str.length };
     };
-    return xform(!obj ? 'None' : obj);
+    return xform(obj);
 };
 
 //-----------------------------------------------------------------------------
