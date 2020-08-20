@@ -364,7 +364,7 @@ span.CodeMirror-selectedtext { background: none; }
 
 [data-cb-show-playground] .cb-playground {
     display: inline;
-    width: 384px;
+/*    width: 384px; */
 }
 
 .cb-console {
@@ -1190,8 +1190,10 @@ div.tab-pane {
 /* ----- Drawing window ----- */
 
 .cb-drawing-window {
-    flex: 0 0 384px;
+/*    flex: 0 0 384px;
     padding: 15px 15px 15px 0;
+*/
+    padding: 0 0 0 0.5em;
     margin: 0;
     float: right;
     display: none;
@@ -1200,8 +1202,10 @@ div.tab-pane {
 /* ----- Pixels window ----- */
 
 .cb-pixels-window {
-    flex: 0 0 384px;
+/*    flex: 0 0 384px;
     padding: 15px 15px 15px 0;
+*/
+    padding: 0 0 0 0.5em;
     margin: 0;
     float: right;
     display: none;
