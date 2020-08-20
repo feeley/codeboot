@@ -67,6 +67,7 @@ LangPy.prototype.RunTime = function () {
 
     rt.ast = null;
     rt.msg = '';
+    rt.error = null;
     rt.cont = null;
     rt.ctx = null;
     rt.stepCount = 0;
@@ -146,6 +147,7 @@ LangPy.prototype.startExecution = function (cont) {
     lang.rt.stepCount = 0;
     lang.rt.ast = null;
     lang.rt.msg = '';
+    lang.rt.error = null;
     lang.rt.cont = function () {
                        return cont(lang.rt.rte,
                                    function () {
@@ -176,8 +178,9 @@ LangPy.prototype.continueExecution = function (steps) {
             lang.rt.stepCount++;
             lang.rt.ast = state[0];
             lang.rt.msg = state[1];
-            lang.rt.cont = state[2];
-            lang.rt.ctx = state[3];
+            lang.rt.error = state[2];
+            lang.rt.cont = state[3];
+            lang.rt.ctx = state[4];
         }
     }
 };
@@ -194,7 +197,7 @@ LangPy.prototype.isExecuting = function () {
 
 LangPy.prototype.isEndedWithResult = function () {
     var lang = this;
-    return true;
+    return !(lang.rt.error);
 };
 
 LangPy.prototype.getResult = function () {
@@ -204,7 +207,7 @@ LangPy.prototype.getResult = function () {
 
 LangPy.prototype.getError = function () {
     var lang = this;
-    return '***some error***';
+    return lang.rt.error;
 };
 
 LangPy.prototype.getLocation = function () {
