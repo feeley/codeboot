@@ -274,7 +274,7 @@ LangPy.prototype.objectRepresentation = function (obj, format, limit) {
         }
         return { text: text, len: str.length };
     };
-    return xform(obj);
+    return xform(obj === undefined ? "" : obj);
 };
 
 //-----------------------------------------------------------------------------
