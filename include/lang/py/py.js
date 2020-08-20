@@ -243,13 +243,18 @@ LangPy.prototype.executionStateHTML = function () {
                     : lang.printedRepresentation(result, 'HTML');
 
     var contextHTML = lang.contextHTML();
-
-    return '<div class="cb-exec-point-bubble-value">' +
-           resultHTML +
-           '</div>' +
-           '<div class="cb-exec-point-bubble-context">' +
-            contextHTML +
-           '</div>';
+    if (contextHTML == '') {
+        return '<div class="cb-exec-point-bubble-value">' +
+               resultHTML +
+               '</div>';
+    } else {
+        return '<div class="cb-exec-point-bubble-value">' +
+               resultHTML +
+               '</div>' +
+               '<div class="cb-exec-point-bubble-context">' +
+                contextHTML +
+               '</div>';
+    }
 };
 
 LangPy.prototype.contextHTML = function () {
