@@ -921,12 +921,12 @@ div.tab-pane {
 /* -------------------------------------
  * WORK ON ADDING TABS TO THE HELP MODAL
  * ------------------------------------- */
-.modal-dialog {
+.cb-modal-dialog {
     width: calc(100% - 1rem);
 }
 
 @media (min-width: 576px) {
-    .modal-dialog {
+    .cb-modal-dialog {
         max-width: calc(100% - 3.5rem);
     }
 }
@@ -967,7 +967,7 @@ div.tab-pane {
     padding-bottom: 5px;
 }
 
-.grammar-category {
+.grammar-category-box {
     color: #aaa;
     flex-grow: 0;
     margin-bottom: 0;
@@ -992,24 +992,24 @@ div.tab-pane {
     padding-left: 9px;
 }
 
-.grammar-production b {
+.grammar-production .grammar-category {
     color: black;
     font-weight: normal;
 }
 
-.grammar-category b {
+.grammar-category-box .grammar-category {
     background-color: white;
     color: #333;
     font-weight: bold;
     margin-right: 5px!important;
 }
 
-.grammar-production b,
-.grammar-production i {
+.grammar-production .grammar-category,
+.grammar-production .grammar-token {
     font-size: 87.5%;
 }
 
-.grammar-production i {
+.grammar-production .grammar-token {
     background-color: #e6e6e6;
     border-radius: .2rem;
     color: #333;
