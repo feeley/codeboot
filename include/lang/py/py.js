@@ -271,7 +271,9 @@ LangPy.prototype.contextHTML = function () {
     var result = [];
 
     var add = function (id, val) {
-        if (!Object.hasOwnProperty.call(seen, id) && !id.startsWith('__')) {
+        if (!Object.hasOwnProperty.call(seen, id)
+            && !id.startsWith('__')
+            && id !== 'math') {
             result.push('<div class="cb-exec-point-bubble-binding"><span class="cb-code-font">' + id + '</span>: ' + lang.printedRepresentation(val, 'HTML') + '</div>');
             seen[id] = true;
         }
