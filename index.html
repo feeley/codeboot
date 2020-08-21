@@ -870,7 +870,7 @@
               <div class="grammar-production without-border-bottom">
                 <p class="grammar-category"><b>program</b>:</p>
                 <div class="grammar-rule-group">
-                  <p class="grammar-rule"><span>(</span><b>NEWLINE</b> | <b>stmt</b><span>)*</span></p>
+                  <p class="grammar-rule">(<b>NEWLINE</b> | <b>stmt</b>)*</p>
                 </div>
               </div>
 
@@ -923,7 +923,7 @@
                   <div class="grammar-production">
                     <p class="grammar-category"><b>expr_stmt</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>testlist</b> (<b>augassign</b> <b>testlist</b> | [(<i>'='</i> <b>testlist</b><span>)+] )</span></p>
+                      <p class="grammar-rule"><b>testlist</b> (<b>augassign</b> <b>testlist</b> | [(<i>'='</i> <b>testlist</b>)+] )</p>
                     </div>
                   </div>
                   <div class="grammar-production">
@@ -965,31 +965,31 @@
                   <div class="grammar-production">
                     <p class="grammar-category"><b>return_stmt</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><i>'return'</i> [<b>testlist</b><span>]</span></p>
+                      <p class="grammar-rule"><i>'return'</i> [<b>testlist</b>]</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>raise_stmt</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><i>'raise'</i> [<b>test</b> [<i>'from'</i> <b>test</b><span>]]</span></p>
+                      <p class="grammar-rule"><i>'raise'</i> [<b>test</b> [<i>'from'</i> <b>test</b>]]</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>global_stmt</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><i>'global'</i> <b>NAME</b> (<i>','</i> <b>NAME</b><span>)*</span></p>
+                      <p class="grammar-rule"><i>'global'</i> <b>NAME</b> (<i>','</i> <b>NAME</b>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>nonlocal_stmt</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><i>'nonlocal'</i> <b>NAME</b> (<i>','</i> <b>NAME</b><span>)*</span></p>
+                      <p class="grammar-rule"><i>'nonlocal'</i> <b>NAME</b> (<i>','</i> <b>NAME</b>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>assert_stmt</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><i>'assert'</i> <b>test</b> [<i>','</i> <b>test</b><span>]</span></p>
+                      <p class="grammar-rule"><i>'assert'</i> <b>test</b> [<i>','</i> <b>test</b>]</p>
                     </div>
                   </div>
                   <div class="grammar-production">
@@ -1001,37 +1001,37 @@
                   <div class="grammar-production">
                     <p class="grammar-category"><b>dotted_as_name</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>dotted_name</b> [<i>'as'</i> <b>NAME</b><span>]</span></p>
+                      <p class="grammar-rule"><b>dotted_name</b> [<i>'as'</i> <b>NAME</b>]</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>dotted_as_names</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>dotted_as_name</b> (<i>','</i> <b>dotted_as_name</b><span>)*</span></p>
+                      <p class="grammar-rule"><b>dotted_as_name</b> (<i>','</i> <b>dotted_as_name</b>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>dotted_name</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>NAME</b> (<i>'.'</i> <b>NAME</b><span>)*</span></p>
+                      <p class="grammar-rule"><b>NAME</b> (<i>'.'</i> <b>NAME</b>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>if_stmt</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><i>'if'</i> <b>test</b> <i>':'</i> <b>suite</b> (<i>'elif'</i> <b>test</b> <i>':'</i> <b>suite</b>)* [<i>'else'</i> <i>':'</i> <b>suite</b><span>]</span></p>
+                      <p class="grammar-rule"><i>'if'</i> <b>test</b> <i>':'</i> <b>suite</b> (<i>'elif'</i> <b>test</b> <i>':'</i> <b>suite</b>)* [<i>'else'</i> <i>':'</i> <b>suite</b>]</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>while_stmt</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><i>'while'</i> <b>test</b> <i>':'</i> <b>suite</b> [<i>'else'</i> <i>':'</i> <b>suite</b><span>]</span></p>
+                      <p class="grammar-rule"><i>'while'</i> <b>test</b> <i>':'</i> <b>suite</b> [<i>'else'</i> <i>':'</i> <b>suite</b>]</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>for_stmt</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><i>'for'</i> <b>exprlist</b> <i>'in'</i> <b>testlist</b> <i>':'</i> <b>suite</b> [<i>'else'</i> <i>':'</i> <b>suite</b><span>]</span></p>
+                      <p class="grammar-rule"><i>'for'</i> <b>exprlist</b> <i>'in'</i> <b>testlist</b> <i>':'</i> <b>suite</b> [<i>'else'</i> <i>':'</i> <b>suite</b>]</p>
                     </div>
                   </div>
                   <div class="grammar-production">
@@ -1057,7 +1057,7 @@
                   <div class="grammar-production">
                     <p class="grammar-category"><b>argslist</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>NAME</b> (<i>','</i> <b>NAME</b><span>)*</span></p>
+                      <p class="grammar-rule"><b>NAME</b> (<i>','</i> <b>NAME</b>)*</p>
                     </div>
                   </div>
                 </div>
@@ -1067,7 +1067,7 @@
                   <div class="grammar-production">
                     <p class="grammar-category"><b>test</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>or_test</b> [<i>'if'</i> <b>or_test</b> <i>'else'</i> <b>test</b><span>]</span></p>
+                      <p class="grammar-rule"><b>or_test</b> [<i>'if'</i> <b>or_test</b> <i>'else'</i> <b>test</b>]</p>
                       <p class="grammar-rule"><b>lambdef</b></p>
                     </div>
                   </div>
@@ -1093,13 +1093,13 @@
                   <div class="grammar-production">
                     <p class="grammar-category"><b>or_test</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>and_test</b> (<i>'or'</i> <b>and_test</b><span>)*</span></p>
+                      <p class="grammar-rule"><b>and_test</b> (<i>'or'</i> <b>and_test</b>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>and_test</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>not_test</b> (<i>'and'</i> <b>not_test</b><span>)*</span></p>
+                      <p class="grammar-rule"><b>not_test</b> (<i>'and'</i> <b>not_test</b>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
@@ -1112,7 +1112,7 @@
                   <div class="grammar-production">
                     <p class="grammar-category"><b>comparison</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>expr</b> (<b>comp_op expr</b><span>)*</span></p>
+                      <p class="grammar-rule"><b>expr</b> (<b>comp_op expr</b>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
@@ -1125,62 +1125,62 @@
                       <p class="grammar-rule"><i>'&lt;='</i></p>
                       <p class="grammar-rule"><i>'!='</i></p>
                       <p class="grammar-rule">[<i>'not'</i>] <i>'in'</i></p>
-                      <p class="grammar-rule"><i>'is'</i> [<i>'not'</i><span>]</span></p>
+                      <p class="grammar-rule"><i>'is'</i> [<i>'not'</i>]</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>expr</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>xor_expr</b> (<i>'|'</i> <b>xor_expr</b><span>)*</span></p>
+                      <p class="grammar-rule"><b>xor_expr</b> (<i>'|'</i> <b>xor_expr</b>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>xor_expr</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>and_expr</b> (<i>'^'</i> <b>and_expr</b><span>)*</span></p>
+                      <p class="grammar-rule"><b>and_expr</b> (<i>'^'</i> <b>and_expr</b>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>and_expr</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>shift_expr</b> (<i>'&'</i> <b>shift_expr</b><span>)*</span></p>
+                      <p class="grammar-rule"><b>shift_expr</b> (<i>'&'</i> <b>shift_expr</b>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>shift_expr</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>arith_expr</b> ((<i>'&lt;&lt;'</i> <i>'&gt;&gt;'</i>) <b>arith_expr</b><span>)*</span></p>
+                      <p class="grammar-rule"><b>arith_expr</b> ((<i>'&lt;&lt;'</i> <i>'&gt;&gt;'</i>) <b>arith_expr</b>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>arith_expr</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>term</b> ((<i>'+'</i> <i>'-'</i>) <b>term</b><span>)*</span></p>
+                      <p class="grammar-rule"><b>term</b> ((<i>'+'</i> <i>'-'</i>) <b>term</b>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>term</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>factor</b> ((<i>'*'</i> <i>'@'</i> | <i>'/'</i> | <i>'%'</i> | <i>'//'</i>) <b>factor</b><span>)*</span></p>
+                      <p class="grammar-rule"><b>factor</b> ((<i>'*'</i> <i>'@'</i> | <i>'/'</i> | <i>'%'</i> | <i>'//'</i>) <b>factor</b>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>factor</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><span>(</span><i>'+'</i> <i>'-'</i> | <i>'~'</i>) <b>factor</b></p>
+                      <p class="grammar-rule">(<i>'+'</i> <i>'-'</i> | <i>'~'</i>) <b>factor</b></p>
                       <p class="grammar-rule"><b>power</b></p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>power</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>atom_expr</b> [<i>'**'</i> <b>factor</b><span>]</span></p>
+                      <p class="grammar-rule"><b>atom_expr</b> [<i>'**'</i> <b>factor</b>]</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>atom_expr</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>atom</b> <b>trailer</b><span>*</span></p>
+                      <p class="grammar-rule"><b>atom</b> <b>trailer</b>*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
@@ -1209,32 +1209,32 @@
                   <div class="grammar-production">
                     <p class="grammar-category"><b>subscriptlist</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>subscript</b> (<i>','</i> <b>subscript</b>)* [<i>','</i><span>]</span></p>
+                      <p class="grammar-rule"><b>subscript</b> (<i>','</i> <b>subscript</b>)* [<i>','</i>]</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>subscript</b>:</p>
                     <div class="grammar-rule-group">
                       <p class="grammar-rule"><b>test</b></p>
-                      <p class="grammar-rule"><span>[</span><b>test</b>] <i>':'</i> [<b>test</b>] [<i>':'</i> [<b>test</b><span>]]</span></p>
+                      <p class="grammar-rule">[<b>test</b>] <i>':'</i> [<b>test</b>] [<i>':'</i> [<b>test</b>]]</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>exprlist</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>expr</b> (<i>','</i> <b>expr</b>)* [<i>','</i><span>]</span></p>
+                      <p class="grammar-rule"><b>expr</b> (<i>','</i> <b>expr</b>)* [<i>','</i>]</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>testlist</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><b>test</b> (<i>','</i> <b>test</b>)* [<i>','</i><span>]</span></p>
+                      <p class="grammar-rule"><b>test</b> (<i>','</i> <b>test</b>)* [<i>','</i>]</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category"><b>dictorsetmaker</b>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><span>(</span><b>test</b> <i>':'</i> <b>test</b>) (<i>','</i> (<b>test</b> <i>':'</i> <b>test</b>))* [<i>','</i><span>]</span></p>
+                      <p class="grammar-rule">(<b>test</b> <i>':'</i> <b>test</b>) (<i>','</i> (<b>test</b> <i>':'</i> <b>test</b>))* [<i>','</i>]</p>
                     </div>
                   </div>
                 </div>

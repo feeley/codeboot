@@ -1366,14 +1366,6 @@ div.tab-pane {
     font-size: 87.5%;
 }
 
-.grammar-production i:first-child{
-    margin-left: -1px;
-}
-
-.grammar-production i:last-child {
-    margin-right: -1px;
-}
-
 .grammar-production i {
     background-color: #e6e6e6;
     border-radius: .2rem;
