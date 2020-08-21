@@ -1341,6 +1341,7 @@ div.tab-pane {
     display: inline-block;
     margin-bottom: 4px;
     padding: 1px 7px 2px 2px;
+    vertical-align: top;
 }
 
 .grammar-rule:not(:first-of-type) {
@@ -1373,5 +1374,9 @@ div.tab-pane {
     font-style: normal;
     margin: 0 1px ;
     padding: .1rem .3rem;
+}
+
+.grammar-token.multi {
+    display: block;
 }
 
