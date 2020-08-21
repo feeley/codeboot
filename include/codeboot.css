@@ -917,3 +917,111 @@ div.tab-pane {
   margin-bottom: 3px;
   margin-left: 14px;
 }
+
+/* -------------------------------------
+ * WORK ON ADDING TABS TO THE HELP MODAL
+ * ------------------------------------- */
+.modal-dialog {
+    width: calc(100% - 1rem);
+}
+
+@media (min-width: 576px) {
+    .modal-dialog {
+        max-width: calc(100% - 3.5rem);
+    }
+}
+
+#cb-help-box .js-novice,
+#cb-help-box .js-standard,
+#cb-help-box .py-novice {
+    display: none;
+}
+
+[data-cb-lang=js-novice] ~ #cb-help-box .js-novice,
+[data-cb-lang=js-standard] ~ #cb-help-box .js-standard,
+[data-cb-lang=py-novice] ~ #cb-help-box .py-novice {
+    display: block;
+}
+
+[data-cb-lang=js-novice] ~ #cb-help-box span.js-novice,
+[data-cb-lang=js-standard] ~ #cb-help-box span.js-standard,
+[data-cb-lang=py-novice] ~ #cb-help-box span.py-novice {
+    display: inline;
+}
+
+#grammarTab {
+    margin-top: 10px;
+}
+
+.grammar-production {
+    display: flex;
+}
+
+.grammar-production:not(:first-of-type) {
+    padding-top: 5px;
+}
+
+.grammar-production:not(:last-of-type):not(.without-border-bottom) {
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+}
+
+.grammar-category {
+    color: #aaa;
+    flex-grow: 0;
+    margin-bottom: 0;
+    padding: 1px 0 0;
+}
+
+.grammar-rule-group {
+    color: #aaa;
+    flex-grow: 1;
+    margin-left: 5px;
+}
+
+.grammar-rule {
+    display: inline-block;
+    margin-bottom: 4px;
+    padding: 1px 7px 2px 2px;
+}
+
+.grammar-rule:not(:first-of-type) {
+    border-left: 1px solid #ccc;
+    margin-left: -2px;
+    padding-left: 9px;
+}
+
+.grammar-production b {
+    color: black;
+    font-weight: normal;
+}
+
+.grammar-category b {
+    background-color: white;
+    color: #333;
+    font-weight: bold;
+    margin-right: 5px!important;
+}
+
+.grammar-production b,
+.grammar-production i {
+    font-size: 87.5%;
+}
+
+.grammar-production i:first-child{
+    margin-left: -1px;
+}
+
+.grammar-production i:last-child {
+    margin-right: -1px;
+}
+
+.grammar-production i {
+    background-color: #e6e6e6;
+    border-radius: .2rem;
+    color: #333;
+    font-style: normal;
+    margin: 0 1px ;
+    padding: .1rem .3rem;
+}
