@@ -27,10 +27,12 @@
 
 <div id="cb-about-box" class="modal fade" role="dialog">
   <div class="modal-dialog">
-
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title">About codeBoot</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
       </div>
       <div class="modal-body">
         <p>codeBoot was created by Marc Feeley and Bruno Dufour.  The following people have also contributed to its development:</p>
@@ -49,29 +51,1234 @@
 </div>
 
 <div id="cb-help-box" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-
+  <div class="modal-dialog cb-modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title">codeBoot help</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
       </div>
       <div class="modal-body">
+        <!-- WORKED ON TABS -->
+        <ul class="nav nav-tabs" id="helpTab" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" id="keybindings-tab" data-toggle="tab" href="#keybindings" role="tab" aria-controls="keybindings" aria-selected="true">Key bindings</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="grammar-tab" data-toggle="tab" href="#grammar" role="tab" aria-controls="grammar" aria-selected="false">Grammar</a>
+          </li>
+        </ul>
+        
+        <div class="tab-content" id="helpTabContent">
+          <div class="tab-pane fade show active" id="keybindings" role="tabpanel" aria-labelledby="keybindings-tab">
+            <h5>Console</h5>
+            <p>Enter a command at the console and then:</p>
+            <p> <kbd>Enter</kbd> : execute it fully and display result<p>
+            <p> <kbd>Shift</kbd> + <kbd>Enter</kbd> : execute the first step (continue with <kbd>Shift</kbd> + <kbd>Enter</kbd> or <kbd>Enter</kbd>)</p>
+            <p> <kbd>Esc</kbd> : stop the execution</p>
 
-        <h5>Console</h5>
-        <p>Enter a command at the console and then:</p>
-        <p> <kbd>Enter</kbd> : execute it fully and display result<p>
-        <p> <kbd>Shift</kbd> + <kbd>Enter</kbd> : execute the first step (continue with <kbd>Shift</kbd> + <kbd>Enter</kbd> or <kbd>Enter</kbd>)</p>
-        <p> <kbd>Esc</kbd> : stop the execution</p>
+            <h5>Editor</h5>
+            <p> <kbd>↑</kbd> / <kbd>Ctrl</kbd> + <kbd>P</kbd> : move cursor up</p>
+            <p> <kbd>↓</kbd> / <kbd>Ctrl</kbd> + <kbd>N</kbd> : move cursor down</p>
+            <p> <kbd>←</kbd> / <kbd>Ctrl</kbd> + <kbd>B</kbd> : move cursor left</p>
+            <p> <kbd>→</kbd> / <kbd>Ctrl</kbd> + <kbd>F</kbd> : move cursor right</p>
+            <p> <kbd>Enter</kbd> : insert line break, move to next line and smart indent</p>
+            <p> <kbd>Ctrl</kbd> + <kbd>J</kbd> : insert line break and move to next line</p>
+            <p> <kbd>Ctrl</kbd> + <kbd>O</kbd> : insert line break</p>
+            <p> <kbd>Shift</kbd> + <kbd>Enter</kbd> : execute the first step of current file (continue with <kbd>Shift</kbd> + <kbd>Enter</kbd> or <kbd>Enter</kbd>)</p>
+          </div>
 
-        <h5>Editor</h5>
-        <p> <kbd>↑</kbd> / <kbd>Ctrl</kbd> + <kbd>P</kbd> : move cursor up</p>
-        <p> <kbd>↓</kbd> / <kbd>Ctrl</kbd> + <kbd>N</kbd> : move cursor down</p>
-        <p> <kbd>←</kbd> / <kbd>Ctrl</kbd> + <kbd>B</kbd> : move cursor left</p>
-        <p> <kbd>→</kbd> / <kbd>Ctrl</kbd> + <kbd>F</kbd> : move cursor right</p>
-        <p> <kbd>Enter</kbd> : insert line break, move to next line and smart indent</p>
-        <p> <kbd>Ctrl</kbd> + <kbd>J</kbd> : insert line break and move to next line</p>
-        <p> <kbd>Ctrl</kbd> + <kbd>O</kbd> : insert line break</p>
-        <p> <kbd>Shift</kbd> + <kbd>Enter</kbd> : execute the first step of current file (continue with <kbd>Shift</kbd> + <kbd>Enter</kbd> or <kbd>Enter</kbd>)</p>
+          <div class="tab-pane fade" id="grammar" role="tabpanel" ara-labelledby="grammar-tab">
+            <div class="js-novice js-standard">
+              <h5>Grammar for "JavaScript <span class="js-novice">novice</span><span class="js-standard">standard</span>"</h5>
+              <p class="js-novice">All statements must be terminated with a semicolon.</p>
+             
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">Literal</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">null</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">true</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">false</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">NUMBER</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">STRING</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">Property</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">IDENT</span> <span class="grammar-token">:</span> <span class="grammar-category">AssignmentExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">STRING</span> <span class="grammar-token">:</span> <span class="grammar-category">AssignmentExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">NUMBER</span> <span class="grammar-token">:</span> <span class="grammar-category">AssignmentExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">IDENT</span> <span class="grammar-category">IDENT</span> <span class="grammar-token">(</span> <span class="grammar-token">)</span> <span class="grammar-token">{</span> <span class="grammar-category">FunctionBody</span> <span class="grammar-token">}</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">IDENT</span> <span class="grammar-category">IDENT</span> <span class="grammar-token">(</span> <span class="grammar-category">FormalParameterList</span> <span class="grammar-token">)</span> <span class="grammar-token">{</span> <span class="grammar-category">FunctionBody</span> <span class="grammar-token">}</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">PropertyList</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">Property</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">PropertyList</span> <span class="grammar-token">,</span> <span class="grammar-category">Property</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">PrimaryExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">PrimaryExprNoBrace</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">{</span> <span class="grammar-token">}</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">{</span> <span class="grammar-category">PropertyList</span> <span class="grammar-token">}</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">{</span> <span class="grammar-category">PropertyList</span> <span class="grammar-token">,</span> <span class="grammar-token">}</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">PrimaryExprNoBrace</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">this</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">Literal</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ArrayLiteral</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">IDENT</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">(</span> <span class="grammar-category">Expr</span> <span class="grammar-token">)</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ArrayLiteral</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">[</span> <span class="grammar-category">ElisionOpt</span> <span class="grammar-token">]</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">[</span> <span class="grammar-category">ElementList</span> <span class="grammar-token">]</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">[</span> <span class="grammar-category">ElementList</span> <span class="grammar-token">,</span> <span class="grammar-category">ElisionOpt</span> <span class="grammar-token">]</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ElementList</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">ElisionOpt</span> <span class="grammar-category">AssignmentExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ElementList</span> <span class="grammar-token">,</span> <span class="grammar-category">ElisionOpt</span> <span class="grammar-category">AssignmentExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ElisionOpt</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">/* nothing */</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">Elision</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">Elision</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">,</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">Elision</span> <span class="grammar-token">,</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">MemberExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">PrimaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">FunctionExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">MemberExpr</span> <span class="grammar-token">[</span> <span class="grammar-category">Expr</span> <span class="grammar-token">]</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">MemberExpr</span> <span class="grammar-token">.</span> <span class="grammar-category">IDENT</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">new</span> <span class="grammar-category">MemberExpr</span> <span class="grammar-category">Arguments</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">MemberExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">PrimaryExprNoBrace</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">MemberExprNoBF</span> <span class="grammar-token">[</span> <span class="grammar-category">Expr</span> <span class="grammar-token">]</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">MemberExprNoBF</span> <span class="grammar-token">.</span> <span class="grammar-category">IDENT</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">new</span> <span class="grammar-category">MemberExpr</span> <span class="grammar-category">Arguments</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">NewExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">MemberExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">new</span> <span class="grammar-category">NewExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">NewExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">MemberExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">new</span> <span class="grammar-category">NewExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">CallExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">MemberExpr</span> <span class="grammar-category">Arguments</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">CallExpr</span> <span class="grammar-category">Arguments</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">CallExpr</span> <span class="grammar-token">[</span> <span class="grammar-category">Expr</span> <span class="grammar-token">]</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">CallExpr</span> <span class="grammar-token">.</span> <span class="grammar-category">IDENT</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">CallExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">MemberExprNoBF</span> <span class="grammar-category">Arguments</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">CallExprNoBF</span> <span class="grammar-category">Arguments</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">CallExprNoBF</span> <span class="grammar-token">[</span> <span class="grammar-category">Expr</span> <span class="grammar-token">]</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">CallExprNoBF</span> <span class="grammar-token">.</span> <span class="grammar-category">IDENT</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">Arguments</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">(</span> <span class="grammar-token">)</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">(</span> <span class="grammar-category">ArgumentList</span> <span class="grammar-token">)</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ArgumentList</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">AssignmentExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ArgumentList</span> <span class="grammar-token">,</span> <span class="grammar-category">AssignmentExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">LeftHandSideExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">NewExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">CallExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">LeftHandSideExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">NewExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">CallExprNoBF</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">PostfixExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">LeftHandSideExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LeftHandSideExpr</span> <span class="grammar-token">++</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LeftHandSideExpr</span> <span class="grammar-token">--</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">PostfixExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">LeftHandSideExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LeftHandSideExprNoBF</span> <span class="grammar-token">++</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LeftHandSideExprNoBF</span> <span class="grammar-token">--</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">UnaryExprCommon</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">delete</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">void</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">typeof</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">++</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">++</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">--</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">--</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">+</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">-</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">~</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">!</span> <span class="grammar-category">UnaryExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">UnaryExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">PostfixExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">UnaryExprCommon</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">UnaryExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">PostfixExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">UnaryExprCommon</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">MultiplicativeExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">MultiplicativeExpr</span> <span class="grammar-token">*</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">MultiplicativeExpr</span> <span class="grammar-token">/</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">MultiplicativeExpr</span> <span class="grammar-token">%</span> <span class="grammar-category">UnaryExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">MultiplicativeExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">UnaryExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">MultiplicativeExprNoBF</span> <span class="grammar-token">*</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">MultiplicativeExprNoBF</span> <span class="grammar-token">/</span> <span class="grammar-category">UnaryExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">MultiplicativeExprNoBF</span> <span class="grammar-token">%</span> <span class="grammar-category">UnaryExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">AdditiveExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">MultiplicativeExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">AdditiveExpr</span> <span class="grammar-token">+</span> <span class="grammar-category">MultiplicativeExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">AdditiveExpr</span> <span class="grammar-token">-</span> <span class="grammar-category">MultiplicativeExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">AdditiveExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">MultiplicativeExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">AdditiveExprNoBF</span> <span class="grammar-token">+</span> <span class="grammar-category">MultiplicativeExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">AdditiveExprNoBF</span> <span class="grammar-token">-</span> <span class="grammar-category">MultiplicativeExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ShiftExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">AdditiveExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ShiftExpr</span> <span class="grammar-token">&lt;&lt;</span> <span class="grammar-category">AdditiveExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ShiftExpr</span> <span class="grammar-token">&gt;&gt;</span> <span class="grammar-category">AdditiveExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ShiftExpr</span> <span class="grammar-token">&gt;&gt;&gt;</span> <span class="grammar-category">AdditiveExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ShiftExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">AdditiveExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ShiftExprNoBF</span> <span class="grammar-token">&lt;&lt;</span> <span class="grammar-category">AdditiveExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ShiftExprNoBF</span> <span class="grammar-token">&gt;&gt;</span> <span class="grammar-category">AdditiveExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ShiftExprNoBF</span> <span class="grammar-token">&gt;&gt;&gt;</span> <span class="grammar-category">AdditiveExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">RelationalExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExpr</span> <span class="grammar-token">&lt;</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExpr</span> <span class="grammar-token">&gt;</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExpr</span> <span class="grammar-token">&lt;=</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExpr</span> <span class="grammar-token">&gt;=</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExpr</span> <span class="grammar-token">instanceof</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExpr</span> <span class="grammar-token">in</span> <span class="grammar-category">ShiftExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">RelationalExprNoIn</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExprNoIn</span> <span class="grammar-token">&lt;</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExprNoIn</span> <span class="grammar-token">&gt;</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExprNoIn</span> <span class="grammar-token">&lt;=</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExprNoIn</span> <span class="grammar-token">&gt;=</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExprNoIn</span> <span class="grammar-token">instanceof</span> <span class="grammar-category">ShiftExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">RelationalExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">ShiftExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExprNoBF</span> <span class="grammar-token">&lt;</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExprNoBF</span> <span class="grammar-token">&gt;</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExprNoBF</span> <span class="grammar-token">&lt;=</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExprNoBF</span> <span class="grammar-token">&gt;=</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExprNoBF</span> <span class="grammar-token">instanceof</span> <span class="grammar-category">ShiftExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExprNoBF</span> <span class="grammar-token">in</span> <span class="grammar-category">ShiftExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">EqualityExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExpr</span> <span class="grammar-token">==</span> <span class="grammar-category">RelationalExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExpr</span> <span class="grammar-token">!=</span> <span class="grammar-category">RelationalExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExpr</span> <span class="grammar-token">===</span> <span class="grammar-category">RelationalExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExpr</span> <span class="grammar-token">!==</span> <span class="grammar-category">RelationalExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">EqualityExprNoIn</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExprNoIn</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExprNoIn</span> <span class="grammar-token">==</span> <span class="grammar-category">RelationalExprNoIn</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExprNoIn</span> <span class="grammar-token">!=</span> <span class="grammar-category">RelationalExprNoIn</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExprNoIn</span> <span class="grammar-token">===</span> <span class="grammar-category">RelationalExprNoIn</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExprNoIn</span> <span class="grammar-token">!==</span> <span class="grammar-category">RelationalExprNoIn</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">EqualityExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">RelationalExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExprNoBF</span> <span class="grammar-token">==</span> <span class="grammar-category">RelationalExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExprNoBF</span> <span class="grammar-token">!=</span> <span class="grammar-category">RelationalExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExprNoBF</span> <span class="grammar-token">===</span> <span class="grammar-category">RelationalExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExprNoBF</span> <span class="grammar-token">!==</span> <span class="grammar-category">RelationalExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">BitwiseANDExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseANDExpr</span> <span class="grammar-token">&amp;</span> <span class="grammar-category">EqualityExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">BitwiseANDExprNoIn</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExprNoIn</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseANDExprNoIn</span> <span class="grammar-token">&amp;</span> <span class="grammar-category">EqualityExprNoIn</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">BitwiseANDExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">EqualityExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseANDExprNoBF</span> <span class="grammar-token">&amp;</span> <span class="grammar-category">EqualityExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">BitwiseXORExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseANDExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseXORExpr</span> <span class="grammar-token">^</span> <span class="grammar-category">BitwiseANDExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">BitwiseXORExprNoIn</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseANDExprNoIn</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseXORExprNoIn</span> <span class="grammar-token">^</span> <span class="grammar-category">BitwiseANDExprNoIn</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">BitwiseXORExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseANDExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseXORExprNoBF</span> <span class="grammar-token">^</span> <span class="grammar-category">BitwiseANDExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">BitwiseORExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseXORExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseORExpr</span> <span class="grammar-token">|</span> <span class="grammar-category">BitwiseXORExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">BitwiseORExprNoIn</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseXORExprNoIn</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseORExprNoIn</span> <span class="grammar-token">|</span> <span class="grammar-category">BitwiseXORExprNoIn</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">BitwiseORExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseXORExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseORExprNoBF</span> <span class="grammar-token">|</span> <span class="grammar-category">BitwiseXORExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">LogicalANDExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseORExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LogicalANDExpr</span> <span class="grammar-token">&&</span> <span class="grammar-category">BitwiseORExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">LogicalANDExprNoIn</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseORExprNoIn</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LogicalANDExprNoIn</span> <span class="grammar-token">&&</span> <span class="grammar-category">BitwiseORExprNoIn</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">LogicalANDExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">BitwiseORExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LogicalANDExprNoBF</span> <span class="grammar-token">&&</span> <span class="grammar-category">BitwiseORExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">LogicalORExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">LogicalANDExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LogicalORExpr</span> <span class="grammar-token">||</span> <span class="grammar-category">LogicalANDExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">LogicalORExprNoIn</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">LogicalANDExprNoIn</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LogicalORExprNoIn</span> <span class="grammar-token">||</span> <span class="grammar-category">LogicalANDExprNoIn</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">LogicalORExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">LogicalANDExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LogicalORExprNoBF</span> <span class="grammar-token">||</span> <span class="grammar-category">LogicalANDExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ConditionalExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">LogicalORExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LogicalORExpr</span> <span class="grammar-token">?</span> <span class="grammar-category">AssignmentExpr</span> <span class="grammar-token">:</span> <span class="grammar-category">AssignmentExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ConditionalExprNoIn</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">LogicalORExprNoIn</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LogicalORExprNoIn</span> <span class="grammar-token">?</span> <span class="grammar-category">AssignmentExprNoIn</span> <span class="grammar-token">:</span> <span class="grammar-category">AssignmentExprNoIn</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ConditionalExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">LogicalORExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LogicalORExprNoBF</span> <span class="grammar-token">?</span> <span class="grammar-category">AssignmentExpr</span> <span class="grammar-token">:</span> <span class="grammar-category">AssignmentExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">AssignmentExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">ConditionalExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LeftHandSideExpr</span> <span class="grammar-category">AssignmentOperator</span> <span class="grammar-category">AssignmentExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">AssignmentExprNoIn</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">ConditionalExprNoIn</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LeftHandSideExpr</span> <span class="grammar-category">AssignmentOperator</span> <span class="grammar-category">AssignmentExprNoIn</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">AssignmentExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">ConditionalExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LeftHandSideExprNoBF</span> <span class="grammar-category">AssignmentOperator</span> <span class="grammar-category">AssignmentExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">AssignmentOperator</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">=</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">+=</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">-=</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">*=</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">/=</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">&lt;&lt;=</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">&gt;&gt;=</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">&gt;&gt;&gt;=</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">&amp;=</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">^=</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">|=</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">%=</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">Expr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">AssignmentExpr</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">Expr</span> <span class="grammar-token">,</span> <span class="grammar-category">AssignmentExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ExprNoIn</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">AssignmentExprNoIn</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ExprNoIn</span> <span class="grammar-token">,</span> <span class="grammar-category">AssignmentExprNoIn</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ExprNoBF</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">AssignmentExprNoBF</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ExprNoBF</span> <span class="grammar-token">,</span> <span class="grammar-category">AssignmentExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">Statement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">Block</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">VariableStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ConstStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">FunctionDeclaration</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">EmptyStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ExprStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">IfStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">IterationStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ContinueStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">BreakStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ReturnStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">WithStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">SwitchStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">LabelledStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ThrowStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">TryStatement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">DebuggerStatement</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">Block</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">{</span> <span class="grammar-token">}</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">{</span> <span class="grammar-category">SourceElements</span> <span class="grammar-token">}</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">VariableStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">var</span> <span class="grammar-category">VariableDeclarationList</span> <span class="grammar-token">;</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">VariableDeclarationList</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">IDENT</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">IDENT</span> <span class="grammar-category">Initializer</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">VariableDeclarationList</span> <span class="grammar-token">,</span> <span class="grammar-category">IDENT</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">VariableDeclarationList</span> <span class="grammar-token">,</span> <span class="grammar-category">IDENT</span> <span class="grammar-category">Initializer</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">VariableDeclarationListNoIn</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">IDENT</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">IDENT</span> <span class="grammar-category">InitializerNoIn</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">VariableDeclarationListNoIn</span> <span class="grammar-token">,</span> <span class="grammar-category">IDENT</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">VariableDeclarationListNoIn</span> <span class="grammar-token">,</span> <span class="grammar-category">IDENT</span> <span class="grammar-category">InitializerNoIn</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ConstStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">const</span> <span class="grammar-category">ConstDeclarationList</span> <span class="grammar-token">;</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ConstDeclarationList</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">ConstDeclaration</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ConstDeclarationList</span> <span class="grammar-token">,</span> <span class="grammar-category">ConstDeclaration</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ConstDeclaration</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">IDENT</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">IDENT</span> <span class="grammar-category">Initializer</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">Initializer</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">=</span> <span class="grammar-category">AssignmentExpr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">InitializerNoIn</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">=</span> <span class="grammar-category">AssignmentExprNoIn</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">EmptyStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">;</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ExprStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">ExprNoBF</span> <span class="grammar-token">;</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">IfStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">if</span> <span class="grammar-token">(</span> <span class="grammar-category">Expr</span> <span class="grammar-token">)</span> <span class="grammar-category">Statement</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">if</span> <span class="grammar-token">(</span> <span class="grammar-category">Expr</span> <span class="grammar-token">)</span> <span class="grammar-category">Statement</span> <span class="grammar-token">else</span> <span class="grammar-category">Statement</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">IterationStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">do</span> <span class="grammar-category">Statement</span> <span class="grammar-token">while</span> <span class="grammar-token">(</span> <span class="grammar-category">Expr</span> <span class="grammar-token">)</span> <span class="grammar-token">;</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">while</span> <span class="grammar-token">(</span> <span class="grammar-category">Expr</span> <span class="grammar-token">)</span> <span class="grammar-category">Statement</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">for</span> <span class="grammar-token">(</span> <span class="grammar-category">ExprNoInOpt</span> <span class="grammar-token">;</span> <span class="grammar-category">ExprOpt</span> <span class="grammar-token">;</span> <span class="grammar-category">ExprOpt</span> <span class="grammar-token">)</span> <span class="grammar-category">Statement</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">for</span> <span class="grammar-token">(</span> <span class="grammar-token">var</span> <span class="grammar-category">VariableDeclarationListNoIn</span> <span class="grammar-token">;</span> <span class="grammar-category">ExprOpt</span> <span class="grammar-token">;</span> <span class="grammar-category">ExprOpt</span> <span class="grammar-token">)</span> <span class="grammar-category">Statement</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">for</span> <span class="grammar-token">(</span> <span class="grammar-category">LeftHandSideExpr</span> <span class="grammar-token">in</span> <span class="grammar-category">Expr</span> <span class="grammar-token">)</span> <span class="grammar-category">Statement</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">for</span> <span class="grammar-token">(</span> <span class="grammar-token">var</span> <span class="grammar-category">IDENT</span> <span class="grammar-token">in</span> <span class="grammar-category">Expr</span> <span class="grammar-token">)</span> <span class="grammar-category">Statement</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">for</span> <span class="grammar-token">(</span> <span class="grammar-token">var</span> <span class="grammar-category">IDENT</span> <span class="grammar-category">InitializerNoIn</span> <span class="grammar-token">in</span> <span class="grammar-category">Expr</span> <span class="grammar-token">)</span> <span class="grammar-category">Statement</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ExprOpt</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">/* nothing */</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">Expr</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ExprNoInOpt</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">/* nothing */</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">ExprNoIn</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ContinueStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">continue</span> <span class="grammar-token">;</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">continue</span> <span class="grammar-category">IDENT</span> <span class="grammar-token">;</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">BreakStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">break</span> <span class="grammar-token">;</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">break</span> <span class="grammar-category">IDENT</span> <span class="grammar-token">;</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ReturnStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">return</span> <span class="grammar-token">;</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">return</span> <span class="grammar-category">Expr</span> <span class="grammar-token">;</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">WithStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">with</span> <span class="grammar-token">(</span> <span class="grammar-category">Expr</span> <span class="grammar-token">)</span> <span class="grammar-category">Statement</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">SwitchStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">switch</span> <span class="grammar-token">(</span> <span class="grammar-category">Expr</span> <span class="grammar-token">)</span> <span class="grammar-category">CaseBlock</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">CaseBlock</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">{</span> <span class="grammar-category">CaseClausesOpt</span> <span class="grammar-token">}</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">{</span> <span class="grammar-category">CaseClausesOpt</span> <span class="grammar-category">DefaultClause</span> <span class="grammar-category">CaseClausesOpt</span> <span class="grammar-token">}</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">CaseClausesOpt</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">/* nothing */</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">CaseClauses</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">CaseClauses</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">CaseClause</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">CaseClauses</span> <span class="grammar-category">CaseClause</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">CaseClause</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">case</span> <span class="grammar-category">Expr</span> <span class="grammar-token">:</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">case</span> <span class="grammar-category">Expr</span> <span class="grammar-token">:</span> <span class="grammar-category">SourceElements</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">DefaultClause</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">default</span> <span class="grammar-token">:</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">default</span> <span class="grammar-token">:</span> <span class="grammar-category">SourceElements</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">LabelledStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">IDENT</span> <span class="grammar-token">:</span> <span class="grammar-category">Statement</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">ThrowStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">throw</span> <span class="grammar-category">Expr</span> <span class="grammar-token">;</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">TryStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">try</span> <span class="grammar-category">Block</span> <span class="grammar-token">finally</span> <span class="grammar-category">Block</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">try</span> <span class="grammar-category">Block</span> <span class="grammar-token">catch</span> <span class="grammar-token">(</span> <span class="grammar-category">IDENT</span> <span class="grammar-token">)</span> <span class="grammar-category">Block</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">try</span> <span class="grammar-category">Block</span> <span class="grammar-token">catch</span> <span class="grammar-token">(</span> <span class="grammar-category">IDENT</span> <span class="grammar-token">)</span> <span class="grammar-category">Block</span> <span class="grammar-token">finally</span> <span class="grammar-category">Block</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">DebuggerStatement</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">debugger</span> <span class="grammar-token">;</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">FunctionDeclaration</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">function</span> <span class="grammar-category">IDENT</span> <span class="grammar-token">(</span> <span class="grammar-token">)</span> <span class="grammar-token">{</span> <span class="grammar-category">FunctionBody</span> <span class="grammar-token">}</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">function</span> <span class="grammar-category">IDENT</span> <span class="grammar-token">(</span> <span class="grammar-category">FormalParameterList</span> <span class="grammar-token">)</span> <span class="grammar-token">{</span> <span class="grammar-category">FunctionBody</span> <span class="grammar-token">}</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">FunctionExpr</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-token">function</span> <span class="grammar-token">(</span> <span class="grammar-token">)</span> <span class="grammar-token">{</span> <span class="grammar-category">FunctionBody</span> <span class="grammar-token">}</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">function</span> <span class="grammar-token">(</span> <span class="grammar-category">FormalParameterList</span> <span class="grammar-token">)</span> <span class="grammar-token">{</span> <span class="grammar-category">FunctionBody</span> <span class="grammar-token">}</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">function</span> <span class="grammar-category">IDENT</span> <span class="grammar-token">(</span> <span class="grammar-token">)</span> <span class="grammar-token">{</span> <span class="grammar-category">FunctionBody</span> <span class="grammar-token">}</span></p>
+                  <p class="grammar-rule"><span class="grammar-token">function</span> <span class="grammar-category">IDENT</span> <span class="grammar-token">(</span> <span class="grammar-category">FormalParameterList</span> <span class="grammar-token">)</span> <span class="grammar-token">{</span> <span class="grammar-category">FunctionBody</span> <span class="grammar-token">}</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">FormalParameterList</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">IDENT</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">FormalParameterList</span> <span class="grammar-token">,</span> <span class="grammar-category">IDENT</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">FunctionBody</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">SourceElements</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">Program</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">SourceElements</span></p>
+                </div>
+              </div>
+              <div class="grammar-production">
+                <p class="grammar-category-box"><span class="grammar-category">SourceElements</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule"><span class="grammar-category">Statement</span></p>
+                  <p class="grammar-rule"><span class="grammar-category">SourceElements</span> <span class="grammar-category">Statement</span></p>
+                </div>
+              </div>
+            </div>
+            <div class="py-novice">
+              <h5>Grammar for "Python novice"</h5>
+              <div class="grammar-production without-border-bottom">
+                <p class="grammar-category-box"><span class="grammar-category">program</span>:</p>
+                <div class="grammar-rule-group">
+                  <p class="grammar-rule">(<span class="grammar-category">NEWLINE</span> | <span class="grammar-category">stmt</span>)*</p>
+                </div>
+              </div>
+
+              <ul class="nav nav-tabs" id="grammarTab" role="tablist">
+                <li class="nav-item">
+                  <a class="nav-link active" id="statements-tab" data-toggle="tab" href="#statements" role="tab" aria-controls="statements" aria-selected="true">Statements</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" id="expressions-tab" data-toggle="tab" href="#expressions" role="tab" aria-controls="expressions" aria-selected="false">Expressions</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" id="tokenEx-tab" data-toggle="tab" href="#tokenEx" role="tab" aria-controls="tokenEx" aria-selected="false">Token examples</a>
+                </li>
+              </ul>
+
+              <div class="tab-content" id="grammarTabContent">
+                <div class="tab-pane fade show active" id="statements" role="tabpanel" aria-labelledby="statements-tab">
+                  <h6>Statements</h6>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">simple_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">if_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">while_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">for_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">funcdef</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">simple_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">small_stmt</span> (<span class="grammar-token">;</span> <span class="grammar-category">small_stmt</span>)* [<span class="grammar-token">;</span>] <span class="grammar-category">NEWLINE</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">small_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">expr_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">pass_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">break_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">continue_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">return_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">raise_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">global_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">nonlocal_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">assert_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">import_stmt</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">expr_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">testlist</span> (<span class="grammar-category">augassign</span> <span class="grammar-category">testlist</span> | [(<span class="grammar-token">=</span> <span class="grammar-category">testlist</span>)+] )</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">augassign</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">+=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">-=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">*=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">@=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">/=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">%=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">&amp;=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">|=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">^=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">&lt;&lt;=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">&gt;&gt;=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">**=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">//=</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">pass_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">pass</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">break_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">break</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">continue_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">continue</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">return_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">return</span> [<span class="grammar-category">testlist</span>]</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">raise_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">raise</span> [<span class="grammar-category">test</span> [<span class="grammar-token">from</span> <span class="grammar-category">test</span>]]</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">global_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">global</span> <span class="grammar-category">NAME</span> (<span class="grammar-token">,</span> <span class="grammar-category">NAME</span>)*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">nonlocal_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">nonlocal</span> <span class="grammar-category">NAME</span> (<span class="grammar-token">,</span> <span class="grammar-category">NAME</span>)*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">assert_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">assert</span> <span class="grammar-category">test</span> [<span class="grammar-token">,</span> <span class="grammar-category">test</span>]</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">import_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">import</span> <span class="grammar-category">dotted_as_names</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">dotted_as_name</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">dotted_name</span> [<span class="grammar-token">as</span> <span class="grammar-category">NAME</span>]</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">dotted_as_names</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">dotted_as_name</span> (<span class="grammar-token">,</span> <span class="grammar-category">dotted_as_name</span>)*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">dotted_name</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">NAME</span> (<span class="grammar-token">.</span> <span class="grammar-category">NAME</span>)*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">if_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">if</span> <span class="grammar-category">test</span> <span class="grammar-token">:</span> <span class="grammar-category">suite</span> (<span class="grammar-token">elif</span> <span class="grammar-category">test</span> <span class="grammar-token">:</span> <span class="grammar-category">suite</span>)* [<span class="grammar-token">else</span> <span class="grammar-token">:</span> <span class="grammar-category">suite</span>]</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">while_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">while</span> <span class="grammar-category">test</span> <span class="grammar-token">:</span> <span class="grammar-category">suite</span> [<span class="grammar-token">else</span> <span class="grammar-token">:</span> <span class="grammar-category">suite</span>]</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">for_stmt</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">for</span> <span class="grammar-category">exprlist</span> <span class="grammar-token">in</span> <span class="grammar-category">testlist</span> <span class="grammar-token">:</span> <span class="grammar-category">suite</span> [<span class="grammar-token">else</span> <span class="grammar-token">:</span> <span class="grammar-category">suite</span>]</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">suite</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">simple_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">NEWLINE</span> <span class="grammar-category">INDENT</span> <span class="grammar-category">stmt</span>+ <span class="grammar-category">DEDENT</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">funcdef</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">def</span> <span class="grammar-category">NAME</span> <span class="grammar-token">(</span> [<span class="grammar-category">argslist</span>] <span class="grammar-token">)</span> <span class="grammar-token">:</span> <span class="grammar-category">func_body_suite</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">func_body_suite</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">simple_stmt</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">NEWLINE</span> <span class="grammar-category">INDENT</span> <span class="grammar-category">stmt</span>+ <span class="grammar-category">DEDENT</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">argslist</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">NAME</span> (<span class="grammar-token">,</span> <span class="grammar-category">NAME</span>)*</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="tab-pane fade" id="expressions" role="tabpanel" aria-labelledby="expressions-tab">
+                  <h6>Expressions</h6>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">test</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">or_test</span> [<span class="grammar-token">if</span> <span class="grammar-category">or_test</span> <span class="grammar-token">else</span> <span class="grammar-category">test</span>]</p>
+                      <p class="grammar-rule"><span class="grammar-category">lambdef</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">test_nocond</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">or_test</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">lambdef_nocond</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">lambdef</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">lambda</span> [<span class="grammar-category">argslist</span>] <span class="grammar-token">:</span> <span class="grammar-category">test</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">lambdef_nocond</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">lambda</span> [<span class="grammar-category">argslist</span>] <span class="grammar-token">:</span> <span class="grammar-category">test_nocond</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">or_test</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">and_test</span> (<span class="grammar-token">or</span> <span class="grammar-category">and_test</span>)*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">and_test</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">not_test</span> (<span class="grammar-token">and</span> <span class="grammar-category">not_test</span>)*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">not_test</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">not</span> <span class="grammar-category">not_test</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">comparison</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">comparison</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">expr</span> (<span class="grammar-category">comp_op expr</span>)*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">comp_op</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">&lt;</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">&gt;</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">==</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">&gt;=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">&lt;=</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">!=</span></p>
+                      <p class="grammar-rule">[<span class="grammar-token">not</span>] <span class="grammar-token">in</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">is</span> [<span class="grammar-token">not</span>]</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">expr</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">xor_expr</span> (<span class="grammar-token">|</span> <span class="grammar-category">xor_expr</span>)*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">xor_expr</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">and_expr</span> (<span class="grammar-token">^</span> <span class="grammar-category">and_expr</span>)*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">and_expr</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">shift_expr</span> (<span class="grammar-token">&</span> <span class="grammar-category">shift_expr</span>)*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">shift_expr</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">arith_expr</span> ((<span class="grammar-token">&lt;&lt;</span> <span class="grammar-token">&gt;&gt;</span>) <span class="grammar-category">arith_expr</span>)*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">arith_expr</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">term</span> ((<span class="grammar-token">+</span> <span class="grammar-token">-</span>) <span class="grammar-category">term</span>)*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">term</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">factor</span> ((<span class="grammar-token">*</span> <span class="grammar-token">@</span> | <span class="grammar-token">/</span> | <span class="grammar-token">%</span> | <span class="grammar-token">//</span>) <span class="grammar-category">factor</span>)*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">factor</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule">(<span class="grammar-token">+</span> <span class="grammar-token">-</span> | <span class="grammar-token">~</span>) <span class="grammar-category">factor</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">power</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">power</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">atom_expr</span> [<span class="grammar-token">**</span> <span class="grammar-category">factor</span>]</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">atom_expr</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">atom</span> <span class="grammar-category">trailer</span>*</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">atom</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">(</span> [<span class="grammar-category">testlist</span>] <span class="grammar-token">)</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">[</span> [<span class="grammar-category">testlist</span>] <span class="grammar-token">]</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">{</span> [<span class="grammar-category">dictorsetmaker</span>] <span class="grammar-token">}</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">NAME</span></p>
+                      <p class="grammar-rule"><span class="grammar-category"><span class="grammar-category">NUMBER</span></span></p>
+                      <p class="grammar-rule"><span class="grammar-category"><span class="grammar-category">STRING</span></span>+</p>
+                      <p class="grammar-rule"><span class="grammar-token">...</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">None</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">True</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">False</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">trailer</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">(</span> [<span class="grammar-category">testlist</span>] <span class="grammar-token">)</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">[</span> <span class="grammar-category">subscriptlist</span> <span class="grammar-token">]</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">.</span> <span class="grammar-category">NAME</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">subscriptlist</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">subscript</span> (<span class="grammar-token">,</span> <span class="grammar-category">subscript</span>)* [<span class="grammar-token">,</span>]</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">subscript</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">test</span></p>
+                      <p class="grammar-rule">[<span class="grammar-category">test</span>] <span class="grammar-token">:</span> [<span class="grammar-category">test</span>] [<span class="grammar-token">:</span> [<span class="grammar-category">test</span>]]</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">exprlist</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">expr</span> (<span class="grammar-token">,</span> <span class="grammar-category">expr</span>)* [<span class="grammar-token">,</span>]</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">testlist</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-category">test</span> (<span class="grammar-token">,</span> <span class="grammar-category">test</span>)* [<span class="grammar-token">,</span>]</p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">dictorsetmaker</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule">(<span class="grammar-category">test</span> <span class="grammar-token">:</span> <span class="grammar-category">test</span>) (<span class="grammar-token">,</span> (<span class="grammar-category">test</span> <span class="grammar-token">:</span> <span class="grammar-category">test</span>))* [<span class="grammar-token">,</span>]</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="tab-pane fade" id="tokenEx" role="tabpanel" aria-labelledby="tokenEx-tab">
+                  <h6>Token examples</h6>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">NAME</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">n</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">int2string</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">int_to_string</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">itemCount</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">BaseException</span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">STRING</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">'hi'</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">'he said \'hi!\''</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">"'"</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">'"'</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">'\x41\u265e\n'</span></p>
+		      <p class="grammar-rule"><span class="grammar-token multi"><span>"""Python</span><br><span>is awesome"""</span></span></p>
+                    </div>
+                  </div>
+                  <div class="grammar-production">
+                    <p class="grammar-category-box"><span class="grammar-category">NUMBER</span>:</p>
+                    <div class="grammar-rule-group">
+                      <p class="grammar-rule"><span class="grammar-token">42</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">0x1f00</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">0o377</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">0b10011</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">1.0</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">3.14</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">1e6</span></p>
+                      <p class="grammar-rule"><span class="grammar-token">1.2e-50</span></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- END -->
       </div>
     </div>
   </div>
