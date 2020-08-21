@@ -188,7 +188,11 @@ function float_nan() {
 }
 
 function float_to_string(float_a) {
-    return float_a + "";
+    var str_a = float_a + "";
+    if (str_a.includes('.') || str_a.includes('e'))
+        return str_a;
+    else
+        return str_a + ".0";
 }
 
 function float_from_string(str) {
