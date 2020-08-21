@@ -112,17 +112,12 @@
       elem.classList.add("grammar-clickable");
       elem.onclick = function () {
         if (isInTab) {
-          console.log("Oh lala un tab!")
           var tabTemp = defTemp.parentNode;
-          console.log(tabTemp);
-          console.log(parentTab);
         
           if (parentTab !== tabTemp) {
-            console.log("pas dans l'bon tab");
             var btnTab = document.getElementById(tabTemp.id + "-tab");
 
             if (btnTab !== null) {
-              console.log("CLICK");
               btnTab.click();
             }
           }
