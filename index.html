@@ -93,6 +93,63 @@
             <div class="js-novice js-standard">
               <h5>Grammar for "JavaScript <span class="js-novice">novice</span><span class="js-standard">standard</span>"</h5>
               <p class="js-novice">All statements must be terminated with a semicolon.</p>
+<script>
+  function linkToDef(elem, isInTab) {
+    var innerTemp = elem.innerHTML;
+    var parentTab = elem.parentNode.parentNode.parentNode.parentNode;
+    var defTemp = null;
+
+    parentTab.parentNode.querySelectorAll(".grammar-category-box .grammar-category")
+      .forEach(
+        function (linkTemp) {
+          var nameTemp = linkTemp.innerHTML;
+
+          if (nameTemp === innerTemp)
+            defTemp = linkTemp.parentNode.parentNode;
+        });
+
+	  if (defTemp !== null) {
+      elem.classList.add("grammar-clickable");
+      elem.onclick = function () {
+        if (isInTab) {
+          console.log("Oh lala un tab!")
+          var tabTemp = defTemp.parentNode;
+          console.log(tabTemp);
+          console.log(parentTab);
+        
+          if (parentTab !== tabTemp) {
+            console.log("pas dans l'bon tab");
+            var btnTab = document.getElementById(tabTemp.id + "-tab");
+
+            if (btnTab !== null) {
+              console.log("CLICK");
+              btnTab.click();
+            }
+          }
+          else {
+            isInTab = false;
+          }
+        }
+
+        setTimeout(function () {
+          defTemp.scrollIntoView();
+          defTemp.classList.add("grammar-highlight");
+          setTimeout(function () {defTemp.classList.remove("grammar-highlight");}, 500);
+        }, isInTab ? 250 : 0);
+      };
+	  }
+  }
+
+  function addCategoryEvent() {
+    document.querySelectorAll(".js-novice .grammar-rule-group .grammar-category").forEach(function (catTemp) {linkToDef(catTemp, false);});
+    document.querySelectorAll(".py-novice .grammar-rule-group .grammar-category").forEach(function (catTemp) {linkToDef(catTemp, true);});
+  }
+
+  if (window.addEventListener) 
+    window.addEventListener("load", addCategoryEvent);
+  else
+    window.attachEvent("onload", addCategoryEvent);
+</script>
              
               <div class="grammar-production">
                 <p class="grammar-category-box"><span class="grammar-category">Literal</span>:</p>
@@ -1141,31 +1198,31 @@
                   <div class="grammar-production">
                     <p class="grammar-category-box"><span class="grammar-category">and_expr</span>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><span class="grammar-category">shift_expr</span> (<span class="grammar-token">&</span> <span class="grammar-category">shift_expr</span>)*</p>
+                      <p class="grammar-rule"><span class="grammar-category">shift_expr</span> (<span class="grammar-token">&amp;</span> <span class="grammar-category">shift_expr</span>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category-box"><span class="grammar-category">shift_expr</span>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><span class="grammar-category">arith_expr</span> ((<span class="grammar-token">&lt;&lt;</span> <span class="grammar-token">&gt;&gt;</span>) <span class="grammar-category">arith_expr</span>)*</p>
+                      <p class="grammar-rule"><span class="grammar-category">arith_expr</span> ((<span class="grammar-token">&lt;&lt;</span> | <span class="grammar-token">&gt;&gt;</span>) <span class="grammar-category">arith_expr</span>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category-box"><span class="grammar-category">arith_expr</span>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><span class="grammar-category">term</span> ((<span class="grammar-token">+</span> <span class="grammar-token">-</span>) <span class="grammar-category">term</span>)*</p>
+                      <p class="grammar-rule"><span class="grammar-category">term</span> ((<span class="grammar-token">+</span> | <span class="grammar-token">-</span>) <span class="grammar-category">term</span>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category-box"><span class="grammar-category">term</span>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule"><span class="grammar-category">factor</span> ((<span class="grammar-token">*</span> <span class="grammar-token">@</span> | <span class="grammar-token">/</span> | <span class="grammar-token">%</span> | <span class="grammar-token">//</span>) <span class="grammar-category">factor</span>)*</p>
+                      <p class="grammar-rule"><span class="grammar-category">factor</span> ((<span class="grammar-token">*</span> | <span class="grammar-token">@</span> | <span class="grammar-token">/</span> | <span class="grammar-token">%</span> | <span class="grammar-token">//</span>) <span class="grammar-category">factor</span>)*</p>
                     </div>
                   </div>
                   <div class="grammar-production">
                     <p class="grammar-category-box"><span class="grammar-category">factor</span>:</p>
                     <div class="grammar-rule-group">
-                      <p class="grammar-rule">(<span class="grammar-token">+</span> <span class="grammar-token">-</span> | <span class="grammar-token">~</span>) <span class="grammar-category">factor</span></p>
+                      <p class="grammar-rule">(<span class="grammar-token">+</span> | <span class="grammar-token">-</span> | <span class="grammar-token">~</span>) <span class="grammar-category">factor</span></p>
                       <p class="grammar-rule"><span class="grammar-category">power</span></p>
                     </div>
                   </div>
@@ -1188,8 +1245,8 @@
                       <p class="grammar-rule"><span class="grammar-token">[</span> [<span class="grammar-category">testlist</span>] <span class="grammar-token">]</span></p>
                       <p class="grammar-rule"><span class="grammar-token">{</span> [<span class="grammar-category">dictorsetmaker</span>] <span class="grammar-token">}</span></p>
                       <p class="grammar-rule"><span class="grammar-category">NAME</span></p>
-                      <p class="grammar-rule"><span class="grammar-category"><span class="grammar-category">NUMBER</span></span></p>
-                      <p class="grammar-rule"><span class="grammar-category"><span class="grammar-category">STRING</span></span>+</p>
+                      <p class="grammar-rule"><span class="grammar-category">NUMBER</span></p>
+                      <p class="grammar-rule"><span class="grammar-category">STRING</span>+</p>
                       <p class="grammar-rule"><span class="grammar-token">...</span></p>
                       <p class="grammar-rule"><span class="grammar-token">None</span></p>
                       <p class="grammar-rule"><span class="grammar-token">True</span></p>
