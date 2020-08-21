@@ -119,16 +119,18 @@ LangPy.prototype.compile = function (source, container, reboot) {
     }
 
     var lang = this;
+    var external_context =
+      {
+        syntaxError: syntaxError
+      };
     var ast = pyinterp.parse(source,
                              '<unknown>',
                              'exec',
-                             {
-                                 syntaxError: syntaxError
-                             });
+                             external_context);
 
     attach_to_container(ast, container);
 
-    var code = pyinterp.comp(ast);
+    var code = pyinterp.comp(ast, external_context);
 
     if (code === null) // empty program?
         return null;
