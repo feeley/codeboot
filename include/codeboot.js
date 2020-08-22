@@ -175,7 +175,7 @@ function CodeBootVM(cb, root, opts) {
 
     vm.enterMode(vm.modeStopped());
 
-    vm.replSetPrompt(true);
+    vm.replAllowInput();
     vm.replFocus();
 
     vm.setDevMode(opts.devMode !== undefined
@@ -818,7 +818,7 @@ CodeBootVM.prototype.setupEventHandlers = function () {
     vm.forEachElem('.cb-exec-btn-step', function (elem) {
         elem.addEventListener('click', function (event) {
             vm.hideTooltip();
-            vm.eventStep();
+            vm.eventStepPause();
         });
     });
 
@@ -1039,19 +1039,19 @@ CodeBootVM.prototype.setLargeFont = function (large) {
 
 // Execution events
 
-CodeBootVM.prototype.ASAP = function (thunk) {
+CodeBootVM.prototype.afterDelay = function (thunk, delay) {
 
     var vm = this;
 
-    setTimeout(thunk, 0);
+    return setTimeout(thunk, Math.max(1, (delay === undefined ? 0 : delay)));
 };
 
-CodeBootVM.prototype.eventStep = function () {
+CodeBootVM.prototype.eventStepPause = function () {
 
     var vm = this;
 
-    vm.ASAP(function () {
-        vm.execStep();
+    vm.afterDelay(function () {
+        vm.execStepPause();
         vm.focusLastFocusedEditor();
     });
 };
@@ -1060,7 +1060,7 @@ CodeBootVM.prototype.eventAnimate = function () {
 
     var vm = this;
 
-    vm.ASAP(function () {
+    vm.afterDelay(function () {
         vm.execAnimate();
         vm.focusLastFocusedEditor();
     });
@@ -1070,7 +1070,7 @@ CodeBootVM.prototype.eventEval = function () {
 
     var vm = this;
 
-    vm.ASAP(function () {
+    vm.afterDelay(function () {
         vm.execEval();
         vm.focusLastFocusedEditor();
     });
@@ -1080,7 +1080,7 @@ CodeBootVM.prototype.eventStop = function () {
 
     var vm = this;
 
-    vm.ASAP(function () {
+    vm.afterDelay(function () {
         vm.execStop();
         vm.focusLastFocusedEditor();
     });

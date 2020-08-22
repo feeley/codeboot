@@ -183,6 +183,23 @@ SourceContainer.prototype.toString = function () {
 
     var sc = this;
 
+    if (sc.is_repl())
+        return '<REPL>';
+    else
+        return sc.tostr;
+};
+
+SourceContainer.prototype.is_repl = function () {
+
+    var sc = this;
+
+    return sc.tostr === false;
+}
+
+SourceContainer.prototype.toString = function () {
+
+    var sc = this;
+
     return sc.tostr;
 };
 
@@ -195,6 +212,10 @@ function SourceContainerInternalFile(source, tostr, start_line0, start_column0, 
     sc.start_line0 = start_line0;
     sc.start_column0 = start_column0;
     sc.stamp = stamp;
+}
+
+SourceContainerInternalFile.prototype.is_repl = function () {
+    return false;
 }
 
 SourceContainerInternalFile.prototype.toString = function () {

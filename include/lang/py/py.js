@@ -87,6 +87,8 @@ LangPy.prototype.compile = function (source, container, reboot) {
     //              the execution state of the program should be
     //              reset (reboot == false is useful for REPL evaluation)
 
+    var from_repl = container.is_repl();
+
     function attach_to_container(ast, container) {
         if (typeof ast === 'object') {
             if (Object.prototype.hasOwnProperty.call(ast, '_fields')) {
@@ -109,6 +111,13 @@ LangPy.prototype.compile = function (source, container, reboot) {
                          end_column0,
                          msg) {
 
+        // detect continuable REPL input
+
+        if (start_column0 <= 0 && end_column0 === start_column0 &&
+            start_line0 === end_line0 && from_repl) {
+            throw 'continuable REPL input';
+        }
+
         var loc = lang.relativeLocation(container,
                                         start_line0,
                                         start_column0,
@@ -123,10 +132,18 @@ LangPy.prototype.compile = function (source, container, reboot) {
       {
         syntaxError: syntaxError
       };
+
     var ast = pyinterp.parse(source,
                              '<unknown>',
-                             'exec',
+                             from_repl ? 'single' : 'exec',
                              external_context);
+
+    // REPL input must end in a blank line, unless it contains a single line
+    if (from_repl) {
+        if (source.indexOf('\n') !== source.length-1 &&
+            source.slice(-2) !== '\n\n')
+            throw 'continuable REPL input';
+    }
 
     attach_to_container(ast, container);
 

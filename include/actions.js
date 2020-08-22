@@ -215,7 +215,7 @@ CodeBootVM.prototype.replay = function () {
                     vm.repl.refresh();
                     vm.repl.focus();
                 } else {
-                    vm.execStep();
+                    vm.execStepPause();
                     j += 2;
                 }
             } else if (command.charAt(j+1) === 'A') {
@@ -316,7 +316,7 @@ CodeBootVM.prototype.code_queue_service = function () {
         var code = vm.ui.code_queue.shift();
         vm.lang.rt.rte = jev.runSetup(code,
                                       {globalObject: vm.globalObject});
-        vm.execute(false);
+        vm.exec_continue(false);
     }
 };
 
@@ -440,11 +440,14 @@ CodeBootVM.prototype.enterMode = function (newMode) {
         vm.hideExecPoint();
         vm.hideStepCounter();
         vm.lang.stopExecution();
-        vm.replSetPrompt(true);
+        vm.replAllowInput();
+
         //TODO: interferes?
         //vm.repl.focus();
     } else {
+
         // Update step counter
+
         if (vm.showingStepCounter()) {
             vm.updateStepCounter();
         }
@@ -459,9 +462,9 @@ CodeBootVM.prototype.enterMode = function (newMode) {
 
 // Control of execution
 
-CodeBootVM.prototype.execStep = function () {
+CodeBootVM.prototype.execStepPause = function () {
     var vm = this;
-    vm.execEvent('step');
+    vm.execEvent('steppause');
 };
 
 CodeBootVM.prototype.execAnimate = function () {
@@ -503,12 +506,12 @@ CodeBootVM.prototype.execEvent = function (event) {
 
     switch (event) {
 
-    case 'step':
-        vm.animate(0);
+    case 'steppause':
+        vm.steppause();
         break;
 
     case 'animate':
-        vm.animate(vm.stepDelay);
+        vm.animate();
         break;
 
     case 'eval':
@@ -521,38 +524,188 @@ CodeBootVM.prototype.execEvent = function (event) {
     }
 };
 
-CodeBootVM.prototype.animate = function (newStepDelay) {
+CodeBootVM.prototype.steppause = function () {
     var vm = this;
-    var was_animating = vm.stopAnimation();
-    vm.ui.stepDelay = newStepDelay;
-    if (newStepDelay === 0) {
-        vm.enterMode(vm.modeStepping());
-        if (!was_animating)
-            vm.step_or_animate(true);
-        else
-            vm.showExecPoint();
-    } else {
-        vm.enterMode(vm.modeAnimating());
-        vm.step_or_animate(true);
-    }
+    vm.exec(Infinity);
+};
+
+CodeBootVM.prototype.animate = function () {
+    var vm = this;
+    vm.exec(vm.stepDelay);
 };
 
 CodeBootVM.prototype.eval = function () {
     var vm = this;
-    vm.enterMode(vm.modeAnimating());
-    vm.hideExecPoint();
-    vm.step_or_animate(false);
+    vm.exec(0);
 };
 
+CodeBootVM.prototype.exec = function (delay) {
+
+    // delay = 0 : execute code without stepping
+    // delay = Infinity : pause execution (after one step if currently paused)
+    // 0 < delay < Infinity : animate execution with that delay between steps
+
+    var vm = this;
+
+    if (vm.ui.mode === vm.modeStopped()) {
+        vm.exec_start(delay);
+    } else {
+        vm.exec_continue(delay);
+    }
+};
+
+CodeBootVM.prototype.exec_start = function (delay) {
+
+    var vm = this;
+    var compile;
+    var after_successful_compile;
+    var source;
+
+    if (vm.lastFocusedEditor === vm.repl) {
+
+        /* running REPL input */
+
+        source = vm.replGetInput();
+
+        if (source.trim() === '') {
+            vm.replNewline();
+            vm.replAcceptInput();
+            return;
+        }
+
+        /* deprecated
+        if (false && source.trim() === '') {
+            if (vm.lang.isExecuting()) {
+                vm.exec_continue(true);
+                return;
+            }
+            if (single_step) {
+                vm.enterMode(vm.modeStopped());
+                vm.code_queue_check();
+                return;
+            }
+        }
+        */
+
+        var line = vm.replInputPos().line;
+
+        compile = function () {
+            var cleaned_source = source.replace(/[ \t\f]*$/,'');
+            return vm.compile_repl_expression(cleaned_source + '\n', line+1, 1);
+        };
+
+        after_successful_compile = function () {
+            if (source.trim() !== '') {
+                vm.replAddHistory(source);
+                vm.replAcceptInput();
+            }
+        };
+
+    } else {
+
+        /* running file */
+
+        var filename = vm.lastFocusedEditor.cb.fileEditor.filename;
+
+        if (vm.root.hasAttribute('data-cb-runable-code')) {
+            source = '';
+        } else {
+            source = 'load("' + filename + '")';
+            //vm.replReplaceInput(source);
+            //vm.replAcceptInput();
+        }
+
+        compile = function () {
+            return vm.compile_internal_file(filename, true); // reset state
+        };
+
+        after_successful_compile = function () {
+
+            drawing_window.cs(); // clear drawing window when running file
+            pixels_window.clear();
+
+            vm.replAddHistory(source);
+        };
+    }
+
+    vm.hide_error();
+
+    var code = vm.compile_catching_exceptions(compile);
+
+    if (code === false) { // continuable REPL input?
+        vm.replNewline();
+//        vm.enterMode(vm.modeStopped());
+    } else {
+
+        after_successful_compile();
+
+        if (code === null) { // empty program?
+            //vm.enterMode(vm.modeStopped());
+            // do nothing
+        } else {
+            // run code
+            vm.lang.startExecution(code);
+            vm.ui.mode = vm.modeAnimating();
+            vm.exec_continue(delay);
+            //TODO: interferes?
+            //vm.repl.focus();
+        }
+    }
+};
+
+CodeBootVM.prototype.compile_catching_exceptions = function (compile) {
+
+    var vm = this;
+
+    try {
+        return compile();
+    }
+    catch (e) {
+        console.log(e);
+        if (e === 'continuable REPL input') return false;
+        vm.handle_lang_exception(e);
+        return null;
+    }
+};
+
+CodeBootVM.prototype.handle_lang_exception = function (e) {
+
+    var vm = this;
+
+    if (e !== false)
+        vm.stop(String(e));
+    else
+        vm.stop(null);
+};
+
+CodeBootVM.prototype.update_mode = function (delay) {
+
+    var vm = this;
+
+    if (delay === 0) {
+        vm.enterMode(vm.modeAnimating());
+        vm.hideExecPoint();
+    } else {
+        var was_animating = vm.stopAnimation();
+        vm.ui.stepDelay = delay;
+        vm.enterMode(vm.modeStepping());
+//        if (was_animating)
+//            vm.showExecPoint();
+    }
+};
+
+/*
+deprecated
 CodeBootVM.prototype.step_or_animate = function (single_step) {
     var vm = this;
     //TODO: interferes?
     //vm.repl.focus();
     if (vm.lang.isExecuting()) // currently executing code?
-        vm.execute(single_step);
+        vm.exec_continue(single_step);
     else
         vm.run(single_step);
 };
+*/
 
 CodeBootVM.prototype.stopAnimation = function () {
 
@@ -856,85 +1009,112 @@ CodeBootVM.prototype.showExecPoint = function () {
     });
 };
 
-CodeBootVM.prototype.execute = function (single_step) {
+/*
+deprecated
+CodeBootVM.prototype.exec_continue = function (delay) {
     var vm = this;
     if (false && vm.hideExecPoint()) { //TODO: find a better way... this causes too much flicker
         // give some time for the browser to refresh the page
-        setTimeout(function () { vm.execute2(single_step); }, 10);
+        setTimeout(function () { vm.exec_continue2(single_step); }, 10);
     } else {
         // step was not shown, so no need to wait
-        vm.execute2(single_step);
+        vm.exec_continue2(delay);
     }
 };
+*/
 
-CodeBootVM.prototype.execute2 = function (single_step) {
+CodeBootVM.prototype.exec_continue = function (delay) {
 
     var vm = this;
     var lang = vm.lang;
+
+    if (!lang.isExecuting()) return;
+
     var stepChunk = 51151;
-    var newMode = vm.modeStopped();
 
-    vm.stopAnimation();
+    var was_animating = vm.stopAnimation(); // cancel execution animation timer if any
 
-    if (lang.isExecuting()) {
-
-        try {
-            lang.continueExecution(single_step ? 1 : stepChunk);
-        }
-        catch (e) {
-            console.log(e);//TODO: remove
-            update_playground_visibility();//TODO: fix
-            if (e !== false)
-                vm.stop(String(e));
-            else
-                vm.stop(null);
-            return;
-        }
-
+    try {
+        lang.continueExecution(delay > 0 ? 1 : stepChunk);
+    }
+    catch (e) {
+        console.log(e);//TODO: remove
         update_playground_visibility();//TODO: fix
-
-        if (vm.ui.mode === vm.modeStepping()) {
-            single_step = true;
-        }
-
-        //$('#cb-menu-brand').text(vm.ui.mode);
-
-        if (lang.isExecuting()) {
-            newMode = vm.modeStepping();
-            if (single_step) {
-                vm.showExecPoint();
-                if (vm.ui.stepDelay > 0) {
-                    newMode = vm.modeAnimating();
-                    vm.ui.timeoutId = setTimeout(function ()
-                                                   { vm.execute(true); },
-                                                 vm.ui.stepDelay);
-                } else if (vm.ui.timeoutId !== null) {
-                    newMode = vm.modeAnimatingSleeping();
-                }
-            } else {
-                if (vm.showingStepCounter()) {
-                    vm.updateStepCounter();
-                } else if (vm.lang.getStepCount() >= stepChunk) {
-                    vm.showStepCounter();
-                }
-                newMode = vm.modeAnimating();
-                vm.ui.timeoutId = setTimeout(function ()
-                                               { vm.execute(false); },
-                                             1);
-            }
-        } else {
-
-            if (lang.isEndedWithResult()) {
-                vm.executionEndedWithResult(lang.getResult());
-            } else {
-                vm.executionEndedWithError(lang.getError());
-            }
-        }
+        vm.handle_lang_exception(e);
     }
 
-    vm.enterMode(newMode);
+    update_playground_visibility();//TODO: fix
 
-    vm.code_queue_check();
+    /*
+      if (vm.ui.mode === vm.modeStepping()) {
+      single_step = true;
+      }
+    */
+
+    //$('#cb-menu-brand').text(vm.ui.mode);
+
+    if (!lang.isExecuting()) {
+
+        // execution has finished... check if with result or error
+
+        if (lang.isEndedWithResult()) {
+            vm.executionEndedWithResult(lang.getResult());
+        } else {
+            vm.executionEndedWithError(lang.getError());
+        }
+
+    } else {
+
+        // determine how execution will continue (either we continue
+        // after the requested delay, or we must wait for an execution
+        // event)
+
+        var newMode = vm.modeStopped();
+
+        if (delay === Infinity) {
+
+            // single-stepping mode
+
+            newMode = vm.modeStepping();
+
+        } else {
+
+            // execution with animation mode
+
+            if (vm.showingStepCounter()) {
+                vm.updateStepCounter();
+            } else if (vm.lang.getStepCount() >= stepChunk) {
+                vm.showStepCounter();
+            }
+
+            if (vm.ui.timeoutId !== null) {
+
+                // program is executing a "sleep"?
+
+                newMode = vm.modeAnimatingSleeping();
+
+            } else {
+
+                // resume execution after appropriate delay
+
+                newMode = vm.modeAnimating();
+
+                vm.stepDelay = delay;
+
+                vm.ui.timeoutId =
+                    vm.afterDelay(function () { vm.exec_continue(vm.stepDelay); },
+                                  delay);
+            }
+        }
+
+        if (delay > 0 || newMode === vm.modeAnimatingSleeping()) {
+            vm.showExecPoint();
+        } else {
+            vm.hideExecPoint();
+        }
+
+        vm.enterMode(newMode);
+    }
 };
 
 CodeBootVM.prototype.executionEndedWithError = function (msg) {
@@ -948,8 +1128,7 @@ CodeBootVM.prototype.executionEndedWithResult = function (result) {
 
     vm.lastResult = result;
     vm.lastResultRepresentation = vm.lang.printedRepresentation(result);
-    console.log(result);
-    console.log(vm.lastResultRepresentation);
+
     if (result !== void 0) {
         vm.replAddTranscript(vm.lastResultRepresentation + '\n',
                              'cb-repl-result');
@@ -963,97 +1142,44 @@ CodeBootVM.prototype.executionEndedWithResult = function (result) {
 CodeBootVM.prototype.executionHook = function () {
 };
 
-CodeBootVM.prototype.run = function (single_step) {
 
-    var vm = this;
-    var compile;
-    var source;
-
-    if (vm.lastFocusedEditor === vm.repl) {
-
-        /* running REPL input */
-
-        source = vm.replGetInput();
-
-        if (false && source.trim() === '') {
-            if (vm.lang.isExecuting()) {
-                vm.execute(true);
-                return;
-            }
-            if (single_step) {
-                vm.enterMode(vm.modeStopped());
-                vm.code_queue_check();
-                return;
-            }
-        }
-
-        var line = vm.replInputPos().line;
-
-        vm.replAcceptInput();
-
-        compile = function () {
-            return vm.compile_repl_expression(source, line+1, 1);
-        };
-
-    } else {
-
-        /* running file */
-
-        var filename = vm.lastFocusedEditor.cb.fileEditor.filename;
-
-        if (vm.root.hasAttribute('data-cb-runable-code')) {
-            source = '';
-        } else {
-            source = 'load("' + filename + '")';
-            vm.replReplaceInput(source);
-            vm.replAcceptInput();
-        }
-
-        drawing_window.cs(); /* clear drawing window when running file */
-        pixels_window.clear();
-
-        compile = function () {
-            return vm.compile_internal_file(filename, true); // reset state
-        };
-    }
-
-    if (source.trim() !== '')
-        vm.replAddHistory(source);
-
-//    vm.replAcceptInput();
-
-    vm.run_setup_and_execute(compile, single_step);
-};
-
+/*
+deprecated
 CodeBootVM.prototype.run_setup_and_execute = function (compile, single_step) {
 
     var vm = this;
+    var code = null;
 
     vm.hide_error();
 
     try {
-        var code = compile();
+        code = compile();
         if (code === null) {
             vm.stop(null);
-            return;
+            return true;
         } else {
             vm.lang.startExecution(code);
         }
     }
     catch (e) {
         console.log(e);//TODO: remove
+        if (e === 'continuable REPL input')
+            return false;
         if (e !== false)
             vm.stop(String(e));
         else
             vm.stop(null);
-        return;
+        return true;
     }
 
     vm.execute(single_step);
 
     //TODO: interferes?
     //vm.repl.focus();
+
+    return true;
 };
+*/
 
 function writeFileInternal(filename, content) {
 
@@ -1082,7 +1208,7 @@ function writeFileInternal(filename, content) {
 CodeBootVM.prototype.compile_repl_expression = function (source, line, ch) {
     var vm = this;
     return vm.compile(source,
-                      new SourceContainer(source, '<REPL>', line-1, ch-1),
+                      new SourceContainer(source, false, line-1, ch-1),
                       false); // preserve execution state
 };
 
@@ -1207,7 +1333,7 @@ CodeBootVM.prototype.errorMessage = function (loc, kind, msg) {
     var vm = this;
     var locText = '';
 
-    if (vm.showLineNumbers && loc.container.toString() !== '<REPL>') {
+    if (vm.showLineNumbers && !loc.container.is_repl()) {
         locText = loc.toString('simple') + ': ';
     }
 
