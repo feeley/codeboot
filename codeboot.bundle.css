@@ -1310,18 +1310,22 @@ div.tab-pane {
     margin-top: 10px;
 }
 
+.grammar-clickable:hover {
+    cursor: pointer;
+}
+
 .grammar-production {
     display: flex;
+    padding: 0 5px;
+    transition: 1s ease background-color;
 }
 
-.grammar-production:not(:first-of-type) {
-    padding-top: 5px;
+.grammar-production.grammar-highlight {
+    background-color: yellow;
 }
 
-.grammar-production:not(:last-of-type):not(.without-border-bottom) {
-    border-bottom: 1px solid #ddd;
-    margin-bottom: 5px;
-    padding-bottom: 5px;
+.grammar-production:first-of-type {
+    padding-top: 0;
 }
 
 .grammar-category-box {
@@ -1350,13 +1354,15 @@ div.tab-pane {
     padding-left: 9px;
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+
 .grammar-production .grammar-category {
     color: black;
     font-weight: normal;
 }
 
 .grammar-category-box .grammar-category {
-    background-color: white;
+    background-color: transparent;
     color: #333;
     font-weight: bold;
     margin-right: 5px!important;
@@ -1371,6 +1377,7 @@ div.tab-pane {
     background-color: #e6e6e6;
     border-radius: .2rem;
     color: #333;
+    font-family: 'Roboto Mono', monospace;
     font-style: normal;
     margin: 0 1px ;
     padding: .1rem .3rem;
