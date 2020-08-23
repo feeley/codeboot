@@ -124,8 +124,11 @@ jev.runSetup = function (code, options) {
 jev.compile = function (source, container, options) {
 
     var error = function (loc, kind, msg) {
-        if (kind !== "warning") {
-            throw loc.toString() + ": " + kind + " -- " + msg;
+        if (kind === false) {
+            kind = "syntax error -- ";
+        }
+        if (kind !== "warning -- ") {
+            throw loc.toString() + ": " + kind + msg;
         }
     };
 
@@ -578,9 +581,9 @@ jev.compStatement = function (cte, ast) {
 
         if (depth_ast === null) {
             if (ast.label === null) {
-                cte.options.error(ast.loc, "syntax error", "illegal continue statement");
+                cte.options.error(ast.loc, false, "illegal continue statement");
             } else {
-                cte.options.error(ast.label.loc, "syntax error", "undefined label '" + ast.label.toString() + "'");
+                cte.options.error(ast.label.loc, false, "undefined label '" + ast.label.toString() + "'");
             }
         } else {
             if (!(depth_ast.ast instanceof DoWhileStatement ||
@@ -590,7 +593,7 @@ jev.compStatement = function (cte, ast) {
                   depth_ast.ast instanceof ForInStatement ||
                   depth_ast.ast instanceof ForVarInStatement)) {
                 // Note: V8 gives an "undefined label" error
-                cte.options.error(ast.loc, "syntax error", "illegal continue statement");
+                cte.options.error(ast.loc, false, "illegal continue statement");
             }
         }
 
@@ -614,9 +617,9 @@ jev.compStatement = function (cte, ast) {
 
         if (depth_ast === null) {
             if (ast.label === null) {
-                cte.options.error(ast.loc, "syntax error", "illegal break statement");
+                cte.options.error(ast.loc, false, "illegal break statement");
             } else {
-                cte.options.error(ast.label.loc, "syntax error", "undefined label '" + ast.label.toString() + "'");
+                cte.options.error(ast.label.loc, false, "undefined label '" + ast.label.toString() + "'");
             }
         }
 
@@ -636,7 +639,7 @@ jev.compStatement = function (cte, ast) {
         var depth_ast = jev.labelLookup(cte, "return point");
 
         if (depth_ast === null) {
-            cte.options.error(ast.loc, "syntax error", "illegal return statement");
+            cte.options.error(ast.loc, false, "illegal return statement");
         }
 
         if (ast.expr === null) {
@@ -785,7 +788,7 @@ jev.compStatement = function (cte, ast) {
         while (statement instanceof LabelledStatement) {
             var id_str = statement.label.toString();
             if (jev.labelLookup(new_cte, id_str) !== null) {
-                cte.options.error(statement.label.loc, "syntax error", "duplicate label " + id_str);
+                cte.options.error(statement.label.loc, false, "duplicate label " + id_str);
             }
             ids[id_str] = true;
             statement = statement.statement;

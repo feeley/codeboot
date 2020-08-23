@@ -12,7 +12,7 @@
 
 function float_instance(val) {
     // assumes ints are a separate type such as BigInt (see int.js)
-    return typeof val === "number";
+    return typeof val === 'number';
 }
 
 function float_from_float(n) {
@@ -188,11 +188,19 @@ function float_nan() {
 }
 
 function float_to_string(float_a) {
-    var str_a = float_a + "";
-    if (str_a.includes('.') || str_a.includes('e'))
-        return str_a;
-    else
-        return str_a + ".0";
+    if (isNaN(float_a)) {
+        return 'nan';
+    } else if (!isFinite(float_a)) {
+        return (float_a < 0) ? '-inf' : 'inf';
+    } else if (float_a === 0) {
+        return (1/float_a < 0) ? '-0.0' : '0.0';
+    } else {
+        var str_a = float_a + '';
+        if (str_a.includes('.') || str_a.includes('e'))
+            return str_a;
+        else
+            return str_a + ".0";
+    }
 }
 
 function float_from_string(str) {

@@ -333,11 +333,11 @@ Location.prototype.toString = function(format) {
     }
 };
 
-Lang.prototype.absoluteLocation = function (container,
-                                            start_line0,
-                                            start_column0,
-                                            end_line0,
-                                            end_column0) {
+Lang.prototype.Location0 = function (container,
+                                     start_line0,
+                                     start_column0,
+                                     end_line0,
+                                     end_column0) {
 
     var start_pos = line0_and_column0_to_position(start_line0, start_column0);
     var end_pos = line0_and_column0_to_position(end_line0, end_column0);
@@ -345,14 +345,11 @@ Lang.prototype.absoluteLocation = function (container,
     return new Location(container, start_pos, end_pos);
 };
 
-Lang.prototype.relativeLocation = function (container,
-                                            start_line0,
-                                            start_column0,
-                                            end_line0,
-                                            end_column0) {
+Lang.prototype.relativeLocation = function (loc) {
 
-    var start_pos = line0_and_column0_to_position(start_line0, start_column0);
-    var end_pos = line0_and_column0_to_position(end_line0, end_column0);
+    var container = loc.container;
+    var start_pos = loc.start_pos;
+    var end_pos = loc.end_pos;
 
     return new Location(container,
                         position_within_container(start_pos, container),

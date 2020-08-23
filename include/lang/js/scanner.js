@@ -41,7 +41,7 @@ function Scanner(port, error, line0, column0)
 
 Scanner.prototype.syntax_error = function (loc, msg)
 {
-    this.error(loc, "syntax error", msg);
+    this.error(loc, "syntax error -- ", msg);
     throw "syntax error";
 };
 
@@ -50,7 +50,7 @@ Scanner.prototype.syntax_error = function (loc, msg)
 
 Scanner.prototype.syntax_warning = function (loc, msg)
 {
-    this.error(loc, "warning", msg);
+    this.error(loc, "warning -- ", msg);
 };
 
 

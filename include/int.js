@@ -892,41 +892,41 @@ function int_from_substring(str, start, end, radix) {
 
 if (globalThis.BigInt) {
 
-    function int_instance(val) { return val.constructor === BigInt; }
-    function int_from_float(n) { return BigInt(n); } // n must be int. value
-    function int_to_float(int_a, exact) {
+    int_instance = function (val) { return val.constructor === BigInt; };
+    int_from_float = function (n) { return BigInt(n); }; // n must be int. value
+    int_to_float = function (int_a, exact) {
         var val = Number(int_a);
         if (exact && int_a != val) val = false;
         return val;
-    }
-    function int_is_zero(int_a) { return int_a == 0; }
-    function int_is_pos(int_a) { return int_a > 0; }
-    function int_is_neg(int_a) { return int_a < 0; }
-    function int_is_nonneg(int_a) { return int_a >= 0; }
-    function int_eq(int_a, int_b) { return int_a == int_b; }
-    function int_ne(int_a, int_b) { return int_a != int_b; }
-    function int_lt(int_a, int_b) { return int_a < int_b; }
-    function int_le(int_a, int_b) { return int_a <= int_b; }
-    function int_gt(int_a, int_b) { return int_a > int_b; }
-    function int_ge(int_a, int_b) { return int_a >= int_b; }
-    function int_abs(int_a) { return int_a<0 ? -int_a : int_a; }
-    function int_neg(int_a) { return -int_a; }
-    function int_add(int_a, int_b) { return int_a+int_b; }
-    function int_sub(int_a, int_b) { return int_a-int_b; }
-    function int_mul(int_a, int_b) { return int_a*int_b; }
-    function int_div(int_a, int_b) { return int_a/int_b; } // integer div
-    function int_mod(int_a, int_b) { return int_a%int_b; }
-    function int_divmod(int_a, int_b) { return [int_a/int_b, int_a%int_b]; }
-    function int_not(int_a) { return ~int_a; }
-    function int_and(int_a, int_b) { return int_a&int_b; }
-    function int_or(int_a, int_b)  { return int_a|int_b; }
-    function int_xor(int_a, int_b) { return int_a^int_b; }
-    function int_shift(int_a, int_b) { return int_a<<int_b; }
-    function int_lshift(int_a, int_b) { return int_a<<int_b; }
-    function int_rshift(int_a, int_b) { return int_a>>int_b; }
-    function int_to_string(int_a, radix) { return int_a.toString(radix); }
-    function int_from_string_radix10(str) { return BigInt(str); }
-    // function int_from_string(str, radix) // not a method of BigInt
+    };
+    int_is_zero = function (int_a) { return int_a == 0; };
+    int_is_pos = function (int_a) { return int_a > 0; };
+    int_is_neg = function (int_a) { return int_a < 0; };
+    int_is_nonneg = function (int_a) { return int_a >= 0; };
+    int_eq = function (int_a, int_b) { return int_a == int_b; };
+    int_ne = function (int_a, int_b) { return int_a != int_b; };
+    int_lt = function (int_a, int_b) { return int_a < int_b; };
+    int_le = function (int_a, int_b) { return int_a <= int_b; };
+    int_gt = function (int_a, int_b) { return int_a > int_b; };
+    int_ge = function (int_a, int_b) { return int_a >= int_b; };
+    int_abs = function (int_a) { return int_a<0 ? -int_a : int_a; };
+    int_neg = function (int_a) { return -int_a; };
+    int_add = function (int_a, int_b) { return int_a+int_b; };
+    int_sub = function (int_a, int_b) { return int_a-int_b; };
+    int_mul = function (int_a, int_b) { return int_a*int_b; };
+    int_div = function (int_a, int_b) { return int_a/int_b; }; // integer div
+    int_mod = function (int_a, int_b) { return int_a%int_b; };
+    int_divmod = function (int_a, int_b) { return [int_a/int_b, int_a%int_b]; };
+    int_not = function (int_a) { return ~int_a; };
+    int_and = function (int_a, int_b) { return int_a&int_b; };
+    int_or = function (int_a, int_b)  { return int_a|int_b; };
+    int_xor = function (int_a, int_b) { return int_a^int_b; };
+    int_shift = function (int_a, int_b) { return int_a<<int_b; };
+    int_lshift = function (int_a, int_b) { return int_a<<int_b; };
+    int_rshift = function (int_a, int_b) { return int_a>>int_b; };
+    int_to_string = function (int_a, radix) { return int_a.toString(radix); };
+    int_from_string_radix10 = function (str) { return BigInt(str); };
+    // int_from_string is not a method of BigInt
 }
 
 //-----------------------------------------------------------------------------

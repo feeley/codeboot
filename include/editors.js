@@ -154,7 +154,8 @@ function CodeBootHistoryManager(editor) {
     hm.history = [];
     hm.pos = 0;
     hm.limit = 100; // TODO: make this configurable
-    hm.currentLine = undefined;
+    hm.saved = [];
+//    hm.currentLine = undefined;
 }
 
 CodeBootHistoryManager.prototype.setEditorValue = function (v) {
@@ -162,12 +163,11 @@ CodeBootHistoryManager.prototype.setEditorValue = function (v) {
     var hm = this;
     var vm = hm.editor.cb.vm;
 
-//    console.log('setEditorValue');
+    console.log('setEditorValue');
 
     vm.replSetInput(v);
-    vm.replAddPrompt();
-    vm.repl.refresh();
-    CodeMirror.commands.goLineEnd(vm.repl);
+//    vm.repl.refresh();
+//    CodeMirror.commands.goLineEnd(vm.repl);
 };
 
 CodeBootHistoryManager.prototype.resetPos = function () {
@@ -175,7 +175,8 @@ CodeBootHistoryManager.prototype.resetPos = function () {
     var hm = this;
 
     hm.pos = hm.history.length;
-    hm.currentLine = undefined;
+//    hm.currentLine = undefined;
+    hm.saved = [];
 };
 
 CodeBootHistoryManager.prototype.add = function (line) {
@@ -198,15 +199,42 @@ CodeBootHistoryManager.prototype.previous = function () {
     var vm = hm.editor.cb.vm;
 
     var index = hm.pos - 1;
-    if (hm.pos === hm.history.length) {
-        // Remember the current line to be able to restore it later, if needed
-        hm.currentLine = vm.replGetInput();
-    }
+
+    // save current line in case there were any edits
+    hm.saved[hm.pos] = vm.replGetInput();
+
     if (index >= 0) {
         // Restore previous history item
-        hm.setEditorValue(hm.history[index]);
+        hm.setEditorValue(hm.getSaved(index));
         hm.pos = index;
     }
+};
+
+CodeBootHistoryManager.prototype.next = function () {
+
+    var hm = this;
+    var vm = hm.editor.cb.vm;
+
+    var index = hm.pos + 1;
+
+    // save current line in case there were any edits
+    hm.saved[hm.pos] = vm.replGetInput();
+
+    if (index <= hm.history.length) {
+        hm.setEditorValue(hm.getSaved(index));
+        hm.pos = index;
+    }
+};
+
+CodeBootHistoryManager.prototype.getSaved = function (i) {
+
+    var hm = this;
+
+    if (hm.saved[i] === undefined) {
+        hm.saved[i] = hm.history[i];
+    }
+
+    return hm.saved[i];
 };
 
 CodeBootHistoryManager.prototype.serializeState = function () {
@@ -226,20 +254,6 @@ CodeBootHistoryManager.prototype.restoreState = function (state) {
     hm.resetPos();
 };
 
-
-CodeBootHistoryManager.prototype.next = function () {
-
-    var hm = this;
-    var index = hm.pos + 1;
-
-    if (index < hm.history.length) {
-        hm.setEditorValue(hm.history[index]);
-        hm.pos = index;
-    }  else if (index === hm.history.length) {
-        hm.setEditorValue(hm.currentLine);
-        hm.resetPos();
-    }
-};
 
 CodeBootVM.prototype.replAddHistory = function (source) {
 
@@ -401,6 +415,60 @@ CodeBootVM.prototype.replSetup = function () {
 
     if (node && !vm.repl) {
 
+        function cursorUp(cm) {
+            if (cm.cb.vm.replCursorOnFirstLineOfInput()) {
+                cm.cb.history.previous();
+            } else {
+                cm.execCommand('goLineUp');
+            }
+        };
+
+        function cursorDown(cm) {
+            if (cm.cb.vm.replCursorOnLastLineOfInput()) {
+                cm.cb.history.next();
+            } else {
+                cm.execCommand('goLineDown');
+            }
+        };
+
+        function insertLine(cm) {
+            var first = vm.replCursorOnFirstLineOfInput();
+            cm.cb.vm.replAddInputLine('', first, false);
+            vm.replAddPrompt2(true); // add continuation prompt to new line
+            cm.execCommand('goCharLeft');
+        };
+
+        function newline(cm) {
+            var first = vm.replCursorOnFirstLineOfInput();
+            cm.cb.vm.replAddInputLine('', first, false);
+            vm.replAddPrompt2(true); // add continuation prompt to new line
+        };
+
+        function newlineAndIndent(cm) {
+            var first = vm.replCursorOnFirstLineOfInput();
+            cm.cb.vm.replAddInputLine('', first, false);
+            vm.replAddPrompt2(true); // add continuation prompt to new line
+            cm.execCommand('indentAuto');
+        };
+
+        function enter(cm) {
+            if (true || cm.cb.vm.replCursorOnLastLineOfInput()) {
+                cm.cb.vm.replSetCursorToEnd();
+                cm.cb.vm.eventEval();
+            } else {
+                newlineAndIndent(cm);
+            }
+        };
+
+        function shiftEnter(cm) {
+            if (true || cm.cb.vm.replCursorOnLastLineOfInput()) {
+                cm.cb.vm.replSetCursorToEnd();
+                cm.cb.vm.eventStepPause();
+            } else {
+                newlineAndIndent(cm);
+            }
+        };
+
         var options = {
             lineNumbers: false,    // Show line numbers
             matchBrackets: true,
@@ -411,17 +479,15 @@ CodeBootVM.prototype.replSetup = function () {
             extraKeys: {
                 'Ctrl-L': function (cm) { cm.cb.vm.replReset(); },
                 'Ctrl-\\': function (cm) { cm.cb.vm.toggleDevMode(); },
-                'Up': function (cm) {
-                    cm.cb.history.previous();
-                    return true;
-                },
-                'Down': function (cm) {
-                    cm.cb.history.next();
-                    return true;
-                },
+                'Up': cursorUp,
+                'Ctrl-P': cursorUp,
+                'Down': cursorDown,
+                'Ctrl-N': cursorDown,
+                'Ctrl-J': newline,
+                'Ctrl-O': insertLine,
                 'Esc': function (cm) { cm.cb.vm.eventStop(); },
-                'Enter': function (cm) { cm.cb.vm.eventEval(); },
-                'Shift-Enter': function (cm) { cm.cb.vm.eventStepPause(); },
+                'Enter': enter,
+                'Shift-Enter': shiftEnter,
                 'Shift-Ctrl-Enter': function (cm) { cm.cb.vm.eventEval(); },
                 'F5' : function (cm) { cm.cb.vm.eventStepPause(); },
                 'F6' : function (cm) { cm.cb.vm.eventAnimate(); },
@@ -454,23 +520,55 @@ CodeBootVM.prototype.replSetup = function () {
     }
 };
 
+CodeBootVM.prototype.replCursorOnFirstColumnOfInput = function () {
+
+    var vm = this;
+    var editor = vm.repl;
+
+    return editor.getCursor().ch === 0;
+};
+
+CodeBootVM.prototype.replCursorOnFirstLineOfInput = function () {
+
+    var vm = this;
+    var editor = vm.repl;
+
+    var cursor = editor.cursorCoords(editor.getCursor());
+    var first = editor.cursorCoords(vm.replInputPos());
+
+    return cursor.top === first.top;
+};
+
+CodeBootVM.prototype.replCursorOnLastLineOfInput = function () {
+
+    var vm = this;
+    var editor = vm.repl;
+
+    var cursor = editor.cursorCoords(editor.getCursor());
+    var last = editor.cursorCoords({ line: editor.lastLine()+1, ch: 0 });
+
+    return cursor.top === last.top;
+};
+
+CodeBootVM.prototype.replCursorPos = function () {
+
+    var vm = this;
+    var editor = vm.repl;
+
+    return editor.getCursor();
+};
+
 CodeBootVM.prototype.replNewline = function () {
 
     var vm = this;
     var editor = vm.repl;
 
-//    console.log('replNewline');
+    console.log('replNewline');
     if (!editor) return;
 
-//    editor.replaceRange('\n', vm.endOfEditor(), vm.endOfEditor());
-
-    editor.setCursor(vm.endOfEditor());
-
-    editor.execCommand('newlineAndIndent');
-
-    vm.replAllowInput();
-
-    vm.replScrollToEnd();
+    var first = vm.replCursorOnFirstLineOfInput();
+    vm.replAddInputLine('', first, false);
+    editor.execCommand('indentAuto');
 };
 
 CodeBootVM.prototype.replAcceptInput = function () {
@@ -478,14 +576,25 @@ CodeBootVM.prototype.replAcceptInput = function () {
     var vm = this;
     var editor = vm.repl;
 
-//    console.log('replAcceptInput |'+vm.replGetInput()+'|');
+    console.log('replAcceptInput |'+vm.replGetInput()+'|');
     if (!editor) return;
+/*
+    var input = vm.replGetInput();
+    var nl = input.lastIndexOf('\n');
 
-    if (vm.replGetInput().slice(-1) === '\n')
-        editor.replaceRange(' ', vm.endOfEditor(), vm.endOfEditor());
+    // avoid empty lines that prevent prompt from showing
+    if (nl === input.length-1)
+        editor.replaceRange('\f', vm.endOfEditor(), vm.endOfEditor());
 
-    vm.replAddPrompt();
-        editor.replaceRange('\n', vm.endOfEditor(), vm.endOfEditor());
+    vm.replAddPrompt2(nl >= 0); // set prompt of last line of input
+
+    editor.replaceRange('\n', vm.endOfEditor(), vm.endOfEditor());
+*/
+    vm.replAddInputLine('',
+                        vm.replCursorOnFirstLineOfInput(),
+                        false);
+
+//    vm.replAddPrompt2(false); // add normal prompt
 
     vm.replSetReadOnlyTranscript(vm.endOfEditor());
 
@@ -496,8 +605,6 @@ CodeBootVM.prototype.replInputPos = function () {
 
     var vm = this;
     var editor = vm.repl;
-
-    if (!editor) return;
 
     var transcriptPos = editor.cb.transcriptMarker.find();
     return transcriptPos ? transcriptPos.to : vm.beginningOfEditor();
@@ -521,8 +628,18 @@ CodeBootVM.prototype.replGetInput = function () {
     var vm = this;
     var editor = vm.repl;
 
-//    console.log('replGetInput');
+    console.log('replGetInput');
     return editor.getRange(vm.replInputPos(), vm.endOfEditor());
+};
+
+CodeBootVM.prototype.replSetCursorToEnd = function () {
+
+    var vm = this;
+    var editor = vm.repl;
+
+    editor.setCursor(vm.endOfEditor());
+    vm.replScrollToEnd();
+    console.log('did replSetCursorToEnd();');
 };
 
 CodeBootVM.prototype.replSetInput = function (text) {
@@ -530,7 +647,7 @@ CodeBootVM.prototype.replSetInput = function (text) {
     var vm = this;
     var editor = vm.repl;
 
-//    console.log('replSetInput');
+    console.log('replSetInput');
     if (!editor) return;
 
     var lines = text.split('\n');
@@ -538,38 +655,57 @@ CodeBootVM.prototype.replSetInput = function (text) {
     editor.replaceRange('', vm.replInputPos(), vm.endOfEditor());
 
     for (var i=0; i<lines.length; i++) {
-        var line = lines[i];
-        editor.replaceRange(line, vm.endOfEditor(), vm.endOfEditor());
-        vm.replAddPrompt2(i > 0);
-        if (i < lines.length-1)
-            editor.replaceRange('\n', vm.endOfEditor(), vm.endOfEditor());
+        vm.replAddInputLine(lines[i], i === 0, i === lines.length-1);
     }
 
-    editor.setCursor(vm.endOfEditor());
+    vm.replSetCursorToEnd();
+//    editor.setCursor(vm.endOfEditor());
 
 //TODO: deprecated
 //    cm.setValue(text);
 //    cm.setCursor(0, text.length);
 };
 
+CodeBootVM.prototype.replAddInputLine = function (line, first, last) {
+
+    var vm = this;
+    var editor = vm.repl;
+
+    var addSpace = (line === '' && !last);
+    if (addSpace) line += ' '; // on empty line: add then remove space
+                               // to avoid hidden gutter bug
+    editor.replaceRange(line,
+                        editor.getCursor(),
+                        editor.getCursor());
+    vm.replAddPrompt2(!first); // normal or continuation prompt
+    if (!last) {
+        editor.replaceRange('\n',
+                            vm.getOffsetFromCursor(editor,addSpace?-1:0),
+                            editor.getCursor());
+    }
+};
+
+/*deprecated
+
 CodeBootVM.prototype.replReplaceInput = function (text) {
 
     var vm = this;
     var editor = vm.repl;
 
-//    console.log('replReplaceInput');
+    console.log('replReplaceInput');
     if (!editor) return;
 
     var lines = text.split('\n');
     editor.replaceRange(text, vm.replInputPos(), vm.endOfEditor());
 };
+*/
 
 CodeBootVM.prototype.replReset = function () {
 
     var vm = this;
     var editor = vm.repl;
 
-//    console.log('replReset');
+    console.log('replReset');
     if (!editor) return;
 
     editor.setValue('');
@@ -593,7 +729,7 @@ CodeBootVM.prototype.setTranscriptMarker = function (editor, endPos) {
             endPos,
             { className: 'cb-transcript',
               inclusiveLeft: true,
-              atomic: true,
+              //atomic: true,
               readOnly: true } );
 };
 
@@ -602,7 +738,7 @@ CodeBootVM.prototype.replSetReadOnlyTranscript = function (endPos) {
     var vm = this;
     var editor = vm.repl;
 
-//    console.log('replSetReadOnlyTranscript');
+    console.log('replSetReadOnlyTranscript');
     if (!editor) return;
 
     vm.setTranscriptMarker(editor, endPos);
@@ -612,7 +748,7 @@ CodeBootVM.prototype.replAllowInput = function () {
 
     var vm = this;
 
-    vm.replAddPrompt();
+    vm.replAddPrompt2(!vm.replEmptyInput());
 };
 
 CodeBootVM.prototype.replAddPrompt = function () {
@@ -620,7 +756,7 @@ CodeBootVM.prototype.replAddPrompt = function () {
     var vm = this;
     var editor = vm.repl;
 
-//    console.log('replAddPrompt');
+    console.log('replAddPrompt');
     if (!editor) return;
 
 //    if (text !== undefined)
@@ -634,7 +770,7 @@ CodeBootVM.prototype.replAddPrompt = function () {
                      : vm.lang.getPromptCont();
     editor.setGutterMarker(line, 'cb-repl-cm-gutter', elem);
 
-    vm.replScrollToEnd();
+    vm.replSetCursorToEnd();
 };
 
 CodeBootVM.prototype.replAddPrompt2 = function (cont) {
@@ -642,12 +778,14 @@ CodeBootVM.prototype.replAddPrompt2 = function (cont) {
     var vm = this;
     var editor = vm.repl;
 
-//    console.log('replAddPrompt2');
+    console.log('replAddPrompt2');
     if (!editor) return;
 
+    var cursor = vm.replCursorPos();
     var elem = document.createElement('div');
     elem.innerText = cont ? vm.lang.getPromptCont() : vm.lang.getPrompt()
-    editor.setGutterMarker(editor.lastLine(), 'cb-repl-cm-gutter', elem);
+    editor.setGutterMarker(cursor.line, 'cb-repl-cm-gutter', elem);
+    editor.refresh();
 };
 
 CodeBootVM.prototype.scrollToEnd = function (editor) {
@@ -667,6 +805,24 @@ CodeBootVM.prototype.nextLineStart = function (pos) {
 
 CodeBootVM.prototype.beginningOfEditor = function () {
     return { line: 0, ch: 0 };
+};
+
+CodeBootVM.prototype.beginningOfLastLineOfEditor = function (editor) {
+    return { line: editor.lastLine(), ch: 0 };
+};
+
+CodeBootVM.prototype.offsetFromEndOfEditor = function (editor, offset) {
+    var pos = editor.posFromIndex(Infinity); // get end line/ch
+    if (offset === 0) return pos;
+    var ind = editor.indexFromPos(pos); // get actual index
+    return editor.posFromIndex(ind + offset);
+};
+
+CodeBootVM.prototype.getOffsetFromCursor = function (editor, offset) {
+    var pos = editor.getCursor(); // get end line/ch
+    if (offset === 0) return pos;
+    var ind = editor.indexFromPos(pos); // get actual index
+    return editor.posFromIndex(ind + offset);
 };
 
 CodeBootVM.prototype.endOfEditor = function () {
@@ -710,12 +866,13 @@ CodeBootVM.prototype.replAddSingleLineTranscript = function (text, cssClass) {
 
 };
 
-CodeBootVM.prototype.replAddLineWidgetTranscript = function (widget, cssClass) {
+CodeBootVM.prototype.replAddLineWidgetTranscript = function (widget) {
 
     var vm = this;
     var editor = vm.repl;
 
     if (!editor) return;
+    console.log('starting vm.replAddLineWidgetTranscript');
 
     var transcriptPos = editor.cb.transcriptMarker.find();
     var pos = transcriptPos ? transcriptPos.to : vm.beginningOfEditor();
@@ -724,21 +881,25 @@ CodeBootVM.prototype.replAddLineWidgetTranscript = function (widget, cssClass) {
 //    var w = editor.addLineWidget(editor.lineCount() - 2, widget);
     editor.cb.widgets.push(w);
 
-
-//    vm.scrollToEnd(editor);
-
-//    editor.onTranscriptChanged();
+    vm.replScrollToEnd();
 };
 
 CodeBootVM.prototype.replAddTranscript = function (text, cssClass) {
+
+    var vm = this;
+    var editor = vm.repl;
+
+    if (!editor) return;
+    console.log('starting vm.replAddTranscript');
+
     if (text.length > 0) {
         if (text.indexOf('\n') === text.length-1) {
             /* optimize for single newline at end */
-            this.replAddSingleLineTranscript(text, cssClass);
+            vm.replAddSingleLineTranscript(text, cssClass);
         } else {
             var lines = text.split('\n');
             for (var i=0; i<lines.length; i++) {
-                this.replAddSingleLineTranscript(lines[i] + '\n', cssClass);
+                vm.replAddSingleLineTranscript(lines[i] + '\n', cssClass);
             }
         }
     }

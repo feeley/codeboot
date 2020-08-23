@@ -61,6 +61,10 @@ LangJs.prototype.init = function () {
     lang.rt = new lang.RunTime();
 };
 
+LangJs.prototype.loadCommand = function (filename) {
+    return 'load("' + filename + '")';
+};
+
 LangJs.prototype.RunTime = function () {
 
     var rt = this;
@@ -102,6 +106,13 @@ LangJs.prototype.compile = function (source, container, reboot) {
                            container,
                            {
                                error: function (loc, kind, msg) {
+                                   var warnSemicolon = true;
+                                   if (kind === false) {
+                                       kind = "syntax error -- ";
+                                   }
+                                   if (warnSemicolon && msg === '\';\' missing after this token') {
+                                       kind = 'syntax error -- ';
+                                   }
                                    lang.vm.syntaxError(loc, kind, msg);
                                },
                                detectEmpty: true,
@@ -127,11 +138,11 @@ LangJs.prototype.startExecution = function (code) {
     lang.rt.rte = jev.runSetup(code, {globalObject: lang.rt.globalObject});
 };
 
-LangJs.prototype.continueExecution = function (steps) {
+LangJs.prototype.continueExecution = function (maxSteps) {
 
     var lang = this;
 
-    lang.rt.rte.step(steps);
+    lang.rt.rte.step(maxSteps);
 };
 
 LangJs.prototype.getStepCount = function () {
@@ -156,7 +167,8 @@ LangJs.prototype.getResult = function () {
 
 LangJs.prototype.getError = function () {
     var lang = this;
-    return String(lang.rt.rte.error);
+    var vm = lang.vm;
+    return new vm.Error(lang.getLocation(), null, String(lang.rt.rte.error));
 };
 
 LangJs.prototype.getLocation = function () {

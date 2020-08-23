@@ -558,6 +558,7 @@ CodeBootVM.prototype.exec_start = function (delay) {
 
     var vm = this;
     var compile;
+    var after_failed_compile;
     var after_successful_compile;
     var source;
 
@@ -567,9 +568,9 @@ CodeBootVM.prototype.exec_start = function (delay) {
 
         source = vm.replGetInput();
 
-        if (source.trim() === '') {
-            vm.replNewline();
+        if (source.trim() === '') { // accept empty input but do nothing else
             vm.replAcceptInput();
+            vm.replAllowInput();
             return;
         }
 
@@ -589,17 +590,20 @@ CodeBootVM.prototype.exec_start = function (delay) {
 
         var line = vm.replInputPos().line;
 
+        // remove trailing whitespace to undo effect of automatic indent
+        var cleaned_source = source.replace(/[ \t\f]*$/,'');
+
         compile = function () {
-            var cleaned_source = source.replace(/[ \t\f]*$/,'');
             return vm.compile_repl_expression(cleaned_source + '\n', line+1, 1);
         };
 
         after_successful_compile = function () {
-            if (source.trim() !== '') {
-                vm.replAddHistory(source);
-                vm.replAcceptInput();
-            }
+            // accept input and add it to history
+            vm.replAddHistory(cleaned_source);
+            vm.replAcceptInput();
         };
+
+        after_failed_compile = after_successful_compile;
 
     } else {
 
@@ -610,9 +614,9 @@ CodeBootVM.prototype.exec_start = function (delay) {
         if (vm.root.hasAttribute('data-cb-runable-code')) {
             source = '';
         } else {
-            source = 'load("' + filename + '")';
-            //vm.replReplaceInput(source);
-            //vm.replAcceptInput();
+            source = vm.lang.loadCommand(filename);
+            vm.replSetInput(source);
+            vm.replAcceptInput();
         }
 
         compile = function () {
@@ -626,56 +630,39 @@ CodeBootVM.prototype.exec_start = function (delay) {
 
             vm.replAddHistory(source);
         };
+
+        after_failed_compile = function () { };
     }
 
-    vm.hide_error();
+    vm.hideReasonHighlight();
 
-    var code = vm.compile_catching_exceptions(compile);
-
-    if (code === false) { // continuable REPL input?
-        vm.replNewline();
-//        vm.enterMode(vm.modeStopped());
-    } else {
-
-        after_successful_compile();
-
-        if (code === null) { // empty program?
-            //vm.enterMode(vm.modeStopped());
-            // do nothing
-        } else {
-            // run code
-            vm.lang.startExecution(code);
-            vm.ui.mode = vm.modeAnimating();
-            vm.exec_continue(delay);
-            //TODO: interferes?
-            //vm.repl.focus();
-        }
-    }
-};
-
-CodeBootVM.prototype.compile_catching_exceptions = function (compile) {
-
-    var vm = this;
+    var code = null;
 
     try {
-        return compile();
+        code = compile();
     }
     catch (e) {
-        console.log(e);
-        if (e === 'continuable REPL input') return false;
-        vm.handle_lang_exception(e);
-        return null;
+        //console.log(e);
+        if (e === 'continuable REPL input') {
+            vm.replNewline();
+        } else {
+            after_failed_compile();
+            vm.showReason(e);
+        }
+
+        vm.replAllowInput();
+        return;
     }
-};
 
-CodeBootVM.prototype.handle_lang_exception = function (e) {
+    after_successful_compile();
 
-    var vm = this;
+    // run code
 
-    if (e !== false)
-        vm.stop(String(e));
-    else
-        vm.stop(null);
+    vm.ui.mode = vm.modeAnimating();
+    vm.lang.startExecution(code);
+    vm.exec_continue(delay);
+    //TODO: interferes?
+    //vm.repl.focus();
 };
 
 CodeBootVM.prototype.update_mode = function (delay) {
@@ -725,50 +712,112 @@ CodeBootVM.prototype.stopAnimation = function () {
 
 CodeBootVM.prototype.stop = function (reason) {
 
+    // when reason is not null, an error message will be displayed
+
     var vm = this;
 
     if (vm.ui.mode !== vm.modeStopped()) {
 
-        if (true) {//TODO: fix
-
-            var msg = $('<span class="cb-repl-error"/>');
-            var withStepCounter = vm.showingStepCounter();
-
-            if (reason !== null) {
-                if (reason === void 0) {
-                    reason = 'stopped';
-                } else {
-                    var loc = vm.lang.getLocation();
-                    vm.showError(loc);
-                    reason = vm.errorMessage(loc, null, reason);
-                }
-                if (withStepCounter) {
-                    reason += ' after ';
-                }
-                msg.text(reason);
-            }
-
-            if (withStepCounter) {
-                var counter = $('<span class="badge badge-primary badge-pill cb-step-counter"/>');
-                counter.text(vm.textStepCounter());
-                msg.append(counter);
-                vm.hideStepCounter();
-            }
-
-            if (reason !== null || withStepCounter) {
-                vm.replAddLineWidgetTranscript(msg.get(0));
-            }
+        if (reason !== null) {
+            if (reason === undefined) reason = 'stopped';
+            vm.showReason(reason);
         }
 
         vm.enterMode(vm.modeStopped());
     }
 };
 
-CodeBootVM.prototype.showError = function (loc) {
+CodeBootVM.prototype.showReason = function (reason) {
+
+    // reason can be a string or an Error object
 
     var vm = this;
 
-    vm.hide_error();
+    var elem = $('<span class="cb-repl-error"/>');
+    var withStepCounter = vm.showingStepCounter();
+    var loc = null;
+    var kind = null;
+    var msg;
+
+    if (typeof reason === 'string') {
+        msg = reason;
+    } else {
+
+        if (reason instanceof vm.Error) {
+            loc = reason.loc;
+            kind = reason.kind;
+            msg = reason.msg;
+        } else {
+            loc = vm.lang.getLocation();
+            msg = 'Internal error -- ' + String(reason);
+        }
+    }
+
+    if (msg !== '' || withStepCounter) {
+
+        if (loc) {
+            loc = vm.lang.relativeLocation(loc);   // convert to relative loc
+            msg = vm.errorMessage(loc, kind, msg); // add location to message
+            vm.showReasonHighlight(loc);           // and highlight location
+        }
+
+        if (withStepCounter) {
+            if (msg !== '') msg += ' after ';
+            elem.text(msg);
+            var counter = $('<span class="badge badge-primary badge-pill cb-step-counter"/>');
+            counter.text(vm.textStepCounter());
+            elem.append(counter);
+            vm.hideStepCounter(); //TODO: belongs elsewhere
+        } else {
+            elem.text(msg);
+        }
+
+        vm.replAddLineWidgetTranscript(elem.get(0));
+    }
+};
+
+CodeBootVM.prototype.Error = function (loc, kind, msg) {
+    var se = this;
+    se.loc = loc;
+    se.kind = kind;
+    se.msg = msg;
+};
+
+CodeBootVM.prototype.syntaxError = function (loc, kind, msg) {
+
+    var vm = this;
+
+    if (kind !== 'warning -- ') {
+        throw new vm.Error(loc, kind, msg);
+    }
+};
+
+CodeBootVM.prototype.errorMessage = function (loc, kind, msg) {
+
+    var vm = this;
+    var locText = '';
+
+    if (loc && vm.showLineNumbers && !loc.container.is_repl()) {
+        locText = loc.toString('simple') + ': ';
+    }
+
+    return locText + ((kind === null) ? '' : kind) + msg;
+};
+
+CodeBootVM.prototype.displayError = function (loc, kind, msg) {
+
+    var vm = this;
+
+    if (loc) vm.showReasonHighlight(loc);
+    vm.replAddTranscript(vm.errorMessage(loc, kind, msg) + '\n',
+                         'cb-repl-error');
+};
+
+CodeBootVM.prototype.showReasonHighlight = function (loc) {
+
+    var vm = this;
+
+    vm.hideReasonHighlight();
 
     vm.ui.errorMark = vm.codeHighlight(loc, 'cb-code-error', false);
 
@@ -776,7 +825,7 @@ CodeBootVM.prototype.showError = function (loc) {
         vm.scrollToMarker(vm.ui.errorMark.all);
 };
 
-CodeBootVM.prototype.hide_error = function () {
+CodeBootVM.prototype.hideReasonHighlight = function () {
 
     var vm = this;
     var mark = vm.ui.errorMark;
@@ -1038,9 +1087,10 @@ CodeBootVM.prototype.exec_continue = function (delay) {
         lang.continueExecution(delay > 0 ? 1 : stepChunk);
     }
     catch (e) {
-        console.log(e);//TODO: remove
         update_playground_visibility();//TODO: fix
-        vm.handle_lang_exception(e);
+        //console.log(e);
+        vm.showReason(e);
+        vm.stop(null);
     }
 
     update_playground_visibility();//TODO: fix
@@ -1055,15 +1105,17 @@ CodeBootVM.prototype.exec_continue = function (delay) {
 
     if (!lang.isExecuting()) {
 
+        //console.log('lang.isExecuting() === false');
         // execution has finished... check if with result or error
 
         if (lang.isEndedWithResult()) {
             vm.executionEndedWithResult(lang.getResult());
         } else {
-            vm.executionEndedWithError(lang.getError());
+            vm.executionEndedWithError(vm.lang.getError());
         }
 
     } else {
+        //console.log('lang.isExecuting() === true');
 
         // determine how execution will continue (either we continue
         // after the requested delay, or we must wait for an execution
@@ -1117,9 +1169,9 @@ CodeBootVM.prototype.exec_continue = function (delay) {
     }
 };
 
-CodeBootVM.prototype.executionEndedWithError = function (msg) {
+CodeBootVM.prototype.executionEndedWithError = function (err) {
     var vm = this;
-    vm.stop(msg);
+    vm.stop(err);
 };
 
 CodeBootVM.prototype.executionEndedWithResult = function (result) {
@@ -1136,7 +1188,7 @@ CodeBootVM.prototype.executionEndedWithResult = function (result) {
 
     vm.executionHook();
 
-    vm.stop(null);
+    vm.stop('');
 };
 
 CodeBootVM.prototype.executionHook = function () {
@@ -1150,7 +1202,7 @@ CodeBootVM.prototype.run_setup_and_execute = function (compile, single_step) {
     var vm = this;
     var code = null;
 
-    vm.hide_error();
+    vm.hideReasonHighlight();
 
     try {
         code = compile();
@@ -1162,7 +1214,7 @@ CodeBootVM.prototype.run_setup_and_execute = function (compile, single_step) {
         }
     }
     catch (e) {
-        console.log(e);//TODO: remove
+        //console.log(e);//TODO: remove
         if (e === 'continuable REPL input')
             return false;
         if (e !== false)
@@ -1309,44 +1361,6 @@ CodeBootVM.prototype.filterAST = function (ast, source) {
     vm.lastResultRepresentation = null;
 
     return ast;
-};
-
-var warnSemicolon = true; // TODO: move to Js
-
-CodeBootVM.prototype.syntaxError = function (loc, kind, msg) {
-
-    var vm = this;
-
-    if (warnSemicolon && msg === '\';\' missing after this token') {
-        vm.displayError(loc, 'syntax error', msg);
-        throw false;
-    }
-
-    if (kind !== 'warning') {
-        vm.displayError(loc, kind, msg);
-        throw false;
-    }
-};
-
-CodeBootVM.prototype.errorMessage = function (loc, kind, msg) {
-
-    var vm = this;
-    var locText = '';
-
-    if (vm.showLineNumbers && !loc.container.is_repl()) {
-        locText = loc.toString('simple') + ': ';
-    }
-
-    return locText + ((kind === null) ? '' : kind + ' -- ') + msg;
-};
-
-CodeBootVM.prototype.displayError = function (loc, kind, msg) {
-
-    var vm = this;
-
-    vm.showError(loc);
-    vm.replAddTranscript(vm.errorMessage(loc, kind, msg) + '\n',
-                         'cb-repl-error');
 };
 
 //-----------------------------------------------------------------------------
