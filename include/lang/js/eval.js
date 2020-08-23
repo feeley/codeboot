@@ -175,7 +175,8 @@ jev.compile = function (source, container, options) {
                };
 
     var port = new String_input_port(source, opts.container);
-    var s = new Scanner(port, opts.error, opts.container.start_line0, opts.container.start_column0);
+//    var s = new Scanner(port, opts.error, opts.container.start_line0, opts.container.start_column0);
+    var s = new Scanner(port, opts.error, 0, 0);
     var p = new Parser(s, opts.warnings);
     var ast = filterAST(p.parse(), source);
 

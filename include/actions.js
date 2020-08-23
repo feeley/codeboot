@@ -1025,6 +1025,7 @@ CodeBootVM.prototype.showExecPoint = function () {
     vm.hideExecPoint();
 
     var loc = vm.lang.getLocation();
+    if (loc) loc = vm.lang.relativeLocation(loc); // convert to relative loc
     vm.ui.execPointMark = vm.codeHighlight(loc, 'cb-exec-point-code', true);
 
     if (vm.ui.execPointMark)

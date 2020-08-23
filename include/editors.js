@@ -56,6 +56,16 @@ CodeBootVM.prototype.initEditorScrollHandling = function (editor) {
 CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
 
     var vm = this;
+
+    function enter(cm) {
+        if (cm.cb.vm.ui.mode === cm.cb.vm.modeStopped()) return CodeMirror.Pass;
+        cm.cb.vm.eventEval();
+    };
+
+    function shiftEnter(cm) {
+        cm.cb.vm.eventStepPause();
+    };
+
     var options = {
         value: '',
         lineNumbers: vm.showLineNumbers,
@@ -75,8 +85,8 @@ CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
 
             'Ctrl-L': function (cm) { cm.cb.vm.replReset(); },
             'Esc': function (cm) { cm.cb.vm.eventStop(); },
-            'Enter': function (cm) { if (cm.cb.vm.ui.mode === cm.cb.vm.modeStopped()) return CodeMirror.Pass; cm.cb.vm.eventStepPause(); },
-            'Shift-Enter': function (cm) { cm.cb.vm.eventStepPause(); },
+            'Enter': enter,
+            'Shift-Enter': shiftEnter,
             'Shift-Ctrl-Enter': function (cm) { cm.cb.vm.eventEval(); },
             'F5' : function (cm) { cm.cb.vm.eventStepPause(); },
             'F6' : function (cm) { cm.cb.vm.eventAnimate(); },
@@ -163,7 +173,7 @@ CodeBootHistoryManager.prototype.setEditorValue = function (v) {
     var hm = this;
     var vm = hm.editor.cb.vm;
 
-    console.log('setEditorValue');
+//    console.log('setEditorValue');
 
     vm.replSetInput(v);
 //    vm.repl.refresh();
@@ -563,7 +573,7 @@ CodeBootVM.prototype.replNewline = function () {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replNewline');
+//    console.log('replNewline');
     if (!editor) return;
 
     var first = vm.replCursorOnFirstLineOfInput();
@@ -576,7 +586,7 @@ CodeBootVM.prototype.replAcceptInput = function () {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replAcceptInput |'+vm.replGetInput()+'|');
+//    console.log('replAcceptInput |'+vm.replGetInput()+'|');
     if (!editor) return;
 /*
     var input = vm.replGetInput();
@@ -628,7 +638,7 @@ CodeBootVM.prototype.replGetInput = function () {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replGetInput');
+//    console.log('replGetInput');
     return editor.getRange(vm.replInputPos(), vm.endOfEditor());
 };
 
@@ -639,7 +649,7 @@ CodeBootVM.prototype.replSetCursorToEnd = function () {
 
     editor.setCursor(vm.endOfEditor());
     vm.replScrollToEnd();
-    console.log('did replSetCursorToEnd();');
+//    console.log('did replSetCursorToEnd();');
 };
 
 CodeBootVM.prototype.replSetInput = function (text) {
@@ -647,7 +657,7 @@ CodeBootVM.prototype.replSetInput = function (text) {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replSetInput');
+//    console.log('replSetInput');
     if (!editor) return;
 
     var lines = text.split('\n');
@@ -692,7 +702,7 @@ CodeBootVM.prototype.replReplaceInput = function (text) {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replReplaceInput');
+//    console.log('replReplaceInput');
     if (!editor) return;
 
     var lines = text.split('\n');
@@ -705,7 +715,7 @@ CodeBootVM.prototype.replReset = function () {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replReset');
+//    console.log('replReset');
     if (!editor) return;
 
     editor.setValue('');
@@ -738,7 +748,7 @@ CodeBootVM.prototype.replSetReadOnlyTranscript = function (endPos) {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replSetReadOnlyTranscript');
+//    console.log('replSetReadOnlyTranscript');
     if (!editor) return;
 
     vm.setTranscriptMarker(editor, endPos);
@@ -756,7 +766,7 @@ CodeBootVM.prototype.replAddPrompt = function () {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replAddPrompt');
+//    console.log('replAddPrompt');
     if (!editor) return;
 
 //    if (text !== undefined)
@@ -778,7 +788,7 @@ CodeBootVM.prototype.replAddPrompt2 = function (cont) {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replAddPrompt2');
+//    console.log('replAddPrompt2');
     if (!editor) return;
 
     var cursor = vm.replCursorPos();
@@ -872,7 +882,7 @@ CodeBootVM.prototype.replAddLineWidgetTranscript = function (widget) {
     var editor = vm.repl;
 
     if (!editor) return;
-    console.log('starting vm.replAddLineWidgetTranscript');
+//    console.log('starting vm.replAddLineWidgetTranscript');
 
     var transcriptPos = editor.cb.transcriptMarker.find();
     var pos = transcriptPos ? transcriptPos.to : vm.beginningOfEditor();
@@ -890,7 +900,7 @@ CodeBootVM.prototype.replAddTranscript = function (text, cssClass) {
     var editor = vm.repl;
 
     if (!editor) return;
-    console.log('starting vm.replAddTranscript');
+//    console.log('starting vm.replAddTranscript');
 
     if (text.length > 0) {
         if (text.indexOf('\n') === text.length-1) {

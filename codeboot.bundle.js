@@ -14244,11 +14244,11 @@ LangJs.prototype.startExecution = function (code) {
     lang.rt.rte = jev.runSetup(code, {globalObject: lang.rt.globalObject});
 };
 
-LangJs.prototype.continueExecution = function (steps) {
+LangJs.prototype.continueExecution = function (maxSteps) {
 
     var lang = this;
 
-    lang.rt.rte.step(steps);
+    lang.rt.rte.step(maxSteps);
 };
 
 LangJs.prototype.getStepCount = function () {
@@ -26546,7 +26546,8 @@ jev.compile = function (source, container, options) {
                };
 
     var port = new String_input_port(source, opts.container);
-    var s = new Scanner(port, opts.error, opts.container.start_line0, opts.container.start_column0);
+//    var s = new Scanner(port, opts.error, opts.container.start_line0, opts.container.start_column0);
+    var s = new Scanner(port, opts.error, 0, 0);
     var p = new Parser(s, opts.warnings);
     var ast = filterAST(p.parse(), source);
 
@@ -30177,7 +30178,7 @@ LangPy.prototype.startExecution = function (cont) {
 
     var lang = this;
 
-    console.log('LangPy.startExecution');
+    //console.log('LangPy.startExecution');
 
     lang.rt.stepCount = 0;
     lang.rt.ast = null;
@@ -30194,15 +30195,15 @@ LangPy.prototype.startExecution = function (cont) {
     lang.rt.ctx = null;
 };
 
-LangPy.prototype.continueExecution = function (steps) {
+LangPy.prototype.continueExecution = function (maxSteps) {
 
     var lang = this;
 
-    console.log('LangPy.continueExecution steps='+steps);
+    //console.log('LangPy.continueExecution maxSteps='+maxSteps);
 
-    if (steps > 0 && lang.rt.cont) {
+    if (maxSteps > 0 && lang.rt.cont) {
 
-        var limit = lang.rt.stepCount + steps;
+        var limit = lang.rt.stepCount + maxSteps;
 
         while (lang.rt.stepCount < limit && lang.rt.cont) {
             var state = lang.rt.cont();
@@ -30364,7 +30365,7 @@ LangPy.prototype.initRunTimeState = function (code, reboot) {
     // default 'trace' option to false
     var options = { trace: false };
 
-    console.log('LangPy.initRunTimeState reboot='+reboot);
+    //console.log('LangPy.initRunTimeState reboot='+reboot);
 
     if (!lang.rt.rte || reboot) {
         lang.rt.rte = pyinterp.fresh_rte(options);
@@ -30528,7 +30529,6 @@ CodeBoot.prototype.getVM = function (elem) {
 };
 
 CodeBoot.prototype.beforeunload = function (event) {
-    console.log('beforeunload');
     event.preventDefault();
     event.returnValue = '';
     return 'your session will be lost';
@@ -31346,11 +31346,11 @@ CodeBootVM.prototype.setAttribute = function (attr, value) {
 };
 
 CodeBootVM.prototype.stateChanged = function () {
-    console.log('stateChanged');
+//    console.log('stateChanged');
 };
 
 CodeBootVM.prototype.stateAddedHistory = function (line) {
-    console.log('stateAddedHistory |'+line+'|');
+//    console.log('stateAddedHistory |'+line+'|');
 };
 
 CodeBootVM.prototype.setDevMode = function (devMode) {
@@ -32923,7 +32923,7 @@ CodeBootVM.prototype.exec_start = function (delay) {
         code = compile();
     }
     catch (e) {
-        console.log(e);
+        //console.log(e);
         if (e === 'continuable REPL input') {
             vm.replNewline();
         } else {
@@ -33306,6 +33306,7 @@ CodeBootVM.prototype.showExecPoint = function () {
     vm.hideExecPoint();
 
     var loc = vm.lang.getLocation();
+    if (loc) loc = vm.lang.relativeLocation(loc); // convert to relative loc
     vm.ui.execPointMark = vm.codeHighlight(loc, 'cb-exec-point-code', true);
 
     if (vm.ui.execPointMark)
@@ -33369,7 +33370,7 @@ CodeBootVM.prototype.exec_continue = function (delay) {
     }
     catch (e) {
         update_playground_visibility();//TODO: fix
-        console.log(e);
+        //console.log(e);
         vm.showReason(e);
         vm.stop(null);
     }
@@ -33386,7 +33387,7 @@ CodeBootVM.prototype.exec_continue = function (delay) {
 
     if (!lang.isExecuting()) {
 
-        console.log('lang.isExecuting() === false');
+        //console.log('lang.isExecuting() === false');
         // execution has finished... check if with result or error
 
         if (lang.isEndedWithResult()) {
@@ -33396,7 +33397,7 @@ CodeBootVM.prototype.exec_continue = function (delay) {
         }
 
     } else {
-        console.log('lang.isExecuting() === true');
+        //console.log('lang.isExecuting() === true');
 
         // determine how execution will continue (either we continue
         // after the requested delay, or we must wait for an execution
@@ -33495,7 +33496,7 @@ CodeBootVM.prototype.run_setup_and_execute = function (compile, single_step) {
         }
     }
     catch (e) {
-        console.log(e);//TODO: remove
+        //console.log(e);//TODO: remove
         if (e === 'continuable REPL input')
             return false;
         if (e !== false)
@@ -33714,6 +33715,16 @@ CodeBootVM.prototype.initEditorScrollHandling = function (editor) {
 CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
 
     var vm = this;
+
+    function enter(cm) {
+        if (cm.cb.vm.ui.mode === cm.cb.vm.modeStopped()) return CodeMirror.Pass;
+        cm.cb.vm.eventEval();
+    };
+
+    function shiftEnter(cm) {
+        cm.cb.vm.eventStepPause();
+    };
+
     var options = {
         value: '',
         lineNumbers: vm.showLineNumbers,
@@ -33733,8 +33744,8 @@ CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
 
             'Ctrl-L': function (cm) { cm.cb.vm.replReset(); },
             'Esc': function (cm) { cm.cb.vm.eventStop(); },
-            'Enter': function (cm) { if (cm.cb.vm.ui.mode === cm.cb.vm.modeStopped()) return CodeMirror.Pass; cm.cb.vm.eventStepPause(); },
-            'Shift-Enter': function (cm) { cm.cb.vm.eventStepPause(); },
+            'Enter': enter,
+            'Shift-Enter': shiftEnter,
             'Shift-Ctrl-Enter': function (cm) { cm.cb.vm.eventEval(); },
             'F5' : function (cm) { cm.cb.vm.eventStepPause(); },
             'F6' : function (cm) { cm.cb.vm.eventAnimate(); },
@@ -33821,7 +33832,7 @@ CodeBootHistoryManager.prototype.setEditorValue = function (v) {
     var hm = this;
     var vm = hm.editor.cb.vm;
 
-    console.log('setEditorValue');
+//    console.log('setEditorValue');
 
     vm.replSetInput(v);
 //    vm.repl.refresh();
@@ -34221,7 +34232,7 @@ CodeBootVM.prototype.replNewline = function () {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replNewline');
+//    console.log('replNewline');
     if (!editor) return;
 
     var first = vm.replCursorOnFirstLineOfInput();
@@ -34234,7 +34245,7 @@ CodeBootVM.prototype.replAcceptInput = function () {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replAcceptInput |'+vm.replGetInput()+'|');
+//    console.log('replAcceptInput |'+vm.replGetInput()+'|');
     if (!editor) return;
 /*
     var input = vm.replGetInput();
@@ -34286,7 +34297,7 @@ CodeBootVM.prototype.replGetInput = function () {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replGetInput');
+//    console.log('replGetInput');
     return editor.getRange(vm.replInputPos(), vm.endOfEditor());
 };
 
@@ -34297,7 +34308,7 @@ CodeBootVM.prototype.replSetCursorToEnd = function () {
 
     editor.setCursor(vm.endOfEditor());
     vm.replScrollToEnd();
-    console.log('did replSetCursorToEnd();');
+//    console.log('did replSetCursorToEnd();');
 };
 
 CodeBootVM.prototype.replSetInput = function (text) {
@@ -34305,7 +34316,7 @@ CodeBootVM.prototype.replSetInput = function (text) {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replSetInput');
+//    console.log('replSetInput');
     if (!editor) return;
 
     var lines = text.split('\n');
@@ -34350,7 +34361,7 @@ CodeBootVM.prototype.replReplaceInput = function (text) {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replReplaceInput');
+//    console.log('replReplaceInput');
     if (!editor) return;
 
     var lines = text.split('\n');
@@ -34363,7 +34374,7 @@ CodeBootVM.prototype.replReset = function () {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replReset');
+//    console.log('replReset');
     if (!editor) return;
 
     editor.setValue('');
@@ -34396,7 +34407,7 @@ CodeBootVM.prototype.replSetReadOnlyTranscript = function (endPos) {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replSetReadOnlyTranscript');
+//    console.log('replSetReadOnlyTranscript');
     if (!editor) return;
 
     vm.setTranscriptMarker(editor, endPos);
@@ -34414,7 +34425,7 @@ CodeBootVM.prototype.replAddPrompt = function () {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replAddPrompt');
+//    console.log('replAddPrompt');
     if (!editor) return;
 
 //    if (text !== undefined)
@@ -34436,7 +34447,7 @@ CodeBootVM.prototype.replAddPrompt2 = function (cont) {
     var vm = this;
     var editor = vm.repl;
 
-    console.log('replAddPrompt2');
+//    console.log('replAddPrompt2');
     if (!editor) return;
 
     var cursor = vm.replCursorPos();
@@ -34530,7 +34541,7 @@ CodeBootVM.prototype.replAddLineWidgetTranscript = function (widget) {
     var editor = vm.repl;
 
     if (!editor) return;
-    console.log('starting vm.replAddLineWidgetTranscript');
+//    console.log('starting vm.replAddLineWidgetTranscript');
 
     var transcriptPos = editor.cb.transcriptMarker.find();
     var pos = transcriptPos ? transcriptPos.to : vm.beginningOfEditor();
@@ -34548,7 +34559,7 @@ CodeBootVM.prototype.replAddTranscript = function (text, cssClass) {
     var editor = vm.repl;
 
     if (!editor) return;
-    console.log('starting vm.replAddTranscript');
+//    console.log('starting vm.replAddTranscript');
 
     if (text.length > 0) {
         if (text.indexOf('\n') === text.length-1) {

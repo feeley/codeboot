@@ -85,7 +85,6 @@ CodeBoot.prototype.getVM = function (elem) {
 };
 
 CodeBoot.prototype.beforeunload = function (event) {
-    console.log('beforeunload');
     event.preventDefault();
     event.returnValue = '';
     return 'your session will be lost';
@@ -903,11 +902,11 @@ CodeBootVM.prototype.setAttribute = function (attr, value) {
 };
 
 CodeBootVM.prototype.stateChanged = function () {
-    console.log('stateChanged');
+//    console.log('stateChanged');
 };
 
 CodeBootVM.prototype.stateAddedHistory = function (line) {
-    console.log('stateAddedHistory |'+line+'|');
+//    console.log('stateAddedHistory |'+line+'|');
 };
 
 CodeBootVM.prototype.setDevMode = function (devMode) {
