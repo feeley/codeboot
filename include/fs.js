@@ -512,22 +512,30 @@ CodeBootFile.prototype.delete = function () {
 };
 
 CodeBootFile.prototype.download = function () {
+
     var file = this;
     var filename = file.filename;
     var content = file.content;
-    $('#cb-form-download-content').val(content);
-    $('#cb-form-download-filename').val(filename);
-//    vm.saveInProgress = true;
-    $('#cb-form-download').submit();
+
+    var elem = document.createElement('a');
+    elem.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+    elem.setAttribute('download', filename);
+
+    elem.style.display = 'none';
+    document.body.appendChild(elem);
+
+    elem.click();
+
+    document.body.removeChild(elem);
 };
 
 CodeBootFile.prototype.email = function () {
     var file = this;
     var filename = file.filename;
     var content = file.content;
-    var url = editor_URL(content, filename);
+    var url = ''; //editor_URL(content, filename) + '\n\n\n';
     var subject = encodeURIComponent(filename);
-    var body = encodeURIComponent(url+'\n\n\n'+content);
+    var body = encodeURIComponent(url+content);
     var href = 'mailto:?subject=' + subject + '&body=' + body;
     var w = window.open(href, '_blank');
     if (w) w.close();

@@ -145,9 +145,12 @@ function CodeBootVM(cb, root, opts) {
 
     vm.setClass('cb-vm', true); // force class in case not yet set
 
-    vm.setAttribute('data-cb-hide-header', true);
-    vm.setAttribute('data-cb-hide-playground', true);
-    vm.setAttribute('data-cb-hide-footer', true);
+    vm.setAttribute('data-cb-show-header', false);
+    vm.setAttribute('data-cb-show-footer', false);
+    vm.setAttribute('data-cb-show-console', false);
+    vm.setAttribute('data-cb-show-repl-container', false);
+    vm.setAttribute('data-cb-show-playground', false);
+    vm.setAttribute('data-cb-show-editors', false);
 
     var id_and_level;
 
@@ -540,12 +543,12 @@ CodeBootVM.prototype.navbarHTML = function () {
 ';
 };
 
-CodeBootVM.prototype.consoleHTML = function (display) {
+CodeBootVM.prototype.consoleHTML = function () {
 
     var vm = this;
 
     return '\
-<div class="cb-console"' + (display ? '' : ' style="display: none;"') + '>\
+<div class="cb-console">\
   <div class="cb-repl-container">\
     <textarea class="cb-repl"></textarea>\
   </div>\
@@ -605,11 +608,12 @@ CodeBootVM.prototype.initRoot = function () {
         elem.innerHTML =
             vm.execControlsHTML() +
             vm.editorsHTML(false) +
-            vm.consoleHTML(false);
+            vm.consoleHTML();
 
         vm.root.replaceWith(elem);
         vm.root = elem;
 
+        vm.setAttribute('data-cb-show-editors', true);
         vm.setAttribute('data-cb-runable-code', true);
 
     } else if (nChildren === 0) {
@@ -617,9 +621,13 @@ CodeBootVM.prototype.initRoot = function () {
         vm.root.innerHTML =
             vm.headerHTML() +
             vm.navbarHTML() +
-            vm.consoleHTML(true) +
+            vm.consoleHTML() +
             vm.editorsHTML(true) +
             vm.footerHTML();
+
+        vm.setAttribute('data-cb-show-console', true);
+        vm.setAttribute('data-cb-show-repl-container', true);
+        vm.setAttribute('data-cb-show-editors', true);
 
     } else if (nChildren === 1) {
 
@@ -632,8 +640,9 @@ CodeBootVM.prototype.initRoot = function () {
             vm.root.innerHTML =
                 vm.execControlsHTML() +
                 vm.editorsHTML(false) +
-                vm.consoleHTML(false);
+                vm.consoleHTML();
 
+            vm.setAttribute('data-cb-show-editors', true);
             vm.setAttribute('data-cb-runable-code', true);
 
         }

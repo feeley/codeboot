@@ -1088,13 +1088,13 @@ CodeBootVM.prototype.exec_continue = function (delay) {
         lang.continueExecution(delay > 0 ? 1 : stepChunk);
     }
     catch (e) {
-        update_playground_visibility();//TODO: fix
+        update_playground_visibility(vm);//TODO: fix
         //console.log(e);
         vm.showReason(e);
         vm.stop(null);
     }
 
-    update_playground_visibility();//TODO: fix
+    update_playground_visibility(vm);//TODO: fix
 
     /*
       if (vm.ui.mode === vm.modeStepping()) {

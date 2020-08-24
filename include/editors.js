@@ -846,8 +846,6 @@ CodeBootVM.prototype.replAddSingleLineTranscript = function (text, cssClass) {
 
     if (!editor) return;
 
-    vm.setDisplay('.cb-console', 'block');
-
     var transcriptPos = editor.cb.transcriptMarker.find();
     var pos = transcriptPos ? transcriptPos.to : vm.beginningOfEditor();
 
@@ -901,6 +899,9 @@ CodeBootVM.prototype.replAddTranscript = function (text, cssClass) {
 
     if (!editor) return;
 //    console.log('starting vm.replAddTranscript');
+
+    vm.setAttribute('data-cb-show-console', true);
+    vm.setAttribute('data-cb-show-repl-container', true);
 
     if (text.length > 0) {
         if (text.indexOf('\n') === text.length-1) {
