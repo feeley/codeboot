@@ -571,11 +571,11 @@ body {
 /*-------------------------- Font size ------------------------------*/
 
 .cb-code-font {
-    font-family: Courier;
+    font-family: "Lucida Console";
 }
 
 .cb-vm .CodeMirror {
-    font-family: Courier;
+    font-family: "Lucida Console";
     font-size: 100%;
     line-height: 1;
 }
