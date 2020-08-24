@@ -1,13 +1,10 @@
-.cb-header,
-.cb-footer,
-.cb-repl,
-.cb-playground {
+.cb-vm:not([data-cb-show-header]) .cb-header,
+.cb-vm:not([data-cb-show-footer]) .cb-footer,
+.cb-vm:not([data-cb-show-console]) .cb-console,
+.cb-vm:not([data-cb-show-repl-container]) .cb-repl-container,
+.cb-vm:not([data-cb-show-playground]) .cb-playground,
+.cb-vm:not([data-cb-show-editors]) .cb-editors {
     display: none;
-}
-
-[data-cb-show-playground] .cb-playground {
-    display: inline;
-/*    width: 384px; */
 }
 
 .cb-console {
@@ -15,12 +12,12 @@
     align-items: flex-start;
     margin: 0.5em;
     padding: 0;
-    height: 7.5em;
+    height: 11.5em;
 }
 
 .cb-repl-container {
     width: 100%;
-    max-height: 9.5em; /* 7.5em + 2*1em */
+    max-height: 13.5em; /* 11.5em + 2*1em */
     padding: 0.3em;
     border-radius: 0.3em;
     background-color: orange;
@@ -28,12 +25,12 @@
 
 .cb-repl-container .CodeMirror {
     height: auto;
-    max-height: 7.5em;
+    max-height: 11.5em;
 }
 
 .cb-repl-container .CodeMirror-scroll {
     height: auto;
-    max-height: 7.5em;
+    max-height: 11.5em;
 }
 
 .cb-exec-controls-buttons .cb-button.btn-secondary,
@@ -134,7 +131,7 @@
     height: calc(100% - 2em);
 }
 
-.cb-hide-header.cb-hide-footer .cb-file-container .CodeMirror-scroll {
+.cb-vm:not([data-cb-show-header]):not([data-cb-show-footer]) .cb-file-container .CodeMirror-scroll {
     max-height: 200px;
     height: auto;
 }
@@ -149,11 +146,11 @@
     height: calc( 0.40*(100% - 155px - 55px - 276px - 39px) );
 }
 
-.cb-hide-header .cb-footer {
+.cb-vm:not([data-cb-show-header]) .cb-footer {
     height: calc( 0.40*(100% - 0px - 55px - 276px - 39px) );
 }
 
-.cb-hide-footer .cb-footer {
+.cb-vm:not([data-cb-show-footer]) .cb-footer {
     height: 15px;
 }
 

@@ -61,6 +61,10 @@ LangPy.prototype.init = function () {
     lang.rt = new lang.RunTime();
 };
 
+LangPy.prototype.loadCommand = function (filename) {
+    return 'import ' + filename.replace(/\.[^/.]+$/, '');
+};
+
 LangPy.prototype.RunTime = function () {
 
     var rt = this;
@@ -87,12 +91,14 @@ LangPy.prototype.compile = function (source, container, reboot) {
     //              the execution state of the program should be
     //              reset (reboot == false is useful for REPL evaluation)
 
+    var from_repl = container.is_repl();
+
     function attach_to_container(ast, container) {
         if (typeof ast === 'object') {
             if (Object.prototype.hasOwnProperty.call(ast, '_fields')) {
                 ast.container = container;
-                ast.lineno += container.start_line0;
-                ast.end_lineno += container.start_line0;
+                //ast.lineno += container.start_line0;
+                //ast.end_lineno += container.start_line0;
                 for (var i in ast._fields) {
                     attach_to_container(ast[ast._fields[i]], container);
                 }
@@ -109,13 +115,20 @@ LangPy.prototype.compile = function (source, container, reboot) {
                          end_column0,
                          msg) {
 
-        var loc = lang.relativeLocation(container,
-                                        start_line0,
-                                        start_column0,
-                                        end_line0,
-                                        end_column0);
+        // detect continuable REPL input
 
-        lang.vm.syntaxError(loc, 'syntax error', msg);
+        if (start_column0 <= 0 && end_column0 === start_column0 &&
+            start_line0 === end_line0 && from_repl) {
+            throw 'continuable REPL input';
+        }
+
+        var loc = lang.Location0(container,
+                                 start_line0,
+                                 start_column0,
+                                 end_line0,
+                                 end_column0);
+
+        lang.vm.syntaxError(loc, 'SyntaxError: ', msg);
     }
 
     var lang = this;
@@ -123,10 +136,18 @@ LangPy.prototype.compile = function (source, container, reboot) {
       {
         syntaxError: syntaxError
       };
+
     var ast = pyinterp.parse(source,
                              '<unknown>',
-                             'exec',
+                             from_repl ? 'single' : 'exec',
                              external_context);
+
+    // REPL input must end in a blank line, unless it contains a single line
+    if (from_repl) {
+        if (source.indexOf('\n') !== source.length-1 &&
+            source.slice(-2) !== '\n\n')
+            throw 'continuable REPL input';
+    }
 
     attach_to_container(ast, container);
 
@@ -144,7 +165,7 @@ LangPy.prototype.startExecution = function (cont) {
 
     var lang = this;
 
-    console.log('LangPy.startExecution');
+    //console.log('LangPy.startExecution');
 
     lang.rt.stepCount = 0;
     lang.rt.ast = null;
@@ -161,15 +182,15 @@ LangPy.prototype.startExecution = function (cont) {
     lang.rt.ctx = null;
 };
 
-LangPy.prototype.continueExecution = function (steps) {
+LangPy.prototype.continueExecution = function (maxSteps) {
 
     var lang = this;
 
-    console.log('LangPy.continueExecution steps='+steps);
+    //console.log('LangPy.continueExecution maxSteps='+maxSteps);
 
-    if (steps > 0 && lang.rt.cont) {
+    if (maxSteps > 0 && lang.rt.cont) {
 
-        var limit = lang.rt.stepCount + steps;
+        var limit = lang.rt.stepCount + maxSteps;
 
         while (lang.rt.stepCount < limit && lang.rt.cont) {
             var state = lang.rt.cont();
@@ -214,7 +235,8 @@ LangPy.prototype.getResult = function () {
 
 LangPy.prototype.getError = function () {
     var lang = this;
-    return lang.rt.error;
+    var vm = lang.vm;
+    return new vm.Error(lang.getLocation(), null, lang.rt.error);
 };
 
 LangPy.prototype.getLocation = function () {
@@ -222,11 +244,13 @@ LangPy.prototype.getLocation = function () {
     var lang = this;
     var ast = lang.rt.ast;
 
-    return lang.absoluteLocation(ast.container,
-                                 ast.lineno-1,
-                                 ast.col_offset,
-                                 ast.end_lineno-1,
-                                 ast.end_col_offset);
+    if (!ast) return null;
+
+    return lang.Location0(ast.container,
+                          ast.lineno-1,
+                          ast.col_offset,
+                          ast.end_lineno-1,
+                          ast.end_col_offset);
 };
 
 LangPy.prototype.stopExecution = function () {
@@ -328,7 +352,7 @@ LangPy.prototype.initRunTimeState = function (code, reboot) {
     // default 'trace' option to false
     var options = { trace: false };
 
-    console.log('LangPy.initRunTimeState reboot='+reboot);
+    //console.log('LangPy.initRunTimeState reboot='+reboot);
 
     if (!lang.rt.rte || reboot) {
         lang.rt.rte = pyinterp.fresh_rte(options);

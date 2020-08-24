@@ -85,7 +85,6 @@ CodeBoot.prototype.getVM = function (elem) {
 };
 
 CodeBoot.prototype.beforeunload = function (event) {
-    console.log('beforeunload');
     event.preventDefault();
     event.returnValue = '';
     return 'your session will be lost';
@@ -146,9 +145,12 @@ function CodeBootVM(cb, root, opts) {
 
     vm.setClass('cb-vm', true); // force class in case not yet set
 
-    vm.setAttribute('data-cb-hide-header', true);
-    vm.setAttribute('data-cb-hide-playground', true);
-    vm.setAttribute('data-cb-hide-footer', true);
+    vm.setAttribute('data-cb-show-header', false);
+    vm.setAttribute('data-cb-show-footer', false);
+    vm.setAttribute('data-cb-show-console', false);
+    vm.setAttribute('data-cb-show-repl-container', false);
+    vm.setAttribute('data-cb-show-playground', false);
+    vm.setAttribute('data-cb-show-editors', false);
 
     var id_and_level;
 
@@ -175,7 +177,7 @@ function CodeBootVM(cb, root, opts) {
 
     vm.enterMode(vm.modeStopped());
 
-    vm.replSetPrompt(true);
+    vm.replAllowInput();
     vm.replFocus();
 
     vm.setDevMode(opts.devMode !== undefined
@@ -541,12 +543,12 @@ CodeBootVM.prototype.navbarHTML = function () {
 ';
 };
 
-CodeBootVM.prototype.consoleHTML = function (display) {
+CodeBootVM.prototype.consoleHTML = function () {
 
     var vm = this;
 
     return '\
-<div class="cb-console"' + (display ? '' : ' style="display: none;"') + '>\
+<div class="cb-console">\
   <div class="cb-repl-container">\
     <textarea class="cb-repl"></textarea>\
   </div>\
@@ -606,11 +608,12 @@ CodeBootVM.prototype.initRoot = function () {
         elem.innerHTML =
             vm.execControlsHTML() +
             vm.editorsHTML(false) +
-            vm.consoleHTML(false);
+            vm.consoleHTML();
 
         vm.root.replaceWith(elem);
         vm.root = elem;
 
+        vm.setAttribute('data-cb-show-editors', true);
         vm.setAttribute('data-cb-runable-code', true);
 
     } else if (nChildren === 0) {
@@ -618,9 +621,13 @@ CodeBootVM.prototype.initRoot = function () {
         vm.root.innerHTML =
             vm.headerHTML() +
             vm.navbarHTML() +
-            vm.consoleHTML(true) +
+            vm.consoleHTML() +
             vm.editorsHTML(true) +
             vm.footerHTML();
+
+        vm.setAttribute('data-cb-show-console', true);
+        vm.setAttribute('data-cb-show-repl-container', true);
+        vm.setAttribute('data-cb-show-editors', true);
 
     } else if (nChildren === 1) {
 
@@ -633,8 +640,9 @@ CodeBootVM.prototype.initRoot = function () {
             vm.root.innerHTML =
                 vm.execControlsHTML() +
                 vm.editorsHTML(false) +
-                vm.consoleHTML(false);
+                vm.consoleHTML();
 
+            vm.setAttribute('data-cb-show-editors', true);
             vm.setAttribute('data-cb-runable-code', true);
 
         }
@@ -818,7 +826,7 @@ CodeBootVM.prototype.setupEventHandlers = function () {
     vm.forEachElem('.cb-exec-btn-step', function (elem) {
         elem.addEventListener('click', function (event) {
             vm.hideTooltip();
-            vm.eventStep();
+            vm.eventStepPause();
         });
     });
 
@@ -903,11 +911,11 @@ CodeBootVM.prototype.setAttribute = function (attr, value) {
 };
 
 CodeBootVM.prototype.stateChanged = function () {
-    console.log('stateChanged');
+//    console.log('stateChanged');
 };
 
 CodeBootVM.prototype.stateAddedHistory = function (line) {
-    console.log('stateAddedHistory |'+line+'|');
+//    console.log('stateAddedHistory |'+line+'|');
 };
 
 CodeBootVM.prototype.setDevMode = function (devMode) {
@@ -1039,19 +1047,19 @@ CodeBootVM.prototype.setLargeFont = function (large) {
 
 // Execution events
 
-CodeBootVM.prototype.ASAP = function (thunk) {
+CodeBootVM.prototype.afterDelay = function (thunk, delay) {
 
     var vm = this;
 
-    setTimeout(thunk, 0);
+    return setTimeout(thunk, Math.max(1, (delay === undefined ? 0 : delay)));
 };
 
-CodeBootVM.prototype.eventStep = function () {
+CodeBootVM.prototype.eventStepPause = function () {
 
     var vm = this;
 
-    vm.ASAP(function () {
-        vm.execStep();
+    vm.afterDelay(function () {
+        vm.execStepPause();
         vm.focusLastFocusedEditor();
     });
 };
@@ -1060,7 +1068,7 @@ CodeBootVM.prototype.eventAnimate = function () {
 
     var vm = this;
 
-    vm.ASAP(function () {
+    vm.afterDelay(function () {
         vm.execAnimate();
         vm.focusLastFocusedEditor();
     });
@@ -1070,7 +1078,7 @@ CodeBootVM.prototype.eventEval = function () {
 
     var vm = this;
 
-    vm.ASAP(function () {
+    vm.afterDelay(function () {
         vm.execEval();
         vm.focusLastFocusedEditor();
     });
@@ -1080,7 +1088,7 @@ CodeBootVM.prototype.eventStop = function () {
 
     var vm = this;
 
-    vm.ASAP(function () {
+    vm.afterDelay(function () {
         vm.execStop();
         vm.focusLastFocusedEditor();
     });

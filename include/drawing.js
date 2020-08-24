@@ -374,17 +374,16 @@ DrawingWindow.prototype.setShow = function (show) {
         parent.appendChild(drawing_window.drawing_canvas);
         parent.appendChild(drawing_window.turtle_canvas);
         parent.appendChild(drawing_window.grid_canvas);
-        update_playground_visibility();
+        update_playground_visibility(vm);
     } else {
         var parent = document.querySelector('.cb-drawing-window');
         dom_remove_children(parent);
         $('.cb-drawing-window').css('display', 'none');
-        update_playground_visibility();
+        update_playground_visibility(vm);
     }
 };
 
-function update_playground_visibility() {
-    var vm = this;
+function update_playground_visibility(vm) {
     var drawing_window_visible =
         $('.cb-drawing-window').css('display') !== 'none';
     var pixels_window_visible =
@@ -394,9 +393,9 @@ function update_playground_visibility() {
     $('a[data-cb-setting-graphics="show-pixels-window"] > span')
         .css('visibility', pixels_window_visible ? 'visible' : 'hidden');
     if (true || drawing_window_visible || pixels_window_visible || $('#b').html() !== '') {
-        document.body.setAttribute('data-cb-show-playground', '');
+        vm.setAttribute('data-cb-show-playground', true);
     } else {
-        document.body.removeAttribute('data-cb-show-playground');
+        vm.setAttribute('data-cb-show-playground', false);
     }
 }
 
@@ -674,12 +673,12 @@ PixelsWindow.prototype.setShow = function (show) {
         dom_remove_children(parent);
         parent.appendChild(pixels_window.grid_canvas);
         parent.appendChild(pixels_window.pixels_canvas);
-        update_playground_visibility();
+        update_playground_visibility(vm);
     } else {
         var parent = document.querySelector('.cb-pixels-window');
         dom_remove_children(parent);
         $('.cb-pixels-window').css('display', 'none');
-        update_playground_visibility();
+        update_playground_visibility(vm);
     }
 };
 
