@@ -93,21 +93,7 @@ CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
             'F7' : function (cm) { cm.cb.vm.eventEval(); },
             'F8' : function (cm) { cm.cb.vm.eventStop(); }
         },
-
-        onDragEvent: function(cm, event) {
-            if (event.type === 'drop') {
-                event.stopPropagation();
-                event.preventDefault();
-                var dt = event.dataTransfer;
-                var files = dt.files;
-                cm.cb.vm.editFileFromRealFS(cm, files[0]);
-                return true;
-            } else if (event.type === 'dragover') {
-                event.stopPropagation();
-                event.preventDefault();
-                event.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-            }
-        }
+        dragDrop: false,
         //,viewportMargin: Infinity
     };
 
@@ -504,6 +490,7 @@ CodeBootVM.prototype.replSetup = function () {
                 'F7' : function (cm) { cm.cb.vm.eventEval(); },
                 'F8' : function (cm) { cm.cb.vm.eventStop(); }
             },
+            dragDrop: false,
             //viewportMargin: Infinity,
             lineWrapping: true
         };
