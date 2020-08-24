@@ -2,8 +2,7 @@
 .cb-vm:not([data-cb-show-footer]) .cb-footer,
 .cb-vm:not([data-cb-show-console]) .cb-console,
 .cb-vm:not([data-cb-show-repl-container]) .cb-repl-container,
-.cb-vm:not([data-cb-show-playground]) .cb-playground,
-.cb-vm:not([data-cb-show-editors]) .cb-editors {
+.cb-vm:not([data-cb-show-playground]) .cb-playground {
     display: none;
 }
 
@@ -85,7 +84,7 @@
 
 .cb-editors {
     max-height: 100%;
-    height: calc(100% - 12.5em); /* 7.5em + 2*1em + 1em */
+    height: calc(100% - 16.5em); /* 11.5em + 2*1em + 1em */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -132,8 +131,7 @@
 }
 
 .cb-vm:not([data-cb-show-header]):not([data-cb-show-footer]) .cb-file-container .CodeMirror-scroll {
-    max-height: 200px;
-    height: auto;
+    height: 100%;
 }
 
 .cb-rename-box {
