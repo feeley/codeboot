@@ -682,7 +682,7 @@ CodeBootVM.prototype.dropFiles = function (files, i) {
         var filename = 'scratch';
         if ('name' in file) {
             filename = file.name;
-        } else {
+        } else if ('fileName' in file) {
             filename = file.fileName;
         }
 
@@ -708,12 +708,14 @@ CodeBootVM.prototype.dropFile = function (filename, content) {
         if (content !== oldContent) {
             if (confirm('You are about to replace the file "' + filename + '" with different content.  Are you sure you want to proceed with the replacement and lose your local changes to that file?')) {
                 file.setContent(content);
+                vm.fs.openFile(filename);
             }
         }
     } else {
         file = new CodeBootFile(vm.fs, filename, content);
         vm.fs.addFile(file);
         vm.fs.rebuildFileMenu();
+        vm.fs.openFile(filename);
     }
 };
 
