@@ -571,13 +571,13 @@ body {
 /*-------------------------- Font size ------------------------------*/
 
 .cb-code-font {
-    font-family: "Lucida Console";
+    font-family: "Lucida Console", Monaco, monospace;
 }
 
 .cb-vm .CodeMirror {
-    font-family: "Lucida Console";
+    font-family: "Lucida Console", Monaco, monospace;
     font-size: 100%;
-    line-height: 1;
+    line-height: 1.3;
 }
 
 .cb-vm[data-cb-large-font] .cb-console,
