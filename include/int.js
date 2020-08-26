@@ -119,12 +119,12 @@ function int_from_unnormalized_digs(digs) {
     return int_from_digs(digs);
 }
 
-function int_from_float(n) {
+function int_from_num(n) {
 
     // Constructs a normalized Int from a floating point integer value.
 
     if (!Number.isInteger(n))
-        throw "int_from_float's parameter must be an integer value";
+        throw "int_from_num's parameter must be an integer value";
 
     var digs = [];  // Array accumulating digits with digs.push(digit)
     var i = 0;
@@ -150,7 +150,7 @@ function int_from_float(n) {
     return int_from_digs(digs);
 }
 
-function int_to_float(int_a, exact) {
+function int_to_num(int_a, exact) {
 
     // Converts an Int to a floating point integer value.  If the
     // number cannot be represented exactly (loss of significant
@@ -700,7 +700,7 @@ function int_shift(int_a, int_b) {
     var digs_a = int_to_digs(int_a);
     var len_a = digs_a.length;
 
-    var shift = Math.max(int_to_float(int_b), -(len_a*int_radix_log2));
+    var shift = Math.max(int_to_num(int_b), -(len_a*int_radix_log2));
     var bit_shift;
 
     if (shift < 0)
@@ -849,7 +849,7 @@ function int_from_substring(str, start, end, radix) {
     var levels = 32 - Math.clz32(len-1);
     var scale = int_dig_array(levels);
 
-    var pow = int_from_float(radix);
+    var pow = int_from_num(radix);
     var i = 0;
     while (i < levels) {
         scale[i++] = pow;
@@ -858,7 +858,7 @@ function int_from_substring(str, start, end, radix) {
 
     function value(start, end, i) {
         if (start >= end) {
-            return int_from_float(0);
+            return int_from_num(0);
         } else if (start+1 === end) {
             var c = str.charCodeAt(start);
             var d = 99;
@@ -870,7 +870,7 @@ function int_from_substring(str, start, end, radix) {
                 d = c - 55;
             if (d >= radix)
                 return false;
-            return int_from_float(d);
+            return int_from_num(d);
         } else {
             var split = end - (1<<i);
             var val1 = value(Math.max(split,start), end, i-1);
@@ -893,8 +893,8 @@ function int_from_substring(str, start, end, radix) {
 if (globalThis.BigInt) {
 
     int_instance = function (val) { return val.constructor === BigInt; };
-    int_from_float = function (n) { return BigInt(n); }; // n must be int. value
-    int_to_float = function (int_a, exact) {
+    int_from_num = function (n) { return BigInt(n); }; // n must be int. value
+    int_to_num = function (int_a, exact) {
         var val = Number(int_a);
         if (exact && int_a != val) val = false;
         return val;
