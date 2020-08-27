@@ -198,9 +198,10 @@ LangPy.prototype.continueExecution = function (maxSteps) {
                 lang.rt.cont = null;
                 break;
             }
-            lang.rt.stepCount++;
+            lang.rt.stepCount += state.nb_steps;
             lang.rt.ast = state.ast;
             lang.rt.msg = state.msg;
+            lang.rt.nb_steps = state.nb_steps;
             lang.rt.display_result = state.display_result;
             lang.rt.error = state.error;
             lang.rt.cont = state.cont;
