@@ -978,7 +978,7 @@ CodeBootExecPointBubble.prototype.attachTo = function (elem, html) {
             bubble.destroy();
 
         var tip = tippy(elem, {
-            appendTo: bubble.vm.root,
+            appendTo: elem.closest('.CodeMirror-scroll'),
             allowHTML: true,
             placement: 'bottom-end',
             maxWidth: 9999,
@@ -1183,8 +1183,7 @@ CodeBootVM.prototype.executionEndedWithResult = function (result) {
     vm.lastResultRepresentation = vm.lang.printedRepresentation(result);
 
     if (result !== void 0) {
-        vm.replAddTranscript(vm.lastResultRepresentation + '\n',
-                             'cb-repl-result');
+        vm.replAddTranscript(vm.lastResultRepresentation, 'cb-repl-result');
     }
 
     vm.executionHook();

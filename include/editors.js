@@ -97,6 +97,8 @@ CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
         //,viewportMargin: Infinity
     };
 
+    vm.adjustEditorOptions(options);
+
     var editor = CodeMirror.fromTextArea(node, options);
 
     vm.lang.setupEditor(editor);
@@ -404,6 +406,16 @@ CodeBootTranscript.prototype.addLine = function (text, cssClass) {
 };
 */
 
+CodeBootVM.prototype.adjustEditorOptions = function (options) {
+
+    var vm = this;
+
+    if (!vm.editable) {
+        options.inputStyle = 'contenteditable';
+        options.readOnly = 'nocursor';
+    }
+};
+
 CodeBootVM.prototype.replSetup = function () {
 
     var vm = this;
@@ -494,7 +506,9 @@ CodeBootVM.prototype.replSetup = function () {
             //viewportMargin: Infinity,
             lineWrapping: true
         };
-            
+
+        vm.adjustEditorOptions(options);
+
         var editor = CodeMirror.fromTextArea(node, options);
 
         vm.repl = editor;
@@ -891,6 +905,7 @@ CodeBootVM.prototype.replAddTranscript = function (text, cssClass) {
     vm.setAttribute('data-cb-show-repl-container', true);
 
     if (text.length > 0) {
+        text = text.split('\r').join(''); // remove carriage-return
         if (text.indexOf('\n') === text.length-1) {
             /* optimize for single newline at end */
             vm.replAddSingleLineTranscript(text, cssClass);

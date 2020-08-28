@@ -114,13 +114,16 @@ function DrawingWindow(vm, width, height) {
     var dw = this;
 
     dw.vm = vm;
+
     dw.turtle_canvas = dom_create_canvas_cartesian('cb-turtle', width, height);
     dw.turtle_context = dom_canvas_context(dw.turtle_canvas);
     dw.turtle_canvas.style.position = 'absolute';
+
     dw.drawing_canvas = dom_create_canvas_cartesian('cb-drawing', width, height);
     dw.drawing_canvas.style.position = 'absolute';
     dw.drawing_canvas.style.boxShadow = '0 0 10px #999';
     dw.drawing_context = dom_canvas_context(dw.drawing_canvas);
+
     dw.grid_canvas = dom_create_canvas_cartesian('cb-grid', width, height);
     dw.grid_context = dom_canvas_context(dw.grid_canvas);
 
@@ -131,18 +134,22 @@ function DrawingWindow(vm, width, height) {
     var grid_step = 10;
 
     for (var x=0; x<=w2; x+=grid_step) {
-        dom_set_thickness(dw.grid_context, (x%(5*grid_step)===0)?2:1);
+        var i = (x/grid_step)%10;
+        dom_set_thickness(dw.grid_context, (i===0 ? 1.5 : i===5 ? 1 : 0.5));
         dom_line_to(dw.grid_context, x, -h2, x, h2);
-        dom_line_to(dw.grid_context, -x, -h2, -x, h2);
+        if (x>0)
+            dom_line_to(dw.grid_context, -x, -h2, -x, h2);
     }
 
     for (var y=0; y<=h2; y+=grid_step) {
-        dom_set_thickness(dw.grid_context, (y%(5*grid_step)===0)?2:1);
+        var i = (y/grid_step)%10;
+        dom_set_thickness(dw.grid_context, (i===0 ? 1.5 : i===5 ? 1 : 0.5));
         dom_line_to(dw.grid_context, -w2, y, w2, y);
-        dom_line_to(dw.grid_context, -w2, -y, w2, -y);
+        if (y>0)
+            dom_line_to(dw.grid_context, -w2, -y, w2, -y);
     }
 
-    dw.cs();
+    dw.init();
 
     drawing_window = dw;//TODO: remove
 }
@@ -189,7 +196,7 @@ DrawingWindow.prototype.excursion = function (thunk) {
     return result;
 };
 
-DrawingWindow.prototype.cs = function () {
+DrawingWindow.prototype.init = function () {
     var dw = this;
     dom_clear(dw.drawing_canvas);
     dw.turtle_height = 0;
@@ -199,6 +206,11 @@ DrawingWindow.prototype.cs = function () {
     dw.draw_turtle();
     dw.set_color('#000');
     dw.set_thickness(1);
+};
+
+DrawingWindow.prototype.cs = function () {
+    var dw = this;
+    dw.init();
 };
 
 DrawingWindow.prototype.fd = function (xdistance, ydistance) {
@@ -369,14 +381,14 @@ DrawingWindow.prototype.setShow = function (show) {
     if (show) {
         $('.cb-pixels-window').css('display', 'none');
         $('.cb-drawing-window').css('display', 'inline');
-        var parent = document.querySelector('.cb-drawing-window');
+        var parent = vm.root.querySelector('.cb-drawing-window');
         dom_remove_children(parent);
         parent.appendChild(drawing_window.drawing_canvas);
         parent.appendChild(drawing_window.turtle_canvas);
         parent.appendChild(drawing_window.grid_canvas);
         update_playground_visibility(vm);
     } else {
-        var parent = document.querySelector('.cb-drawing-window');
+        var parent = vm.root.querySelector('.cb-drawing-window');
         dom_remove_children(parent);
         $('.cb-drawing-window').css('display', 'none');
         update_playground_visibility(vm);
