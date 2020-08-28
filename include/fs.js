@@ -54,6 +54,7 @@ NEW_FILE_DEFAULT_CONTENT = '';
 function CodeBootFile(fs, filename, content, opts) {
 
     var file = this;
+    var vm = fs.vm;
 
     file.fs = fs;
     file.filename = filename;

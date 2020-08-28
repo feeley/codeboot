@@ -12,9 +12,6 @@ function CodeBoot() {
         return cb.beforeunload(event);
     });
 */
-    cb.vms = {};
-    cb.vmCount = 0;
-
     cb.setupAllVM(document);
 
     $(function () {
@@ -74,12 +71,15 @@ CodeBoot.prototype.setupVM = function (root) {
     return new CodeBootVM(cb, root, {});
 };
 
-CodeBoot.prototype.getVM = function (elem) {
+CodeBoot.prototype.vms = {};
+CodeBoot.prototype.vmCount = 0;
+
+function getCodeBootVM(elem) {
 
     var vm = undefined;
     var root = elem.closest('.cb-vm'); // find enclosing cb-vm element
 
-    if (root) vm = this.vms['#' + root.getAttribute('id')];
+    if (root) vm = CodeBoot.prototype.vms['#' + root.getAttribute('id')];
 
     return vm;
 };
@@ -109,7 +109,7 @@ function CodeBootVM(cb, root, opts) {
 
     id = '#' + id;
 
-    cb.vms[id] = vm;
+    CodeBoot.prototype.vms[id] = vm;
 
     vm.id    = id;    // id of this VM, typically '#cb-vm-N'
     vm.cb    = cb;    // CodeBoot container
@@ -118,6 +118,8 @@ function CodeBootVM(cb, root, opts) {
     vm.langs = {};    // language instances in use
     vm.lang  = null;  // reference to instance of Lang
     vm.level = null;  // the selected level of the language
+
+    vm.editable = true;
 
     new CodeBootFileSystem(vm); // initializes vm.fs
 
@@ -399,7 +401,7 @@ CodeBootVM.prototype.menuSettingsHTML = function () {
     return '\
 <span class="dropdown cb-menu-settings">\
 \
-  <button class="btn btn-secondary cb-button cb-menu-settings-btn" type="button" data-toggle="dropdown">' + vm.SVG['checkmark'] + '</button>\
+  <button class="btn btn-secondary cb-button cb-menu-settings-btn" type="button" data-toggle="dropdown">' + vm.SVG['gears'] + '</button>\
   <div class="dropdown-menu">\
 \
     <h5 class="dropdown-header">Animation speed</h5>\
@@ -588,13 +590,11 @@ CodeBootVM.prototype.initRoot = function () {
     var content = null;
 
     function initLast() {
-        if (content !== null) {
 
-            var file = vm.fs.newFile(undefined, content);
+        vm.setAttribute('data-cb-editable', vm.editable);
 
-            file.setReadOnly(true);
-
-            vm.setClass('cb-read-only', true);
+        if (!vm.editable) {
+            vm.fs.newFile(undefined, content);
         }
     }
 
@@ -647,6 +647,8 @@ CodeBootVM.prototype.initRoot = function () {
 
         }
     }
+
+    vm.editable = (content === null);
 
     return initLast;
 };
@@ -772,9 +774,11 @@ CodeBootVM.prototype.setupEventHandlers = function () {
 
     var vm = this;
 
-    vm.setupDrop(document.body, function (event) {
-        vm.menuFileDrop(event);
-    });
+    if (vm.editable) {
+        vm.setupDrop(document.body, function (event) {
+            vm.menuFileDrop(event);
+        });
+    }
 
 /*
     $('body').bind('dragover', function (event) {

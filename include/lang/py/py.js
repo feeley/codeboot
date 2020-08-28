@@ -115,11 +115,11 @@ LangPy.prototype.compile = function (source, container, reboot) {
                          end_column0,
                          msg) {
 
-        // detect continuable REPL input
-
-        if (start_column0 <= 0 && end_column0 === start_column0 &&
-            start_line0 === end_line0 && from_repl) {
-            throw 'continuable REPL input';
+        if (from_repl) {
+            var nlines = source.split('\n').length-1;
+            if (end_column0 <= 0 && end_line0 >= nlines) {
+                throw 'continuable REPL input';
+            }
         }
 
         var loc = lang.Location0(container,
