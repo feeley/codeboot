@@ -631,11 +631,13 @@ body {
 
 .tippy-box[data-theme="cb-exec-point-bubble"] .cb-exec-point-bubble-binding {
     display: flex;
+    font-family: "Lucida Console", Monaco, monospace;
 }
 
 .tippy-box[data-theme="cb-exec-point-bubble"] .cb-exec-point-bubble-binding .cb-code-font {
     font-weight: bold;
-    font-size: 111%;
+    font-size: 110%;
+    line-height: calc(100 * 1.4 / 110);
 }
 
 /*-------------------------------------------------------------------*/
