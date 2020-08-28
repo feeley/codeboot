@@ -967,6 +967,7 @@ CodeBootVM.prototype.execPointCodeElement = function () {
 CodeBootExecPointBubble.prototype.attachTo = function (elem, html) {
 
     var bubble = this;
+    var vm = bubble.vm;
 
     if (elem === null) return;
 
@@ -978,7 +979,7 @@ CodeBootExecPointBubble.prototype.attachTo = function (elem, html) {
             bubble.destroy();
 
         var tip = tippy(elem, {
-            appendTo: elem.closest('.CodeMirror-scroll'),
+            appendTo: vm.root, //elem.closest('.CodeMirror-scroll'),
             allowHTML: true,
             placement: 'bottom-end',
             maxWidth: 9999,
