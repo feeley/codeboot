@@ -237,6 +237,15 @@ function int_is_nonneg(int_a) {
     return digs[digs.length-1] < int_radix_div2;
 }
 
+function int_is_even(int_a) {
+
+    // Tests if a normalized Int is even.
+
+    var digs = int_to_digs(int_a);
+
+    return (digs[0] & 1) === 0;
+}
+
 function int_cmp(int_a, int_b) {
 
     // Compares two normalized Ints.  Returns -1, 0, or 1 if
@@ -473,49 +482,6 @@ function int_mul(int_a, int_b) {
         return val;
 }
 
-function int_div(int_a, int_b) {
-
-    // Division of two normalized Ints.
-
-    var dm = int_divmod_nonneg(int_abs(int_a), int_abs(int_b));
-
-    if (int_is_nonneg(int_a) === int_is_nonneg(int_b))
-        return dm[0];
-    else
-        return int_neg(dm[0]);
-}
-
-function int_mod(int_a, int_b) {
-
-    // Modulo of two normalized Ints.
-
-    var dm = int_divmod_nonneg(int_abs(int_a), int_abs(int_b));
-
-    if (int_is_nonneg(int_a))
-        return dm[1];
-    else
-        return int_neg(dm[1]);
-}
-
-function int_divmod(int_a, int_b) {
-
-    // Division and modulo of two normalized Ints.
-
-    var dm = int_divmod_nonneg(int_abs(int_a), int_abs(int_b));
-
-    if (int_is_nonneg(int_a)) {
-        if (int_is_nonneg(int_b))
-            return dm;
-        else
-            return [int_neg(dm[0]), dm[1]];
-    } else {
-        if (int_is_nonneg(int_b))
-            return [int_neg(dm[0]), int_neg(dm[1])];
-        else
-            return [dm[0], int_neg(dm[1])];
-    }
-}
-
 function int_divmod_nonneg(int_a, int_b) {
 
     // Computes division and modulo of two nonnegative normalized
@@ -548,6 +514,156 @@ function int_divmod_nonneg(int_a, int_b) {
         // multi digit divisor case
 
         throw "multi-digit divisors not yet supported";
+    }
+}
+
+function int_div_floor(int_a, int_b) {
+
+    var divmod = int_divmod_trunc(int_a, int_b);
+    var div = divmod[0];
+    var mod = divmod[1];
+
+    if (int_is_zero(mod) || (int_is_neg(int_a) === int_is_neg(int_b))) {
+        return div;
+    } else {
+        return int_sub(div, int_from_num(1));
+    }
+}
+
+function int_mod_floor(int_a, int_b) {
+
+    var mod = int_mod_trunc(int_a, int_b);
+
+    if (int_is_zero(mod) || (int_is_neg(int_a) === int_is_neg(int_b))) {
+        return mod;
+    } else {
+        return int_add(mod, int_b);
+    }
+}
+
+function int_divmod_floor(int_a, int_b) {
+
+    var divmod = int_divmod_trunc(int_a, int_b);
+    var div = divmod[0];
+    var mod = divmod[1];
+
+    if (int_is_zero(mod) || (int_is_neg(int_a) === int_is_neg(int_b))) {
+        return [div, mod];
+    } else {
+        return [int_sub(div, int_from_num(1)), int_add(mod, int_b)];
+    }
+}
+
+function int_div_trunc(int_a, int_b) {
+
+    // Division of two normalized Ints.
+
+    var dm = int_divmod_nonneg(int_abs(int_a), int_abs(int_b));
+
+    if (int_is_nonneg(int_a) === int_is_nonneg(int_b))
+        return dm[0];
+    else
+        return int_neg(dm[0]);
+}
+
+function int_mod_trunc(int_a, int_b) {
+
+    // Modulo of two normalized Ints.
+
+    var dm = int_divmod_nonneg(int_abs(int_a), int_abs(int_b));
+
+    if (int_is_nonneg(int_a))
+        return dm[1];
+    else
+        return int_neg(dm[1]);
+}
+
+function int_divmod_trunc(int_a, int_b) {
+
+    // Division and modulo of two normalized Ints.
+
+    var dm = int_divmod_nonneg(int_abs(int_a), int_abs(int_b));
+
+    if (int_is_nonneg(int_a)) {
+        if (int_is_nonneg(int_b))
+            return dm;
+        else
+            return [int_neg(dm[0]), dm[1]];
+    } else {
+        if (int_is_nonneg(int_b))
+            return [int_neg(dm[0]), int_neg(dm[1])];
+        else
+            return [dm[0], int_neg(dm[1])];
+    }
+}
+
+function int_pow(int_a, int_b) {
+
+    function pow(int_a, int_b) {
+        if (int_is_zero(int_b)) {
+            return int_from_num(1);
+        } else {
+            var sq = int_mul(int_a, int_a);
+            var temp = pow(sq, int_shift(int_b, int_from_num(-1)));
+            if (int_is_even(int_b)) {
+                return temp;
+            } else {
+                return int_mul(int_a, temp);
+            }
+        }
+    }
+
+    return pow(int_a, int_b);
+}
+
+function int_round(int_a, int_b) {
+
+    const pow_limit = int_mul(int_from_num(10), int_abs(int_a));
+
+    // A version of pow which abort if the power is unnecessarily big
+    function round_pow(int_x, int_n) {
+        if (int_gt(int_x, pow_limit) && !int_is_zero(int_n)) {
+            return false;
+        }
+        else if (int_is_zero(int_n)) {
+            return int_from_num(1);
+        } else {
+            var sq = int_mul(int_x, int_x);
+            var temp = round_pow(sq, int_shift(int_n, int_from_num(-1)));
+            if (temp === false){
+                return false;
+            } else if (int_is_even(int_n)) {
+                return temp;
+            } else {
+                return int_mul(int_x, temp);
+            }
+        }
+    }
+
+    if (int_is_nonneg(int_b)) {
+        return int_a;
+    } else {
+        const low_digits_range = round_pow(int_from_num(10), int_neg(int_b));
+
+        // abs(int_b) is so big that we don't need 10**abs(int_b) to know the result is 0
+        if (low_digits_range === false) {
+            return int_from_num(0);
+        } else {
+            const low_digits = int_mod_trunc(int_a, low_digits_range);
+            const tmp_cmp = int_mul(low_digits, int_from_num(2));
+            const int_a_rounded_down = int_sub(int_a, low_digits);
+            if (int_gt(tmp_cmp, low_digits_range)) { // round up
+                return int_add(int_a_rounded_down, low_digits_range);
+            } else if (int_eq(tmp_cmp, low_digits_range)) { // round toward even
+                if (int_is_even(int_div_floor(int_a_rounded_down, low_digits_range))) {
+                    return int_a_rounded_down;
+                } else {
+                    return int_add(int_a_rounded_down, low_digits_range);
+                }
+            } else { // round down
+                return int_a_rounded_down;
+            }
+        }
     }
 }
 
@@ -890,7 +1006,7 @@ function int_from_substring(str, start, end, radix) {
 
 // use BigInt if available
 
-if (globalThis.BigInt) {
+if (globalThis.BigInt && !globalThis.disableBigInt) {
 
     int_instance = function (val) { return val.constructor === BigInt; };
     int_from_num = function (n) { return BigInt(n); }; // n must be int. value
@@ -914,9 +1030,44 @@ if (globalThis.BigInt) {
     int_add = function (int_a, int_b) { return int_a+int_b; };
     int_sub = function (int_a, int_b) { return int_a-int_b; };
     int_mul = function (int_a, int_b) { return int_a*int_b; };
-    int_div = function (int_a, int_b) { return int_a/int_b; }; // integer div
-    int_mod = function (int_a, int_b) { return int_a%int_b; };
-    int_divmod = function (int_a, int_b) { return [int_a/int_b, int_a%int_b]; };
+    int_is_even = function (int_a) { return (int_a % 2n) == 0; };
+
+    int_div_floor = function (int_a, int_b) {
+        return int_divmod_floor(int_a, int_b)[0];
+    };
+
+    int_mod_floor = function (int_a, int_b) {
+        return int_divmod_floor(int_a, int_b)[1];
+    };
+
+    int_divmod_floor = function (int_a, int_b) {
+
+        var div = int_a / int_b;
+        var mod = int_a % int_b;
+
+        if (mod == 0 || (int_a<0 === int_b<0)) {
+            return [div, mod];
+        } else {
+            return [div-1n, mod+int_b];
+        }
+    };
+
+    int_div_trunc = function (int_a, int_b) {
+        return int_a/int_b; // integer div
+    };
+
+    int_mod_trunc = function (int_a, int_b) {
+        return int_a%int_b;
+    };
+
+    int_divmod_trunc = function (int_a, int_b) {
+        return [int_a/int_b, int_a%int_b];
+    };
+
+    int_pow = function (int_a, int_b) {
+        return int_a ** int_b;
+    };
+
     int_not = function (int_a) { return ~int_a; };
     int_and = function (int_a, int_b) { return int_a&int_b; };
     int_or = function (int_a, int_b)  { return int_a|int_b; };
