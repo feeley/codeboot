@@ -363,10 +363,29 @@ LangPy.prototype.initRunTimeState = function (code, reboot) {
     return pyinterp.prepare_execution(code, lang.rt.rte);
 };
 
-function print_stdout(msg, rte) {
+function runtime_print(msg, rte) {
     rte.vm.replAddTranscript(msg, 'cb-repl-output');
 };
 
-function input_stdin(msg) {
-    return prompt(msg);
+function runtime_alert(msg) {
+  alert(msg);
 };
+
+function runtime_confirm(msg) {
+  return confirm(msg);
+};
+
+function runtime_input(msg) {
+    result = prompt(msg);
+    if (result === null) {
+        return void 0;
+    } else {
+        return result;
+    }
+};
+
+function runtime_prompt(msg) {
+  return runtime_input(msg);
+}
+
+// runtime_random is define in pyinterp runtime.
