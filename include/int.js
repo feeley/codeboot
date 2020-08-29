@@ -655,7 +655,7 @@ function int_round(int_a, int_b) {
             if (int_gt(tmp_cmp, low_digits_range)) { // round up
                 return int_add(int_a_rounded_down, low_digits_range);
             } else if (int_eq(tmp_cmp, low_digits_range)) { // round toward even
-                if (int_is_even(int_a_rounded_down)) {
+                if (int_is_even(int_div_floor(int_a_rounded_down, low_digits_range))) {
                     return int_a_rounded_down;
                 } else {
                     return int_add(int_a_rounded_down, low_digits_range);
