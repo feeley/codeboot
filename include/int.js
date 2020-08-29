@@ -618,11 +618,11 @@ function int_pow(int_a, int_b) {
 
 function int_round(int_a, int_b) {
 
-    const pow_limit = int_mul(int_from_num(100), int_abs(int_a));
+    const pow_limit = int_mul(int_from_num(10), int_abs(int_a));
 
     // A version of pow which abort if the power is unnecessarily big
     function round_pow(int_x, int_n) {
-        if (int_gt(int_x, pow_limit)) {
+        if (int_gt(int_x, pow_limit) && !int_is_zero(int_n)) {
             return false;
         }
         else if (int_is_zero(int_n)) {
