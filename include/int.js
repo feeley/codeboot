@@ -616,56 +616,6 @@ function int_pow(int_a, int_b) {
     return pow(int_a, int_b);
 }
 
-function int_round(int_a, int_b) {
-
-    const pow_limit = int_mul(int_from_num(10), int_abs(int_a));
-
-    // A version of pow which abort if the power is unnecessarily big
-    function round_pow(int_x, int_n) {
-        if (int_gt(int_x, pow_limit) && !int_is_zero(int_n)) {
-            return false;
-        }
-        else if (int_is_zero(int_n)) {
-            return int_from_num(1);
-        } else {
-            var sq = int_mul(int_x, int_x);
-            var temp = round_pow(sq, int_shift(int_n, int_from_num(-1)));
-            if (temp === false){
-                return false;
-            } else if (int_is_even(int_n)) {
-                return temp;
-            } else {
-                return int_mul(int_x, temp);
-            }
-        }
-    }
-
-    if (int_is_nonneg(int_b)) {
-        return int_a;
-    } else {
-        const low_digits_range = round_pow(int_from_num(10), int_neg(int_b));
-
-        // abs(int_b) is so big that we don't need 10**abs(int_b) to know the result is 0
-        if (low_digits_range === false) {
-            return int_from_num(0);
-        } else {
-            const low_digits = int_mod_trunc(int_a, low_digits_range);
-            const tmp_cmp = int_mul(low_digits, int_from_num(2));
-            const int_a_rounded_down = int_sub(int_a, low_digits);
-            if (int_gt(tmp_cmp, low_digits_range)) { // round up
-                return int_add(int_a_rounded_down, low_digits_range);
-            } else if (int_eq(tmp_cmp, low_digits_range)) { // round toward even
-                if (int_is_even(int_div_floor(int_a_rounded_down, low_digits_range))) {
-                    return int_a_rounded_down;
-                } else {
-                    return int_add(int_a_rounded_down, low_digits_range);
-                }
-            } else { // round down
-                return int_a_rounded_down;
-            }
-        }
-    }
-}
 
 function int_not(int_a) {
 
