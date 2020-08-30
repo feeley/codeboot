@@ -107,6 +107,22 @@ function float_round(float_a) {
     return Math.round(float_a);
 }
 
+function float_round_to_digits(float_a, ndigits) {
+    try {
+        return parseFloat(float_a.toFixed(ndigits));
+    } catch (e) {
+        if (float_is_nonneg(ndigits) && (e instanceof RangeError)) {
+            if (float_is_nonneg(float_a)) {
+                return float_from_float(0.0);
+            } else {
+                return float_from_float(-0.0);
+            }
+        } else {
+            throw e;
+        }
+    }
+}
+
 function float_trunc(float_a) {
     return Math.trunc(float_a);
 }
