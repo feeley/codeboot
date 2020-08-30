@@ -15,7 +15,7 @@ function float_instance(val) {
     return typeof val === 'number';
 }
 
-function float_from_float(n) {
+function float_from_num(n) {
     return n;
 }
 
