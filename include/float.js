@@ -123,6 +123,10 @@ function float_round_to_digits(float_a, ndigits) {
     }
 }
 
+function float_mod_floor(float_a, float_b){
+    return float_a - float_floor(float_a / float_b) * float_b
+}
+
 function float_trunc(float_a) {
     return Math.trunc(float_a);
 }
