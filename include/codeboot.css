@@ -91,6 +91,10 @@
     margin: 1em 0.5em 0.5em 0.5em;
 }
 
+.cb-vm:not([data-cb-show-header]).cb-editors {
+    height: calc(100% - 16.5em - 250px);
+}
+
 .cb-file-tabs {
     height: 2.2em;
     overflow: hidden;
@@ -274,7 +278,7 @@ body {
 }
 
 .cb-menu-settings > .cb-button > svg {
-    width: 0.75em;
+    width: 1.2em;
 }
 
 .cb-svg-trash,
@@ -943,6 +947,11 @@ div.tab-pane {
 [data-cb-lang=js-standard] ~ #cb-help-box span.js-standard,
 [data-cb-lang=py-novice] ~ #cb-help-box span.py-novice {
     display: inline;
+}
+
+table.cb-keybindings td:nth-child(1)
+{
+    text-align: right;
 }
 
 #grammarTab {

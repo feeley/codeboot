@@ -19,7 +19,7 @@ function float_from_num(n) {
     return n;
 }
 
-function float_to_float(float_a) {
+function float_to_num(float_a) {
     return float_a;
 }
 

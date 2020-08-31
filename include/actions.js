@@ -562,6 +562,8 @@ CodeBootVM.prototype.exec_start = function (delay) {
     var after_successful_compile;
     var source;
 
+    if (vm.lastFocusedEditor === null) return;
+
     if (vm.lastFocusedEditor === vm.repl) {
 
         /* running REPL input */

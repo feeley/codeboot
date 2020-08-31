@@ -62,7 +62,8 @@ LangPy.prototype.init = function () {
 };
 
 LangPy.prototype.loadCommand = function (filename) {
-    return 'import ' + filename.replace(/\.[^/.]+$/, '');
+    return 'load("' + filename + '")';
+//    return 'import ' + filename.replace(/\.[^/.]+$/, '');
 };
 
 LangPy.prototype.RunTime = function () {

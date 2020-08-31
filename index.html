@@ -66,30 +66,101 @@
             <a class="nav-link active" id="keybindings-tab" data-toggle="tab" href="#keybindings" role="tab" aria-controls="keybindings" aria-selected="true">Key bindings</a>
           </li>
           <li class="nav-item">
+            <a class="nav-link" id="files-tab" data-toggle="tab" href="#files" role="tab" aria-controls="files" aria-selected="false">Files</a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link" id="grammar-tab" data-toggle="tab" href="#grammar" role="tab" aria-controls="grammar" aria-selected="false">Grammar</a>
           </li>
         </ul>
-        
+
         <div class="tab-content" id="helpTabContent">
           <div class="tab-pane fade show active" id="keybindings" role="tabpanel" aria-labelledby="keybindings-tab">
             <h5>Console</h5>
             <p>Enter a command at the console and then:</p>
-            <p> <kbd>Enter</kbd> : execute it fully and display result<p>
-            <p> <kbd>Shift</kbd> + <kbd>Enter</kbd> : execute the first step (continue with <kbd>Shift</kbd> + <kbd>Enter</kbd> or <kbd>Enter</kbd>)</p>
-            <p> <kbd>Esc</kbd> : stop the execution</p>
-
+            <table class="cb-keybindings">
+              <tr>
+                <td><kbd>Enter</kbd></td>
+                <td>: execute it fully and display result (unless command is incomplete)</td>
+              </tr>
+              <tr>
+                <td><kbd>Shift</kbd> <kbd>Enter</kbd></td>
+                <td>: execute the first step (continue with <kbd>Shift</kbd> <kbd>Enter</kbd> or <kbd>Enter</kbd>)</td>
+              </tr>
+              <tr>
+                <td><kbd>↑</kbd>&nbsp;/&nbsp;<kbd>Ctrl</kbd> <kbd>P</kbd></td>
+                <td>: move back in command history or cursor up</td>
+              </tr>
+              <tr>
+                <td><kbd>↓</kbd>&nbsp;/&nbsp;<kbd>Ctrl</kbd> <kbd>N</kbd></td>
+                <td>: move forward in command history or cursor down</td>
+              </tr>
+            </table>
+            <br/>
             <h5>Editor</h5>
-            <p> <kbd>↑</kbd> / <kbd>Ctrl</kbd> + <kbd>P</kbd> : move cursor up</p>
-            <p> <kbd>↓</kbd> / <kbd>Ctrl</kbd> + <kbd>N</kbd> : move cursor down</p>
-            <p> <kbd>←</kbd> / <kbd>Ctrl</kbd> + <kbd>B</kbd> : move cursor left</p>
-            <p> <kbd>→</kbd> / <kbd>Ctrl</kbd> + <kbd>F</kbd> : move cursor right</p>
-            <p> <kbd>Enter</kbd> : insert line break, move to next line and smart indent</p>
-            <p> <kbd>Ctrl</kbd> + <kbd>J</kbd> : insert line break and move to next line</p>
-            <p> <kbd>Ctrl</kbd> + <kbd>O</kbd> : insert line break</p>
-            <p> <kbd>Shift</kbd> + <kbd>Enter</kbd> : execute the first step of current file (continue with <kbd>Shift</kbd> + <kbd>Enter</kbd> or <kbd>Enter</kbd>)</p>
+            <table class="cb-keybindings">
+              <tr>
+                <td><kbd>Enter</kbd></td>
+                <td>: insert line break, move to next line and smart indent</td>
+              </tr>
+              <tr>
+                <td><kbd>Shift</kbd> <kbd>Enter</kbd></td>
+                <td>: execute the first step of current file (continue with <kbd>Shift</kbd> <kbd>Enter</kbd> or <kbd>Enter</kbd>)</td>
+              </tr>
+              <tr>
+                <td><kbd>↑</kbd>&nbsp;/&nbsp;<kbd>Ctrl</kbd> <kbd>P</kbd></td>
+                <td>: move cursor up</td>
+              </tr>
+              <tr>
+                <td><kbd>↓</kbd>&nbsp;/&nbsp;<kbd>Ctrl</kbd> <kbd>N</kbd></td>
+                <td>: move cursor down</td>
+              </tr>
+            </table>
+            <br/>
+            <h5>Console and Editor</h5>
+            <table class="cb-keybindings">
+              <tr>
+                <td><kbd>Esc</kbd></td>
+                <td>: stop the execution</td>
+              </tr>
+              <tr>
+                <td><kbd>Ctrl</kbd> <kbd>L</kbd></td>
+                <td>: clear the console</td>
+              </tr>
+              <tr>
+                <td><kbd>←</kbd>&nbsp;/&nbsp;<kbd>Ctrl</kbd> <kbd>B</kbd></td>
+                <td>: move cursor left</td>
+              </tr>
+              <tr>
+                <td><kbd>→</kbd>&nbsp;/&nbsp;<kbd>Ctrl</kbd> <kbd>F</kbd></td>
+                <td>: move cursor right</td>
+              </tr>
+              <tr>
+                <td><kbd>Alt</kbd> <kbd>←</kbd>&nbsp;/&nbsp;<kbd>Ctrl</kbd> <kbd>A</kbd></td>
+                <td>: move cursor to beginning of line</td>
+              </tr>
+              <tr>
+                <td><kbd>Alt</kbd> <kbd>→</kbd>&nbsp;/&nbsp;<kbd>Ctrl</kbd> <kbd>E</kbd></td>
+                <td>: move cursor to end of line</td>
+              </tr>
+              <tr>
+                <td><kbd>Ctrl</kbd> <kbd>J</kbd></td>
+                <td>: insert line break and move to next line</td>
+              </tr>
+              <tr>
+                <td><kbd>Ctrl</kbd> <kbd>O</kbd></td>
+                <td>: insert line break</td>
+              </tr>
+            </table>
           </div>
 
-          <div class="tab-pane fade" id="grammar" role="tabpanel" ara-labelledby="grammar-tab">
+          <div class="tab-pane fade" id="files" role="tabpanel" aria-labelledby="grammar-tab">
+            <p>Importing a file from the desktop is done using drag-and-drop.</p>
+            <p>Saving a file to the desktop is done using the download icon next
+              to its name in the Files menu.</p>
+            <p>Renaming a file is done by double clicking its editor tab.<p>
+          </div>
+
+          <div class="tab-pane fade" id="grammar" role="tabpanel" aria-labelledby="grammar-tab">
             <div class="js-novice js-standard">
               <h5>Grammar for "JavaScript <span class="js-novice">novice</span><span class="js-standard">standard</span>"</h5>
               <p class="js-novice">All statements must be terminated with a semicolon.</p>
@@ -113,7 +184,7 @@
       elem.onclick = function () {
         if (isInTab) {
           var tabTemp = defTemp.parentNode;
-        
+
           if (parentTab !== tabTemp) {
             var btnTab = document.getElementById(tabTemp.id + "-tab");
 
@@ -140,12 +211,12 @@
     document.querySelectorAll(".py-novice .grammar-rule-group .grammar-category").forEach(function (catTemp) {linkToDef(catTemp, true);});
   }
 
-  if (window.addEventListener) 
+  if (window.addEventListener)
     window.addEventListener("load", addCategoryEvent);
   else
     window.attachEvent("onload", addCategoryEvent);
 </script>
-             
+
               <div class="grammar-production">
                 <p class="grammar-category-box"><span class="grammar-category">Literal</span>:</p>
                 <div class="grammar-rule-group">

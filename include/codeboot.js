@@ -1,12 +1,20 @@
 // codeBoot state
 
-document.addEventListener('DOMContentLoaded', function () {
-    new CodeBoot();
-});
-
 function CodeBoot() {
 
     var cb = this;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        cb.init();
+    });
+}
+
+CodeBoot.prototype.cb = new CodeBoot();
+
+CodeBoot.prototype.init = function () {
+
+    var cb = this;
+
 /*
     window.addEventListener('beforeunload', function (event) {
         return cb.beforeunload(event);
@@ -60,15 +68,10 @@ CodeBoot.prototype.setupAllVM = function (elem) {
     var cb = this;
 
     elem.querySelectorAll('.cb-vm').forEach(function (root) {
-        cb.setupVM(root);
+        if (!getCodeBootVM(root)) {
+            new CodeBootVM({ root: root });
+        }
     });
-};
-
-CodeBoot.prototype.setupVM = function (root) {
-
-    var cb = this;
-
-    return new CodeBootVM(cb, root, {});
 };
 
 CodeBoot.prototype.vms = {};
@@ -92,9 +95,26 @@ CodeBoot.prototype.beforeunload = function (event) {
 
 // CodeBoot virtual machines encapsulate an execution environment
 
-function CodeBootVM(cb, root, opts) {
+function CodeBootVM(opts) {
 
     var vm = this;
+
+    if (opts === undefined)
+        opts = {};
+
+    var cb;
+
+    if (opts.cb === undefined)
+        cb = CodeBoot.prototype.cb;
+    else
+        cb = opts.cb;
+
+    var root;
+
+    if (opts.root === undefined)
+        root = document.createElement('div');
+    else
+        root = opts.root;
 
     var index = ++cb.vmCount;
     var id = 'cb-vm-' + index; // default id
@@ -111,13 +131,13 @@ function CodeBootVM(cb, root, opts) {
 
     CodeBoot.prototype.vms[id] = vm;
 
-    vm.id    = id;    // id of this VM, typically '#cb-vm-N'
-    vm.cb    = cb;    // CodeBoot container
-    vm.root  = root;  // DOM element with class 'cb-vm'
-    vm.index = index; // sequence number, typically the N in the id
-    vm.langs = {};    // language instances in use
-    vm.lang  = null;  // reference to instance of Lang
-    vm.level = null;  // the selected level of the language
+    vm.id    = id;     // id of this VM, typically '#cb-vm-N'
+    vm.cb    = cb;     // CodeBoot container
+    vm.root  = root;   // DOM element with class 'cb-vm'
+    vm.index = index;  // sequence number, typically the N in the id
+    vm.langs = {};     // language instances in use
+    vm.lang  = null;   // reference to instance of Lang
+    vm.level = null;   // the selected level of the language
 
     vm.editable = true;
 
@@ -167,7 +187,16 @@ function CodeBootVM(cb, root, opts) {
 
     vm.setLang(id_and_level);
 
-    var initLast = vm.initRoot();
+    var initLast = vm.initRoot(opts);
+
+    if (opts.root === undefined) {
+        var parent;
+        if (opts.parent === undefined)
+            parent = document.body;
+        else
+            parent = opts.parent;
+        parent.appendChild(vm.root);
+    }
 
     vm.initUI();
 
@@ -200,6 +229,12 @@ function CodeBootVM(cb, root, opts) {
                             'normal'));
 
     initLast();
+
+    if (opts.input !== undefined)
+        vm.replSetInput(opts.input);
+
+    if (opts.event !== undefined)
+        vm.execEvent(opts.event);
 };
 
 CodeBootVM.prototype.initUI = function () {
@@ -583,18 +618,19 @@ CodeBootVM.prototype.footerHTML = function () {
 ';
 };
 
-CodeBootVM.prototype.initRoot = function () {
+CodeBootVM.prototype.initRoot = function (opts) {
 
     var vm = this;
     var nChildren = vm.root.childNodes.length;
+    var filename = undefined;
     var content = null;
 
     function initLast() {
 
         vm.setAttribute('data-cb-editable', vm.editable);
 
-        if (!vm.editable) {
-            vm.fs.newFile(undefined, content);
+        if (content !== null) {
+            vm.fs.newFile(filename, content);
         }
     }
 
@@ -616,6 +652,8 @@ CodeBootVM.prototype.initRoot = function () {
         vm.setAttribute('data-cb-show-editors', true);
         vm.setAttribute('data-cb-runable-code', true);
 
+        vm.editable = (content === null);
+
     } else if (nChildren === 0) {
 
         vm.root.innerHTML =
@@ -628,6 +666,14 @@ CodeBootVM.prototype.initRoot = function () {
         vm.setAttribute('data-cb-show-console', true);
         vm.setAttribute('data-cb-show-repl-container', true);
         vm.setAttribute('data-cb-show-editors', true);
+
+        vm.editable = true;
+
+        if (opts.filename !== undefined)
+            filename = opts.filename;
+
+        if (opts.content !== undefined)
+            content = opts.content;
 
     } else if (nChildren === 1) {
 
@@ -644,11 +690,10 @@ CodeBootVM.prototype.initRoot = function () {
 
             vm.setAttribute('data-cb-show-editors', true);
             vm.setAttribute('data-cb-runable-code', true);
-
         }
-    }
 
-    vm.editable = (content === null);
+        vm.editable = (content === null);
+    }
 
     return initLast;
 };

@@ -616,6 +616,24 @@ function int_pow(int_a, int_b) {
     return pow(int_a, int_b);
 }
 
+function int_pow_mod(int_a, int_b, int_c) {
+
+    function pow(int_a, int_b) {
+        if (int_is_zero(int_b)) {
+            return int_mod(int_from_num(1), int_c);
+        } else {
+            var sq = int_mod(int_mul(int_a, int_a), int_c);
+            var temp = pow(sq, int_shift(int_b, int_from_num(-1)));
+            if (int_is_even(int_b)) {
+                return temp;
+            } else {
+                return int_mod(int_mul(int_a, temp), int_c);
+            }
+        }
+    }
+
+    return pow(int_mod(int_a, int_c), int_b);
+}
 
 function int_not(int_a) {
 
@@ -913,7 +931,7 @@ function int_from_substring(str, start, end, radix) {
 
     var len = end - start;
     var levels = 32 - Math.clz32(len-1);
-    var scale = int_dig_array(levels);
+    var scale = new Array(levels);
 
     var pow = int_from_num(radix);
     var i = 0;
@@ -980,7 +998,7 @@ if (globalThis.BigInt && !globalThis.disableBigInt) {
     int_add = function (int_a, int_b) { return int_a+int_b; };
     int_sub = function (int_a, int_b) { return int_a-int_b; };
     int_mul = function (int_a, int_b) { return int_a*int_b; };
-    int_is_even = function (int_a) { return (int_a % 2n) == 0; };
+    int_is_even = function (int_a) { return (int_a % BigInt(2)) == 0; };
 
     int_div_floor = function (int_a, int_b) {
         return int_divmod_floor(int_a, int_b)[0];
@@ -998,7 +1016,7 @@ if (globalThis.BigInt && !globalThis.disableBigInt) {
         if (mod == 0 || (int_a<0 === int_b<0)) {
             return [div, mod];
         } else {
-            return [div-1n, mod+int_b];
+            return [div-BigInt(1), mod+int_b];
         }
     };
 
