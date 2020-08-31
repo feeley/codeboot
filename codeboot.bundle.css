@@ -448,6 +448,10 @@ span.CodeMirror-selectedtext { background: none; }
     margin: 1em 0.5em 0.5em 0.5em;
 }
 
+.cb-vm:not([data-cb-show-header]).cb-editors {
+    height: calc(100% - 16.5em - 250px);
+}
+
 .cb-file-tabs {
     height: 2.2em;
     overflow: hidden;
@@ -631,7 +635,7 @@ body {
 }
 
 .cb-menu-settings > .cb-button > svg {
-    width: 0.75em;
+    width: 1.2em;
 }
 
 .cb-svg-trash,
@@ -931,10 +935,11 @@ body {
     font-family: "Lucida Console", Monaco, monospace;
 }
 
-.cb-vm .CodeMirror {
+.cb-vm .CodeMirror,
+.cb-vm .CodeMirror pre.CodeMirror-line {
     font-family: "Lucida Console", Monaco, monospace;
     font-size: 100%;
-    line-height: 1.3;
+    line-height: 1.4;
 }
 
 .cb-vm[data-cb-large-font] .cb-console,
@@ -1299,6 +1304,11 @@ div.tab-pane {
 [data-cb-lang=js-standard] ~ #cb-help-box span.js-standard,
 [data-cb-lang=py-novice] ~ #cb-help-box span.py-novice {
     display: inline;
+}
+
+table.cb-keybindings td:nth-child(1)
+{
+    text-align: right;
 }
 
 #grammarTab {
