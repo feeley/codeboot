@@ -660,11 +660,15 @@ CodeBootVM.prototype.exec_start = function (delay) {
 
     // run code
 
-    vm.ui.mode = vm.modeAnimating();
-    vm.lang.startExecution(code);
-    vm.exec_continue(delay);
-    //TODO: interferes?
-    //vm.repl.focus();
+    if (code === null) {
+        vm.replAllowInput();
+    } else {
+        vm.ui.mode = vm.modeAnimating();
+        vm.lang.startExecution(code);
+        vm.exec_continue(delay);
+        //TODO: interferes?
+        //vm.repl.focus();
+    }
 };
 
 CodeBootVM.prototype.update_mode = function (delay) {
