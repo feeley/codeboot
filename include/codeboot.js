@@ -248,7 +248,12 @@ CodeBootVM.prototype.initUI = function () {
 
 // Access to host's globals
 
-CodeBootVM.prototype.hostGlobalObject = (function () { return this; })();
+CodeBootVM.prototype.hostGlobalObject = (function () {
+    if (typeof self !== 'undefined') { return self; }
+    else if (typeof window !== 'undefined') { return window; }
+    else if (typeof global !== 'undefined') { return global; }
+    else return this;
+})();
 
 CodeBootVM.prototype.hasHostGlobal = function (id) {
     return Object.prototype.hasOwnProperty.call(CodeBootVM.prototype.hostGlobalObject, id);

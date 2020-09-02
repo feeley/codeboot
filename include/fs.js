@@ -516,8 +516,10 @@ CodeBootFile.prototype.download = function () {
 
     var file = this;
     var filename = file.filename;
-    var content = file.content;
+    var content = file.getContent();
 
+    download(content, filename, "text/plain");
+/*deprecated
     var elem = document.createElement('a');
     elem.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
     elem.setAttribute('download', filename);
@@ -528,12 +530,13 @@ CodeBootFile.prototype.download = function () {
     elem.click();
 
     document.body.removeChild(elem);
+*/
 };
 
 CodeBootFile.prototype.email = function () {
     var file = this;
     var filename = file.filename;
-    var content = file.content;
+    var content = file.getContent();
     var url = ''; //editor_URL(content, filename) + '\n\n\n';
     var subject = encodeURIComponent(filename);
     var body = encodeURIComponent(url+content);

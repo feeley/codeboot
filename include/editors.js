@@ -53,6 +53,10 @@ CodeBootVM.prototype.initEditorScrollHandling = function (editor) {
 
 };
 
+// Disable Ctrl-V and Ctrl-X keybindings that users expect to map to paste/cut
+delete CodeMirror.keyMap.emacs["Ctrl-V"];
+delete CodeMirror.keyMap.emacs["Ctrl-X"];
+
 CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
 
     var vm = this;
