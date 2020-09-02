@@ -974,7 +974,14 @@ function int_from_substring(str, start, end, radix) {
 
 // use BigInt if available
 
-if (globalThis.BigInt && !globalThis.disableBigInt) {
+var getGlobalObject = function () {
+    if (typeof self !== 'undefined') { return self; }
+    else if (typeof window !== 'undefined') { return window; }
+    else if (typeof global !== 'undefined') { return global; }
+    else return this;
+};
+
+if (getGlobalObject().BigInt && !getGlobalObject().disableBigInt) {
 
     int_instance = function (val) { return val.constructor === BigInt; };
     int_from_num = function (n) { return BigInt(n); }; // n must be int. value
