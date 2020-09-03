@@ -248,7 +248,12 @@ CodeBootVM.prototype.initUI = function () {
 
 // Access to host's globals
 
-CodeBootVM.prototype.hostGlobalObject = (function () { return this; })();
+CodeBootVM.prototype.hostGlobalObject = (function () {
+    if (typeof self !== 'undefined') { return self; }
+    else if (typeof window !== 'undefined') { return window; }
+    else if (typeof global !== 'undefined') { return global; }
+    else return this;
+})();
 
 CodeBootVM.prototype.hasHostGlobal = function (id) {
     return Object.prototype.hasOwnProperty.call(CodeBootVM.prototype.hostGlobalObject, id);
@@ -388,7 +393,7 @@ CodeBootVM.prototype.menuLangHTML = function () {
   <div class="dropdown-menu cb-menu-settings-lang">\
 ' + vm.menuSettingsLangHTML() + '\
   <div class="dropdown-divider"></div>\
-  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.0</a>\
+  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.0.1</a>\
   <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-help-box">Help</a>\
   </div>\
 </span>\

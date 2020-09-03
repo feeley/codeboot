@@ -626,20 +626,22 @@ body {
 .tippy-box[data-theme="cb-exec-point-bubble"] .cb-exec-point-bubble-value {
     padding: 0.3em;
     text-align: center;
-    border-bottom: 2px solid #ccc;
 }
 
 .tippy-box[data-theme="cb-exec-point-bubble"] .cb-exec-point-bubble-context {
+    border-top: 2px solid #ccc;
     padding: 0.3em;
 }
 
 .tippy-box[data-theme="cb-exec-point-bubble"] .cb-exec-point-bubble-binding {
     display: flex;
+    font-family: "Lucida Console", Monaco, monospace;
 }
 
 .tippy-box[data-theme="cb-exec-point-bubble"] .cb-exec-point-bubble-binding .cb-code-font {
     font-weight: bold;
     font-size: 110%;
+    line-height: calc(100 * 1.4 / 110);
 }
 
 /*-------------------------------------------------------------------*/
