@@ -44,11 +44,23 @@ function float_is_pos(float_a) {
 }
 
 function float_is_neg(float_a) {
-    return float_a < 0.0;
+    if (isNaN(float_a)) {
+        return false;
+    } else if (float_a === 0) {
+        return 1 / float_a === -Infinity;
+    } else {
+        return float_a < 0.0;
+    }
 }
 
 function float_is_nonneg(float_a) {
-    return float_a >= 0.0;
+    if (isNaN(float_a)) {
+        return false;
+    } else if (float_a === 0) {
+        return 1 / float_a === Infinity;
+    } else {
+        return float_a > 0.0;
+    }
 }
 
 function float_eq(float_a, float_b) {
