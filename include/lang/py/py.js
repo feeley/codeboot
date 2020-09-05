@@ -58,7 +58,7 @@ Lang.prototype.register(LangPy);
 
 LangPy.prototype.init = function () {
     var lang = this;
-    lang.rt = new lang.RunTime();
+    lang.rt = new lang.RunTime(lang);
 };
 
 LangPy.prototype.loadCommand = function (filename) {
@@ -66,16 +66,18 @@ LangPy.prototype.loadCommand = function (filename) {
 //    return 'import ' + filename.replace(/\.[^/.]+$/, '');
 };
 
-LangPy.prototype.RunTime = function () {
+LangPy.prototype.RunTime = function (lang) {
 
     var rt = this;
 
+    rt.lang = lang;
     rt.ast = null;
     rt.msg = '';
     rt.error = null;
     rt.cont = null;
     rt.ctx = null;
     rt.stepCount = 0;
+    rt.stepLimit = 0;
     rt.rte = null;
 };
 
@@ -169,6 +171,7 @@ LangPy.prototype.startExecution = function (cont) {
     //console.log('LangPy.startExecution');
 
     lang.rt.stepCount = 0;
+    lang.rt.stepLimit = 0;
     lang.rt.ast = null;
     lang.rt.msg = '';
     lang.rt.error = null;
@@ -191,9 +194,9 @@ LangPy.prototype.continueExecution = function (maxSteps) {
 
     if (maxSteps > 0 && lang.rt.cont) {
 
-        var limit = lang.rt.stepCount + maxSteps;
+        lang.rt.stepLimit = lang.rt.stepCount + maxSteps;
 
-        while (lang.rt.stepCount < limit && lang.rt.cont) {
+        while (lang.rt.stepCount < lang.rt.stepLimit && lang.rt.cont) {
             var state = lang.rt.cont();
             if (!state) {
                 lang.rt.cont = null;
@@ -209,6 +212,11 @@ LangPy.prototype.continueExecution = function (maxSteps) {
             lang.rt.ctx = state.ctx;
         }
     }
+};
+
+LangPy.prototype.refreshUI = function () {
+    var lang = this;
+    lang.rt.stepLimit = -1; // cause exit of the trampoline
 };
 
 LangPy.prototype.getStepCount = function () {
@@ -366,6 +374,7 @@ LangPy.prototype.initRunTimeState = function (code, reboot) {
 
 function runtime_print(msg, rte) {
     rte.vm.replAddTranscript(msg, 'cb-repl-output');
+    rte.vm.lang.refreshUI();
 };
 
 function runtime_alert(msg) {
