@@ -212,6 +212,10 @@ function float_inf() {
     return Infinity;
 }
 
+function float_neg_inf() {
+    return -Infinity;
+}
+
 function float_nan() {
     return NaN;
 }
