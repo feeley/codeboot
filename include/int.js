@@ -620,19 +620,19 @@ function int_pow_mod(int_a, int_b, int_c) {
 
     function pow(int_a, int_b) {
         if (int_is_zero(int_b)) {
-            return int_mod(int_from_num(1), int_c);
+            return int_mod_floor(int_from_num(1), int_c);
         } else {
-            var sq = int_mod(int_mul(int_a, int_a), int_c);
+            var sq = int_mod_floor(int_mul(int_a, int_a), int_c);
             var temp = pow(sq, int_shift(int_b, int_from_num(-1)));
             if (int_is_even(int_b)) {
                 return temp;
             } else {
-                return int_mod(int_mul(int_a, temp), int_c);
+                return int_mod_floor(int_mul(int_a, temp), int_c);
             }
         }
     }
 
-    return pow(int_mod(int_a, int_c), int_b);
+    return pow(int_mod_floor(int_a, int_c), int_b);
 }
 
 function int_not(int_a) {
