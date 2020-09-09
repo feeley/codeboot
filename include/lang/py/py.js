@@ -116,6 +116,7 @@ LangPy.prototype.compile = function (source, container, reboot) {
                          start_column0,
                          end_line0,
                          end_column0,
+                         error_name,
                          msg) {
 
         if (from_repl) {
@@ -131,7 +132,7 @@ LangPy.prototype.compile = function (source, container, reboot) {
                                  end_line0,
                                  end_column0);
 
-        lang.vm.syntaxError(loc, 'SyntaxError: ', msg);
+        lang.vm.syntaxError(loc, error_name + ": ", msg);
     }
 
     var lang = this;
