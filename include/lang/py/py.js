@@ -132,7 +132,7 @@ LangPy.prototype.compile = function (source, container, reboot) {
                                  end_line0,
                                  end_column0);
 
-        lang.vm.compilationError(loc, error_kind + ": ", msg);
+        lang.vm.syntaxError(loc, error_kind + ": ", msg);
     }
 
     var lang = this;
