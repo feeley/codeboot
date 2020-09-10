@@ -172,7 +172,7 @@ builtin_pause._apply_ = function (rte, cont, this_, params) {
         if (delay !== Infinity) {
             vm.stopAnimation();
             vm.ui.timeoutId = setTimeout(function () {
-                                           vm.repeatLastExecEvent();
+                                           vm.repeatLatestExecEvent();
                                          },
                                          delay*1000);
         }

@@ -12,7 +12,7 @@ CodeBootVM.prototype.initEditor = function (editor, node, history, fileEditor) {
     vm.setTranscriptMarker(editor, vm.beginningOfEditor());
 };
 
-CodeBootVM.prototype.trackEditorFocus = function (editor, event, focus) {
+CodeBootVM.prototype.trackEditorFocus = function (editor, focus) {
 
     var vm = this;
 
@@ -35,11 +35,11 @@ CodeBootVM.prototype.initEditorFocusHandling = function (editor) {
     var vm = this;
 
     editor.on('focus', function (cm, event) {
-        vm.trackEditorFocus(editor, event, true);
+        vm.trackEditorFocus(editor, true);
     });
 
     editor.on('blur', function (cm, event) {
-        vm.trackEditorFocus(editor, event, false);
+        vm.trackEditorFocus(editor, false);
     });
 };
 
@@ -54,8 +54,8 @@ CodeBootVM.prototype.initEditorScrollHandling = function (editor) {
 };
 
 // Disable Ctrl-V and Ctrl-X keybindings that users expect to map to paste/cut
-delete CodeMirror.keyMap.emacs["Ctrl-V"];
-delete CodeMirror.keyMap.emacs["Ctrl-X"];
+delete CodeMirror.keyMap.emacs['Ctrl-V'];
+delete CodeMirror.keyMap.emacs['Ctrl-X'];
 
 CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
 
@@ -87,7 +87,7 @@ CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
             //    cm.commentRange(!isComment, cm.getCursor(true), cm.getCursor(false));
             // },
 
-            'Ctrl-L': function (cm) { cm.cb.vm.replReset(); },
+            'Ctrl-L': function (cm) { cm.cb.vm.eventClearConsole(); },
             'Esc': function (cm) { cm.cb.vm.eventStop(); },
             'Enter': enter,
             'Shift-Enter': shiftEnter,
@@ -489,7 +489,7 @@ CodeBootVM.prototype.replSetup = function () {
             gutters: ['CodeMirror-linenumbers', 'cb-repl-cm-gutter'],
             fixedGutter: false,
             extraKeys: {
-                'Ctrl-L': function (cm) { cm.cb.vm.replReset(); },
+                'Ctrl-L': function (cm) { cm.cb.vm.eventClearConsole(); },
                 'Ctrl-\\': function (cm) { cm.cb.vm.toggleDevMode(); },
                 'Up': cursorUp,
                 'Ctrl-P': cursorUp,

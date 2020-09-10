@@ -437,6 +437,7 @@ CodeBootFileSystem.prototype.addFileToMenu = function (elem, file) {
     var filename = file.filename;
 
     function dismissMenu() {
+        $(elem).find($('[data-toggle="tooltip"]')).tooltip('hide');
         elem.classList.remove('show');
     }
 
@@ -486,6 +487,15 @@ CodeBootFileSystem.prototype.addFileToMenu = function (elem, file) {
                      file.email();
                  });
 
+    fs.addButton(buttons,
+                 'Copy to clipboard',
+                 vm.SVG['clipboard'],
+                 function (event) {
+                     event.stopPropagation();
+                     dismissMenu();
+                     file.copyToClipboard();
+                 });
+
     item.append(buttons);
 
     var nodes = elem.childNodes;
@@ -499,6 +509,8 @@ CodeBootFileSystem.prototype.addFileToMenu = function (elem, file) {
     }
 
     elem.appendChild(item);
+
+    $(elem).find($('[data-toggle="tooltip"]')).tooltip();
 };
 
 CodeBootFile.prototype.delete = function () {
@@ -543,6 +555,71 @@ CodeBootFile.prototype.email = function () {
     var href = 'mailto:?subject=' + subject + '&body=' + body;
     var w = window.open(href, '_blank');
     if (w) w.close();
+};
+
+CodeBootFile.prototype.copyToClipboard = function () {
+
+    var file = this;
+    var filename = file.filename;
+    var richText = file.toRichText();
+    var content = file.getContent();
+
+    function handler(event) {
+        if (richText) event.clipboardData.setData('text/html', richText);
+        event.clipboardData.setData('text/plain', content);
+        event.preventDefault();
+  }
+
+    document.addEventListener('copy', handler);
+    document.execCommand('copy');
+    document.removeEventListener('copy', handler);
+};
+
+CodeBootFile.prototype.toRichText = function () {
+
+    var file = this;
+    var fe = file.fe;
+    var editor = fe.editor;
+
+    if (fe.editor === null) {
+        return null;
+/*
+        var content = file.getContent();
+        return '<pre>' + escape_HTML(content) + '</pre>';
+*/
+    } else {
+
+        var styles = ['text-transform', 'color', 'font-weight'];
+        var richText = '<pre style="font-family: \'Lucida Console\', \'Hack\', Monaco, monospace; font-size: 18px;">';
+
+        for (var i=0; i<editor.lineCount(); i++) {
+            var lineTokens = editor.getLineTokens(i, true);
+            for (var j=0; j<lineTokens.length; j++) {
+                var t = lineTokens[j];
+                var token = escape_HTML(t.string);
+                var tokenType = t.type;
+                if (tokenType) {
+
+                    var elem = document.querySelectorAll('.cm-'+tokenType);
+                    var css = '';
+                    var compStyle = window.getComputedStyle(elem[0], null);
+
+                    styles.forEach(function (style) {
+                        css += style + ':' + compStyle.getPropertyValue(style) + ';';
+                    });
+
+                    richText += '<span style="' + css + '">';
+                } else {
+                    richText += '<span>';
+                }
+                richText += token + '</span>';
+            }
+            richText += '\n';
+        }
+        richText += '</pre>';
+
+        return richText;
+    }
 };
 
 CodeBootFileSystem.prototype.openFile = function (fileOrFilename) {
@@ -601,11 +678,19 @@ function CodeBootFileEditorManager(fs) {
     fem.activated = -1;
 }
 
+CodeBootFileEditorManager.prototype.currentlyActivated = function () {
+
+    var fem = this;
+
+    return fem.activated >= 0 ? fem.editors[fem.activated] : null;
+
+};
+
 CodeBootFileEditorManager.prototype.isActivated = function (fe) {
 
     var fem = this;
 
-    return (fem.activated >= 0 && fem.editors[fem.activated] === fe);
+    return fem.currentlyActivated() === fe;
 
 };
 
@@ -639,6 +724,8 @@ CodeBootFileEditorManager.prototype.activate = function (fe) {
     fe.activatePresentation(); // activate editor
 
     fem.activated = i; // remember it is activated
+
+    fe.focus();
 };
 
 CodeBootFileEditorManager.prototype.add = function (fe) {
@@ -828,7 +915,14 @@ CodeBootFileEditor.prototype.edit = function () {
 
     fe.enable();
     fe.activate();
+};
+
+CodeBootFileEditor.prototype.focus = function () {
+
+    var fe = this;
+
     fe.editor.focus();
+    fe.file.fs.vm.trackEditorFocus(fe.editor, true);
 };
 
 CodeBootFileEditor.prototype.enable = function () {

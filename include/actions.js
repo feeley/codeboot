@@ -273,11 +273,28 @@ CodeBootVM.prototype.replay = function () {
     }
 };
 
-CodeBootVM.prototype.showTryMeTooltip = function (filename) {
-    $('.cb-exec-controls-buttons').tooltip('show');
+CodeBootVM.prototype.showTryMeTooltip = function () {
 
-    // Auto hide the tooltip after 2 secs
-    setTimeout(function () { $('.cb-exec-controls-buttons').tooltip('hide'); }, 2000);
+    var vm = this;
+
+    vm.showExecControlsMessage('TRY ME!', 2000);
+};
+
+CodeBootVM.prototype.showExecControlsMessage = function (msg, timeout) {
+
+    var vm = this;
+
+    var execControls = vm.root.querySelector('.cb-exec-controls-buttons');
+
+    if (execControls) {
+        execControls.setAttribute('data-original-title', msg);
+        $(execControls).tooltip('show');
+        vm.afterDelay(function () {
+            $(execControls).tooltip('hide');
+            execControls.setAttribute('data-original-title',
+                                      execControls.getAttribute('title'));
+        }, timeout);
+    }
 };
 
 CodeBootVM.prototype.modeStopped = function () {
@@ -482,9 +499,14 @@ CodeBootVM.prototype.execStop = function () {
     vm.execEvent('stop');
 };
 
-CodeBootVM.prototype.repeatLastExecEvent = function () {
+CodeBootVM.prototype.execReset = function () {
     var vm = this;
-    vm.execEvent(vm.lastExecEvent);
+    vm.execEvent('reset');
+};
+
+CodeBootVM.prototype.repeatLatestExecEvent = function () {
+    var vm = this;
+    vm.execEvent(vm.latestExecEvent);
 };
 
 /*
@@ -502,7 +524,7 @@ CodeBootVM.prototype.execEvent = function (event) {
 
     var vm = this;
 
-    vm.lastExecEvent = event;
+    vm.latestExecEvent = event;
 
     switch (event) {
 
@@ -520,6 +542,10 @@ CodeBootVM.prototype.execEvent = function (event) {
 
     case 'stop':
         vm.stop();
+        break;
+
+    case 'reset':
+        vm.reset();
         break;
     }
 };
@@ -596,7 +622,7 @@ CodeBootVM.prototype.exec_start = function (delay) {
         var cleaned_source = source.replace(/[ \t\f]*$/,'');
 
         compile = function () {
-            return vm.compile_repl_expression(cleaned_source + '\n', line+1, 1);
+            return vm.compile_repl_expression(cleaned_source + '\n', line+1, 1, false); // don't force reset to preserve execution state
         };
 
         after_successful_compile = function () {
@@ -622,7 +648,7 @@ CodeBootVM.prototype.exec_start = function (delay) {
         }
 
         compile = function () {
-            return vm.compile_internal_file(filename, true); // reset state
+            return vm.compile_internal_file(filename, true); // force reset state
         };
 
         after_successful_compile = function () {
@@ -665,12 +691,16 @@ CodeBootVM.prototype.exec_start = function (delay) {
     } else {
         vm.ui.mode = vm.modeAnimating();
         vm.lang.startExecution(code);
+        vm.ui.mode = vm.modeStopped();
+        vm.enterMode(vm.modeAnimating());
         vm.exec_continue(delay);
         //TODO: interferes?
         //vm.repl.focus();
     }
 };
 
+/*
+deprecated
 CodeBootVM.prototype.update_mode = function (delay) {
 
     var vm = this;
@@ -687,8 +717,6 @@ CodeBootVM.prototype.update_mode = function (delay) {
     }
 };
 
-/*
-deprecated
 CodeBootVM.prototype.step_or_animate = function (single_step) {
     var vm = this;
     //TODO: interferes?
@@ -731,6 +759,17 @@ CodeBootVM.prototype.stop = function (reason) {
 
         vm.enterMode(vm.modeStopped());
     }
+};
+
+CodeBootVM.prototype.reset = function () {
+
+    var vm = this;
+
+    if (vm.ui.mode !== vm.modeStopped()) {
+        vm.enterMode(vm.modeStopped());
+    }
+
+    vm.force_reset = true;
 };
 
 CodeBootVM.prototype.showReason = function (reason) {
@@ -1099,6 +1138,7 @@ CodeBootVM.prototype.exec_continue = function (delay) {
         //console.log(e);
         vm.showReason(e);
         vm.stop(null);
+        return;
     }
 
     update_playground_visibility(vm);//TODO: fix
@@ -1159,10 +1199,10 @@ CodeBootVM.prototype.exec_continue = function (delay) {
 
                 newMode = vm.modeAnimating();
 
-                vm.stepDelay = delay;
+                //vm.stepDelay = delay;
 
                 vm.ui.timeoutId =
-                    vm.afterDelay(function () { vm.exec_continue(vm.stepDelay); },
+                    vm.afterDelay(function () { vm.exec_continue(delay); },
                                   delay);
             }
         }
@@ -1264,19 +1304,19 @@ function writeFileInternal(filename, content) {
 
 // Compilation of source code (at the REPL, files and URLs)
 
-CodeBootVM.prototype.compile_repl_expression = function (source, line, ch) {
+CodeBootVM.prototype.compile_repl_expression = function (source, line, ch, force_reset) {
     var vm = this;
     return vm.compile(source,
                       new SourceContainer(source, false, line-1, ch-1),
-                      false); // preserve execution state
+                      force_reset);
 };
 
-CodeBootVM.prototype.compile_file = function (filename, reboot) {
+CodeBootVM.prototype.compile_file = function (filename, force_reset) {
     var vm = this;
     if (/^http:\/\//.test(filename)) {
-        return vm.compile_url_file(filename, reboot);
+        return vm.compile_url_file(filename, force_reset);
     } else {
-        return vm.compile_internal_file(filename, reboot);
+        return vm.compile_internal_file(filename, force_reset);
     }
 };
 
@@ -1316,7 +1356,7 @@ CodeBootVM.prototype.getURL = function (url) {
     return content;
 };
 
-CodeBootVM.prototype.compile_url_file = function (url, reboot) {
+CodeBootVM.prototype.compile_url_file = function (url, force_reset) {
 
     var vm = this;
     var source = vm.readURL(url);
@@ -1324,12 +1364,12 @@ CodeBootVM.prototype.compile_url_file = function (url, reboot) {
 
     return vm.compile(source,
                       new SourceContainer(source, url, 0, 0),
-                      reboot);
+                      force_reset);
 };
 
 // end deprecated
 
-CodeBootVM.prototype.compile_internal_file = function (filename, reboot) {
+CodeBootVM.prototype.compile_internal_file = function (filename, force_reset) {
 
     var vm = this;
     var state = vm.readFileInternal(filename);
@@ -1337,7 +1377,7 @@ CodeBootVM.prototype.compile_internal_file = function (filename, reboot) {
 
     return vm.compile(source,
                       new SourceContainerInternalFile(source, filename, 0, 0, state.stamp),
-                      reboot);
+                      force_reset);
 };
 
 CodeBootVM.prototype.readFileInternal = function (filename) {
@@ -1351,11 +1391,14 @@ CodeBootVM.prototype.readFileInternal = function (filename) {
     };
 };
 
-CodeBootVM.prototype.compile = function (source, container, reboot) {
+CodeBootVM.prototype.compile = function (source, container, force_reset) {
 
     var vm = this;
 
-    return vm.lang.compile(source, container, reboot);
+    force_reset = force_reset || vm.force_reset;
+    vm.force_reset = false;
+
+    return vm.lang.compile(source, container, force_reset);
 };
 
 CodeBootVM.prototype.filterAST = function (ast, source) {

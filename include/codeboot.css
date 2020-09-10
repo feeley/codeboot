@@ -1,9 +1,35 @@
+body {
+    --cb-navbar-color: #90c0ff;
+    --cb-exec-point-color: yellow;
+    --cb-exec-point-bubble-color: var(--cb-exec-point-color);
+}
+
+.cb-vm {
+    overflow: hidden;
+}
+
+.cb-vm[data-cb-floating] {
+    position: absolute;
+    width: 600px;
+    height: 400px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    background-color: #fff;
+}
+
 .cb-vm:not([data-cb-show-header]) .cb-header,
 .cb-vm:not([data-cb-show-footer]) .cb-footer,
 .cb-vm:not([data-cb-show-console]) .cb-console,
 .cb-vm:not([data-cb-show-repl-container]) .cb-repl-container,
 .cb-vm:not([data-cb-show-playground]) .cb-playground {
     display: none;
+}
+
+.cb-vm[data-cb-show-header] .cb-header,
+.cb-vm[data-cb-show-footer] .cb-footer,
+.cb-vm[data-cb-show-console] .cb-console,
+.cb-vm[data-cb-show-repl-container] .cb-repl-container,
+.cb-vm[data-cb-show-playground] .cb-playground {
+    display: block;
 }
 
 .cb-console {
@@ -84,7 +110,7 @@
 
 .cb-editors {
     max-height: 100%;
-    height: calc(100% - 16.5em); /* 11.5em + 2*1em + 1em */
+    height: calc(100% - 13.5em - 55px);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -96,10 +122,14 @@
 }
 
 .cb-file-tabs {
-    height: 2.2em;
+    height: 2.8em;
     overflow: hidden;
     text-overflow: ellipsis;
     flex-wrap: nowrap;
+}
+
+.cb-file-tab {
+    height: 2.8em;
 }
 
 .dropdown-item[data-cb-filename] > span > .close {
@@ -158,21 +188,66 @@
 
 /*--------------------------- page layout ---------------------------*/
 
-body {
-    --cb-navbar-color: #90c0ff;
-    --cb-exec-point-color: yellow;
-    --cb-exec-point-bubble-color: var(--cb-exec-point-color);
-}
-
 .cb-navbar {
     background-color: var(--cb-navbar-color);
+}
+
+.cb-vm[data-cb-floating] .cb-navbar {
+    cursor: move;
 }
 
 .cb-exec-btn-step > svg,
 .cb-exec-btn-animate > svg,
 .cb-exec-btn-eval > svg,
-.cb-exec-btn-stop > svg {
+.cb-exec-btn-stop > svg,
+.cb-exec-btn-close > svg {
     width: 1.8em;
+}
+
+.cb-exec-btn-clone {
+    position: relative;
+    line-height: 1.3;
+    z-index: 9999;
+}
+
+.cb-exec-btn-clone > svg {
+    position: relative;
+    width: 1.1em;
+    z-index: 9998;
+}
+
+.cb-file-tab > button > svg {
+    width: 1.5em;
+}
+
+.cb-resize-handle > svg {
+    width: 1.3em;
+}
+
+.cb-exec-btn-step,
+.cb-exec-btn-animate,
+.cb-exec-btn-eval,
+.cb-exec-btn-stop,
+.cb-exec-btn-clone,
+.cb-exec-btn-close,
+.cb-resize-handle {
+    display: none;
+}
+
+.cb-vm > .cb-navbar > .cb-navbar-controls > .cb-exec-controls > .cb-exec-controls-buttons > .cb-exec-btn-step,
+.cb-vm > .cb-navbar > .cb-navbar-controls > .cb-exec-controls > .cb-exec-controls-buttons > .cb-exec-btn-animate,
+.cb-vm > .cb-navbar > .cb-navbar-controls > .cb-exec-controls > .cb-exec-controls-buttons > .cb-exec-btn-eval,
+.cb-vm > .cb-navbar > .cb-navbar-controls > .cb-exec-controls > .cb-exec-controls-buttons > .cb-exec-btn-stop,
+.cb-vm[data-cb-show-clone] > .cb-exec-controls > .cb-exec-controls-buttons > .cb-exec-btn-clone,
+.cb-vm[data-cb-floating] > .cb-navbar > .cb-navbar-controls > .cb-exec-controls > .cb-exec-controls-buttons > .cb-exec-btn-close,
+.cb-vm[data-cb-resizable] > .cb-resize-handle {
+    display: block;
+}
+
+.cb-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
 }
 
 .btn {
@@ -284,6 +359,7 @@ body {
 .cb-svg-trash,
 .cb-svg-download,
 .cb-svg-mail,
+.cb-svg-clipboard,
 .cb-svg-close,
 .cb-svg-checkmark {
     width: 1em;
@@ -313,9 +389,7 @@ body {
     align-items: baseline;
     position: absolute;
     right: 0;
-    z-index: 99999;
     margin-right: 0.5em;
-    opacity: 0.75;
 }
 
 .cb-navbar-controls {
@@ -360,58 +434,62 @@ body {
     border-bottom: 0;
 }
 
-.cb-file-tabs .cb-file-tab {
+.cb-file-tabs > .cb-file-tab {
     border-bottom: 0;
     border-top: 1px solid #f6f6f6;
     border-left: 1px solid #f6f6f6;
     border-right: 1px solid #f6f6f6;
     background-color: #fdfdfd;
     color: #ccc;
-    margin-right: 10px;
+    margin-right: 1em;
     display: flex;
 }
 
-.cb-file-tabs .cb-file-tab.active,
-.cb-file-tabs .cb-file-tab.active:hover {
+.cb-file-tabs > .cb-file-tab.active,
+.cb-file-tabs > .cb-file-tab.active:hover {
     border: 0;
     color: black;
     background-color: #f6f6f6;
 }
 
-.cb-file-tabs .cb-file-tab button.close {
-  margin: 0 0 -0.1em -1em;
-  padding-right: 0;
+.cb-file-tabs > .cb-file-tab > button.close {
+    margin: -0.5em 0 -0.1em -1em;
+    padding-right: 0;
 }
 
-.cb-file-tabs .cb-file-tab .tab-label {
-  padding-right: 0.8em;
-  padding-left: 0.5em;
+.cb-file-tabs > .cb-file-tab > .tab-label {
+    padding-right: 0.8em;
+    padding-left: 0.1em;
 }
 
-.cb-file-tabs .cb-file-tab .close {
+.cb-file-tabs > .cb-file-tab > .tab-label > .cb-rename-box {
+    margin-left: 2em;
+}
+
+.cb-file-tabs > .cb-file-tab > .close {
     font-size: 90%;
     color: #aaa;
     opacity: 0;
 }
 
-.cb-file-tabs .cb-file-tab:hover .close {
+.cb-file-tabs > .cb-file-tab:hover > .close {
     opacity: 0.5;
 }
 
-.cb-file-tabs .cb-file-tab:hover .close:hover {
+.cb-file-tabs > .cb-file-tab:hover > .close:hover {
     opacity: 1;
 }
 
-.cb-file-tabs .cb-file-tab.active .close {
+.cb-file-tabs > .cb-file-tab.active > .close {
     color: black;
     opacity: 0;
 }
 
-.cb-file-tabs .cb-file-tab.active:hover .close {
+.cb-file-tabs > .cb-file-tab.active:hover > .close {
     opacity: 0.5;
 }
 
-.cb-file-tabs .cb-file-tab.active:hover .close:hover {
+.cb-file-tabs > .cb-file-tab.active:hover > .close:hover {
     opacity: 1;
 }
 
@@ -575,12 +653,12 @@ body {
 /*-------------------------- Font size ------------------------------*/
 
 .cb-code-font {
-    font-family: "Lucida Console", Monaco, monospace;
+    font-family: "Lucida Console", "Hack", Monaco, monospace;
 }
 
 .cb-vm .CodeMirror,
 .cb-vm .CodeMirror pre.CodeMirror-line {
-    font-family: "Lucida Console", Monaco, monospace;
+    font-family: "Lucida Console", "Hack", Monaco, monospace;
     font-size: 100%;
     line-height: 1.4;
 }
@@ -635,7 +713,7 @@ body {
 
 .tippy-box[data-theme="cb-exec-point-bubble"] .cb-exec-point-bubble-binding {
     display: flex;
-    font-family: "Lucida Console", Monaco, monospace;
+    font-family: "Lucida Console", "Hack", Monaco, monospace;
 }
 
 .tippy-box[data-theme="cb-exec-point-bubble"] .cb-exec-point-bubble-binding .cb-code-font {
@@ -647,7 +725,7 @@ body {
 /*-------------------------------------------------------------------*/
 
 .cb-about-box {
-    z-index: 10000;
+    z-index: 999999;
 }
 
 /*-------------------------------------------------------------------*/
