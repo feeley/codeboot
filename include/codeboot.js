@@ -15,16 +15,19 @@ CodeBoot.prototype.init = function () {
 
     var cb = this;
 
-/*
     window.addEventListener('beforeunload', function (event) {
         return cb.beforeunload(event);
     });
-*/
+
     cb.setupAllVM(document);
 
     $(function () {
         $('[data-toggle="tooltip"]').tooltip();
     })
+
+    window.addEventListener('resize', function (event) {
+        cb.resizeHandler();
+    });
 
 /*TODO: fix
     $('body').on('mousemove', function (event) {
@@ -75,7 +78,93 @@ CodeBoot.prototype.setupAllVM = function (elem) {
 };
 
 CodeBoot.prototype.vms = {};
+CodeBoot.prototype.vmsCreated = 0;
 CodeBoot.prototype.vmCount = 0;
+
+CodeBoot.prototype.zIndexFromLevel = function (level) {
+    return 1000 * level;
+};
+
+CodeBoot.prototype.registerVM = function (vm) {
+
+    var cb = this;
+
+    vm.zIndex = cb.zIndexFromLevel(CodeBoot.prototype.vmCount);
+    vm.root.style.zIndex = vm.zIndex;
+
+    CodeBoot.prototype.vms[vm.id] = vm;
+    CodeBoot.prototype.vmCount++;
+};
+
+CodeBoot.prototype.bringToFront = function (vm) {
+
+    var cb = this;
+
+    var vms = Object.values(CodeBoot.prototype.vms);
+
+    console.log('==> ' + vm.zIndex + ' ' + vm.root.style.zIndex + ' ' + cb.zIndexFromLevel(CodeBoot.prototype.vmCount-1));
+
+    if (vm.zIndex === cb.zIndexFromLevel(CodeBoot.prototype.vmCount-1))
+        return false;
+
+    vm.zIndex = Infinity;
+
+    cb.refreshZIndex();
+
+    return true;
+};
+
+CodeBoot.prototype.refreshZIndex = function () {
+
+    var cb = this;
+
+    var vms = Object.values(CodeBoot.prototype.vms);
+
+    vms.sort(function (a, b) {
+        return (a.zIndex < b.zIndex) ? -1 : 1;
+    });
+
+    for (var level=0; level<vms.length; level++) {
+        var vm = vms[level];
+        var zIndex = cb.zIndexFromLevel(level);
+        vm.zIndex = zIndex;
+        vm.root.style.zIndex = zIndex;
+    }
+};
+
+CodeBoot.prototype.resizeHandler = function (event) {
+
+    var cb = this;
+
+    // undo scaling so VM stays same size
+
+    for (var id in CodeBoot.prototype.vms) {
+        var vm = CodeBoot.prototype.vms[id];
+        console.log(id + ' ' + vm);
+        delete vm.root.style.transform;
+        var scale = getScale(vm.root);
+        vm.root.style.transform = 'scale(' + (1/scale) + ')';
+    }
+};
+
+function getScale(elem) {
+
+    var style = window.getComputedStyle(elem, null);
+    var transform = style.getPropertyValue("-webkit-transform") ||
+                    style.getPropertyValue("-moz-transform") ||
+                    style.getPropertyValue("-ms-transform") ||
+                    style.getPropertyValue("-o-transform") ||
+                    style.getPropertyValue("transform");
+
+    if (transform && transform !== 'none') {
+        var values = transform.split('(')[1].split(')')[0].split(',');
+        var a = values[0];
+        var b = values[1];
+        return Math.sqrt(a*a + b*b);
+    } else {
+        return 1;
+    }
+}
 
 function getCodeBootVM(elem) {
 
@@ -88,6 +177,9 @@ function getCodeBootVM(elem) {
 };
 
 CodeBoot.prototype.beforeunload = function (event) {
+
+    var cb = this;
+
     event.preventDefault();
     event.returnValue = '';
     return 'your session will be lost';
@@ -116,7 +208,7 @@ function CodeBootVM(opts) {
     else
         root = opts.root;
 
-    var index = ++cb.vmCount;
+    var index = ++cb.vmsCreated;
     var id = 'cb-vm-' + index; // default id
 
     if (root.hasAttribute('id')) {
@@ -129,8 +221,6 @@ function CodeBootVM(opts) {
 
     id = '#' + id;
 
-    CodeBoot.prototype.vms[id] = vm;
-
     vm.id    = id;     // id of this VM, typically '#cb-vm-N'
     vm.cb    = cb;     // CodeBoot container
     vm.root  = root;   // DOM element with class 'cb-vm'
@@ -138,6 +228,8 @@ function CodeBootVM(opts) {
     vm.langs = {};     // language instances in use
     vm.lang  = null;   // reference to instance of Lang
     vm.level = null;   // the selected level of the language
+    vm.vmClone = null;
+    vm.isOpen = true;
 
     vm.editable = true;
 
@@ -153,7 +245,10 @@ function CodeBootVM(opts) {
     vm.lastFocusedEditor = null;
     vm.allowLosingFocus = true;
 
-    vm.lastExecEvent = 'stop';
+    vm.latestExecEvent = 'stop';
+    vm.latestExecEventRepeat = 0;
+
+    vm.force_reset = true;
 
     vm.repl = null;
 
@@ -173,6 +268,39 @@ function CodeBootVM(opts) {
     vm.setAttribute('data-cb-show-repl-container', false);
     vm.setAttribute('data-cb-show-playground', false);
     vm.setAttribute('data-cb-show-editors', false);
+
+    var showClone;
+
+    if (opts.showClone !== undefined)
+        showClone = opts.showClone;
+    else if (root.hasAttribute('data-cb-show-clone'))
+        showClone = root.getAttribute('data-cb-show-clone');
+    else
+        showClone = false;
+
+    vm.setAttribute('data-cb-show-clone', showClone);
+
+    var floating;
+
+    if (opts.floating !== undefined)
+        floating = opts.floating;
+    else if (root.hasAttribute('data-cb-floating'))
+        floating = root.getAttribute('data-cb-floating');
+    else
+        floating = false;
+
+    vm.setAttribute('data-cb-floating', floating);
+
+    var resizable;
+
+    if (opts.resizable !== undefined)
+        resizable = opts.resizable;
+    else if (root.hasAttribute('data-cb-resizable'))
+        resizable = root.getAttribute('data-cb-resizable');
+    else
+        resizable = false;
+
+    vm.setAttribute('data-cb-resizable', resizable);
 
     var id_and_level;
 
@@ -198,9 +326,13 @@ function CodeBootVM(opts) {
         parent.appendChild(vm.root);
     }
 
+    cb.registerVM(vm);
+
     vm.initUI();
 
     vm.setLangUI();
+
+    vm.setupTooltip();
 
     vm.setupEventHandlers();
 
@@ -235,6 +367,65 @@ function CodeBootVM(opts) {
 
     if (opts.event !== undefined)
         vm.execEvent(opts.event);
+};
+
+CodeBootVM.prototype.cloneIsOpen = function () {
+
+    var vm = this;
+
+    return vm.vmClone && vm.vmClone.isOpen;
+};
+
+CodeBootVM.prototype.clone = function () {
+
+    var vm = this;
+
+    if (vm.cloneIsOpen()) return;
+
+    var input = vm.replGetInput();
+    var fe = vm.fs.fem.currentlyActivated();
+    var filename;
+    var content;
+
+    if (fe) {
+        filename = fe.filename;
+        content = fe.file.getContent();
+    }
+
+    vm.vmClone =
+        new CodeBootVM({
+            parent: vm.root,
+            lang: vm.lang.getId() + '-' + vm.level,
+            input: input ? input : undefined,
+            filename: filename ? filename : undefined,
+            content: content ? content : undefined,
+            floating: true,
+            resizable: true
+        });
+};
+
+CodeBootVM.prototype.close = function () {
+
+    var vm = this;
+
+    vm.remove();
+};
+
+CodeBootVM.prototype.remove = function () {
+
+    var vm = this;
+
+    vm.fs.removeAllEditors();
+
+    if (vm.root.parentNode) {
+        vm.root.parentNode.removeChild(vm.root);
+    }
+
+    vm.isOpen = false;
+
+    delete CodeBoot.prototype.vms[vm.id];
+
+    CodeBoot.prototype.vmCount--;
 };
 
 CodeBootVM.prototype.initUI = function () {
@@ -393,7 +584,7 @@ CodeBootVM.prototype.menuLangHTML = function () {
   <div class="dropdown-menu cb-menu-settings-lang">\
 ' + vm.menuSettingsLangHTML() + '\
   <div class="dropdown-divider"></div>\
-  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.0.1</a>\
+  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.0.2</a>\
   <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-help-box">Help</a>\
   </div>\
 </span>\
@@ -487,6 +678,9 @@ CodeBootVM.prototype.SVG =
         'settings':
         '<svg class="cb-svg-settings" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path transform="translate(0,2) scale(0.3)" fill="#000000" d="M13.5 2l-7.5 7.5-3.5-3.5-2.5 2.5 6 6 10-10zM20 7l30 0l0 4l-30 0l0 -4z"></path><path transform="translate(0,6) scale(0.3)" fill="#000000" d="M13.5 2l-7.5 7.5-3.5-3.5-2.5 2.5 6 6 10-10zM20 7l30 0l0 4l-30 0l0 -4z"></path><path transform="translate(0,10) scale(0.3)" fill="#000000" d="M13.5 2l-7.5 7.5-3.5-3.5-2.5 2.5 6 6 10-10zM20 7l30 0l0 4l-30 0l0 -4z"></path></svg>',
 
+        'clipboard':
+        '<svg class="cb-svg-clipboard" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path fill="#000000" d="M322 321l384 0c-3.376-40-19.458-70.9-55.842-80.712-0.892-0.238-2.24-0.848-3.134-1.082-24.008-6.848-42.024-15.306-42.024-41.562L605 156.454C605 105.382 563.952 64 512.98 64c-50.932 0-91.98 41.382-91.98 92.454l0 41.19c0 26.256-17.184 34.338-41.194 41.186-0.894 0.234-1.6 1.22-2.532 1.458C340.892 250.1 325.854 281 322 321zM513.98 128.79c15.23 0 27.582 12.39 27.582 27.664 0 15.308-12.352 27.7-27.582 27.7-15.228 0-27.544-12.39-27.544-27.7C486.436 141.18 498.752 128.79 513.98 128.79zM811.222 127 663 127l0 27.976c0 21.166 18.386 38.024 39.014 38.024l74.424 0c13.334 0 24.198 10.87 24.88 24.39l0.17 654.2c-0.644 12.864-10.606 23.092-23.028 24.034l-528.836 0.062c-12.422-0.942-22.298-11.39-22.944-24.252l-0.17-654.028c0.644-13.522 11.716-24.406 25.012-24.406l74.462 0c20.626 0 37.014-16.858 37.014-38.024L362.998 127l-146.262 0C186.5 127 161 152.116 161 183.15l0 720.76c0 31.004 25.5 57.09 55.738 57.09L513.98 961l297.242 0c30.276 0 53.778-26.086 53.778-57.09L865 183.15C865 152.116 841.498 127 811.222 127zM289 385l224 0 0 64-224 0 0-64ZM289 769l320 0 0 64-320 0 0-64ZM289 641l258 0 0 64-258 0 0-64ZM289 513l416 0 0 64-416 0 0-64Z"></path></svg>',
+
         'gears':
         '<svg class="cb-svg-gears" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="#000000" d="M5.683 11.282l0.645-0.903-0.707-0.707-0.903 0.645c-0.168-0.094-0.347-0.168-0.535-0.222l-0.183-1.095h-1l-0.183 1.095c-0.188 0.053-0.368 0.128-0.535 0.222l-0.903-0.645-0.707 0.707 0.645 0.903c-0.094 0.168-0.168 0.347-0.222 0.535l-1.095 0.183v1l1.095 0.183c0.053 0.188 0.128 0.368 0.222 0.535l-0.645 0.903 0.707 0.707 0.903-0.645c0.168 0.094 0.347 0.168 0.535 0.222l0.183 1.095h1l0.183-1.095c0.188-0.053 0.368-0.128 0.535-0.222l0.903 0.645 0.707-0.707-0.645-0.903c0.094-0.168 0.168-0.347 0.222-0.535l1.095-0.182v-1l-1.095-0.183c-0.053-0.188-0.128-0.368-0.222-0.535zM3.5 13.5c-0.552 0-1-0.448-1-1s0.448-1 1-1 1 0.448 1 1-0.448 1-1 1zM16 6v-1l-1.053-0.191c-0.019-0.126-0.044-0.25-0.074-0.372l0.899-0.58-0.383-0.924-1.046 0.226c-0.066-0.108-0.136-0.213-0.211-0.315l0.609-0.88-0.707-0.707-0.88 0.609c-0.102-0.074-0.207-0.145-0.315-0.211l0.226-1.046-0.924-0.383-0.58 0.899c-0.122-0.030-0.246-0.054-0.372-0.074l-0.191-1.053h-1l-0.191 1.053c-0.126 0.019-0.25 0.044-0.372 0.074l-0.58-0.899-0.924 0.383 0.226 1.046c-0.108 0.066-0.213 0.136-0.315 0.211l-0.88-0.609-0.707 0.707 0.609 0.88c-0.074 0.102-0.145 0.207-0.211 0.315l-1.046-0.226-0.383 0.924 0.899 0.58c-0.030 0.122-0.054 0.246-0.074 0.372l-1.053 0.191v1l1.053 0.191c0.019 0.126 0.044 0.25 0.074 0.372l-0.899 0.58 0.383 0.924 1.046-0.226c0.066 0.108 0.136 0.213 0.211 0.315l-0.609 0.88 0.707 0.707 0.88-0.609c0.102 0.074 0.207 0.145 0.315 0.211l-0.226 1.046 0.924 0.383 0.58-0.899c0.122 0.030 0.246 0.054 0.372 0.074l0.191 1.053h1l0.191-1.053c0.126-0.019 0.25-0.044 0.372-0.074l0.58 0.899 0.924-0.383-0.226-1.046c0.108-0.066 0.213-0.136 0.315-0.211l0.88 0.609 0.707-0.707-0.609-0.88c0.074-0.102 0.145-0.207 0.211-0.315l1.046 0.226 0.383-0.924-0.899-0.58c0.030-0.122 0.054-0.246 0.074-0.372l1.053-0.191zM10.5 7.675c-1.201 0-2.175-0.974-2.175-2.175s0.974-2.175 2.175-2.175 2.175 0.974 2.175 2.175c0 1.201-0.974 2.175-2.175 2.175z"></path></svg>',
 
@@ -502,11 +696,14 @@ CodeBootVM.prototype.SVG =
         'download':
         '<svg class="cb-svg-download" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="#000000" d="M9 4l-2-2h-7v13h16v-11h-7zM8 13.5l-3.5-3.5h2.5v-4h2v4h2.5l-3.5 3.5z"></path></svg>',
 
-        'trash':
-        '<svg class="cb-svg-trash" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="#000000" d="M2 5v10c0 0.55 0.45 1 1 1h9c0.55 0 1-0.45 1-1v-10h-11zM5 14h-1v-7h1v7zM7 14h-1v-7h1v7zM9 14h-1v-7h1v7zM11 14h-1v-7h1v7z"></path><path fill="#000000" d="M13.25 2h-3.25v-1.25c0-0.412-0.338-0.75-0.75-0.75h-3.5c-0.412 0-0.75 0.338-0.75 0.75v1.25h-3.25c-0.413 0-0.75 0.337-0.75 0.75v1.25h13v-1.25c0-0.413-0.338-0.75-0.75-0.75zM9 2h-3v-0.987h3v0.987z"></path></svg>',
+        'window':
+        '<svg class="cb-svg-window" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><g><path d="M 55 60 L 55 206 L 201 206 L 201 60 Z M 65 85 L 191 85 L 191 196 L 65 196 Z"/></g></svg>',
 
         'close':
-        '<svg class="cb-svg-close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="#000000" d="M15.854 12.854c-0-0-0-0-0-0l-4.854-4.854 4.854-4.854c0-0 0-0 0-0 0.052-0.052 0.090-0.113 0.114-0.178 0.066-0.178 0.028-0.386-0.114-0.529l-2.293-2.293c-0.143-0.143-0.351-0.181-0.529-0.114-0.065 0.024-0.126 0.062-0.178 0.114 0 0-0 0-0 0l-4.854 4.854-4.854-4.854c-0-0-0-0-0-0-0.052-0.052-0.113-0.090-0.178-0.114-0.178-0.066-0.386-0.029-0.529 0.114l-2.293 2.293c-0.143 0.143-0.181 0.351-0.114 0.529 0.024 0.065 0.062 0.126 0.114 0.178 0 0 0 0 0 0l4.854 4.854-4.854 4.854c-0 0-0 0-0 0-0.052 0.052-0.090 0.113-0.114 0.178-0.066 0.178-0.029 0.386 0.114 0.529l2.293 2.293c0.143 0.143 0.351 0.181 0.529 0.114 0.065-0.024 0.126-0.062 0.178-0.114 0-0 0-0 0-0l4.854-4.854 4.854 4.854c0 0 0 0 0 0 0.052 0.052 0.113 0.090 0.178 0.114 0.178 0.066 0.386 0.029 0.529-0.114l2.293-2.293c0.143-0.143 0.181-0.351 0.114-0.529-0.024-0.065-0.062-0.126-0.114-0.178z"></path></svg>',
+        '<svg class="cb-svg-close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><g><path d="M 80 60 L 128 108 L 176 60 L 201 85 L 153 133 L 201 181 L 176 206 L 128 158 L 80 206 L 55 181 L 103 133 L 55 85 Z""/></g></svg>',
+
+        'resize':
+        '<svg class="cb-svg-resize" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill=rgb(0,0,0,0.5) d="M8 16 L16 8 L16 9 L9 16 L9 16 M11 16 L16 11 L16 12 L12 16 L12 16M14 16 L16 14 L16 15 L15 16 L14 16"></path></svg>',
 
         'play-1':
         '<svg class="cb-exec-play-1" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><g><path d="M 46 60 L 46 206 L 172 133 Z"/><path d="M 170.233 66.33 L 195.703 57.75 L 194.333 93.35 L 195.433 117.09 L 182.643 117.09 L 183.743 94.9 L 183.013 72.17 L 170.233 72.26 L 170.233 66.33 Z"/></g></svg>',
@@ -527,7 +724,7 @@ CodeBootVM.prototype.SVG =
         '<svg class="cb-exec-stop" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><g><path d="M 55 60 L 55 206 L 201 206 L 201 60 Z"/></g></svg>'
     };
 
-CodeBootVM.prototype.execControlsHTML = function () {
+CodeBootVM.prototype.execControlsHTML = function (execBtns, closeBtn, cloneBtn) {
 
     var vm = this;
 
@@ -538,33 +735,42 @@ CodeBootVM.prototype.execControlsHTML = function () {
     <span class="badge badge-primary badge-pill cb-step-counter cb-exec-step-counter" style="display: none;"></span>\
   </span>\
 \
-  <div class="btn-group cb-exec-controls-buttons" role="group" data-toggle="tooltip" data-delay="2000" data-trigger="manual" data-placement="left" title="TRY ME!">\
-\
+  <div class="btn-group cb-exec-controls-buttons" role="group" data-toggle="tooltip" data-delay="2000" data-trigger="manual" data-placement="left" title="">\
+' + (execBtns ? '\
     <button class="btn btn-secondary cb-button cb-exec-btn-step" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Single step/Pause">' +
-CodeBootVM.prototype.SVG['play-1'] +
-CodeBootVM.prototype.SVG['pause'] +
-CodeBootVM.prototype.SVG['play-pause'] + '\
+vm.SVG['play-1'] +
+vm.SVG['pause'] +
+vm.SVG['play-pause'] + '\
     </button>\
 \
     <button class="btn btn-secondary cb-button cb-exec-btn-animate" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Execute with animation">' +
-CodeBootVM.prototype.SVG['play'] + '\
+vm.SVG['play'] + '\
     </button>\
 \
     <button class="btn btn-secondary cb-button cb-exec-btn-eval" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Execute to end">' +
-CodeBootVM.prototype.SVG['play-inf'] + '\
+vm.SVG['play-inf'] + '\
     </button>\
 \
     <button class="btn btn-secondary cb-button cb-exec-btn-stop" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Stop">' +
-CodeBootVM.prototype.SVG['stop'] + '\
+vm.SVG['stop'] + '\
     </button>\
-\
+' + (closeBtn ? '\
+    <button class="btn btn-secondary cb-button cb-exec-btn-close" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Close">' +
+vm.SVG['close'] + '\
+    </button>\
+' : '') : '') + '\
+' + (cloneBtn ? '\
+    <button class="btn btn-secondary cb-button cb-exec-btn-clone" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Clone">' +
+vm.SVG['window'] + '\
+    </button>\
+' : '') + '\
   </div>\
 \
 </span>\
 ';
 };
 
-CodeBootVM.prototype.navbarHTML = function () {
+CodeBootVM.prototype.navbarHTML = function (execBtns, closeBtn, cloneBtn) {
 
     var vm = this;
 
@@ -575,7 +781,7 @@ CodeBootVM.prototype.navbarHTML = function () {
 \
   <div class="cb-navbar-controls">\
 \
-' + vm.menuHTML() + vm.execControlsHTML() + '\
+' + vm.menuHTML() + vm.execControlsHTML(execBtns, closeBtn, cloneBtn) + '\
 \
   </div>\
 \
@@ -623,6 +829,17 @@ CodeBootVM.prototype.footerHTML = function () {
 ';
 };
 
+
+CodeBootVM.prototype.resizeHandleHTML = function () {
+
+    var vm = this;
+
+    return '\
+<div class="cb-resize-handle">' + vm.SVG['resize'] + '</div>\
+';
+};
+
+
 CodeBootVM.prototype.initRoot = function (opts) {
 
     var vm = this;
@@ -647,7 +864,7 @@ CodeBootVM.prototype.initRoot = function (opts) {
         elem.className = 'cb-vm';
 
         elem.innerHTML =
-            vm.execControlsHTML() +
+            vm.execControlsHTML(false, false, true) +
             vm.editorsHTML(false) +
             vm.consoleHTML();
 
@@ -663,10 +880,11 @@ CodeBootVM.prototype.initRoot = function (opts) {
 
         vm.root.innerHTML =
             vm.headerHTML() +
-            vm.navbarHTML() +
+            vm.navbarHTML(true, vm.root.hasAttribute('data-cb-floating'), false) +
             vm.consoleHTML() +
             vm.editorsHTML(true) +
-            vm.footerHTML();
+            vm.footerHTML() +
+            vm.resizeHandleHTML();
 
         vm.setAttribute('data-cb-show-console', true);
         vm.setAttribute('data-cb-show-repl-container', true);
@@ -689,7 +907,7 @@ CodeBootVM.prototype.initRoot = function (opts) {
             content = child.innerText;
 
             vm.root.innerHTML =
-                vm.execControlsHTML() +
+                vm.execControlsHTML(false, false, true) +
                 vm.editorsHTML(false) +
                 vm.consoleHTML();
 
@@ -812,6 +1030,14 @@ function decodeUtf8(arrayBuffer) {
   return result;
 }
 
+CodeBootVM.prototype.setupTooltip = function () {
+
+    var vm = this;
+
+    //TODO: limit to the VM
+    $('[data-toggle="tooltip"]').tooltip();
+};
+
 CodeBootVM.prototype.hideTooltip = function () {
 
     var vm = this;
@@ -825,8 +1051,14 @@ CodeBootVM.prototype.setupEventHandlers = function () {
     var vm = this;
 
     if (vm.editable) {
-        vm.setupDrop(document.body, function (event) {
+        vm.setupDrop(vm.root, function (event) {
             vm.menuFileDrop(event);
+        });
+    } else {
+        vm.root.addEventListener('mousedown', function (event) {
+            if (!vm.cloneIsOpen()) {
+                vm.setAttribute('data-cb-show-clone', true);
+            }
         });
     }
 
@@ -907,6 +1139,23 @@ CodeBootVM.prototype.setupEventHandlers = function () {
         });
     });
 
+    vm.forEachElem('.cb-exec-btn-close', function (elem) {
+        elem.addEventListener('click', function (event) {
+            vm.hideTooltip();
+            vm.eventClose();
+        });
+    });
+
+    vm.forEachElem('.cb-exec-btn-clone', function (elem) {
+        elem.addEventListener('click', function (event) {
+            vm.hideTooltip();
+            if (!vm.editable) {
+                vm.setAttribute('data-cb-show-clone', false);
+            }
+            vm.eventClone();
+        });
+    });
+
 
 
 /*
@@ -940,7 +1189,109 @@ CodeBootVM.prototype.setupEventHandlers = function () {
         var filename = $('#openFileModal').attr('data-cb-filename');
         vm.loadFile(vm.fs.getEditor(filename), file);
     });
+/*
+    vm.root.addEventListener('mousedown', function (event) {
+        event = event || window.event;
+        event.preventDefault();
+        event.stopPropagation();
+        vm.cb.bringToFront(vm);
+    });
+*/
+    vm.setupMoveRezizeHandlers();
+};
 
+CodeBootVM.prototype.setupMoveRezizeHandlers = function () {
+
+    var vm = this;
+
+    var elem = vm.root;
+    var latestX = 0;
+    var latestY = 0;
+    var eventScope = document;
+    var resize = false;
+
+    function mousedownMove(event) {
+        resize = false;
+        mousedown(event);
+    }
+
+    function mousedownResize(event) {
+        resize = true;
+        mousedown(event);
+    }
+
+    function mousedown(event) {
+
+        event = event || window.event;
+        event.preventDefault();
+
+        latestX = event.clientX; // init starting point
+        latestY = event.clientY;
+
+        eventScope.addEventListener('mouseup', mouseup);
+        eventScope.addEventListener('mousemove', mousemove);
+    }
+
+    function mousemove(event) {
+
+        event = event || window.event;
+        event.preventDefault();
+
+        if (event.buttons === 0) {
+            mouseup();
+            return;
+        }
+
+        var curW = elem.clientWidth;
+        var curH = elem.clientHeight;
+
+        var maxX = window.innerWidth;
+        var maxY = window.innerHeight;
+
+        var clientX = event.clientX;
+        var clientY = event.clientY;
+
+        var dx = clientX - latestX;
+        var dy = clientY - latestY;
+
+        if (resize) {
+            var newW = Math.min(9999, Math.max(575, curW+dx));
+            var newH = Math.min(9999, Math.max(400, curH+dy));
+            dx = newW - curW;
+            dy = newH - curH;
+            elem.style.width = newW + 'px';
+            elem.style.height = newH + 'px';
+        } else {
+            var curX = elem.offsetLeft;
+            var curY = elem.offsetTop;
+            var newX = Math.min(maxX-20, Math.max(10-curW, curX+dx));
+            var newY = Math.min(maxY-10, Math.max(-10, curY+dy));
+            dx = newX - curX;
+            dy = newY - curY;
+            elem.style.left = newX + 'px';
+            elem.style.top = newY + 'px';
+        }
+
+        latestX += dx;
+        latestY += dy;
+    }
+
+    function mouseup() {
+        eventScope.removeEventListener('mouseup', mouseup);
+        eventScope.removeEventListener('mousemove', mousemove);
+    }
+
+    if (vm.root.hasAttribute('data-cb-floating')) {
+        vm.forEachElem('.cb-navbar', function (elem) {
+            elem.addEventListener('mousedown', mousedownMove);
+        });
+    }
+
+    if (vm.root.hasAttribute('data-cb-resizable')) {
+        vm.forEachElem('.cb-resize-handle', function (elem) {
+            elem.addEventListener('mousedown', mousedownResize);
+        });
+    }
 };
 
 CodeBootVM.prototype.setClass = function (cls, add) {
@@ -1101,7 +1452,7 @@ CodeBootVM.prototype.setLargeFont = function (large) {
     }
 };
 
-// Execution events
+// Execution related events
 
 CodeBootVM.prototype.afterDelay = function (thunk, delay) {
 
@@ -1110,44 +1461,120 @@ CodeBootVM.prototype.afterDelay = function (thunk, delay) {
     return setTimeout(thunk, Math.max(1, (delay === undefined ? 0 : delay)));
 };
 
-CodeBootVM.prototype.eventStepPause = function () {
+CodeBootVM.prototype.trackExecEvent = function (event) {
+
+    var vm = this;
+
+    if (event === vm.latestExecEvent) {
+        vm.latestExecEventRepeat++;
+    } else {
+        vm.latestExecEvent = event;
+        vm.latestExecEventRepeat = 1;
+    }
+};
+
+CodeBootVM.prototype.processEvent = function (event) {
 
     var vm = this;
 
     vm.afterDelay(function () {
-        vm.execStepPause();
-        vm.focusLastFocusedEditor();
+
+        switch (event) {
+
+        case 'clearconsole':
+            vm.replReset();
+            vm.focusLastFocusedEditor();
+            break;
+
+        case 'steppause':
+            vm.trackExecEvent(event);
+            vm.execStepPause();
+            vm.focusLastFocusedEditor();
+            break;
+
+        case 'animate':
+            vm.trackExecEvent(event);
+            vm.execAnimate();
+            vm.focusLastFocusedEditor();
+            break;
+
+        case 'eval':
+            vm.trackExecEvent(event);
+            vm.execEval();
+            vm.focusLastFocusedEditor();
+            break;
+
+        case 'stop':
+            vm.trackExecEvent(event);
+            vm.execStop();
+            vm.focusLastFocusedEditor();
+            if (vm.latestExecEventRepeat < 3) break;
+            // fallthrough to 'reset' when stop repeated 3 times in a row
+            event = 'reset';
+
+        case 'reset':
+            var new_force_reset = !vm.force_reset;
+            vm.trackExecEvent(event);
+            vm.execReset();
+            vm.focusLastFocusedEditor();
+            vm.force_reset = new_force_reset;
+            if (new_force_reset) {
+                vm.showExecControlsMessage('Reset', 400);
+            } else {
+                vm.showExecControlsMessage('Reset cancelled', 400);
+            }
+            break;
+
+        case 'clone':
+            vm.clone();
+            vm.focusLastFocusedEditor();
+            break;
+
+        case 'close':
+            vm.close();
+            break;
+        }
     });
+};
+
+CodeBootVM.prototype.eventClearConsole = function () {
+    var vm = this;
+    vm.processEvent('clearconsole');
+};
+
+CodeBootVM.prototype.eventStepPause = function () {
+    var vm = this;
+    vm.processEvent('steppause');
 };
 
 CodeBootVM.prototype.eventAnimate = function () {
-
     var vm = this;
-
-    vm.afterDelay(function () {
-        vm.execAnimate();
-        vm.focusLastFocusedEditor();
-    });
+    vm.processEvent('animate');
 };
 
 CodeBootVM.prototype.eventEval = function () {
-
     var vm = this;
-
-    vm.afterDelay(function () {
-        vm.execEval();
-        vm.focusLastFocusedEditor();
-    });
+    vm.processEvent('eval');
 };
 
 CodeBootVM.prototype.eventStop = function () {
-
     var vm = this;
+    vm.processEvent('stop');
+};
 
-    vm.afterDelay(function () {
-        vm.execStop();
-        vm.focusLastFocusedEditor();
-    });
+CodeBootVM.prototype.eventReset = function () {
+    var vm = this;
+    vm.processEvent('reset');
+};
+
+CodeBootVM.prototype.eventClone = function () {
+    var vm = this;
+    vm.processEvent('clone');
+};
+
+CodeBootVM.prototype.eventClose = function () {
+    var vm = this;
+    vm.processEvent('close');
 };
 
 function cb_internal_getBounds($element) {

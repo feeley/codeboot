@@ -79,11 +79,15 @@
             <p>Enter a command at the console and then:</p>
             <table class="cb-keybindings">
               <tr>
-                <td><kbd>Enter</kbd></td>
+                <td><kbd>Enter</kbd>&nbsp;/&nbsp;<kbd>Shift</kbd> <kbd>Ctrl</kbd> <kbd>Enter</kbd>&nbsp;/&nbsp;<kbd>F7</kbd></td>
                 <td>: execute it fully and display result (unless command is incomplete)</td>
               </tr>
               <tr>
-                <td><kbd>Shift</kbd> <kbd>Enter</kbd></td>
+                <td><kbd>F6</kbd></td>
+                <td>: animate execution of command (single steps repeated automatically)</td>
+              </tr>
+              <tr>
+                <td><kbd>Shift</kbd> <kbd>Enter</kbd>&nbsp;/&nbsp;<kbd>F5</kbd></td>
                 <td>: execute the first step (continue with <kbd>Shift</kbd> <kbd>Enter</kbd> or <kbd>Enter</kbd>)</td>
               </tr>
               <tr>
@@ -97,13 +101,21 @@
             </table>
             <br/>
             <h5>Editor</h5>
+            <p>When the cursor is in an editor:</p>
             <table class="cb-keybindings">
               <tr>
                 <td><kbd>Enter</kbd></td>
                 <td>: insert line break, move to next line and smart indent</td>
               </tr>
               <tr>
-                <td><kbd>Shift</kbd> <kbd>Enter</kbd></td>
+                <td><kbd>Shift</kbd> <kbd>Ctrl</kbd> <kbd>Enter</kbd>&nbsp;/&nbsp;<kbd>F7</kbd></td>
+                <td>: execute the current file</td>
+              <tr>
+                <td><kbd>F6</kbd></td>
+                <td>: animate execution of current file (single steps repeated automatically)</td>
+              </tr>
+              <tr>
+                <td><kbd>Shift</kbd> <kbd>Enter</kbd>&nbsp;/&nbsp;<kbd>F5</kbd></td>
                 <td>: execute the first step of current file (continue with <kbd>Shift</kbd> <kbd>Enter</kbd> or <kbd>Enter</kbd>)</td>
               </tr>
               <tr>
@@ -119,8 +131,8 @@
             <h5>Console and Editor</h5>
             <table class="cb-keybindings">
               <tr>
-                <td><kbd>Esc</kbd></td>
-                <td>: stop the execution</td>
+                <td><kbd>Esc</kbd>&nbsp;/&nbsp;<kbd>F8</kbd></td>
+                <td>: stop the execution (reset execution when repeated 3 times)</td>
               </tr>
               <tr>
                 <td><kbd>Ctrl</kbd> <kbd>L</kbd></td>
