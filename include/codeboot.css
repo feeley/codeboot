@@ -32,12 +32,22 @@ body {
     display: block;
 }
 
+.cb-header {
+    height: 250px;
+    padding: 10px 10px 10px 10px;
+    background-color: #EEE;
+}
+
 .cb-console {
     display: flex;
     align-items: flex-start;
     margin: 0.5em;
     padding: 0;
     height: 11.5em;
+}
+
+.cb-vm[data-cb-show-header] .cb-console {
+    height: 5.5em;
 }
 
 .cb-repl-container {
@@ -48,6 +58,10 @@ body {
     background-color: orange;
 }
 
+.cb-vm[data-cb-show-header] .cb-repl-container {
+    max-height: 7.5em;
+}
+
 .cb-repl-container .CodeMirror {
     height: auto;
     max-height: 11.5em;
@@ -56,6 +70,10 @@ body {
 .cb-repl-container .CodeMirror-scroll {
     height: auto;
     max-height: 11.5em;
+}
+
+.cb-vm[data-cb-show-header] .cb-repl-container .CodeMirror-scroll {
+    max-height: 5.5em;
 }
 
 .cb-exec-controls-buttons .cb-button.btn-secondary,
@@ -117,8 +135,8 @@ body {
     margin: 1em 0.5em 0.5em 0.5em;
 }
 
-.cb-vm:not([data-cb-show-header]).cb-editors {
-    height: calc(100% - 16.5em - 250px);
+.cb-vm[data-cb-show-header] .cb-editors {
+    height: calc(100% - 7.5em - 305px);
 }
 
 .cb-file-tabs {
