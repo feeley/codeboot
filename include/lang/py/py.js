@@ -135,10 +135,24 @@ LangPy.prototype.compile = function (source, container, reboot) {
         lang.vm.syntaxError(loc, error_kind + ": ", msg);
     }
 
+    function syntaxError(start_line0,
+                         start_column0,
+                         end_line0,
+                         end_column0,
+                         msg) {
+        return compilationError(start_line0,
+                         start_column0,
+                         end_line0,
+                         end_column0,
+                         "SyntaxError",
+                         msg)
+    }
+
     var lang = this;
     var external_context =
       {
-        compilationError: compilationError
+          compilationError: compilationError,
+          syntaxError: syntaxError
       };
 
     var ast = pyinterp.parse(source,
