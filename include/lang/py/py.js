@@ -152,7 +152,7 @@ LangPy.prototype.compile = function (source, container, reboot) {
     var external_context =
       {
           compilationError: compilationError,
-          syntaxError: compilationError
+          syntaxError: syntaxError
       };
 
     var ast = pyinterp.parse(source,
