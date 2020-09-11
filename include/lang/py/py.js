@@ -112,10 +112,11 @@ LangPy.prototype.compile = function (source, container, reboot) {
 
     }
 
-    function syntaxError(start_line0,
+    function compilationError(start_line0,
                          start_column0,
                          end_line0,
                          end_column0,
+                         error_kind,
                          msg) {
 
         if (from_repl) {
@@ -131,13 +132,13 @@ LangPy.prototype.compile = function (source, container, reboot) {
                                  end_line0,
                                  end_column0);
 
-        lang.vm.syntaxError(loc, 'SyntaxError: ', msg);
+        lang.vm.syntaxError(loc, error_kind + ": ", msg);
     }
 
     var lang = this;
     var external_context =
       {
-        syntaxError: syntaxError
+        compilationError: compilationError
       };
 
     var ast = pyinterp.parse(source,
