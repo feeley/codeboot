@@ -311,31 +311,20 @@ LangPy.prototype.executionStateHTML = function () {
 LangPy.prototype.contextHTML = function () {
 
     var lang = this;
-    var ctx = lang.rt.ctx;
-    var rte = ctx.rte;
-    var globals = rte.globals;
-    var locals = rte.locals;
+    var rte = lang.rt.ctx.rte;
 
-    var seen = {};
+    var env_repr = pyinterp.get_scope_variables_repr(rte);
+
     var result = [];
 
     var add = function (id, val) {
-        if (!Object.hasOwnProperty.call(seen, id)
-            && !id.startsWith('__')
-            && id !== 'math') {
+        if (!id.startsWith('__') && id !== 'math') {
             result.push('<div class="cb-exec-point-bubble-binding"><span class="cb-code-font">' + id + '</span>: ' + lang.printedRepresentation(val, 'HTML') + '</div>');
-            seen[id] = true;
         }
     };
-    if (locals !== pyinterp.absent) {
-        Object.getOwnPropertyNames(locals).forEach(function (id) {
-            var value = pyinterp.om_simple_repr(ctx, locals[id]);
-            add(id, value);
-        });
-    }
 
-    Object.getOwnPropertyNames(globals).forEach(function (id) {
-        var value = pyinterp.om_simple_repr(ctx, globals[id]);
+    Object.getOwnPropertyNames(env_repr).forEach(function (id) {
+        var value = env_repr[id];
         add(id, value);
     });
 
