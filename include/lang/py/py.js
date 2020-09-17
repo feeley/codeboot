@@ -152,7 +152,8 @@ LangPy.prototype.compile = function (source, container, reboot) {
     var external_context =
       {
           compilationError: compilationError,
-          syntaxError: syntaxError
+          syntaxError: syntaxError,
+          safe_for_space: false,
       };
 
     var ast = pyinterp.parse(source,
@@ -364,7 +365,7 @@ LangPy.prototype.initRunTimeState = function (code, reboot) {
 
     var lang = this;
     // default 'trace' option to false
-    var options = { trace: false };
+    var options = { trace: false, safe_for_space: false };
 
     //console.log('LangPy.initRunTimeState reboot='+reboot);
 
