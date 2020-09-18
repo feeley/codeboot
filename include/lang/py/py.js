@@ -324,10 +324,10 @@ LangPy.prototype.contextHTML = function () {
         }
     };
 
-    Object.getOwnPropertyNames(env_repr).forEach(function (id) {
-        var value = env_repr[id];
-        add(id, value);
-    });
+    env_repr.forEach(function(item){
+        var [id, val] = item;
+        add(id, val)
+    })
 
     return result.join('');
 };
