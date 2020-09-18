@@ -245,8 +245,9 @@ function CodeBootVM(opts) {
     vm.lastFocusedEditor = null;
     vm.allowLosingFocus = true;
 
-    vm.latestExecEvent = 'stop';
-    vm.latestExecEventRepeat = 0;
+    vm.latestProcessEvent = '';
+    vm.latestProcessEventRepeat = 0;
+    vm.latestExecEvent = '';
 
     vm.force_reset = true;
 
@@ -584,7 +585,7 @@ CodeBootVM.prototype.menuLangHTML = function () {
   <div class="dropdown-menu cb-menu-settings-lang">\
 ' + vm.menuSettingsLangHTML() + '\
   <div class="dropdown-divider"></div>\
-  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.0.3</a>\
+  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.0.5</a>\
   <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-help-box">Help</a>\
   </div>\
 </span>\
@@ -1461,15 +1462,15 @@ CodeBootVM.prototype.afterDelay = function (thunk, delay) {
     return setTimeout(thunk, Math.max(1, (delay === undefined ? 0 : delay)));
 };
 
-CodeBootVM.prototype.trackExecEvent = function (event) {
+CodeBootVM.prototype.trackProcessEvent = function (event) {
 
     var vm = this;
 
-    if (event === vm.latestExecEvent) {
-        vm.latestExecEventRepeat++;
+    if (event === vm.latestProcessEvent) {
+        vm.latestProcessEventRepeat++;
     } else {
-        vm.latestExecEvent = event;
-        vm.latestExecEventRepeat = 1;
+        vm.latestProcessEvent = event;
+        vm.latestProcessEventRepeat = 1;
     }
 };
 
@@ -1481,40 +1482,44 @@ CodeBootVM.prototype.processEvent = function (event) {
 
         switch (event) {
 
-        case 'clearconsole':
-            vm.replReset();
-            vm.focusLastFocusedEditor();
-            break;
-
         case 'steppause':
-            vm.trackExecEvent(event);
+            vm.trackProcessEvent(event);
             vm.execStepPause();
             vm.focusLastFocusedEditor();
             break;
 
         case 'animate':
-            vm.trackExecEvent(event);
+            vm.trackProcessEvent(event);
             vm.execAnimate();
             vm.focusLastFocusedEditor();
             break;
 
         case 'eval':
-            vm.trackExecEvent(event);
+            vm.trackProcessEvent(event);
             vm.execEval();
             vm.focusLastFocusedEditor();
             break;
 
-        case 'stop':
-            vm.trackExecEvent(event);
+        case 'clearconsole':
+            vm.trackProcessEvent(event);
             vm.execStop();
+            vm.replReset();
             vm.focusLastFocusedEditor();
-            if (vm.latestExecEventRepeat < 3) break;
+            break;
+
+        case 'stop':
+            vm.trackProcessEvent(event);
+            vm.execStop();
+            if (vm.latestProcessEventRepeat < 3) {
+                vm.focusLastFocusedEditor();
+                break;
+            }
             // fallthrough to 'reset' when stop repeated 3 times in a row
             event = 'reset';
 
         case 'reset':
             var new_force_reset = !vm.force_reset;
-            vm.trackExecEvent(event);
+            vm.trackProcessEvent(event);
             vm.execReset();
             vm.focusLastFocusedEditor();
             vm.force_reset = new_force_reset;

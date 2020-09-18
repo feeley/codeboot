@@ -378,7 +378,7 @@ LangPy.prototype.initRunTimeState = function (code, reboot) {
 };
 
 function runtime_print(msg, rte) {
-    rte.vm.replAddTranscript(msg, 'cb-repl-output');
+    rte.vm.replAddTranscript(msg + '\n', 'cb-repl-output');
     rte.vm.lang.refreshUI();
 };
 

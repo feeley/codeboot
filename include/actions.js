@@ -590,6 +590,8 @@ CodeBootVM.prototype.exec_start = function (delay) {
 
     if (vm.lastFocusedEditor === null) return;
 
+    vm.replSetCursorToEnd();
+
     if (vm.lastFocusedEditor === vm.repl) {
 
         /* running REPL input */
