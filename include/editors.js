@@ -915,8 +915,11 @@ CodeBootVM.prototype.replAddTranscript = function (text, cssClass) {
             vm.replAddSingleLineTranscript(text, cssClass);
         } else {
             var lines = text.split('\n');
-            for (var i=0; i<lines.length; i++) {
+            for (var i=0; i<lines.length-1; i++) {
                 vm.replAddSingleLineTranscript(lines[i] + '\n', cssClass);
+            }
+            if (lines[lines.length-1].length > 0) {
+                vm.replAddSingleLineTranscript(lines[lines.length-1] + '\n', cssClass);
             }
         }
     }
