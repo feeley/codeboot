@@ -152,7 +152,8 @@ LangPy.prototype.compile = function (source, container, reboot) {
     var external_context =
       {
           compilationError: compilationError,
-          syntaxError: syntaxError
+          syntaxError: syntaxError,
+          safe_for_space: false,
       };
 
     var ast = pyinterp.parse(source,
@@ -311,33 +312,22 @@ LangPy.prototype.executionStateHTML = function () {
 LangPy.prototype.contextHTML = function () {
 
     var lang = this;
-    var ctx = lang.rt.ctx;
-    var rte = ctx.rte;
-    var globals = rte.globals;
-    var locals = rte.locals;
+    var rte = lang.rt.ctx.rte;
 
-    var seen = {};
+    var env_repr = pyinterp.get_scope_variables_repr(rte);
+
     var result = [];
 
     var add = function (id, val) {
-        if (!Object.hasOwnProperty.call(seen, id)
-            && !id.startsWith('__')
-            && id !== 'math') {
+        if (!id.startsWith('__') && id !== 'math') {
             result.push('<div class="cb-exec-point-bubble-binding"><span class="cb-code-font">' + id + '</span>: ' + lang.printedRepresentation(val, 'HTML') + '</div>');
-            seen[id] = true;
         }
     };
-    if (locals !== pyinterp.absent) {
-        Object.getOwnPropertyNames(locals).forEach(function (id) {
-            var value = pyinterp.om_simple_repr(ctx, locals[id]);
-            add(id, value);
-        });
-    }
 
-    Object.getOwnPropertyNames(globals).forEach(function (id) {
-        var value = pyinterp.om_simple_repr(ctx, globals[id]);
-        add(id, value);
-    });
+    env_repr.forEach(function(item){
+        var [id, val] = item;
+        add(id, val)
+    })
 
     return result.join('');
 };
@@ -375,7 +365,7 @@ LangPy.prototype.initRunTimeState = function (code, reboot) {
 
     var lang = this;
     // default 'trace' option to false
-    var options = { trace: false };
+    var options = { trace: false, safe_for_space: false };
 
     //console.log('LangPy.initRunTimeState reboot='+reboot);
 
