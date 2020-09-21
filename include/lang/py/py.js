@@ -319,7 +319,7 @@ LangPy.prototype.contextHTML = function () {
     var result = [];
 
     var add = function (id, val) {
-        if (!id.startsWith('__') && id !== 'math') {
+        if (!id.startsWith('__') && id !== 'math' && id !== 'turtle') {
             result.push('<div class="cb-exec-point-bubble-binding"><span class="cb-code-font">' + id + '</span>: ' + lang.printedRepresentation(val, 'HTML') + '</div>');
         }
     };
@@ -403,4 +403,97 @@ function runtime_prompt(msg) {
   return runtime_input(msg);
 }
 
+
+// TODO: move these routines somwwhere else
+function drawing_cs(rte, width, height) {
+  var dw = rte.vm.ui.dw;
+  var vm = dw.vm;
+  if (width !== void 0 || height !== void 0) {
+      if (width === void 0 || height === void 0)
+          throw 'cs expects 0 or 2 parameters';
+      if (typeof width !== 'number')
+          throw 'width parameter of cs must be a number';
+      if (typeof height !== 'number')
+          throw 'height parameter of cs must be a number';
+      if (dw.turtle_canvas.width !== width || dw.turtle_canvas.height !== height) {
+        dw = new DrawingWindow(vm, Math.max(50, Math.min(500, width)), Math.max(50, Math.min(500, height)));
+        dw.setShow(true);
+        vm.ui.dw = dw;
+      }
+  }
+  dw.cs();
+  dw.ensure_showing();
+}
+
+function drawing_ht(rte) {
+  var dw = rte.vm.ui.dw;
+  dw.ht();
+  dw.ensure_showing();
+}
+
+function drawing_st(rte) {
+  var dw = rte.vm.ui.dw;
+  dw.st();
+  dw.ensure_showing();
+}
+
+function drawing_pd(rte) {
+  var dw = rte.vm.ui.dw;
+  dw.pd();
+  dw.ensure_showing();
+}
+
+function drawing_pu(rte) {
+  var dw = rte.vm.ui.dw;
+  dw.pu();
+  dw.ensure_showing();
+}
+
+function drawing_fd(rte, xdist, ydist) {
+  var dw = rte.vm.ui.dw;
+  dw.fd(xdist, ydist);
+  dw.ensure_showing();
+}
+
+function drawing_bk(rte, xdist, ydist) {
+  var dw = rte.vm.ui.dw;
+  dw.bk(xdist, ydist);
+  dw.ensure_showing();
+}
+
+function drawing_lt(rte, angle) {
+  var dw = rte.vm.ui.dw;
+  dw.lt(angle);
+  dw.ensure_showing();
+}
+
+function drawing_rt(rte, angle) {
+  var dw = rte.vm.ui.dw;
+  dw.rt(angle);
+  dw.ensure_showing();
+}
+
+function drawing_mv(rte, x, y) {
+  var dw = rte.vm.ui.dw;
+  dw.mv(x, y);
+  dw.ensure_showing();
+}
+
+function drawing_setpc(rte, r, g, b) {
+  var dw = rte.vm.ui.dw;
+  dw.setpc(r, g, b);
+  dw.ensure_showing();
+}
+
+function drawing_setpw(rte, width) {
+  var dw = rte.vm.ui.dw;
+  dw.setpw(width);
+  dw.ensure_showing();
+}
+
+function drawing_drawtext(rte, text) {
+  var dw = rte.vm.ui.dw;
+  dw.drawtext(text)
+  dw.ensure_showing();
+}
 // runtime_random is define in pyinterp runtime.
