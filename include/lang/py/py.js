@@ -319,7 +319,7 @@ LangPy.prototype.contextHTML = function () {
     var result = [];
 
     var add = function (id, val) {
-        if (!id.startsWith('__') && id !== 'math' && id !== 'turtle') {
+        if (!id.startsWith('__')) {
             result.push('<div class="cb-exec-point-bubble-binding"><span class="cb-code-font">' + id + '</span>: ' + lang.printedRepresentation(val, 'HTML') + '</div>');
         }
     };
