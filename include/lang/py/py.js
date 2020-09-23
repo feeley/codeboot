@@ -319,9 +319,7 @@ LangPy.prototype.contextHTML = function () {
     var result = [];
 
     var add = function (id, val) {
-        if (!id.startsWith('__') && id !== 'math' && id !== 'turtle') {
-            result.push('<div class="cb-exec-point-bubble-binding"><span class="cb-code-font">' + id + '</span>: ' + lang.printedRepresentation(val, 'HTML') + '</div>');
-        }
+        result.push('<div class="cb-exec-point-bubble-binding"><span class="cb-code-font">' + id + '</span>: ' + lang.printedRepresentation(val, 'HTML') + '</div>');
     };
 
     env_repr.forEach(function(item){
