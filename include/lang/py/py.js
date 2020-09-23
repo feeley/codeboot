@@ -228,7 +228,11 @@ LangPy.prototype.continueExecution = function (maxSteps) {
             lang.rt.ctx = state.ctx;
 
             if (state.breakpoint) {
-                lang.rt.stepLimit = lang.rt.stepCount
+                var vm = lang.vm;
+
+                vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(Infinity); }, 0);
+
+                break
             }
         }
     }
