@@ -226,6 +226,10 @@ LangPy.prototype.continueExecution = function (maxSteps) {
             lang.rt.error = state.error;
             lang.rt.cont = state.cont;
             lang.rt.ctx = state.ctx;
+
+            if (state.breakpoint) {
+                lang.rt.stepLimit = lang.rt.stepCount
+            }
         }
     }
 };
