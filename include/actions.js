@@ -1263,9 +1263,7 @@ CodeBootVM.prototype.executionSleep = function(sleepTime, afterSleepDelay) {
                 '<div class="cb-exec-point-bubble-value">' +
                '<i>sleeping ' + (sleepTime / 1000).toFixed(1) + 's</i>' +
                '</div>' +
-               '<div class="cb-exec-point-bubble-context">' +
-                contextHTML +
-               '</div>'
+               contextHTML;
 
             vm.ui.execPointBubble.attachTo(vm.execPointCodeElement(), bubbleContent);
 
@@ -1282,7 +1280,14 @@ CodeBootVM.prototype.executionSleep = function(sleepTime, afterSleepDelay) {
         }
 
         // Compute the context once before the sleep instead of at each step
-        var contextHTML = vm.lang.contextHTML();
+        var context = vm.lang.contextHTML();
+
+        var contextHTML =
+            context === ''
+                ? ''
+                : '<div class="cb-exec-point-bubble-context">' +
+                    vm.lang.contextHTML() +
+                    '</div>';
 
         $('.cb-exec-point-code').hover(function (event) {
         if (!vm.ui.execPointBubble.isVisible()) {
