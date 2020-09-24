@@ -1243,6 +1243,18 @@ CodeBootVM.prototype.executionEndedWithResult = function (result) {
 CodeBootVM.prototype.executionHook = function () {
 };
 
+CodeBootVM.prototype.executionSleep = function(sleepTime) {
+    var vm = this;
+
+    if (sleepTime === Infinity){
+        // Infinite sleep is a switch to single-step mode
+        vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(Infinity); });
+    }
+    else {
+        vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(400); }, sleepTime);
+    }
+}
+
 
 /*
 deprecated

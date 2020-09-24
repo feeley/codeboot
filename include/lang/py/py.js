@@ -202,7 +202,7 @@ LangPy.prototype.startExecution = function (cont) {
     lang.rt.ctx = null;
 };
 
-LangPy.prototype.continueExecution = function (maxSteps, currentDelay) {
+LangPy.prototype.continueExecution = function (maxSteps) {
 
     var lang = this;
     var vm = lang.vm;
@@ -229,12 +229,12 @@ LangPy.prototype.continueExecution = function (maxSteps, currentDelay) {
             lang.rt.ctx = state.ctx;
 
             if (state.sleep_time !== undefined) {
-                vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(currentDelay); }, state.sleep_time);
+                vm.executionSleep(state.sleep_time);
                 break
             }
 
             else if (state.breakpoint) {
-                vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(Infinity); }, 0);
+                vm.executionSleep(Infinity);
                 break
             }
         }
