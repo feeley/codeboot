@@ -202,7 +202,7 @@ LangPy.prototype.startExecution = function (cont) {
     lang.rt.ctx = null;
 };
 
-LangPy.prototype.continueExecution = function (maxSteps) {
+LangPy.prototype.continueExecution = function (maxSteps, currentDelay) {
 
     var lang = this;
     var vm = lang.vm;
@@ -229,8 +229,7 @@ LangPy.prototype.continueExecution = function (maxSteps) {
             lang.rt.ctx = state.ctx;
 
             if (state.sleep_time !== undefined) {
-                // TODO: get mode and restart in same mode after
-                vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(vm.stepDelay); }, state.sleep_time);
+                vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(currentDelay); }, state.sleep_time);
                 break
             }
 
