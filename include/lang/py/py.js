@@ -202,9 +202,10 @@ LangPy.prototype.startExecution = function (cont) {
     lang.rt.ctx = null;
 };
 
-LangPy.prototype.continueExecution = function (maxSteps) {
+LangPy.prototype.continueExecution = function (maxSteps, delay) {
 
     var lang = this;
+    var vm = lang.vm;
 
     //console.log('LangPy.continueExecution maxSteps='+maxSteps);
 
@@ -226,6 +227,16 @@ LangPy.prototype.continueExecution = function (maxSteps) {
             lang.rt.error = state.error;
             lang.rt.cont = state.cont;
             lang.rt.ctx = state.ctx;
+
+            if (state.sleep_time !== undefined) {
+                vm.executionSleep(state.sleep_time, delay);
+                break
+            }
+
+            else if (state.breakpoint) {
+                vm.executionSleep(Infinity);
+                break
+            }
         }
     }
 };

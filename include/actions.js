@@ -1133,7 +1133,7 @@ CodeBootVM.prototype.exec_continue = function (delay) {
     var was_animating = vm.stopAnimation(); // cancel execution animation timer if any
 
     try {
-        lang.continueExecution(delay > 0 ? 1 : stepChunk);
+        lang.continueExecution(delay > 0 ? 1 : stepChunk, delay);
     }
     catch (e) {
         update_playground_visibility(vm);//TODO: fix
@@ -1242,6 +1242,56 @@ CodeBootVM.prototype.executionEndedWithResult = function (result) {
 
 CodeBootVM.prototype.executionHook = function () {
 };
+
+CodeBootVM.prototype.executionSleep = function(sleepTime, afterSleepDelay) {
+    var vm = this;
+
+    if (sleepTime === Infinity){
+        // Infinite sleep is a switch to single-step mode
+        vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(Infinity); });
+    }
+    else if (sleepTime < 100) {
+        // For short sleep, do not display bubble
+        vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(afterSleepDelay); }, sleepTime);
+    } else {
+        function executionSleepLoop(sleepTime, afterSleepDelay, contextHTML){
+            // For longer time, display a count-down
+            var sleepStep = Math.min(sleepTime, 100);
+            var remainingSleepTime = sleepTime - sleepStep;
+
+            var bubbleContent =
+                '<div class="cb-exec-point-bubble-value">' +
+               '<i>sleeping ' + (sleepTime / 1000).toFixed(1) + 's</i>' +
+               '</div>' +
+               '<div class="cb-exec-point-bubble-context">' +
+                contextHTML +
+               '</div>'
+
+            vm.ui.execPointBubble.attachTo(vm.execPointCodeElement(), bubbleContent);
+
+            if (remainingSleepTime <= 0){
+                // Restart execution after next micro-sleep
+                vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(afterSleepDelay); }, sleepTime);
+            }
+            else {
+                // Sleep for 100ms then comeback to update counter
+                vm.ui.timeoutId = vm.afterDelay(function () {
+                    vm.executionSleep(remainingSleepTime, afterSleepDelay);
+                }, sleepStep);
+            }
+        }
+
+        // Compute the context once before the sleep instead of at each step
+        var contextHTML = vm.lang.contextHTML();
+
+        $('.cb-exec-point-code').hover(function (event) {
+        if (!vm.ui.execPointBubble.isVisible()) {
+            vm.showExecPoint();
+        }})
+
+        executionSleepLoop(sleepTime, afterSleepDelay, contextHTML);
+    }
+}
 
 
 /*
