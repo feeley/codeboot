@@ -202,7 +202,7 @@ LangPy.prototype.startExecution = function (cont) {
     lang.rt.ctx = null;
 };
 
-LangPy.prototype.continueExecution = function (maxSteps) {
+LangPy.prototype.continueExecution = function (maxSteps, delay) {
 
     var lang = this;
     var vm = lang.vm;
@@ -229,7 +229,7 @@ LangPy.prototype.continueExecution = function (maxSteps) {
             lang.rt.ctx = state.ctx;
 
             if (state.sleep_time !== undefined) {
-                vm.executionSleep(state.sleep_time);
+                vm.executionSleep(state.sleep_time, delay);
                 break
             }
 

@@ -1133,7 +1133,7 @@ CodeBootVM.prototype.exec_continue = function (delay) {
     var was_animating = vm.stopAnimation(); // cancel execution animation timer if any
 
     try {
-        lang.continueExecution(delay > 0 ? 1 : stepChunk);
+        lang.continueExecution(delay > 0 ? 1 : stepChunk, delay);
     }
     catch (e) {
         update_playground_visibility(vm);//TODO: fix
@@ -1243,7 +1243,7 @@ CodeBootVM.prototype.executionEndedWithResult = function (result) {
 CodeBootVM.prototype.executionHook = function () {
 };
 
-CodeBootVM.prototype.executionSleep = function(sleepTime) {
+CodeBootVM.prototype.executionSleep = function(sleepTime, afterSleepDelay) {
     var vm = this;
 
     if (sleepTime === Infinity){
@@ -1251,7 +1251,7 @@ CodeBootVM.prototype.executionSleep = function(sleepTime) {
         vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(Infinity); });
     }
     else {
-        vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(400); }, sleepTime);
+        vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(afterSleepDelay); }, sleepTime);
     }
 }
 
