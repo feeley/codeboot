@@ -505,4 +505,30 @@ function drawing_drawtext(rte, text) {
   dw.drawtext(text)
   dw.ensure_showing();
 }
+
+// Mouse event
+function getMouse(rte) {
+  var vm = rte.vm;
+  var pos = vm.mousePos;
+  if (vm.ui.dw.showing()) {
+    return vm.ui.dw.pageToRelative(pos);
+  } else if (vm.ui.pw.showing()) {
+    return vm.ui.pw.pageToRelative(pos);
+  } else {
+    return pos
+  }
+}
+
+function getMouseX(rte) {
+  return getMouse(rte).x;
+}
+
+function getMouseY(rte) {
+  return getMouse(rte).y;
+}
+
+function getMouseDown(rte) {
+  return rte.vm.mouseDown;
+}
+
 // runtime_random is define in pyinterp runtime.
