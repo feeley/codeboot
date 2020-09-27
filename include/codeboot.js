@@ -29,20 +29,23 @@ CodeBoot.prototype.init = function () {
         cb.resizeHandler();
     });
 
-/*TODO: fix
     $('body').on('mousemove', function (event) {
-        vm.mousePos = { x: event.pageX, y: event.pageY };
+        for (var id in cb.vms) {
+            cb.vms[id].mousePos = { x: event.pageX, y: event.pageY };
+        }
     });
 
     $('body').on('mousedown', function (event) {
-        vm.mouseDown = true;
+        for (var id in cb.vms) {
+            cb.vms[id].mouseDown = true;
+        }
     });
 
     $('body').on('mouseup', function (event) {
-        vm.mouseDown = false;
+        for (var id in cb.vms) {
+            cb.vms[id].mouseDown = false;
+        }
     });
-
-*/
 
 /*
     window.onbeforeunload = function () {
