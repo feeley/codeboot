@@ -214,6 +214,7 @@ body {
     border-bottom-left-radius: 0.3em;
     border-bottom-right-radius: 0.3em;
     background-color: #f6f6f6;
+    position: relative;
 }
 
 .cb-file-container {
@@ -221,7 +222,7 @@ body {
 }
 
 .cb-vm:not([data-cb-show-header]):not([data-cb-show-footer]) .cb-file-container .CodeMirror-scroll {
-    height: 100%;
+/*    height: 100%; */
     width: 100%;
 }
 
@@ -553,7 +554,12 @@ body {
 
 .cb-editors .CodeMirror {
     border: 0;
-    height: auto;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
 }
 
 /*--------------------------- CodeMirror ----------------------------*/
@@ -789,7 +795,7 @@ body {
 .cb-vm .CodeMirror pre.CodeMirror-line {
     font-family: "Lucida Console", "Hack", Monaco, monospace;
     font-size: 100%;
-/*    line-height: 1.4; */
+    line-height: 1.4;
 }
 
 .cb-vm .CodeMirror-dialog {
@@ -801,7 +807,7 @@ body {
 .cb-vm[data-cb-large-font] .cb-editors,
 .cb-vm[data-cb-large-font] .tippy-box[data-theme="cb-exec-point-bubble"] {
     font-size: 140%;
-/*    line-height: 1.4; */
+    line-height: 1.4;
 }
 
 /*------------------ Execution point highlighting -------------------*/
@@ -853,7 +859,7 @@ body {
 .tippy-box[data-theme="cb-exec-point-bubble"] .cb-exec-point-bubble-binding .cb-code-font {
     font-weight: bold;
     font-size: 110%;
-/*    line-height: calc(100 * 1.4 / 110); */
+    line-height: calc(100 * 1.4 / 110);
 }
 
 /*-------------------------------------------------------------------*/

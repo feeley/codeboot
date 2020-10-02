@@ -1007,6 +1007,7 @@ CodeBootVM.prototype.setupSplitter = function (containerElem, setSize) {
             var delta = Math.min(dist - (currentSize - startSize),
                                  elasticSize - elasticSizeMin);
             var size = Math.max(rigidSizeMin, delta + currentSize);
+            //console.log(elasticSize, pos, dist, delta, size);
             rigidElem.style.flexBasis = size + 'px';
             if (setSize) setSize(size);
             currentSize = size;

@@ -10,6 +10,11 @@ CodeBootVM.prototype.initEditor = function (editor, node, history, fileEditor) {
     editor.cb.widgets = [];
     editor.cb.transcriptMarker = null;
     vm.setTranscriptMarker(editor, vm.beginningOfEditor());
+
+//    editor.on('paste', function(cm, event) {
+//        vm.afterDelay(function () { editor.refresh(); });
+//        //event.preventDefault();
+//    });
 };
 
 CodeBootVM.prototype.trackEditorFocus = function (editor, focus) {
@@ -74,6 +79,7 @@ CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
         value: '',
         lineNumbers: vm.showLineNumbers,
         cursorScrollMargin: 0,
+        scrollbarStyle: 'null', // avoid 2 scrollbars... why needed?
         gutters: ['CodeMirror-linenumbers', 'cb-file-cm-gutter'],
         fixedGutter: false,
         matchBrackets: true,
