@@ -410,6 +410,16 @@ CodeBootTranscript.prototype.addLine = function (text, cssClass) {
 };
 */
 
+CodeBootVM.prototype.setReadOnly = function (editor, val) {
+
+    var vm = this;
+
+    if (editor) {
+        editor.setOption('readOnly', val);
+        editor.setOption('matchBrackets', !val);
+    }
+};
+
 CodeBootVM.prototype.adjustEditorOptions = function (options) {
 
     var vm = this;

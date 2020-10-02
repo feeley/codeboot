@@ -789,7 +789,7 @@ body {
 .cb-vm .CodeMirror pre.CodeMirror-line {
     font-family: "Lucida Console", "Hack", Monaco, monospace;
     font-size: 100%;
-    line-height: 1.4;
+/*    line-height: 1.4; */
 }
 
 .cb-vm .CodeMirror-dialog {
@@ -801,7 +801,7 @@ body {
 .cb-vm[data-cb-large-font] .cb-editors,
 .cb-vm[data-cb-large-font] .tippy-box[data-theme="cb-exec-point-bubble"] {
     font-size: 140%;
-    line-height: 1.4;
+/*    line-height: 1.4; */
 }
 
 /*------------------ Execution point highlighting -------------------*/
@@ -853,7 +853,7 @@ body {
 .tippy-box[data-theme="cb-exec-point-bubble"] .cb-exec-point-bubble-binding .cb-code-font {
     font-weight: bold;
     font-size: 110%;
-    line-height: calc(100 * 1.4 / 110);
+/*    line-height: calc(100 * 1.4 / 110); */
 }
 
 /*-------------------------------------------------------------------*/

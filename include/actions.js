@@ -422,9 +422,7 @@ CodeBootVM.prototype.replSetReadOnly = function (val) {
 
     var vm = this;
 
-    if (!vm.repl) return;
-
-    vm.repl.setOption('readOnly', val);
+    vm.setReadOnly(vm.repl, val);
 };
 
 CodeBootVM.prototype.enterMode = function (newMode) {

@@ -1196,6 +1196,7 @@ CodeBootFileEditor.prototype.rename = function () {
 CodeBootFileEditor.prototype.setReadOnly = function (readOnly) {
     var fe = this;
     fe.editor.setOption('readOnly', readOnly);
+    fe.editor.setOption('matchBrackets', !readOnly);
 };
 
 //-----------------------------------------------------------------------------
