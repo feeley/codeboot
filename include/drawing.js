@@ -117,11 +117,8 @@ function DrawingWindow(vm, width, height) {
 
     dw.turtle_canvas = dom_create_canvas_cartesian('cb-turtle', width, height);
     dw.turtle_context = dom_canvas_context(dw.turtle_canvas);
-    dw.turtle_canvas.style.position = 'absolute';
 
     dw.drawing_canvas = dom_create_canvas_cartesian('cb-drawing', width, height);
-    dw.drawing_canvas.style.position = 'absolute';
-    dw.drawing_canvas.style.boxShadow = '0 0 10px #999';
     dw.drawing_context = dom_canvas_context(dw.drawing_canvas);
 
     dw.grid_canvas = dom_create_canvas_cartesian('cb-grid', width, height);
@@ -156,7 +153,7 @@ function DrawingWindow(vm, width, height) {
 
 var drawing_window;
 
-DrawingWindow.prototype.toDataURL = function () {
+DrawingWindow.prototype.toDataURL = function (noDecoration, noBackground) {
 
     var dw = this;
     var w = dw.drawing_canvas.width;
@@ -166,20 +163,34 @@ DrawingWindow.prototype.toDataURL = function () {
     c.height = h;
     var ctx = c.getContext('2d');
 
-    ctx.fillStyle = 'rgba(255,255,255,1)';
-    ctx.fillRect(0,0,w,h);
+    if (!noBackground) {
+        ctx.fillStyle = 'rgba(255,255,255,1)';
+        ctx.fillRect(0,0,w,h);
+    }
 
-    ctx.drawImage(dw.grid_canvas, 0, 0);
+    if (!noDecoration) {
+        ctx.drawImage(dw.grid_canvas, 0, 0);
+    }
+
     ctx.drawImage(dw.drawing_canvas, 0, 0);
-    ctx.drawImage(dw.turtle_canvas, 0, 0);
+
+    if (!noDecoration) {
+        ctx.drawImage(dw.turtle_canvas, 0, 0);
+    }
 
     return c.toDataURL();
 };
 
-DrawingWindow.prototype.screenshot = function () {
+DrawingWindow.prototype.screenshot = function (event) {
     var dw = this;
-    window.open(dw.toDataURL());
+    var dataURL = dw.toDataURL(event.shiftKey, event.altKey);
+    openDataURL(dataURL);
 };
+
+function openDataURL(dataURL){
+    var win = window.open();
+    win.document.write('<iframe src="' + dataURL  +'" frameborder="0" style="border:0; width:100%; height:100%;"></iframe>');
+}
 
 DrawingWindow.prototype.excursion = function (thunk) {
     var dw = this;
@@ -383,9 +394,9 @@ DrawingWindow.prototype.setShow = function (show) {
         $('.cb-drawing-window').css('display', 'inline');
         var parent = vm.root.querySelector('.cb-drawing-window');
         dom_remove_children(parent);
+        parent.appendChild(drawing_window.grid_canvas);
         parent.appendChild(drawing_window.drawing_canvas);
         parent.appendChild(drawing_window.turtle_canvas);
-        parent.appendChild(drawing_window.grid_canvas);
         update_playground_visibility(vm);
     } else {
         var parent = vm.root.querySelector('.cb-drawing-window');
@@ -404,7 +415,7 @@ function update_playground_visibility(vm) {
         .css('visibility', drawing_window_visible ? 'visible' : 'hidden');
     $('a[data-cb-setting-graphics="show-pixels-window"] > span')
         .css('visibility', pixels_window_visible ? 'visible' : 'hidden');
-    if (true || drawing_window_visible || pixels_window_visible || $('#b').html() !== '') {
+    if (drawing_window_visible || pixels_window_visible /* || $('#b').html() !== '' */) {
         vm.setAttribute('data-cb-show-playground', true);
     } else {
         vm.setAttribute('data-cb-show-playground', false);
@@ -595,7 +606,7 @@ function PixelsWindow(vm, width, height, scale) {
 
 var pixels_window;
 
-PixelsWindow.prototype.toDataURL = function () {
+PixelsWindow.prototype.toDataURL = function (noDecoration, noBackground) {
 
     var pw = this;
     var w = pw.pixels_canvas.width;
@@ -605,18 +616,24 @@ PixelsWindow.prototype.toDataURL = function () {
     c.height = h;
     var ctx = c.getContext('2d');
 
-    ctx.fillStyle = 'rgba(255,255,255,1)';
-    ctx.fillRect(0,0,w,h);
+    if (!noBackground) {
+        ctx.fillStyle = 'rgba(255,255,255,1)';
+        ctx.fillRect(0,0,w,h);
+    }
 
     ctx.drawImage(pw.pixels_canvas, 0, 0);
-    ctx.drawImage(pw.grid_canvas, 0, 0);
+
+    if (!noDecoration) {
+        ctx.drawImage(pw.grid_canvas, 0, 0);
+    }
 
     return c.toDataURL();
 };
 
-PixelsWindow.prototype.screenshot = function () {
+PixelsWindow.prototype.screenshot = function (event) {
     var pw = this;
-    window.open(pw.toDataURL());
+    var dataURL = pw.toDataURL(event.shiftKey, event.altKey);
+    openDataURL(dataURL);
 };
 
 PixelsWindow.prototype.fill_rect = function (x, y, w, h, color) {

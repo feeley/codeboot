@@ -4,6 +4,8 @@ function CodeBoot() {
 
     var cb = this;
 
+    cb.mouse = { x: 0, y: 0, down: false };
+
     document.addEventListener('DOMContentLoaded', function () {
         cb.init();
     });
@@ -30,21 +32,16 @@ CodeBoot.prototype.init = function () {
     });
 
     $('body').on('mousemove', function (event) {
-        for (var id in cb.vms) {
-            cb.vms[id].mousePos = { x: event.pageX, y: event.pageY };
-        }
+        cb.mouse.x = event.pageX;
+        cb.mouse.y = event.pageY;
     });
 
     $('body').on('mousedown', function (event) {
-        for (var id in cb.vms) {
-            cb.vms[id].mouseDown = true;
-        }
+        cb.mouse.down = true;
     });
 
     $('body').on('mouseup', function (event) {
-        for (var id in cb.vms) {
-            cb.vms[id].mouseDown = false;
-        }
+        cb.mouse.down = false;
     });
 
 /*
@@ -105,7 +102,7 @@ CodeBoot.prototype.bringToFront = function (vm) {
 
     var vms = Object.values(CodeBoot.prototype.vms);
 
-    console.log('==> ' + vm.zIndex + ' ' + vm.root.style.zIndex + ' ' + cb.zIndexFromLevel(CodeBoot.prototype.vmCount-1));
+    //console.log('==> ' + vm.zIndex + ' ' + vm.root.style.zIndex + ' ' + cb.zIndexFromLevel(CodeBoot.prototype.vmCount-1));
 
     if (vm.zIndex === cb.zIndexFromLevel(CodeBoot.prototype.vmCount-1))
         return false;
@@ -143,7 +140,7 @@ CodeBoot.prototype.resizeHandler = function (event) {
 
     for (var id in CodeBoot.prototype.vms) {
         var vm = CodeBoot.prototype.vms[id];
-        console.log(id + ' ' + vm);
+        //console.log(id + ' ' + vm);
         delete vm.root.style.transform;
         var scale = getScale(vm.root);
         vm.root.style.transform = 'scale(' + (1/scale) + ')';
@@ -588,7 +585,7 @@ CodeBootVM.prototype.menuLangHTML = function () {
   <div class="dropdown-menu cb-menu-settings-lang">\
 ' + vm.menuSettingsLangHTML() + '\
   <div class="dropdown-divider"></div>\
-  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.0.5</a>\
+  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.0.7</a>\
   <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-help-box">Help</a>\
   </div>\
 </span>\
@@ -800,13 +797,14 @@ CodeBootVM.prototype.consoleHTML = function () {
     var vm = this;
 
     return '\
-<div class="cb-console">\
-  <div class="cb-repl-container">\
+<div class="cb-console cb-pane-rigid cb-h-panes">\
+  <div class="cb-repl-container cb-pane-elastic">\
     <textarea class="cb-repl"></textarea>\
   </div>\
-  <div class="cb-playground">\
-    <div class="cb-drawing-window" ondblclick="drawing_window.screenshot();"></div>\
-    <div class="cb-pixels-window" ondblclick="pixels_window.screenshot();"></div>\
+  <div class="cb-pane-splitter"></div>\
+  <div class="cb-playground cb-pane-rigid">\
+    <div class="cb-drawing-window" ondblclick="drawing_window.screenshot(event);"></div>\
+    <div class="cb-pixels-window" ondblclick="pixels_window.screenshot(event);"></div>\
     <div class="cb-body"></div>\
   </div>\
 </div>\
@@ -818,8 +816,21 @@ CodeBootVM.prototype.editorsHTML = function (enableTabs) {
     var vm = this;
 
     return '\
-<div class="cb-editors">\
+<div class="cb-editors cb-pane-elastic">\
 ' + (enableTabs ? '<ul class="nav nav-tabs cb-file-tabs"></ul>' : '') + '\
+</div>\
+';
+};
+
+CodeBootVM.prototype.bodyHTML = function (consoleAtBottom, enableTabs) {
+
+    var vm = this;
+
+    return '\
+<div class="cb-body cb-v-panes">\
+' + (consoleAtBottom ? vm.editorsHTML(enableTabs) : vm.consoleHTML()) + '\
+<div class="cb-pane-splitter"></div>\
+' + (!consoleAtBottom ? vm.editorsHTML(enableTabs) : vm.consoleHTML()) + '\
 </div>\
 ';
 };
@@ -832,7 +843,6 @@ CodeBootVM.prototype.footerHTML = function () {
 <div class="cb-footer"></div>\
 ';
 };
-
 
 CodeBootVM.prototype.resizeHandleHTML = function () {
 
@@ -869,8 +879,7 @@ CodeBootVM.prototype.initRoot = function (opts) {
 
         elem.innerHTML =
             vm.execControlsHTML(false, false, true) +
-            vm.editorsHTML(false) +
-            vm.consoleHTML();
+            vm.bodyHTML(true, false);
 
         vm.root.replaceWith(elem);
         vm.root = elem;
@@ -885,8 +894,7 @@ CodeBootVM.prototype.initRoot = function (opts) {
         vm.root.innerHTML =
             vm.headerHTML() +
             vm.navbarHTML(true, vm.root.hasAttribute('data-cb-floating'), false) +
-            vm.consoleHTML() +
-            vm.editorsHTML(true) +
+            vm.bodyHTML(false, true) +
             vm.footerHTML() +
             vm.resizeHandleHTML();
 
@@ -912,8 +920,7 @@ CodeBootVM.prototype.initRoot = function (opts) {
 
             vm.root.innerHTML =
                 vm.execControlsHTML(false, false, true) +
-                vm.editorsHTML(false) +
-                vm.consoleHTML();
+                vm.bodyHTML(true, false);
 
             vm.setAttribute('data-cb-show-editors', true);
             vm.setAttribute('data-cb-runable-code', true);
@@ -922,7 +929,100 @@ CodeBootVM.prototype.initRoot = function (opts) {
         vm.editable = (content === null);
     }
 
+    // In order to resize the repl's height, the CodeMirror-scroll
+    // element's max-height must be explicitly changed
+
+    var bodyElem = vm.root.querySelector('.cb-body');
+    if (bodyElem) {
+        var replContElem = bodyElem.querySelector('.cb-repl-container');
+        if (replContElem) {
+            vm.setupSplitter(bodyElem, function (size) {
+                var replScrollElem = replContElem.querySelector('.CodeMirror-scroll');
+                if (replScrollElem) {
+                    replScrollElem.style.maxHeight = size + 'px';
+                    vm.replScrollToEnd();
+                }
+            });
+        }
+    }
+
+    var consoleElem = vm.root.querySelector('.cb-console');
+    if (consoleElem) {
+        vm.setupSplitter(consoleElem);
+    }
+
     return initLast;
+};
+
+CodeBootVM.prototype.setupSplitter = function (containerElem, setSize) {
+
+    function px(style, property) {
+        return parseInt(style.getPropertyValue(property).slice(0, -2));
+    }
+
+    if (!containerElem) return;
+
+    var rigidElem = containerElem.querySelector(':scope > .cb-pane-rigid');
+    var elasticElem = containerElem.querySelector(':scope > .cb-pane-elastic');
+    var splitterElem = containerElem.querySelector(':scope > .cb-pane-splitter');
+
+    if (!(rigidElem && elasticElem && splitterElem)) return;
+
+    var rigidPaneLast = splitterElem.nextElementSibling === rigidElem;
+    var containerStyle = window.getComputedStyle(containerElem);
+    var rigidStyle = window.getComputedStyle(rigidElem);
+    var elasticStyle = window.getComputedStyle(elasticElem);
+
+    var vert = containerStyle.getPropertyValue('flex-direction') === 'column';
+    var sizeProp = vert ? 'height' : 'width';
+    var sizeMinProp = vert ? 'min-height' : 'min-width';
+
+    var rigidSizeMin = px(rigidStyle, sizeMinProp);
+    var elasticSizeMin = px(elasticStyle, sizeMinProp);
+
+    var startPos = null;
+    var startSize = null;
+    var currentSize = null;
+
+    //console.log(rigidElem);
+    //console.log(rigidStyle.getPropertyValue('height'));
+
+    rigidElem.style.flexBasis = rigidStyle.getPropertyValue('height');
+
+    function mouseDown(event) {
+        startPos = vert ? event.pageY : event.pageX;
+        startSize = px(rigidStyle, sizeProp);
+        currentSize = startSize;
+        document.body.addEventListener('mousemove', mouseMove);
+        document.body.addEventListener('mouseup', mouseEnd);
+        event.preventDefault();
+    }
+
+    function mouseMove(event) {
+        if (event.buttons && startPos !== null) {
+            var elasticSize = px(elasticStyle, sizeProp);
+            var pos = vert ? event.pageY : event.pageX;
+            var dist = pos - startPos;
+            if (rigidPaneLast) dist = -dist;
+            var delta = Math.min(dist - (currentSize - startSize),
+                                 elasticSize - elasticSizeMin);
+            var size = Math.max(rigidSizeMin, delta + currentSize);
+            rigidElem.style.flexBasis = size + 'px';
+            if (setSize) setSize(size);
+            currentSize = size;
+        } else {
+            mouseEnd();
+        }
+        event.preventDefault();
+    }
+
+    function mouseEnd(event) {
+        startPos = null;
+        document.body.removeEventListener('mouseup', mouseEnd);
+        splitterElem.removeEventListener('mousemove', mouseMove);
+    }
+
+    splitterElem.addEventListener('mousedown', mouseDown);
 };
 
 function escape_HTML(text) {
@@ -1356,7 +1456,7 @@ CodeBootVM.prototype.toggleDevMode = function () {
     vm.setDevMode(!vm.devMode);
 };
 
-var normalStepDelay = 400; // milliseconds per step
+var normalStepDelay = 500; // milliseconds per step
 
 CodeBootVM.prototype.setAnimationSpeed = function (speed) {
 
@@ -1382,7 +1482,7 @@ CodeBootVM.prototype.setAnimationSpeed = function (speed) {
             break;
 
         case 'turbo':
-            vm.setStepDelay(20);
+            vm.setStepDelay(40);
             break;
 
         case 'lightning':

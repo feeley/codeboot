@@ -502,20 +502,20 @@ function drawing_setpw(rte, width) {
 
 function drawing_drawtext(rte, text) {
   var dw = rte.vm.ui.dw;
-  dw.drawtext(text)
+  dw.drawtext(text);
   dw.ensure_showing();
 }
 
 // Mouse event
 function getMouse(rte) {
   var vm = rte.vm;
-  var pos = vm.mousePos;
+  var pos = vm.cb.mouse;
   if (vm.ui.dw.showing()) {
     return vm.ui.dw.pageToRelative(pos);
   } else if (vm.ui.pw.showing()) {
     return vm.ui.pw.pageToRelative(pos);
   } else {
-    return pos
+    return pos;
   }
 }
 
@@ -528,7 +528,7 @@ function getMouseY(rte) {
 }
 
 function getMouseDown(rte) {
-  return rte.vm.mouseDown;
+  return rte.vm.cb.mouse.down;
 }
 
 // runtime_random is define in pyinterp runtime.

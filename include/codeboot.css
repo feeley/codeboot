@@ -1,11 +1,22 @@
 body {
     --cb-navbar-color: #90c0ff;
+    --cb-focus-repl-navbar-controls-color: #7db6d5;
+    --cb-focus-repl-navbar-controls-hover-color: #afd3e6;
+    --cb-repl-container-color: #e0f0f6;
     --cb-exec-point-color: yellow;
     --cb-exec-point-bubble-color: var(--cb-exec-point-color);
+    --cb-console-height: 260px;    /* initial console height */
+    --cb-console-min-height: 55px; /* min console height = ~1 line */
+    --cb-playground-height: 260px;
+    --cb-playground-width: 370px;
+    --cb-playground-min-width: 50px;
+    --cb-margin: 8px;
 }
 
 .cb-vm {
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .cb-vm[data-cb-floating] {
@@ -24,12 +35,21 @@ body {
     display: none;
 }
 
+.cb-vm:not([data-cb-show-console]) .cb-v-panes > .cb-pane-splitter {
+    display: none;
+}
+
+.cb-vm:not([data-cb-show-playground]) .cb-h-panes > .cb-pane-splitter {
+    display: none;
+}
+
 .cb-vm[data-cb-show-header] .cb-header,
 .cb-vm[data-cb-show-footer] .cb-footer,
 .cb-vm[data-cb-show-console] .cb-console,
 .cb-vm[data-cb-show-repl-container] .cb-repl-container,
 .cb-vm[data-cb-show-playground] .cb-playground {
-    display: block;
+/*    display: block; */
+/*    display: flex; */
 }
 
 .cb-header {
@@ -38,42 +58,46 @@ body {
     background-color: #EEE;
 }
 
-.cb-console {
-    display: flex;
-    align-items: flex-start;
-    margin: 0.5em;
-    padding: 0;
-    height: 11.5em;
+.cb-body {
+/*    height: 100%; */
+    width: 100%;
+/*    background-color: red; */
+    margin: 0;
+}
+
+.cb-v-panes > .cb-console.cb-pane-rigid { /* for highest specificity */
+    height: var(--cb-console-height);
+    min-height: var(--cb-console-min-height);
+}
+
+.cb-h-panes > .cb-playground.cb-pane-rigid { /* for highest specificity */
+    width: var(--cb-playground-width);
+    min-width: var(--cb-playground-min-width);
 }
 
 .cb-vm[data-cb-show-header] .cb-console {
-    height: 5.5em;
+/*    height: 5.5em; */
 }
 
 .cb-repl-container {
-    width: 100%;
-    max-height: 13.5em; /* 11.5em + 2*1em */
-    padding: 0.3em;
-    border-radius: 0.3em;
-    background-color: orange;
+    margin: 0;
 }
 
 .cb-vm[data-cb-show-header] .cb-repl-container {
-    max-height: 7.5em;
+/*    max-height: 7.5em; */
 }
 
 .cb-repl-container .CodeMirror {
-    height: auto;
-    max-height: 11.5em;
+    height: 100%;
+    width: 100%;
 }
 
 .cb-repl-container .CodeMirror-scroll {
-    height: auto;
-    max-height: 11.5em;
+    max-height: var(--cb-console-height);
 }
 
 .cb-vm[data-cb-show-header] .cb-repl-container .CodeMirror-scroll {
-    max-height: 5.5em;
+/*    max-height: 5.5em; */
 }
 
 .cb-exec-controls-buttons .cb-button.btn-secondary,
@@ -86,12 +110,25 @@ body {
 }
 
 .cb-navbar-controls {
-    background-color: #7db6d5;
+    background-color: var(--cb-focus-repl-navbar-controls-color);
 }
 
 .cb-repl-container {
     border: 0;
-    background-color: #e0f0f6;
+    border-radius: 6px;
+    margin: var(--cb-margin) 0 0 var(--cb-margin);
+    padding: 5px;
+    background-color: var(--cb-repl-container-color);
+}
+
+.cb-vm:not([data-cb-show-playground]) .cb-repl-container {
+    margin: var(--cb-margin) var(--cb-margin) 0 var(--cb-margin);
+}
+
+.cb-vm[data-cb-show-playground] .cb-playground {
+    position: relative;
+    overflow: hidden;
+    margin: var(--cb-margin) var(--cb-margin) 0 0;
 }
 
 .cb-vm > .cb-exec-controls > .cb-exec-controls-buttons .cb-button.btn-secondary,
@@ -104,18 +141,18 @@ body {
     background-color: #d0d0d0;
 }
 
-.cb-focus-repl .cb-exec-controls-buttons .cb-button.btn-secondary:hover {
-    background-color: #afd3e6;
+.cb-vm[data-cb-focus-repl] .cb-exec-controls-buttons .cb-button.btn-secondary:hover {
+    background-color: var(--cb-focus-repl-navbar-controls-hover-color);
 }
 
-.cb-focus-repl .cb-exec-controls-buttons .cb-button.btn-secondary,
-.cb-focus-repl .cb-exec-controls-buttons .cb-button.btn-secondary:focus,
-.cb-focus-repl .cb-exec-controls-buttons .cb-button.btn-secondary:active {
+.cb-vm[data-cb-focus-repl] .cb-exec-controls-buttons .cb-button.btn-secondary,
+.cb-vm[data-cb-focus-repl] .cb-exec-controls-buttons .cb-button.btn-secondary:focus,
+.cb-vm[data-cb-focus-repl] .cb-exec-controls-buttons .cb-button.btn-secondary:active {
     background-color: #d0e6f1;
 }
 
-.cb-focus-repl .cb-exec-controls-buttons .cb-button.btn-secondary:hover {
-    background-color: #afd3e6;
+.cb-vm[data-cb-focus-repl] .cb-exec-controls-buttons .cb-button.btn-secondary:hover {
+    background-color: var(--cb-focus-repl-navbar-controls-hover-color);
 }
 
 .cb-navbar-controls {
@@ -123,24 +160,25 @@ body {
 }
 
 .cb-repl-container {
-    background-color: #e0f0f6;
+    background-color: var(--cb-repl-container-color);
 }
 
 .cb-editors {
-    max-height: 100%;
-    height: calc(100% - 13.5em - 55px);
+/*    max-height: 100%; */
+/*    height: calc(100% - 13.5em - 55px); */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    margin: 1em 0.5em 0.5em 0.5em;
+/*    margin: 0; /* 1em 0.5em 0.5em 0.5em */
+    margin: 0 var(--cb-margin) var(--cb-margin) var(--cb-margin);
 }
 
 .cb-vm[data-cb-show-header] .cb-editors {
-    height: calc(100% - 7.5em - 305px);
+/*    height: calc(100% - 7.5em - 305px); */
 }
 
 .cb-file-tabs {
-    height: 2.8em;
+/*    height: 2.8em; */
     overflow: hidden;
     text-overflow: ellipsis;
     flex-wrap: nowrap;
@@ -184,6 +222,7 @@ body {
 
 .cb-vm:not([data-cb-show-header]):not([data-cb-show-footer]) .cb-file-container .CodeMirror-scroll {
     height: 100%;
+    width: 100%;
 }
 
 .cb-rename-box {
@@ -197,7 +236,7 @@ body {
 }
 
 .cb-vm:not([data-cb-show-header]) .cb-footer {
-    height: calc( 0.40*(100% - 0px - 55px - 276px - 39px) );
+/*    height: calc( 0.40*(100% - 0px - 55px - 276px - 39px) ); */
 }
 
 .cb-vm:not([data-cb-show-footer]) .cb-footer {
@@ -207,6 +246,7 @@ body {
 /*--------------------------- page layout ---------------------------*/
 
 .cb-navbar {
+    flex: 0 0;
     background-color: var(--cb-navbar-color);
 }
 
@@ -656,6 +696,77 @@ body {
     font-style: italic;
 }
 
+/*--------------------------- Split panes ---------------------------*/
+
+.cb-v-panes {
+    flex-direction: column;
+}
+
+.cb-h-panes {
+    flex-direction: row;
+}
+
+.cb-v-panes,
+.cb-h-panes {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.cb-v-panes > .cb-pane-rigid {
+/*    overflow-y: auto; */
+    height: 100%;
+    min-height: 35px;
+}
+
+.cb-h-panes > .cb-pane-rigid {
+/*    overflow-x: auto; */
+    width: 100%;
+    min-width: 35px;
+}
+
+.cb-v-panes > .cb-pane-rigid,
+.cb-h-panes > .cb-pane-rigid {
+/*    flex: 0 0 35px; */
+/*    margin: 0; */
+/*    flex: 0 0; */
+}
+
+.cb-v-panes > .cb-pane-elastic {
+/*    overflow-y: auto; */
+    height: 100%;
+    min-height: 35px;
+}
+
+.cb-h-panes > .cb-pane-elastic {
+/*    overflow-x: auto; */
+    width: 100%;
+    min-width: 35px;
+}
+
+.cb-v-panes > .cb-pane-elastic,
+.cb-h-panes > .cb-pane-elastic {
+    flex: 1 0;
+/*    margin: 0; */
+}
+
+.cb-v-panes > .cb-pane-splitter {
+    cursor: row-resize;
+    width: 100%;
+}
+
+.cb-h-panes > .cb-pane-splitter {
+    cursor: col-resize;
+    height: 100%;
+}
+
+.cb-v-panes > .cb-pane-splitter,
+.cb-h-panes > .cb-pane-splitter {
+    flex: 0 0;
+    padding: var(--cb-margin) var(--cb-margin) 0 0; /* width of splitter bar */
+/*    background-color: rgba(0,0,0,0.1); */
+}
+
 /*------------------------- Error messages --------------------------*/
 
 .cb-code-error {
@@ -680,6 +791,11 @@ body {
     font-size: 100%;
     line-height: 1.4;
 }
+
+.cb-vm .CodeMirror-dialog {
+  background: #FFFFE0;
+}
+
 
 .cb-vm[data-cb-large-font] .cb-console,
 .cb-vm[data-cb-large-font] .cb-editors,
@@ -934,10 +1050,19 @@ div.tab-pane {
 /*    flex: 0 0 384px;
     padding: 15px 15px 15px 0;
 */
-    padding: 0 0 0 0.5em;
-    margin: 0;
-    float: right;
+    padding: 0;
     display: none;
+}
+
+.cb-drawing-window > .cb-turtle,
+.cb-drawing-window > .cb-drawing,
+.cb-drawing-window > .cb-grid {
+    position: absolute;
+    right: 0;
+}
+
+.cb-drawing-window > .cb-drawing {
+    box-shadow: -3px 3px 3px 0 #999;
 }
 
 /* ----- Pixels window ----- */

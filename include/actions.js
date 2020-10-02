@@ -377,9 +377,11 @@ CodeBootVM.prototype.textStepCounter = function () {
 
 CodeBootVM.prototype.updatePopupPos = function () {
     var vm = this;
+    //console.log('called updatePopupPos');
     if (vm.ui.execPointMark !== null &&
         vm.ui.execPointMark.end !== null &&
         vm.ui.execPointBubble !== null) {
+        //console.log('==> updatePopupPos ' + vm.isMarkerVisible(vm.ui.execPointMark.end));
         if (vm.isMarkerVisible(vm.ui.execPointMark.end)) {
             vm.ui.execPointBubble.show();
         } else {
@@ -970,6 +972,7 @@ CodeBootExecPointBubble.prototype.show = function () {
     var bubble = this;
 
     if (bubble.tip !== null) {
+        //console.log('bubble.tip.show()');
         bubble.tip.show();
     }
 };
@@ -979,6 +982,7 @@ CodeBootExecPointBubble.prototype.hide = function () {
     var bubble = this;
 
     if (bubble.tip !== null) {
+        //console.log('bubble.tip.hide()');
         bubble.tip.hide();
     }
 };
@@ -1028,19 +1032,21 @@ CodeBootExecPointBubble.prototype.attachTo = function (elem, html) {
         var tip = tippy(elem, {
             appendTo: vm.root, //elem.closest('.CodeMirror-scroll'),
             allowHTML: true,
-            placement: 'bottom-end',
+            placement: 'bottom-start',
             maxWidth: 9999,
             trigger: 'manual',
             hideOnClick: false,
-            theme: 'cb-exec-point-bubble',
+            theme: 'cb-exec-point-bubble'
         });
 
         bubble.tip = tip;
         bubble.elem = elem;
+        //console.log('called tippy');
     }
+    //else console.log('not calling tippy');
 
     bubble.setContent(html);
-    setTimeout(function () { bubble.show(); }, 0);
+    vm.afterDelay(function () { bubble.show(); });
 };
 
 CodeBootVM.prototype.hideExecPoint = function () {
@@ -1064,7 +1070,7 @@ CodeBootVM.prototype.hideExecPoint = function () {
 //        $('.cb-exec-point-code').removeClass('cb-exec-point-code');
 };
 
-CodeBootVM.prototype.showExecPoint = function () {
+CodeBootVM.prototype.showExecPoint = function (skipExecPointBubble) {
 
     var vm = this;
 
@@ -1096,15 +1102,18 @@ CodeBootVM.prototype.showExecPoint = function () {
         vm.scrollTo(file.fe.fileContainer);
     }
 
-    vm.ui.execPointBubble.attachTo(
-        vm.execPointCodeElement(),
-        vm.lang.executionStateHTML());
-
+    if (!skipExecPointBubble) {
+        vm.ui.execPointBubble.attachTo(
+            vm.execPointCodeElement(),
+            vm.lang.executionStateHTML());
+    }
+/*
     $('.cb-exec-point-code').hover(function (event) {
         if (!vm.ui.execPointBubble.isVisible()) {
             vm.showExecPoint();
         }
     });
+*/
 };
 
 /*
@@ -1201,16 +1210,18 @@ CodeBootVM.prototype.exec_continue = function (delay) {
 
                 newMode = vm.modeAnimating();
 
-                //vm.stepDelay = delay;
+                vm.stepDelay = delay;
 
                 vm.ui.timeoutId =
-                    vm.afterDelay(function () { vm.exec_continue(delay); },
+                    vm.afterDelay(function () {
+                                      vm.exec_continue(vm.stepDelay);
+                                  },
                                   delay);
             }
         }
 
         if (delay > 0 || newMode === vm.modeAnimatingSleeping()) {
-            vm.showExecPoint();
+            vm.showExecPoint(delay <= 10);
         } else {
             vm.hideExecPoint();
         }
@@ -1261,9 +1272,9 @@ CodeBootVM.prototype.executionSleep = function(sleepTime, afterSleepDelay) {
 
             var bubbleContent =
                 '<div class="cb-exec-point-bubble-value">' +
-               '<i>sleeping ' + (sleepTime / 1000).toFixed(1) + 's</i>' +
-               '</div>' +
-               contextHTML;
+                '<code><i>sleeping ' + (sleepTime / 1000).toFixed(1) + 's</i></code>' +
+                '</div>' +
+                contextHTML;
 
             vm.ui.execPointBubble.attachTo(vm.execPointCodeElement(), bubbleContent);
 
