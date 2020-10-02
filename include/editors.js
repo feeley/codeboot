@@ -19,12 +19,12 @@ CodeBootVM.prototype.trackEditorFocus = function (editor, focus) {
     if (focus) {
         vm.lastFocusedEditor = editor;
         if (editor === vm.repl) {
-            vm.root.classList.add('cb-focus-repl');
+            vm.setAttribute('data-cb-focus-repl', true);
         } else {
-            vm.root.classList.remove('cb-focus-repl');
+            vm.setAttribute('data-cb-focus-repl', false);
         }
     } else if (!vm.allowLosingFocus) {
-        vm.ASAP(function () {
+        vm.afterDelay(function () {
             vm.focusLastFocusedEditor();
         });
     }
@@ -497,6 +497,8 @@ CodeBootVM.prototype.replSetup = function () {
                 'Ctrl-N': cursorDown,
                 'Ctrl-J': newline,
                 'Ctrl-O': insertLine,
+                'Ctrl-R': function (cm) { },
+                'Ctrl-S': function (cm) { },
                 'Esc': function (cm) { cm.cb.vm.eventStop(); },
                 'Enter': enter,
                 'Shift-Enter': shiftEnter,

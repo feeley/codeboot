@@ -712,6 +712,8 @@ CodeBootFileEditorManager.prototype.activate = function (fe) {
 
     if (fe.isActivated()) return; // already activated
 
+    fem.fs.vm.ui.execPointBubble.destroy();
+
     var i = fem.indexOf(fe);
 
     if (i < 0) return; // not a valid editor
