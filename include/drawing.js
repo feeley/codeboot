@@ -602,6 +602,9 @@ function PixelsWindow(vm, width, height, scale) {
     pw.clear();
 
     pixels_window = pw;//TODO: remove
+    if (vm.ui !== void 0) {
+        vm.ui.pw = pw;
+    }
 }
 
 var pixels_window;
