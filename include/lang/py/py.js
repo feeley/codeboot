@@ -506,6 +506,53 @@ function drawing_drawtext(rte, text) {
   dw.ensure_showing();
 }
 
+function drawing_setScreenMode(rte, width, height) {
+  var pw = rte.vm.ui.pw;
+  //var vm = dw.vm;
+  if (width !== void 0 || height !== void 0) {
+    if (width === void 0 || height === void 0)
+      throw 'cs expects 0 or 2 parameters';
+    if (typeof width !== 'number')
+      throw 'width parameter of cs must be a number';
+    if (typeof height !== 'number')
+      throw 'height parameter of cs must be a number';
+    if (pw.pixels_context.width !== width || dw.pixels_context.height !== height) {
+      pw.setScreenMode(width, height)
+      pw.ensure_showing()
+    }
+  }
+}
+
+function drawing_getScreenWidth(rte) {
+  var pw = rte.vm.ui.pw;
+  return pw.width;
+}
+
+function drawing_getScreenHeight(rte) {
+  var pw = rte.vm.ui.pw;
+  return pw.height;
+}
+
+function drawing_setPixel(rte, x, y, color) {
+  var pw = rte.vm.ui.pw;
+  pw.setPixel(x, y, 'rgb('+color.r+','+color.g+','+color.b+')');
+  pw.ensure_showing()
+}
+
+function drawing_fillRectangle(rte, x, y, width, height, color) {
+  var pw = rte.vm.ui.pw;
+  var color_str = 'rgb('+color.r+','+color.g+','+color.b+')';
+  console.log(color_str);
+  pw.fill_rect(x, y, width, height, color_str);
+
+  pw.ensure_showing()
+}
+
+function drawing_exportScreen(rte) {
+  var pw = rte.vm.ui.pw;
+  return pw.exportScreen()
+}
+
 // Mouse event
 function getMouse(rte) {
   var vm = rte.vm;
