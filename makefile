@@ -32,7 +32,8 @@ zipi-pull: $(ZIPI_FOR_CODEBOOT)
 include/lang/py/pyinterp.js: zipi-pull
 	@echo "*** Building include/lang/py/pyinterp.js:"
 	@echo "***   Running make on pyinterp"
-	cd ./$(ZIPI_FOR_CODEBOOT)/etc/zp && $(MAKE) pyinterp
+	cd ./$(ZIPI_FOR_CODEBOOT) && $(MAKE) clean-venv  # Delete the venv, may have absolute references to copied folder
+	cd ./$(ZIPI_FOR_CODEBOOT)/etc/zp && $(MAKE) zipi-venv && $(MAKE) pyinterp
 	@echo "***   Backing up old include/lang/py/pyinterp.js"
 	cp ./include/lang/py/pyinterp.js ./include/lang/py/pyinterp.js.bk
 	@echo "***   Creating include/lang/py/pyinterp.js"
