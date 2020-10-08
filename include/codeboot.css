@@ -579,6 +579,13 @@ body {
     color: #f89406 !important; /* orange */
 }
 
+.cb-vm .cm-tab {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAAAMCAYAAADBJPs9AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAASKADAAQAAAABAAAADAAAAAA9QrhmAAAAbklEQVRIDe3SQQrAMAgEwLTkgT7VH7YsNOBB46Wn7OYiqAQcdgw9CUhAAv8LuPuT/Yp+nN3ZEksvQlQ3UwMBpUOa3UIle1IfBmZ2ZTfRJ2ihVEER0CdUJWhWgyV7ao2J2RnQJ2iHg3BQA3U4AHoB3jchQhvimSIAAAAASUVORK5CYII=);
+    background-position: right;
+    background-repeat: no-repeat;
+/*    background-color: #eb48ff; */
+}
+
 .cb-vm .CodeMirror,
 .cb-vm .CodeMirror-gutters {
     background-color: transparent;
@@ -801,7 +808,6 @@ body {
 .cb-vm .CodeMirror-dialog {
   background: #FFFFE0;
 }
-
 
 .cb-vm[data-cb-large-font] .cb-console,
 .cb-vm[data-cb-large-font] .cb-editors,

@@ -544,17 +544,7 @@ function builtin_getMouse() {
 builtin_getMouse._apply_ = function (rte, cont, this_, params) {
 
     var code = function (rte, cont) {
-        var state;
-        if (showing_drawing_window()) {
-            var pos = drawing_window.pageToRelative(vm.mousePos);
-            state = { x: pos.x, y: pos.y, down: vm.mouseDown };
-        } else if (showing_pixels_window()) {
-            var pos = pixels_window.pageToRelative(vm.mousePos);
-            state = { x: pos.x, y: pos.y, down: vm.mouseDown };
-        } else {
-            state = { x: vm.mousePos.x, y: vm.mousePos.y, down: vm.mouseDown };
-        }
-        return return_fn_body(rte, state);
+        return return_fn_body(rte, lang.vm.getMouse());
     };
 
     return exec_fn_body(code,
