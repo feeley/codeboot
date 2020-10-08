@@ -5,7 +5,7 @@ CodeBootVM.prototype.initEditor = function (editor, node, history, fileEditor) {
     editor.cb = {};
     editor.cb.node = node;
     editor.cb.vm = vm;
-    editor.cb.history = history;
+    editor.cb.hm = history;
     editor.cb.fileEditor = fileEditor;
     editor.cb.widgets = [];
     editor.cb.transcriptMarker = null;
@@ -75,6 +75,8 @@ CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
         cm.cb.vm.eventStepPause();
     };
 
+    var rulers = [{color: '#000', column: 79, lineStyle: 'dashed'}];
+
     var options = {
         value: '',
         lineNumbers: vm.showLineNumbers,
@@ -83,6 +85,7 @@ CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
         gutters: ['CodeMirror-linenumbers', 'cb-file-cm-gutter'],
         fixedGutter: false,
         matchBrackets: true,
+        rulers: rulers,
         keyMap: 'emacs',
         extraKeys: {
 
@@ -269,7 +272,7 @@ CodeBootVM.prototype.replAddHistory = function (source) {
 
     if (!vm.repl) return;
 
-    vm.repl.cb.history.add(source);
+    vm.repl.cb.hm.add(source);
 };
 
 /*
@@ -445,7 +448,7 @@ CodeBootVM.prototype.replSetup = function () {
 
         function cursorUp(cm) {
             if (cm.cb.vm.replCursorOnFirstLineOfInput()) {
-                cm.cb.history.previous();
+                cm.cb.hm.previous();
             } else {
                 cm.execCommand('goLineUp');
             }
@@ -453,7 +456,7 @@ CodeBootVM.prototype.replSetup = function () {
 
         function cursorDown(cm) {
             if (cm.cb.vm.replCursorOnLastLineOfInput()) {
-                cm.cb.history.next();
+                cm.cb.hm.next();
             } else {
                 cm.execCommand('goLineDown');
             }
@@ -744,7 +747,7 @@ CodeBootVM.prototype.replReset = function () {
     editor.setValue('');
     vm.setTranscriptMarker(editor, vm.beginningOfEditor());
     vm.replAllowInput();
-    vm.repl.cb.history.resetPos();
+    vm.repl.cb.hm.resetPos();
 };
 
 CodeBootVM.prototype.setTranscriptMarker = function (editor, endPos) {

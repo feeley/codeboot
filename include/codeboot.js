@@ -4,7 +4,13 @@ function CodeBoot() {
 
     var cb = this;
 
-    cb.mouse = { x: 0, y: 0, down: false };
+    cb.mouse = { x: 0,
+                 y: 0,
+                 down: false,
+                 shift: false,
+                 ctrl: false,
+                 alt: false
+               };
 
     document.addEventListener('DOMContentLoaded', function () {
         cb.init();
@@ -12,6 +18,39 @@ function CodeBoot() {
 }
 
 CodeBoot.prototype.cb = new CodeBoot();
+
+CodeBoot.prototype.trackMouseMove = function (event) {
+
+    var cb = this;
+
+    cb.mouse.x = event.pageX;
+    cb.mouse.y = event.pageY;
+};
+
+CodeBoot.prototype.trackMouseUp = function (event) {
+
+    var cb = this;
+
+    cb.mouse.down = false;
+};
+
+CodeBoot.prototype.trackMouseDown = function (event) {
+
+    var cb = this;
+
+    cb.mouse.down = true;
+    cb.mouse.shift = event.shiftKey;
+    cb.mouse.ctrl  = event.ctrlKey;
+    cb.mouse.alt   = event.altKey;
+};
+
+CodeBoot.prototype.preventContextMenu = function (event) {
+
+    var cb = this;
+
+    cb.trackMouseDown(event);
+    event.preventDefault(); // don't show context menu
+};
 
 CodeBoot.prototype.init = function () {
 
@@ -32,16 +71,15 @@ CodeBoot.prototype.init = function () {
     });
 
     $('body').on('mousemove', function (event) {
-        cb.mouse.x = event.pageX;
-        cb.mouse.y = event.pageY;
-    });
-
-    $('body').on('mousedown', function (event) {
-        cb.mouse.down = true;
+        cb.trackMouseMove(event);
     });
 
     $('body').on('mouseup', function (event) {
-        cb.mouse.down = false;
+        cb.trackMouseUp(event);
+    });
+
+    $('body').on('mousedown', function (event) {
+        cb.trackMouseDown(event);
     });
 
 /*
@@ -65,6 +103,16 @@ CodeBoot.prototype.init = function () {
 */
 //    cb.handle_query();
 }
+
+CodeBoot.prototype.saveAllVM = function () {
+
+    var cb = this;
+
+    for (var id in CodeBoot.prototype.vms) {
+        var vm = CodeBoot.prototype.vms[id];
+        vm.saveSession();
+    }
+};
 
 CodeBoot.prototype.setupAllVM = function (elem) {
 
@@ -180,6 +228,7 @@ CodeBoot.prototype.beforeunload = function (event) {
 
     var cb = this;
 
+    cb.saveAllVM();
     event.preventDefault();
     event.returnValue = '';
     return 'your session will be lost';
@@ -221,6 +270,15 @@ function CodeBootVM(opts) {
 
     id = '#' + id;
 
+    var storageId;
+
+    if (opts.storageId !== undefined)
+        storageId = opts.storageId;
+    else if (root.hasAttribute('data-cb-storage-id'))
+        storageId = root.getAttribute('data-cb-storage-id');
+    else
+        storageId = id;
+
     vm.id    = id;     // id of this VM, typically '#cb-vm-N'
     vm.cb    = cb;     // CodeBoot container
     vm.root  = root;   // DOM element with class 'cb-vm'
@@ -232,6 +290,8 @@ function CodeBootVM(opts) {
     vm.isOpen = true;
 
     vm.editable = true;
+
+    vm.storageId = storageId;
 
     new CodeBootFileSystem(vm); // initializes vm.fs
 
@@ -257,9 +317,6 @@ function CodeBootVM(opts) {
     vm.lastSource = null;
     vm.lastResult = null;
     vm.lastResultRepresentation = null;
-
-    vm.mousePos = { x: 0, y: 0 };
-    vm.mouseDown = false;
 
     vm.setClass('cb-vm', true); // force class in case not yet set
 
@@ -337,8 +394,6 @@ function CodeBootVM(opts) {
 
     vm.setupEventHandlers();
 
-    vm.loadSession();
-
     vm.enterMode(vm.modeStopped());
 
     vm.replAllowInput();
@@ -361,6 +416,10 @@ function CodeBootVM(opts) {
                          : (root.getAttribute('data-cb-animation-speed') ||
                             'normal'));
 
+    vm.loadSession();
+
+    vm.setupNextSaveSession();
+
     initLast();
 
     if (opts.input !== undefined)
@@ -368,6 +427,16 @@ function CodeBootVM(opts) {
 
     if (opts.event !== undefined)
         vm.execEvent(opts.event);
+};
+
+CodeBootVM.prototype.setupNextSaveSession = function () {
+
+    var vm = this;
+
+    vm.afterDelay(function () {
+        vm.setupNextSaveSession();
+        vm.saveSession();
+    }, 60000); // save session every minute
 };
 
 CodeBootVM.prototype.cloneIsOpen = function () {
@@ -481,6 +550,32 @@ CodeBootVM.prototype.UI = function (vm) {
     ui.pw.setShow(false);
 
     vm.ui = ui;
+
+    var dw_parent = vm.root.querySelector('.cb-drawing-window');
+
+    if (dw_parent) {
+
+        $(dw_parent).on('contextmenu', function (event) {
+            vm.cb.preventContextMenu(event);
+        });
+
+        $(dw_parent).on('dblclick', function (event) {
+            ui.dw.screenshot(event);
+        });
+    }
+
+    var pw_parent = vm.root.querySelector('.cb-pixels-window');
+
+    if (pw_parent) {
+
+        $(pw_parent).on('contextmenu', function (event) {
+            vm.cb.preventContextMenu(event);
+        });
+
+        $(pw_parent).on('dblclick', function (event) {
+            ui.pw.screenshot(event);
+        });
+    }
 };
 
 CodeBootVM.prototype.loadLang = function (id) {
@@ -585,7 +680,7 @@ CodeBootVM.prototype.menuLangHTML = function () {
   <div class="dropdown-menu cb-menu-settings-lang">\
 ' + vm.menuSettingsLangHTML() + '\
   <div class="dropdown-divider"></div>\
-  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.0.7</a>\
+  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.0.8</a>\
   <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-help-box">Help</a>\
   </div>\
 </span>\
@@ -803,8 +898,8 @@ CodeBootVM.prototype.consoleHTML = function () {
   </div>\
   <div class="cb-pane-splitter"></div>\
   <div class="cb-playground cb-pane-rigid">\
-    <div class="cb-drawing-window" ondblclick="drawing_window.screenshot(event);"></div>\
-    <div class="cb-pixels-window" ondblclick="pixels_window.screenshot(event);"></div>\
+    <div class="cb-drawing-window"></div>\
+    <div class="cb-pixels-window"></div>\
     <div class="cb-body"></div>\
   </div>\
 </div>\

@@ -553,29 +553,34 @@ function drawing_exportScreen(rte) {
   return pw.exportScreen()
 }
 
-// Mouse event
+// Mouse information
+
 function getMouse(rte) {
-  var vm = rte.vm;
-  var pos = vm.cb.mouse;
-  if (vm.ui.dw.showing()) {
-    return vm.ui.dw.pageToRelative(pos);
-  } else if (vm.ui.pw.showing()) {
-    return vm.ui.pw.pageToRelative(pos);
-  } else {
-    return pos;
-  }
+    return rte.vm.getMouse();
 }
 
 function getMouseX(rte) {
-  return getMouse(rte).x;
+  return rte.vm.getMouse().x;
 }
 
 function getMouseY(rte) {
-  return getMouse(rte).y;
+  return rte.vm.getMouse().y;
 }
 
 function getMouseDown(rte) {
   return rte.vm.cb.mouse.down;
 }
 
-// runtime_random is define in pyinterp runtime.
+function getMouseShift(rte) {
+  return rte.vm.cb.mouse.shift;
+}
+
+function getMouseCtrl(rte) {
+  return rte.vm.cb.mouse.ctrl;
+}
+
+function getMouseAlt(rte) {
+  return rte.vm.cb.mouse.alt;
+}
+
+// runtime_random is defined in pyinterp runtime.

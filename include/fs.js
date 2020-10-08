@@ -803,18 +803,18 @@ CodeBootFileEditorManager.prototype.show = function () {
 
     var fem = this;
 
-    fem.fs.vm.withElem('.cb-editors', function (elem) {
-        elem.style.display = 'flex';
-    });
+//    fem.fs.vm.withElem('.cb-editors', function (elem) {
+//        elem.style.display = 'flex';
+//    });
 };
 
 CodeBootFileEditorManager.prototype.hide = function () {
 
     var fem = this;
 
-    fem.fs.vm.withElem('.cb-editors', function (elem) {
-        elem.style.display = 'none';
-    });
+//    fem.fs.vm.withElem('.cb-editors', function (elem) {
+//        elem.style.display = 'none';
+//    });
 };
 
 //-----------------------------------------------------------------------------
