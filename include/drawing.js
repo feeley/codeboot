@@ -738,3 +738,26 @@ function getCoords(elem) {
     var rect = elem.getBoundingClientRect();
     return { x: rect.left + pageXOffset, y: rect.top + pageYOffset };
 }
+
+CodeBootVM.prototype.getMouse = function () {
+
+    var vm = this;
+
+    var mouse = vm.cb.mouse;
+    var state;
+
+    if (vm.ui.dw.showing()) {
+        state = vm.ui.dw.pageToRelative(mouse);
+    } else if (vm.ui.pw.showing()) {
+        state = vm.ui.pw.pageToRelative(mouse);
+    } else {
+        state = { x: mouse.x, y: mouse.y };
+    }
+
+    state.down  = mouse.down;
+    state.shift = mouse.shift;
+    state.ctrl  = mouse.ctrl;
+    state.alt   = mouse.alt;
+
+    return state;
+}
