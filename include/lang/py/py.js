@@ -598,4 +598,6 @@ function runtime_attach_ast_to_file(rte, ast, filename) {
     attach_to_container(ast, container);
 }
 
-// runtime_random is defined in pyinterp runtime.
+function runtime_ast_is_from_repl(ast) {
+    return ast.container.is_repl();
+}
