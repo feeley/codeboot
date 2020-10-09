@@ -96,22 +96,6 @@ LangPy.prototype.compile = function (source, container, reboot) {
 
     var from_repl = container.is_repl();
 
-    function attach_to_container(ast, container) {
-        if (typeof ast === 'object') {
-            if (Object.prototype.hasOwnProperty.call(ast, '_fields')) {
-                ast.container = container;
-                //ast.lineno += container.start_line0;
-                //ast.end_lineno += container.start_line0;
-                for (var i in ast._fields) {
-                    attach_to_container(ast[ast._fields[i]], container);
-                }
-            } else if (ast instanceof Array) {
-                ast.forEach(function (a) { attach_to_container(a, container); });
-            }
-        }
-
-    }
-
     function compilationError(start_line0,
                          start_column0,
                          end_line0,
@@ -581,6 +565,37 @@ function getMouseCtrl(rte) {
 
 function getMouseAlt(rte) {
   return rte.vm.cb.mouse.alt;
+}
+
+function runtime_read_file(rte, filename) {
+    var fileSystem = rte.vm.fs;
+
+    if (fileSystem.hasFile(filename)) {
+        return fileSystem.getContent(filename);
+    }
+    else {
+        return undefined;
+    }
+}
+
+function attach_to_container(ast, container) {
+    if (typeof ast === 'object') {
+        if (Object.prototype.hasOwnProperty.call(ast, '_fields')) {
+            ast.container = container;
+            for (var i in ast._fields) {
+                attach_to_container(ast[ast._fields[i]], container);
+            }
+        } else if (ast instanceof Array) {
+            ast.forEach(function (a) { attach_to_container(a, container); });
+        }
+    }
+}
+
+function runtime_attach_ast_to_file(rte, ast, filename) {
+    var state = rte.vm.readFileInternal(filename);
+    var source = state.content;
+    var container = new SourceContainerInternalFile(source, filename, 0, 0, state.stamp);
+    attach_to_container(ast, container);
 }
 
 // runtime_random is defined in pyinterp runtime.
