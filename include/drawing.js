@@ -114,6 +114,8 @@ function DrawingWindow(vm, width, height) {
     var dw = this;
 
     dw.vm = vm;
+    dw.width = width;
+    dw.height = height;
 
     dw.turtle_canvas = dom_create_canvas_cartesian('cb-turtle', width, height);
     dw.turtle_context = dom_canvas_context(dw.turtle_canvas);
@@ -573,10 +575,9 @@ function PixelsWindow(vm, width, height, scale) {
     pw.scale = scale;
 
     pw.pixels_canvas = dom_create_canvas('cb-pixels', width*scale, height*scale);
-    pw.pixels_canvas.style.boxShadow = '0 0 10px #999';
     pw.pixels_context = dom_canvas_context(pw.pixels_canvas);
+
     pw.grid_canvas = dom_create_canvas('cb-grid', width*scale, height*scale);
-    pw.grid_canvas.style.position = 'absolute';
     pw.grid_context = dom_canvas_context(pw.grid_canvas);
 
     if (grid_thickness > 0) {
@@ -703,8 +704,8 @@ PixelsWindow.prototype.setShow = function (show) {
         $('.cb-pixels-window').css('display', 'inline');
         var parent = document.querySelector('.cb-pixels-window');
         dom_remove_children(parent);
-        parent.appendChild(pixels_window.grid_canvas);
         parent.appendChild(pixels_window.pixels_canvas);
+        parent.appendChild(pixels_window.grid_canvas);
         update_playground_visibility(vm);
     } else {
         var parent = document.querySelector('.cb-pixels-window');

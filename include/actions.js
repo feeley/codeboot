@@ -557,7 +557,7 @@ CodeBootVM.prototype.steppause = function () {
 
 CodeBootVM.prototype.animate = function () {
     var vm = this;
-    vm.exec(vm.stepDelay);
+    vm.exec(vm.ui.stepDelay);
 };
 
 CodeBootVM.prototype.eval = function () {

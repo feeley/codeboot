@@ -1089,6 +1089,16 @@ div.tab-pane {
     display: none;
 }
 
+.cb-pixels-window > .cb-pixels,
+.cb-pixels-window > .cb-grid {
+    position: absolute;
+    right: 0;
+}
+
+.cb-pixels-window > .cb-pixels {
+    box-shadow: -3px 3px 3px 0 #999;
+}
+
 
 
 
