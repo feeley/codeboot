@@ -568,12 +568,11 @@ function getMouseAlt(rte) {
 }
 
 function runtime_read_file(rte, filename) {
-    var fileSystem = rte.vm.fs;
+    var fs = rte.vm.fs;
 
-    if (fileSystem.hasFile(filename)) {
-        return fileSystem.getContent(filename);
-    }
-    else {
+    if (fs.hasFile(filename)) {
+        return fs.getContent(filename);
+    } else {
         return undefined;
     }
 }
