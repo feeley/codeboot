@@ -350,7 +350,8 @@ DrawingWindow.prototype.rt = function (angle) {
 
 DrawingWindow.prototype.setpc = function (r, g, b) {
     var dw = this;
-    dw.set_color('rgb('+Math.floor(r*255)+','+Math.floor(g*255)+','+Math.floor(b*255)+')');
+    var color = convertRGB4({r:Math.floor(r*15),g:Math.floor(g*15),b:Math.floor(b*15)});
+    dw.set_color(color || blackRGB);
 };
 
 DrawingWindow.prototype.setpw = function (width) {
@@ -597,7 +598,7 @@ function PixelsWindow(vm, width, height, scale) {
     pw.pixels = [];
 
     for (var i=0; i<height; i++) {
-        pw.pixels[i] = Array(width).fill('#000000');
+        pw.pixels[i] = Array(width).fill(blackRGB);
     }
 
     pw.clear();
@@ -655,7 +656,7 @@ PixelsWindow.prototype.fill_rect = function (x, y, w, h, color) {
 
 PixelsWindow.prototype.clear = function () {
     var pw = this;
-    pw.fill_rect(0, 0, pw.width, pw.height, '#000000');
+    pw.fill_rect(0, 0, pw.width, pw.height, blackRGB);
 };
 
 PixelsWindow.prototype.setScreenMode = function (width, height, scale) {
@@ -675,7 +676,7 @@ PixelsWindow.prototype.fillRectangle = function (x, y, w, h, color) {
 
 PixelsWindow.prototype.clearScreen = function () {
     var pw = this;
-    pw.fillRectangle(0, 0, pw.width, pw.height, '#000000');
+    pw.fillRectangle(0, 0, pw.width, pw.height, blackRGB);
 };
 
 PixelsWindow.prototype.setPixel = function (x, y, color) {
@@ -755,6 +756,9 @@ CodeBootVM.prototype.getMouse = function () {
         state = { x: mouse.x, y: mouse.y };
     }
 
+    state.x = Math.round(state.x);
+    state.y = Math.round(state.y);
+
     state.down  = mouse.down;
     state.shift = mouse.shift;
     state.ctrl  = mouse.ctrl;
@@ -762,3 +766,27 @@ CodeBootVM.prototype.getMouse = function () {
 
     return state;
 }
+
+function convertRGB4(rgb) {
+
+    if (typeof rgb !== 'object' ||
+        rgb === null ||
+        !('r' in rgb) ||
+        typeof rgb.r !== 'number' ||
+        Math.floor(rgb.r) !== rgb.r ||
+        rgb.r < 0 || rgb.r > 15 ||
+        !('g' in rgb) ||
+        typeof rgb.g !== 'number' ||
+        Math.floor(rgb.g) !== rgb.g ||
+        rgb.g < 0 || rgb.g > 15 ||
+        !('b' in rgb) ||
+        typeof rgb.b !== 'number' ||
+        Math.floor(rgb.b) !== rgb.b ||
+        rgb.b < 0 || rgb.b > 15) {
+        return null;
+    }
+
+    return '#' + ((((((1<<4)+rgb.r)<<4)+rgb.g)<<4)+rgb.b).toString(16).slice(1);
+}
+
+var blackRGB = convertRGB4({r:0,g:0,b:0});

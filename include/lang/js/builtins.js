@@ -351,28 +351,6 @@ builtin_getScreenHeight._apply_ = function (rte, cont, this_, params) {
 
 // setPixel
 
-function convertRGB(rgb) {
-
-  if (typeof rgb !== 'object' ||
-      rgb === null ||
-      !('r' in rgb) ||
-      typeof rgb.r !== 'number' ||
-      Math.floor(rgb.r) !== rgb.r ||
-      rgb.r < 0 || rgb.r > 255 ||
-      !('g' in rgb) ||
-      typeof rgb.g !== 'number' ||
-      Math.floor(rgb.g) !== rgb.g ||
-      rgb.g < 0 || rgb.g > 255 ||
-      !('b' in rgb) ||
-      typeof rgb.b !== 'number' ||
-      Math.floor(rgb.b) !== rgb.b ||
-      rgb.b < 0 || rgb.b > 255) {
-    return null;
-  }
-
-  return '#' + ((((((1<<8)+rgb.r)<<8)+rgb.g)<<8)+rgb.b).toString(16).slice(1);
-}
-
 function builtin_setPixel(x, y, color) {
     throw 'setPixel is not builtin in JavaScript';
 }
@@ -387,7 +365,7 @@ builtin_setPixel._apply_ = function (rte, cont, this_, params) {
 
         var x = params[0];
         var y = params[1];
-        var color = convertRGB(params[2]);
+        var color = convertRGB4(params[2]);
 
         if (typeof x !== 'number' ||
             Math.floor(x) !== x ||
@@ -447,7 +425,7 @@ builtin_fillRectangle._apply_ = function (rte, cont, this_, params) {
         var y = params[1];
         var w = params[2];
         var h = params[3];
-        var color = convertRGB(params[4]);
+        var color = convertRGB4(params[4]);
 
         if (typeof x !== 'number' ||
             Math.floor(x) !== x ||
