@@ -94,45 +94,13 @@ LangPy.prototype.compile = function (source, container, reboot) {
     //              the execution state of the program should be
     //              reset (reboot == false is useful for REPL evaluation)
 
+    var lang = this;
     var from_repl = container.is_repl();
 
-    function compilationError(start_line0,
-                         start_column0,
-                         end_line0,
-                         end_column0,
-                         error_kind,
-                         msg) {
+    var compilationError = runtime_get_compilationError_thrower(lang.vm, container, source, from_repl);
 
-        if (from_repl) {
-            var nlines = source.split('\n').length-1;
-            if (end_column0 <= 0 && end_line0 >= nlines) {
-                throw 'continuable REPL input';
-            }
-        }
+    var syntaxError = runtime_get_syntaxError_thrower(compilationError);
 
-        var loc = lang.Location0(container,
-                                 start_line0,
-                                 start_column0,
-                                 end_line0,
-                                 end_column0);
-
-        lang.vm.syntaxError(loc, error_kind + ": ", msg);
-    }
-
-    function syntaxError(start_line0,
-                         start_column0,
-                         end_line0,
-                         end_column0,
-                         msg) {
-        return compilationError(start_line0,
-                         start_column0,
-                         end_line0,
-                         end_column0,
-                         "SyntaxError",
-                         msg)
-    }
-
-    var lang = this;
     var external_context =
       {
           compilationError: compilationError,
@@ -637,6 +605,57 @@ function runtime_attach_ast_to_file(rte, ast, filename) {
     attach_to_container(ast, container);
 }
 
+function runtime_get_file_container(rte, filename) {
+    var state = rte.vm.readFileInternal(filename);
+    var source = state.content;
+    return new SourceContainerInternalFile(source, filename, 0, 0, state.stamp);
+
+}
+
 function runtime_ast_is_from_repl(ast) {
     return ast.container.is_repl();
+}
+
+function runtime_get_compilationError_thrower(vm, container, source, from_repl=false) {
+    function compilationError(start_line0,
+                         start_column0,
+                         end_line0,
+                         end_column0,
+                         error_kind,
+                         msg) {
+
+        if (from_repl) {
+            var nlines = source.split('\n').length-1;
+            if (end_column0 <= 0 && end_line0 >= nlines) {
+                throw 'continuable REPL input';
+            }
+        }
+
+        var loc = vm.lang.Location0(container,
+                                 start_line0,
+                                 start_column0,
+                                 end_line0,
+                                 end_column0);
+
+        vm.syntaxError(loc, error_kind + ": ", msg);
+    }
+
+    return compilationError
+}
+
+function runtime_get_syntaxError_thrower(compilationError) {
+    function syntaxError(start_line0,
+                         start_column0,
+                         end_line0,
+                         end_column0,
+                         msg) {
+        return compilationError(start_line0,
+                         start_column0,
+                         end_line0,
+                         end_column0,
+                         "SyntaxError",
+                         msg)
+    }
+
+    return syntaxError
 }
