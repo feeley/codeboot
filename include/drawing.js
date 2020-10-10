@@ -759,10 +759,10 @@ CodeBootVM.prototype.getMouse = function () {
     state.x = Math.round(state.x);
     state.y = Math.round(state.y);
 
-    state.down  = mouse.down;
-    state.shift = mouse.shift;
-    state.ctrl  = mouse.ctrl;
-    state.alt   = mouse.alt;
+    state.button = mouse.button;
+    state.shift  = mouse.shift;
+    state.ctrl   = mouse.ctrl;
+    state.alt    = mouse.alt;
 
     return state;
 }

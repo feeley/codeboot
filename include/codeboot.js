@@ -6,7 +6,7 @@ function CodeBoot() {
 
     cb.mouse = { x: 0,
                  y: 0,
-                 down: false,
+                 button: 0,
                  shift: false,
                  ctrl: false,
                  alt: false
@@ -31,14 +31,14 @@ CodeBoot.prototype.trackMouseUp = function (event) {
 
     var cb = this;
 
-    cb.mouse.down = false;
+    cb.mouse.button = 0;
 };
 
-CodeBoot.prototype.trackMouseDown = function (event) {
+CodeBoot.prototype.trackMouseDown = function (event, button) {
 
     var cb = this;
 
-    cb.mouse.down = true;
+    cb.mouse.button = button;
     cb.mouse.shift = event.shiftKey;
     cb.mouse.ctrl  = event.ctrlKey;
     cb.mouse.alt   = event.altKey;
@@ -48,7 +48,7 @@ CodeBoot.prototype.preventContextMenu = function (event) {
 
     var cb = this;
 
-    cb.trackMouseDown(event);
+    cb.trackMouseDown(event, 2);
     event.preventDefault(); // don't show context menu
 };
 
@@ -79,7 +79,7 @@ CodeBoot.prototype.init = function () {
     });
 
     $('body').on('mousedown', function (event) {
-        cb.trackMouseDown(event);
+        cb.trackMouseDown(event, 1);
     });
 
 /*
