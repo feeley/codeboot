@@ -591,8 +591,8 @@ function getMouseY(rte) {
   return rte.vm.getMouse().y;
 }
 
-function getMouseDown(rte) {
-  return rte.vm.cb.mouse.down;
+function getMouseButton(rte) {
+  return rte.vm.cb.mouse.button;
 }
 
 function getMouseShift(rte) {
