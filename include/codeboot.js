@@ -544,7 +544,7 @@ CodeBootVM.prototype.UI = function (vm) {
     ui.code_queue = [];
 
     ui.dw = new DrawingWindow(vm, 360, 240);
-    ui.pw = new PixelsWindow(vm, 360, 240, 1);
+    ui.pw = new PixelsWindow(vm, 16, 12, 20);
 
     ui.dw.setShow(false);
     ui.pw.setShow(false);
