@@ -415,142 +415,183 @@ function runtime_prompt(msg) {
 
 // TODO: move these routines somwwhere else
 function drawing_cs(rte, width, height) {
-  var dw = rte.vm.ui.dw;
-  var vm = dw.vm;
-  if (width !== void 0 || height !== void 0) {
-      if (width === void 0 || height === void 0)
-          throw 'cs expects 0 or 2 parameters';
-      if (typeof width !== 'number')
-          throw 'width parameter of cs must be a number';
-      if (typeof height !== 'number')
-          throw 'height parameter of cs must be a number';
-      if (dw.turtle_canvas.width !== width || dw.turtle_canvas.height !== height) {
-        dw = new DrawingWindow(vm, Math.max(50, Math.min(500, width)), Math.max(50, Math.min(500, height)));
-        dw.setShow(true);
-        vm.ui.dw = dw;
-      }
-  }
-  dw.cs();
-  dw.ensure_showing();
+
+    var dw = rte.vm.ui.dw;
+    var vm = dw.vm;
+
+    if (width !== void 0 || height !== void 0) {
+
+        if (width === void 0 || height === void 0)
+            throw 'clear expects 0 or 2 parameters';
+
+        var max_width = 800;
+        var max_height = 600;
+
+        if (typeof width !== 'number' ||
+            Math.floor(width) !== width ||
+            width < 1 ||
+            width > max_width) {
+            throw 'width parameter of clear must be a positive integer no greater than ' + max_width;
+        }
+
+        if (typeof height !== 'number' ||
+            Math.floor(height) !== height ||
+            height < 1 ||
+            height > max_height) {
+            throw 'height parameter of clear must be a positive integer no greater than ' + max_height;
+        }
+
+        if (width !== dw.width || height !== dw.height) {
+
+            dw = new DrawingWindow(vm, width, height);
+
+            dw.setShow(true);
+            vm.ui.dw = dw;
+        }
+    }
+
+    dw.cs();
+    dw.ensure_showing();
 }
 
 function drawing_ht(rte) {
-  var dw = rte.vm.ui.dw;
-  dw.ht();
-  dw.ensure_showing();
+    var dw = rte.vm.ui.dw;
+    dw.ht();
+    dw.ensure_showing();
 }
 
 function drawing_st(rte) {
-  var dw = rte.vm.ui.dw;
-  dw.st();
-  dw.ensure_showing();
+    var dw = rte.vm.ui.dw;
+    dw.st();
+    dw.ensure_showing();
 }
 
 function drawing_pd(rte) {
-  var dw = rte.vm.ui.dw;
-  dw.pd();
-  dw.ensure_showing();
+    var dw = rte.vm.ui.dw;
+    dw.pd();
+    dw.ensure_showing();
 }
 
 function drawing_pu(rte) {
-  var dw = rte.vm.ui.dw;
-  dw.pu();
-  dw.ensure_showing();
+    var dw = rte.vm.ui.dw;
+    dw.pu();
+    dw.ensure_showing();
 }
 
 function drawing_fd(rte, xdist, ydist) {
-  var dw = rte.vm.ui.dw;
-  dw.fd(xdist, ydist);
-  dw.ensure_showing();
+    var dw = rte.vm.ui.dw;
+    dw.fd(xdist, ydist);
+    dw.ensure_showing();
 }
 
 function drawing_bk(rte, xdist, ydist) {
-  var dw = rte.vm.ui.dw;
-  dw.bk(xdist, ydist);
-  dw.ensure_showing();
+    var dw = rte.vm.ui.dw;
+    dw.bk(xdist, ydist);
+    dw.ensure_showing();
 }
 
 function drawing_lt(rte, angle) {
-  var dw = rte.vm.ui.dw;
-  dw.lt(angle);
-  dw.ensure_showing();
+    var dw = rte.vm.ui.dw;
+    dw.lt(angle);
+    dw.ensure_showing();
 }
 
 function drawing_rt(rte, angle) {
-  var dw = rte.vm.ui.dw;
-  dw.rt(angle);
-  dw.ensure_showing();
+    var dw = rte.vm.ui.dw;
+    dw.rt(angle);
+    dw.ensure_showing();
 }
 
 function drawing_mv(rte, x, y) {
-  var dw = rte.vm.ui.dw;
-  dw.mv(x, y);
-  dw.ensure_showing();
+    var dw = rte.vm.ui.dw;
+    dw.mv(x, y);
+    dw.ensure_showing();
 }
 
 function drawing_setpc(rte, r, g, b) {
-  var dw = rte.vm.ui.dw;
-  dw.setpc(r, g, b);
-  dw.ensure_showing();
+    var dw = rte.vm.ui.dw;
+    dw.setpc(r, g, b);
+    dw.ensure_showing();
 }
 
 function drawing_setpw(rte, width) {
-  var dw = rte.vm.ui.dw;
-  dw.setpw(width);
-  dw.ensure_showing();
+    var dw = rte.vm.ui.dw;
+    dw.setpw(width);
+    dw.ensure_showing();
 }
 
 function drawing_drawtext(rte, text) {
-  var dw = rte.vm.ui.dw;
-  dw.drawtext(text);
-  dw.ensure_showing();
+    var dw = rte.vm.ui.dw;
+    dw.drawtext(text);
+    dw.ensure_showing();
 }
 
 function drawing_setScreenMode(rte, width, height) {
-  var pw = rte.vm.ui.pw;
-  //var vm = dw.vm;
-  if (width !== void 0 || height !== void 0) {
-    if (width === void 0 || height === void 0)
-      throw 'cs expects 0 or 2 parameters';
-    if (typeof width !== 'number')
-      throw 'width parameter of cs must be a number';
-    if (typeof height !== 'number')
-      throw 'height parameter of cs must be a number';
-    if (pw.pixels_context.width !== width || dw.pixels_context.height !== height) {
-      pw.setScreenMode(width, height)
-      pw.ensure_showing()
+
+    var pw = rte.vm.ui.pw;
+
+    if (width !== void 0 || height !== void 0) {
+
+        if (width === void 0 || height === void 0)
+            throw 'setScreenMode expects 0 or 2 parameters';
+
+        var max_width = 800;
+        var max_height = 600;
+
+        if (typeof width !== 'number' ||
+            Math.floor(width) !== width ||
+            width < 1 ||
+            width > max_width) {
+            throw 'width parameter of setScreenMode must be a positive integer no greater than ' + max_width;
+        }
+
+        if (typeof height !== 'number' ||
+            Math.floor(height) !== height ||
+            height < 1 ||
+            height > max_height) {
+            throw 'height parameter of setScreenMode must be a positive integer no greater than ' + max_height;
+        }
+
+        var scale = Math.max(1, Math.min(20,
+                                         Math.floor(360 / width),
+                                         Math.floor(240 / height)));
+
+        if (width !== pw.width || height !== pw.height || scale !== pw.scale) {
+            pw.setScreenMode(width, height, scale);
+        } else {
+            pw.clearScreen();
+        }
     }
-  }
+
+    pw.ensure_showing();
 }
 
 function drawing_getScreenWidth(rte) {
-  var pw = rte.vm.ui.pw;
-  return pw.width;
+    var pw = rte.vm.ui.pw;
+    return pw.width;
 }
 
 function drawing_getScreenHeight(rte) {
-  var pw = rte.vm.ui.pw;
-  return pw.height;
+    var pw = rte.vm.ui.pw;
+    return pw.height;
 }
 
 function drawing_setPixel(rte, x, y, color) {
-  var pw = rte.vm.ui.pw;
-  pw.setPixel(x, y, 'rgb('+color.r+','+color.g+','+color.b+')');
-  pw.ensure_showing()
+    var pw = rte.vm.ui.pw;
+    pw.setPixel(x, y, 'rgb('+color.r+','+color.g+','+color.b+')');
+    pw.ensure_showing();
 }
 
 function drawing_fillRectangle(rte, x, y, width, height, color) {
-  var pw = rte.vm.ui.pw;
-  var color_str = 'rgb('+color.r+','+color.g+','+color.b+')';
-  console.log(color_str);
-  pw.fill_rect(x, y, width, height, color_str);
-
-  pw.ensure_showing()
+    var pw = rte.vm.ui.pw;
+    var color_str = 'rgb('+color.r+','+color.g+','+color.b+')';
+    pw.fill_rect(x, y, width, height, color_str);
+    pw.ensure_showing();
 }
 
 function drawing_exportScreen(rte) {
-  var pw = rte.vm.ui.pw;
-  return pw.exportScreen()
+    var pw = rte.vm.ui.pw;
+    return pw.exportScreen();
 }
 
 // Mouse information
