@@ -370,14 +370,18 @@ DrawingWindow.prototype.drawtext = function (text) {
     ctx.restore();
 };
 
-DrawingWindow.prototype.pageToRelative = function (coord) {
+DrawingWindow.prototype.pageToRelative = function (coord, clamp) {
     var dw = this;
     var rect = getCoords(dw.drawing_canvas);
     var w = dw.drawing_canvas.width;
     var h = dw.drawing_canvas.height;
-    var x = Math.max(0, Math.min(w, coord.x - rect.x - 3)) - w/2;
-    var y = h/2 - Math.max(0, Math.min(h, coord.y - rect.y - 3));
-    return { x: x, y: y };
+    var x = coord.x - rect.x - 3;
+    var y = coord.y - rect.y - 3;
+    if (clamp) {
+        x = Math.max(0, Math.min(w, x));
+        y = Math.max(0, Math.min(h, y));
+    }
+    return { x: x - w/2, y: h/2 - y };
 };
 
 function getCoords(elem) {
@@ -723,16 +727,16 @@ PixelsWindow.prototype.ensure_showing = function () {
     }
 }
 
-PixelsWindow.prototype.pageToRelative = function (coord) {
+PixelsWindow.prototype.pageToRelative = function (coord, clamp) {
     var pw = this;
     var rect = getCoords(pw.pixels_canvas);
     var scale = pw.scale;
-    var x = Math.max(0,
-                     Math.min(pw.width-1,
-                              Math.floor((coord.x - rect.x - 3)/scale)));
-    var y = Math.max(0,
-                     Math.min(pw.height-1,
-                              Math.floor((coord.y - rect.y - 3)/scale)));
+    var x = Math.floor((coord.x - rect.x - 3)/scale);
+    var y = Math.floor((coord.y - rect.y - 3)/scale);
+    if (clamp) {
+        x = Math.max(0, Math.min(pw.width-1, x));
+        y = Math.max(0, Math.min(pw.height-1, y));
+    }
     return { x: x, y: y };
 };
 
@@ -749,9 +753,9 @@ CodeBootVM.prototype.getMouse = function () {
     var state;
 
     if (vm.ui.dw.showing()) {
-        state = vm.ui.dw.pageToRelative(mouse);
+        state = vm.ui.dw.pageToRelative(mouse, false);
     } else if (vm.ui.pw.showing()) {
-        state = vm.ui.pw.pageToRelative(mouse);
+        state = vm.ui.pw.pageToRelative(mouse, true);
     } else {
         state = { x: mouse.x, y: mouse.y };
     }

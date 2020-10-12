@@ -19,6 +19,54 @@ function CodeBoot() {
 
 CodeBoot.prototype.cb = new CodeBoot();
 
+CodeBoot.prototype.setupBeforeunloadHandling = function () {
+
+    var cb = this;
+
+    window.addEventListener('beforeunload', function (event) {
+        return cb.beforeunloadHandler(event);
+    });
+};
+
+CodeBoot.prototype.setupResizeHandling = function () {
+
+    var cb = this;
+
+    window.addEventListener('resize', function (event) {
+        cb.resizeHandler();
+    });
+};
+
+CodeBoot.prototype.setupMouseMotionTracking = function (elem) {
+
+    var cb = this;
+
+    elem.addEventListener('mousemove', function (event) {
+        cb.trackMouseMove(event);
+    });
+};
+
+CodeBoot.prototype.setupMouseClickTracking = function (elem) {
+
+    var cb = this;
+
+    elem.addEventListener('mousemove', function (event) {
+        cb.trackMouseMove(event);
+    });
+
+    elem.addEventListener('mouseup', function (event) {
+        cb.trackMouseUp(event);
+    });
+
+    elem.addEventListener('mousedown', function (event) {
+        cb.trackMouseDown(event, 1);
+    });
+
+    elem.addEventListener('contextmenu', function (event) {
+        cb.preventContextMenu(event);
+    });
+};
+
 CodeBoot.prototype.trackMouseMove = function (event) {
 
     var cb = this;
@@ -39,9 +87,9 @@ CodeBoot.prototype.trackMouseDown = function (event, button) {
     var cb = this;
 
     cb.mouse.button = button;
-    cb.mouse.shift = event.shiftKey;
-    cb.mouse.ctrl  = event.ctrlKey;
-    cb.mouse.alt   = event.altKey;
+    cb.mouse.shift  = event.shiftKey;
+    cb.mouse.ctrl   = event.ctrlKey;
+    cb.mouse.alt    = event.altKey;
 };
 
 CodeBoot.prototype.preventContextMenu = function (event) {
@@ -56,31 +104,15 @@ CodeBoot.prototype.init = function () {
 
     var cb = this;
 
-    window.addEventListener('beforeunload', function (event) {
-        return cb.beforeunload(event);
-    });
+    cb.setupBeforeunloadHandling();
+    cb.setupResizeHandling();
+    cb.setupMouseMotionTracking(document.body);
 
     cb.setupAllVM(document);
 
     $(function () {
         $('[data-toggle="tooltip"]').tooltip();
     })
-
-    window.addEventListener('resize', function (event) {
-        cb.resizeHandler();
-    });
-
-    $('body').on('mousemove', function (event) {
-        cb.trackMouseMove(event);
-    });
-
-    $('body').on('mouseup', function (event) {
-        cb.trackMouseUp(event);
-    });
-
-    $('body').on('mousedown', function (event) {
-        cb.trackMouseDown(event, 1);
-    });
 
 /*
     window.onbeforeunload = function () {
@@ -224,7 +256,7 @@ function getCodeBootVM(elem) {
     return vm;
 };
 
-CodeBoot.prototype.beforeunload = function (event) {
+CodeBoot.prototype.beforeunloadHandler = function (event) {
 
     var cb = this;
 
@@ -555,11 +587,9 @@ CodeBootVM.prototype.UI = function (vm) {
 
     if (dw_parent) {
 
-        $(dw_parent).on('contextmenu', function (event) {
-            vm.cb.preventContextMenu(event);
-        });
+        vm.cb.setupMouseClickTracking(dw_parent);
 
-        $(dw_parent).on('dblclick', function (event) {
+        dw_parent.addEventListener('dblclick', function (event) {
             ui.dw.screenshot(event);
         });
     }
@@ -568,11 +598,9 @@ CodeBootVM.prototype.UI = function (vm) {
 
     if (pw_parent) {
 
-        $(pw_parent).on('contextmenu', function (event) {
-            vm.cb.preventContextMenu(event);
-        });
+        vm.cb.setupMouseClickTracking(pw_parent);
 
-        $(pw_parent).on('dblclick', function (event) {
+        pw_parent.addEventListener('dblclick', function (event) {
             ui.pw.screenshot(event);
         });
     }
@@ -680,7 +708,7 @@ CodeBootVM.prototype.menuLangHTML = function () {
   <div class="dropdown-menu cb-menu-settings-lang">\
 ' + vm.menuSettingsLangHTML() + '\
   <div class="dropdown-divider"></div>\
-  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.0.8</a>\
+  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.1.0</a>\
   <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-help-box">Help</a>\
   </div>\
 </span>\

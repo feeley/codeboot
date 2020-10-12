@@ -48,7 +48,7 @@ include/lang/py/style.js: zipi-pull
 	@echo "***   Creating include/lang/py/style.js"
 	cp ./$(ZIPI_FOR_CODEBOOT)/etc/zp/_tmpdir/style.js ./include/lang/py/style.js
 
-include/lang/py/exercice2f.js: include/lang/py/style.js
+include/lang/py/exercice2f.js: zipi-pull include/lang/py/style.js
 	@echo "*** Building include/lang/py/exercice2f.js:"
 	@echo "***   Running make on exercice2f"
 	@echo "***   Backing up old include/lang/py/exercice2f.js"
