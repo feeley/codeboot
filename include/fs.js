@@ -1126,10 +1126,15 @@ CodeBootFileEditor.prototype.rename = function () {
     fe.fileTabLabel.innerText = '';
     fe.fileTabLabel.appendChild(inputBox);
 
-    function resetTabTo(filename) {
+    function removeInputBox() {
         if (inputBox) {
             fe.fileTabLabel.removeChild(inputBox);
+            inputBox = null;
         }
+    }
+
+    function resetTabTo(filename) {
+        removeInputBox();
         fe.fileTabLabel.innerText = filename;
         fe.normalTabEvents();
         fe.file.fs.vm.lastFocusedEditor = lastFocusedEditor;
@@ -1137,8 +1142,7 @@ CodeBootFileEditor.prototype.rename = function () {
     }
 
     function resetTabToOldFilename() {
-        inputBox.value = oldFilename;
-        inputBox = null;
+        removeInputBox();
         resetTabTo(oldFilename);
     }
 
@@ -1146,6 +1150,8 @@ CodeBootFileEditor.prototype.rename = function () {
         if (inputBox) {
 
             var newFilename = inputBox.value;
+
+            removeInputBox();
 
             if (newFilename !== oldFilename) {
 
