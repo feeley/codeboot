@@ -59,7 +59,7 @@ CodeBoot.prototype.setupMouseClickTracking = function (elem) {
     });
 
     elem.addEventListener('mousedown', function (event) {
-        cb.trackMouseDown(event, 1);
+        cb.trackMouseDown(event, event.buttons>1 ? 2 : event.buttons);
     });
 
     elem.addEventListener('contextmenu', function (event) {
@@ -96,7 +96,11 @@ CodeBoot.prototype.preventContextMenu = function (event) {
 
     var cb = this;
 
-    cb.trackMouseDown(event, 2);
+    if (event.buttons & 2) {
+        // secondary button was probably pressed
+        cb.trackMouseDown(event, 2);
+    }
+
     event.preventDefault(); // don't show context menu
 };
 
@@ -450,6 +454,8 @@ function CodeBootVM(opts) {
 
     vm.loadSession();
 
+    vm.updatePlayground();
+
     vm.setupNextSaveSession();
 
     initLast();
@@ -575,11 +581,11 @@ CodeBootVM.prototype.UI = function (vm) {
     ui.mode = null;
     ui.code_queue = [];
 
+    ui.playground_to_show = null;
+    ui.playground_showing = undefined;
+
     ui.dw = new DrawingWindow(vm, 360, 240);
     ui.pw = new PixelsWindow(vm, 16, 12, 20);
-
-    ui.dw.setShow(false);
-    ui.pw.setShow(false);
 
     vm.ui = ui;
 
@@ -604,6 +610,60 @@ CodeBootVM.prototype.UI = function (vm) {
             ui.pw.screenshot(event);
         });
     }
+};
+
+CodeBootVM.prototype.setPlaygroundToShow = function (which) {
+
+    var vm = this;
+
+    vm.ui.playground_to_show = which;
+};
+
+CodeBootVM.prototype.updatePlayground = function () {
+
+    var vm = this;
+    var to_show = vm.ui.playground_to_show;
+
+    if (vm.ui.playground_showing !== to_show) {
+
+        switch (to_show) {
+
+        case 'drawing':
+            vm.ui.dw.setShow(true);
+            break;
+
+        case 'pixels':
+            vm.ui.pw.setShow(true);
+            break;
+
+        default:
+            to_show = null;
+            vm.ui.dw.setShow(false);
+            vm.ui.pw.setShow(false);
+            break;
+        }
+
+        vm.setAttribute('data-cb-show-playground', to_show !== null);
+
+        vm.ui.playground_showing = to_show;
+    }
+/*
+function update_playground_visibility(vm) {
+    var drawing_window_visible =
+        $('.cb-drawing-window').css('display') !== 'none';
+    var pixels_window_visible =
+        $('.cb-pixels-window').css('display') !== 'none';
+    $('a[data-cb-setting-graphics="show-drawing-window"] > span')
+        .css('visibility', drawing_window_visible ? 'visible' : 'hidden');
+    $('a[data-cb-setting-graphics="show-pixels-window"] > span')
+        .css('visibility', pixels_window_visible ? 'visible' : 'hidden');
+    if (drawing_window_visible || pixels_window_visible || $('#b').html() !== '') {
+        vm.setAttribute('data-cb-show-playground', true);
+    } else {
+        vm.setAttribute('data-cb-show-playground', false);
+    }
+}
+*/
 };
 
 CodeBootVM.prototype.loadLang = function (id) {
@@ -708,7 +768,7 @@ CodeBootVM.prototype.menuLangHTML = function () {
   <div class="dropdown-menu cb-menu-settings-lang">\
 ' + vm.menuSettingsLangHTML() + '\
   <div class="dropdown-divider"></div>\
-  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.1.0</a>\
+  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.1.2</a>\
   <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-help-box">Help</a>\
   </div>\
 </span>\
@@ -1329,10 +1389,11 @@ CodeBootVM.prototype.setupEventHandlers = function () {
                 vm.setLargeFont(!vm.largeFont);
             } else if (val = elem.getAttribute('data-cb-setting-graphics')) {
                 if (val === 'show-drawing-window') {
-                    vm.ui.dw.setShow(!vm.ui.dw.showing());
+                    vm.setPlaygroundToShow(vm.ui.dw.showing()?null:'drawing');
                 } else if (val === 'show-pixels-window') {
-                    vm.ui.pw.setShow(!vm.ui.pw.showing());
+                    vm.setPlaygroundToShow(vm.ui.pw.showing()?null:'pixels');
                 }
+                vm.updatePlayground();
             }
 
             return true;

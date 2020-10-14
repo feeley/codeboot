@@ -397,85 +397,84 @@ function drawing_cs(rte, width, height) {
 
             dw = new DrawingWindow(vm, width, height);
 
-            dw.setShow(true);
             vm.ui.dw = dw;
         }
     }
 
     dw.cs();
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function drawing_ht(rte) {
     var dw = rte.vm.ui.dw;
     dw.ht();
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function drawing_st(rte) {
     var dw = rte.vm.ui.dw;
     dw.st();
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function drawing_pd(rte) {
     var dw = rte.vm.ui.dw;
     dw.pd();
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function drawing_pu(rte) {
     var dw = rte.vm.ui.dw;
     dw.pu();
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function drawing_fd(rte, xdist, ydist) {
     var dw = rte.vm.ui.dw;
     dw.fd(xdist, ydist);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function drawing_bk(rte, xdist, ydist) {
     var dw = rte.vm.ui.dw;
     dw.bk(xdist, ydist);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function drawing_lt(rte, angle) {
     var dw = rte.vm.ui.dw;
     dw.lt(angle);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function drawing_rt(rte, angle) {
     var dw = rte.vm.ui.dw;
     dw.rt(angle);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function drawing_mv(rte, x, y) {
     var dw = rte.vm.ui.dw;
     dw.mv(x, y);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function drawing_setpc(rte, r, g, b) {
     var dw = rte.vm.ui.dw;
     dw.setpc(r, g, b);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function drawing_setpw(rte, width) {
     var dw = rte.vm.ui.dw;
     dw.setpw(width);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function drawing_drawtext(rte, text) {
     var dw = rte.vm.ui.dw;
     dw.drawtext(text);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function drawing_setScreenMode(rte, width, height) {
@@ -515,7 +514,7 @@ function drawing_setScreenMode(rte, width, height) {
         }
     }
 
-    pw.ensure_showing();
+    pw.prepareToShow();
 }
 
 function drawing_getScreenWidth(rte) {
@@ -531,13 +530,13 @@ function drawing_getScreenHeight(rte) {
 function drawing_setPixel(rte, x, y, color) {
     var pw = rte.vm.ui.pw;
     pw.setPixel(x, y, convertRGB4(color) || blackRGB);
-    pw.ensure_showing();
+    pw.prepareToShow();
 }
 
 function drawing_fillRectangle(rte, x, y, width, height, color) {
     var pw = rte.vm.ui.pw;
     pw.fill_rect(x, y, width, height, convertRGB4(color) || blackRGB);
-    pw.ensure_showing();
+    pw.prepareToShow();
 }
 
 function drawing_exportScreen(rte) {

@@ -389,6 +389,14 @@ function getCoords(elem) {
     return { x: rect.left + pageXOffset, y: rect.top + pageYOffset };
 }
 
+DrawingWindow.prototype.prepareToShow = function () {
+
+    var dw = this;
+    var vm = dw.vm;
+
+    vm.setPlaygroundToShow('drawing');
+};
+
 DrawingWindow.prototype.setShow = function (show) {
 
     var dw = this;
@@ -404,37 +412,12 @@ DrawingWindow.prototype.setShow = function (show) {
         parent.appendChild(drawing_window.grid_canvas);
         parent.appendChild(drawing_window.drawing_canvas);
         parent.appendChild(drawing_window.turtle_canvas);
-        update_playground_visibility(vm);
     } else {
         var parent = vm.root.querySelector('.cb-drawing-window');
         dom_remove_children(parent);
         $('.cb-drawing-window').css('display', 'none');
-        update_playground_visibility(vm);
     }
 };
-
-function update_playground_visibility(vm) {
-    var drawing_window_visible =
-        $('.cb-drawing-window').css('display') !== 'none';
-    var pixels_window_visible =
-        $('.cb-pixels-window').css('display') !== 'none';
-    $('a[data-cb-setting-graphics="show-drawing-window"] > span')
-        .css('visibility', drawing_window_visible ? 'visible' : 'hidden');
-    $('a[data-cb-setting-graphics="show-pixels-window"] > span')
-        .css('visibility', pixels_window_visible ? 'visible' : 'hidden');
-    if (drawing_window_visible || pixels_window_visible /* || $('#b').html() !== '' */) {
-        vm.setAttribute('data-cb-show-playground', true);
-    } else {
-        vm.setAttribute('data-cb-show-playground', false);
-    }
-}
-
-DrawingWindow.prototype.ensure_showing = function () {
-    var dw = this;
-    if (!dw.showing()) {
-        dw.setShow(true);
-    }
-}
 
 DrawingWindow.prototype.showing = function () {
     return $('.cb-drawing-window').is(':visible');
@@ -451,34 +434,34 @@ function builtin_cs(width, height) {
         if (typeof height !== 'number')
             throw 'height parameter of cs must be a number';
         dw = new DrawingWindow(vm, Math.max(50, Math.min(500, width)), Math.max(50, Math.min(500, height)));
-        dw.setShow(true);
+        vm.ui.playground_showing = undefined;
     }
     dw.cs();
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function builtin_st() {
     var dw = drawing_window;
     dw.st();
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function builtin_ht() {
     var dw = drawing_window;
     dw.ht();
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function builtin_pu() {
     var dw = drawing_window;
     dw.pu();
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function builtin_pd() {
     var dw = drawing_window;
     dw.pd();
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function builtin_fd(xdistance, ydistance) {
@@ -490,7 +473,7 @@ function builtin_fd(xdistance, ydistance) {
     if (ydistance !== void 0 && typeof ydistance !== 'number')
         throw 'ydistance parameter of fd must be a number';
     dw.fd(xdistance, ydistance);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function builtin_bk(xdistance, ydistance) {
@@ -502,7 +485,7 @@ function builtin_bk(xdistance, ydistance) {
     if (ydistance !== void 0 && typeof ydistance !== 'number')
         throw 'ydistance parameter of bk must be a number';
     dw.bk(xdistance, ydistance);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function builtin_mv(x, y) {
@@ -514,7 +497,7 @@ function builtin_mv(x, y) {
     if (typeof y !== 'number')
         throw 'y parameter of mv must be a number';
     dw.mv(x, y);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function builtin_lt(angle) {
@@ -524,7 +507,7 @@ function builtin_lt(angle) {
     if (typeof angle !== 'number')
         throw 'angle parameter of lt must be a number';
     dw.lt(angle);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function builtin_rt(angle) {
@@ -534,7 +517,7 @@ function builtin_rt(angle) {
     if (typeof angle !== 'number')
         throw 'angle parameter of rt must be a number';
     dw.rt(angle);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function builtin_setpc(r, g, b) {
@@ -548,7 +531,7 @@ function builtin_setpc(r, g, b) {
     if (typeof b !== 'number')
         throw 'b parameter of setpc must be a number';
     dw.setpc(r, g, b);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function builtin_setpw(width) {
@@ -558,7 +541,7 @@ function builtin_setpw(width) {
     if (typeof width !== 'number')
         throw 'width parameter of setpw must be a number';
     dw.setpw(width);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function builtin_drawtext(text) {
@@ -566,7 +549,7 @@ function builtin_drawtext(text) {
     if (text === void 0)
         throw 'drawtext expects 1 parameter';
     dw.drawtext(text);
-    dw.ensure_showing();
+    dw.prepareToShow();
 }
 
 function PixelsWindow(vm, width, height, scale) {
@@ -667,15 +650,15 @@ PixelsWindow.prototype.setScreenMode = function (width, height, scale) {
     var pw = this;
     var vm = pw.vm;
     if (scale === void 0) scale = 1;
-    pw.setShow(false);
     pw = new PixelsWindow(vm, width, height, scale);
-    pw.ensure_showing();
+    vm.ui.playground_showing = undefined;
+    pw.prepareToShow();
 };
 
 PixelsWindow.prototype.fillRectangle = function (x, y, w, h, color) {
     var pw = this;
     pw.fill_rect(x, y, w, h, color);
-    pw.ensure_showing();
+    pw.prepareToShow();
 };
 
 PixelsWindow.prototype.clearScreen = function () {
@@ -697,6 +680,14 @@ PixelsWindow.prototype.showing = function () {
     return $('.cb-pixels-window').is(':visible');
 }
 
+PixelsWindow.prototype.prepareToShow = function () {
+
+    var pw = this;
+    var vm = pw.vm;
+
+    vm.setPlaygroundToShow('pixels');
+};
+
 PixelsWindow.prototype.setShow = function (show) {
 
     var pw = this;
@@ -711,21 +702,12 @@ PixelsWindow.prototype.setShow = function (show) {
         dom_remove_children(parent);
         parent.appendChild(pixels_window.pixels_canvas);
         parent.appendChild(pixels_window.grid_canvas);
-        update_playground_visibility(vm);
     } else {
         var parent = document.querySelector('.cb-pixels-window');
         dom_remove_children(parent);
         $('.cb-pixels-window').css('display', 'none');
-        update_playground_visibility(vm);
     }
 };
-
-PixelsWindow.prototype.ensure_showing = function () {
-    var pw = this;
-    if (!pw.showing()) {
-        pw.setShow(true);
-    }
-}
 
 PixelsWindow.prototype.pageToRelative = function (coord, clamp) {
     var pw = this;
