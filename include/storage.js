@@ -2,7 +2,7 @@ CodeBootVM.prototype.getStorageId = function () {
 
     var vm = this;
 
-    return 'v3.1/' + vm.storageId;
+    return vm.storageId;
 };
 
 CodeBootVM.prototype.getStorage = function () {
