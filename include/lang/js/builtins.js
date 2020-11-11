@@ -780,7 +780,7 @@ builtin_writeFile._apply_ = function (rte, cont, this_, params) {
             throw 'content parameter of writeFile must be a string';
         }
 
-        writeFileInternal(filename, content);
+        vm.writeFileInternal(filename, content);
 
         return return_fn_body(rte, void 0);
     };

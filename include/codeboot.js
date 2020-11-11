@@ -4,6 +4,12 @@ function CodeBoot() {
 
     var cb = this;
 
+    cb.version = '3.1.5';
+
+    cb.cmds = null;
+    cb.cmds_valid = false;
+    cb.privkey = null;
+
     cb.mouse = { x: 0,
                  y: 0,
                  button: 0,
@@ -13,7 +19,33 @@ function CodeBoot() {
                };
 
     document.addEventListener('DOMContentLoaded', function () {
-        cb.init();
+
+        function done() {
+            cb.init();
+        }
+
+        var search =  window.location.search;
+
+        if (search && search.slice(0, 6) === '?init=') {
+
+            var init_str = search.slice(6);
+            var parts = init_str.split(',');
+            var cmds = parts.slice(1);
+            var cmds_str = cmds.join(',');
+            var signature = fromSafeBase64ToUint8Array(parts[0]);
+            var i = 0;
+
+            cb.cmds = cmds;
+
+            cb.verify(toUint8Array(cmds_str),
+                      signature,
+                      function (isValid) {
+                          cb.cmds_valid = isValid;
+                          done();
+                      });
+        } else {
+            done();
+        }
     });
 }
 
@@ -104,6 +136,173 @@ CodeBoot.prototype.preventContextMenu = function (event) {
     event.preventDefault(); // don't show context menu
 };
 
+CodeBoot.prototype.keyAlgo = {
+    name: 'RSASSA-PKCS1-v1_5',
+    modulusLength: 768,
+    publicExponent: new Uint8Array([1,0,1]),
+    hash: {
+        name: 'SHA-1'
+    }
+};
+
+CodeBoot.prototype.pubkeys = [
+    'MHwwDQYJKoZIhvcNAQEBBQADawAwaAJhAK2DURk0UzQSBUG8He9PziYJGn-Rkv68jEORAhmskprssApZHSADNK4hdQndCOGtbAvQqjRpf2Qq0MM2UIRxruUKApxX9hfw1ShNbijY5NgUugA9ON4KpxzFEY8_fk6WDQIDAQAB',
+    'MHwwDQYJKoZIhvcNAQEBBQADawAwaAJhAMbz-ADO_hOhaSYQ9YsX9YNEorprFex30r42SB-ImT1TtsHl2uO9ciRDcFSAbj5ocZlrcL3v961L6TcUAzny7EdDGD8NoLe8q2IiCWfGzgroyVffnECdOJw8VaO3_1HWdQIDAQAB',
+    'MHwwDQYJKoZIhvcNAQEBBQADawAwaAJhALyZszW7qTwl39Cc3xOYNbA9G_-ignhoCWlKPupsLpXGpmKmZuffcEAM8GbmeGBoEWv2SDzITVBlEf2okVf3ipx_JHcEG-tCvxugkwyS_uk8CiFZn9SpKM6VHFXDuOfYHQIDAQAB'
+];
+
+CodeBoot.prototype.keyGen = function () {
+
+    var cb = this;
+
+    function succeed(privkey, pubkey) {
+        console.log('privkey: ' +
+                    toSafeBase64FromUint8Array(new Uint8Array(privkey)));
+        console.log('pubkey: ' +
+                    toSafeBase64FromUint8Array(new Uint8Array(pubkey)));
+    }
+
+    function fail(err) {
+        console.log(err);
+        console.log('failed to generate keys');
+    }
+
+    if (window.crypto && window.crypto.subtle) {
+
+        var crypto = window.crypto.subtle;
+
+        crypto.generateKey(
+            CodeBoot.prototype.keyAlgo,
+            true,
+            ['sign', 'verify']).then(
+                function (key) {
+                    console.log(key);
+                    crypto.exportKey(
+                        'pkcs8',
+                        key.privateKey).then(function (privkey) {
+                            console.log(privkey);
+                            crypto.exportKey(
+                                'spki',
+                                key.publicKey).then(function (pubkey) {
+                                    console.log(pubkey);
+                                    succeed(privkey, pubkey);
+                                }).catch(function (err) {
+                                    fail(err);
+                                })
+                        }).catch(function (err) {
+                            fail(err);
+                        })
+                }).catch(function (err) {
+                    fail(err);
+                })
+    } else {
+        fail(null);
+    }
+};
+
+CodeBoot.prototype.withKey = function (b64, priv, succeed, fail) {
+
+    var cb = this;
+
+    if (window.crypto && window.crypto.subtle) {
+
+        var crypto = window.crypto.subtle;
+
+        crypto.importKey(
+            priv ? 'pkcs8' : 'spki',
+            fromSafeBase64ToUint8Array(b64),
+            CodeBoot.prototype.keyAlgo,
+            false, // not extractable
+            [priv ? 'sign' : 'verify']).then(succeed).catch(fail);
+    } else {
+        fail(null);
+    }
+};
+
+CodeBoot.prototype.signWithKey = function (data, key, cont) {
+
+    var cb = this;
+
+    function fail(err) {
+        cont(null);
+    }
+
+    if (window.crypto && window.crypto.subtle) {
+
+        var crypto = window.crypto.subtle;
+
+        function succeed(privkey) {
+
+            crypto.sign(
+                CodeBoot.prototype.keyAlgo,
+                privkey,
+                toUint8Array(data)).then(function (signature) {
+                    cont(new Uint8Array(signature));
+                }).catch(fail);
+        }
+
+        cb.withKey(key, true, succeed, fail);
+    } else {
+        fail(null);
+    }
+};
+
+CodeBoot.prototype.verifyWithKey = function (data, key, signature, cont) {
+
+    var cb = this;
+
+    function fail(err) {
+        cont(false);
+    }
+
+    if (window.crypto && window.crypto.subtle) {
+
+        var crypto = window.crypto.subtle;
+
+        function succeed(pubkey) {
+
+            crypto.verify(
+                CodeBoot.prototype.keyAlgo,
+                pubkey,
+                signature,
+                toUint8Array(data)).then(function (isValid) {
+                    cont(isValid);
+                }).catch(fail);
+        }
+
+        cb.withKey(key, false, succeed, fail);
+    } else {
+        fail(null);
+    }
+};
+
+CodeBoot.prototype.verify = function (data, signature, cont) {
+
+    var cb = this;
+    var i = 0;
+
+    function try_next_key() {
+        if (i < CodeBoot.prototype.pubkeys.length) {
+            cb.verifyWithKey(
+                data,
+                CodeBoot.prototype.pubkeys[i],
+                signature,
+                function (isValid) {
+                    if (!isValid) {
+                        i++;
+                        try_next_key();
+                    } else {
+                        cont(true);
+                    }
+                });
+        } else {
+            cont(false);
+        }
+    }
+
+    try_next_key();
+};
+
 CodeBoot.prototype.init = function () {
 
     var cb = this;
@@ -156,7 +355,13 @@ CodeBoot.prototype.setupAllVM = function (elem) {
 
     elem.querySelectorAll('.cb-vm').forEach(function (root) {
         if (!getCodeBootVM(root)) {
-            new CodeBootVM({ root: root });
+            var opts = { root: root };
+            var cmds = CodeBoot.prototype.cb.cmds;
+            if (cmds) {
+                CodeBoot.prototype.cb.cmds = null;
+                opts.cmds = cmds;
+            }
+            new CodeBootVM(opts);
         }
     });
 };
@@ -174,7 +379,10 @@ CodeBoot.prototype.registerVM = function (vm) {
     var cb = this;
 
     vm.zIndex = cb.zIndexFromLevel(CodeBoot.prototype.vmCount);
-    vm.root.style.zIndex = vm.zIndex;
+
+    if (vm.zIndex !== 0) {
+        vm.root.style.zIndex = vm.zIndex;
+    }
 
     CodeBoot.prototype.vms[vm.id] = vm;
     CodeBoot.prototype.vmCount++;
@@ -227,7 +435,9 @@ CodeBoot.prototype.resizeHandler = function (event) {
         //console.log(id + ' ' + vm);
         delete vm.root.style.transform;
         var scale = getScale(vm.root);
-        vm.root.style.transform = 'scale(' + (1/scale) + ')';
+        if (scale !== 1) {
+            vm.root.style.transform = 'scale(' + (1/scale) + ')';
+        }
     }
 };
 
@@ -253,9 +463,21 @@ function getScale(elem) {
 function getCodeBootVM(elem) {
 
     var vm = undefined;
-    var root = elem.closest('.cb-vm'); // find enclosing cb-vm element
 
-    if (root) vm = CodeBoot.prototype.vms['#' + root.getAttribute('id')];
+    if (elem !== undefined) {
+        var root = elem.closest('.cb-vm'); // find enclosing cb-vm element
+        if (!root) {
+            root = elem.querySelector('.cb-vm'); // find enclosed cb-vm element
+        }
+        if (root) {
+            vm = CodeBoot.prototype.vms['#' + root.getAttribute('id')];
+        }
+    }
+
+    if (vm === undefined) {
+        for (id in CodeBoot.prototype.vms)
+            return CodeBoot.prototype.vms[id];
+    }
 
     return vm;
 };
@@ -304,16 +526,58 @@ function CodeBootVM(opts) {
         root.setAttribute('id', id);
     }
 
+    function get_option(name, attr, default_value) {
+        var result = opts[name];
+        if (result === undefined && attr !== null) {
+            if (root.hasAttribute(attr)) {
+                if (typeof(default_value) === 'boolean') {
+                    result = true;
+                } else if (typeof(default_value) === 'number') {
+                    result = +root.getAttribute(attr);
+                } else {
+                    result = root.getAttribute(attr);
+                }
+            } else {
+                result = default_value;
+            }
+        } else if (typeof(result) == 'string') {
+            if (typeof(default_value) === 'boolean') {
+                result = (result === 'true');
+            } else if (typeof(default_value) === 'number') {
+                result = +result;
+            }
+        }
+        return result;
+    }
+
+    function get_option_attr(name, attr, default_value) {
+        var result = get_option(name, attr, default_value);
+        vm.setAttribute(attr, result);
+        return result;
+    }
+
+    function set_options(opts) {
+        var cmds = opts.cmds;
+        if (cmds) {
+            opts.persistent = false; // default is to not load/save session
+            opts.cmds = [];
+            for (var i=0; i<cmds.length; i++) {
+                var cmd = cmds[i];
+                var colon = cmd.indexOf(':');
+                if (colon > 0) {
+                    var name = cmd.slice(0, colon);
+                    var value = cmd.slice(colon+1);
+                    opts[name] = value;
+                } else {
+                    opts.cmds.push(cmd);
+                }
+            }
+        }
+    }
+
+    set_options(opts);
+
     id = '#' + id;
-
-    var storageId;
-
-    if (opts.storageId !== undefined)
-        storageId = opts.storageId;
-    else if (root.hasAttribute('data-cb-storage-id'))
-        storageId = root.getAttribute('data-cb-storage-id');
-    else
-        storageId = id;
 
     vm.id    = id;     // id of this VM, typically '#cb-vm-N'
     vm.cb    = cb;     // CodeBoot container
@@ -325,9 +589,20 @@ function CodeBootVM(opts) {
     vm.vmClone = null;
     vm.isOpen = true;
 
-    vm.editable = true;
+    vm.storageId = get_option_attr('storageId', 'data-cb-storage-id', id);
+    vm.minWidth  = get_option_attr('minWidth', 'data-cb-min-width', 575);
+    vm.minHeight = get_option_attr('minHeight', 'data-cb-min-height', 400);
+    vm.resizable = get_option_attr('resizable', 'data-cb-resizable', false);
+    vm.editable  = get_option_attr('editable', 'data-cb-editable', true);
 
-    vm.storageId = storageId;
+    get_option_attr('showHeader', 'data-cb-show-header', false);
+    get_option_attr('showFooter', 'data-cb-show-footer', false);
+    get_option_attr('showConsole', 'data-cb-show-console', false);
+    get_option_attr('showReplContainer', 'data-cb-show-repl-container', false);
+    get_option_attr('showPlayground', 'data-cb-show-playground', false);
+    get_option_attr('showEditors', 'data-cb-show-editors', false);
+
+    get_option_attr('showClone', 'data-cb-show-clone', false);
 
     new CodeBootFileSystem(vm); // initializes vm.fs
 
@@ -336,6 +611,7 @@ function CodeBootVM(opts) {
     vm.largeFont = undefined;
     vm.animationSpeed = undefined;
     vm.stepDelay = normalStepDelay;
+    vm.pauseAtStepCount = Infinity;
 
     vm.saveInProgress = false;
     vm.lastFocusedEditor = null;
@@ -356,54 +632,8 @@ function CodeBootVM(opts) {
 
     vm.setClass('cb-vm', true); // force class in case not yet set
 
-    vm.setAttribute('data-cb-show-header', false);
-    vm.setAttribute('data-cb-show-footer', false);
-    vm.setAttribute('data-cb-show-console', false);
-    vm.setAttribute('data-cb-show-repl-container', false);
-    vm.setAttribute('data-cb-show-playground', false);
-    vm.setAttribute('data-cb-show-editors', false);
-
-    var showClone;
-
-    if (opts.showClone !== undefined)
-        showClone = opts.showClone;
-    else if (root.hasAttribute('data-cb-show-clone'))
-        showClone = root.getAttribute('data-cb-show-clone');
-    else
-        showClone = false;
-
-    vm.setAttribute('data-cb-show-clone', showClone);
-
-    var floating;
-
-    if (opts.floating !== undefined)
-        floating = opts.floating;
-    else if (root.hasAttribute('data-cb-floating'))
-        floating = root.getAttribute('data-cb-floating');
-    else
-        floating = false;
-
-    vm.setAttribute('data-cb-floating', floating);
-
-    var resizable;
-
-    if (opts.resizable !== undefined)
-        resizable = opts.resizable;
-    else if (root.hasAttribute('data-cb-resizable'))
-        resizable = root.getAttribute('data-cb-resizable');
-    else
-        resizable = false;
-
-    vm.setAttribute('data-cb-resizable', resizable);
-
-    var id_and_level;
-
-    if (opts.lang !== undefined)
-        id_and_level = opts.lang;
-    else if (root.hasAttribute('data-cb-lang'))
-        id_and_level = root.getAttribute('data-cb-lang');
-    else
-        id_and_level = ''; // use first language and level registered
+    // get language (default to first registered language and level)
+    var id_and_level = get_option('lang', 'data-cb-lang', '');
 
     id_and_level = Lang.prototype.full(id_and_level);
 
@@ -422,6 +652,10 @@ function CodeBootVM(opts) {
 
     cb.registerVM(vm);
 
+    if (cb.vmsCreated === 1) {
+        vm.initCommon(opts);
+    }
+
     vm.initUI();
 
     vm.setLangUI();
@@ -435,28 +669,29 @@ function CodeBootVM(opts) {
     vm.replAllowInput();
     vm.replFocus();
 
-    vm.setDevMode(opts.devMode !== undefined
-                  ? opts.devMode
-                  : root.hasAttribute('data-cb-dev-mode'));
+    vm.setDevMode(
+        get_option('devMode', 'data-cb-dev-mode', false));
 
-    vm.setShowLineNumbers(opts.showLineNumbers !== undefined
-                          ? opts.showLineNumbers
-                          : root.hasAttribute('data-cb-show-line-numbers'));
-    
-    vm.setLargeFont(opts.largeFont !== undefined
-                    ? opts.largeFont
-                    : root.hasAttribute('data-cb-large-font'));
+    vm.setShowLineNumbers(
+        get_option('showLineNumbers', 'data-cb-show-line-numbers', false));
 
-    vm.setAnimationSpeed(opts.animationSpeed !== undefined
-                         ? opts.animationSpeed
-                         : (root.getAttribute('data-cb-animation-speed') ||
-                            'normal'));
+    vm.setLargeFont(
+        get_option('largeFont', 'data-cb-large-font', false));
 
-    vm.loadSession();
+    vm.setAnimationSpeed(
+        get_option('animationSpeed', 'data-cb-animation-speed', 'normal'));
+
+    vm.setHidden(
+        get_option_attr('hidden', 'data-cb-hidden', false));
+
+    vm.setFloating(
+        get_option_attr('floating', 'data-cb-floating', false));
+
+    if (get_option('persistent', 'data-cb-persistent', true)) {
+        vm.beginSession();
+    }
 
     vm.updatePlayground();
-
-    vm.setupNextSaveSession();
 
     initLast();
 
@@ -465,6 +700,140 @@ function CodeBootVM(opts) {
 
     if (opts.event !== undefined)
         vm.execEvent(opts.event);
+
+    if (opts.cmds !== undefined)
+        vm.execCommands(opts.cmds);
+};
+
+CodeBootVM.prototype.execCommands = function (cmds) {
+
+    var vm = this;
+
+    var fileToActivate = null;
+
+    for (var i=0; i<cmds.length; i++) {
+        var cmd = cmds[i];
+        var op = cmd[0];
+        switch (op) {
+        case 'i': // add input
+            var input = fromSafeBase64(cmd.slice(1));
+            vm.replSetInput(input);
+            vm.repl.focus();
+            fileToActivate = null;
+            break;
+        case 'f': // create a file
+        case 'F':
+            i++;
+            if (i<cmds.length) {
+                var filename = fromSafeBase64(cmd.slice(1));
+                var content = fromSafeBase64(cmds[i]);
+                var file = vm.fs.createFile(filename, content);
+                file.fe.edit();
+                if (op === 'F') {
+                    fileToActivate = file;
+                } else if (fileToActivate !== null) {
+                    fileToActivate.fe.activate();
+                }
+            }
+            break;
+        case 'e': // eval
+        case 'a': // animate
+            var pauseAtStepCount = Infinity;
+            if (cmd.length > 1) {
+                pauseAtStepCount = +cmd.slice(1);
+            }
+            if (!(pauseAtStepCount > 0)) {
+                vm.showTryMeTooltip();
+            } else {
+                vm.pauseAtStepCount = pauseAtStepCount;
+            }
+            if (op === 'e') {
+                vm.execEvent('eval');
+            } else {
+                vm.execEvent('animate');
+            }
+            break;
+        }
+    }
+};
+
+CodeBootVM.prototype.toURL = function (executable, cont) {
+
+    var vm = this;
+
+    var loc = window.location;
+    var location = loc.protocol + '//' + loc.host + loc.pathname;
+
+    var cmds = [];
+
+    if (vm.root.hasAttribute('data-cb-show-line-numbers')) {
+        cmds.push('showLineNumbers:true');
+    }
+
+    if (vm.root.hasAttribute('data-cb-large-font')) {
+        cmds.push('largeFont:true');
+    }
+
+    if (vm.root.hasAttribute('data-cb-hidden')) {
+        cmds.push('hidden:true');
+    }
+
+    if (vm.root.hasAttribute('data-cb-floating')) {
+        cmds.push('floating:true');
+    }
+
+    vm.forEachElem('.cb-file-tab', function (elem) {
+        var label = elem.querySelector('.cb-tab-label');
+        if (label) {
+            var file = vm.fs.getByName(label.innerText);
+            if (file) {
+                cmds.push((file.fe.isActivated() ? 'F' : 'f') +
+                          toSafeBase64(file.filename) + ',' +
+                          toSafeBase64(file.getContent()));
+            }
+        }
+    });
+
+    if (executable) {
+        cmds.push('e');
+    } else if (vm.ui.mode === vm.modeStepping()) {
+        cmds.push('e' + vm.lang.getStepCount());
+    } else if (vm.ui.mode === vm.modeAnimating() && vm.stepDelay > 0) {
+        if (vm.animationSpeed !== 'normal') {
+            cmds.push('animationSpeed:' + vm.animationSpeed);
+        }
+        cmds.push('a');
+    }
+
+    var cmds_str = ',' + cmds.join(',');
+
+    function fail() {
+        alert('Error while signing commands');
+    }
+
+    if (vm.cb.privkey) {
+        vm.cb.signWithKey(
+            toUint8Array(cmds_str),
+            vm.cb.privkey,
+            function (signature) {
+                if (signature) {
+                    var url = location + '?init=' + toSafeBase64FromUint8Array(signature) + cmds_str;
+                    cont(url);
+                } else {
+                    cont(null);
+                }
+            });
+    } else {
+        cont(null);
+    }
+};
+
+CodeBootVM.prototype.beginSession = function () {
+
+    var vm = this;
+
+    vm.loadSession();
+    vm.setupNextSaveSession();
 };
 
 CodeBootVM.prototype.setupNextSaveSession = function () {
@@ -653,9 +1022,9 @@ function update_playground_visibility(vm) {
         $('.cb-drawing-window').css('display') !== 'none';
     var pixels_window_visible =
         $('.cb-pixels-window').css('display') !== 'none';
-    $('a[data-cb-setting-graphics="show-drawing-window"] > span')
+    $('a[data-cb-setting-playground="show-drawing-window"] > span')
         .css('visibility', drawing_window_visible ? 'visible' : 'hidden');
-    $('a[data-cb-setting-graphics="show-pixels-window"] > span')
+    $('a[data-cb-setting-playground="show-pixels-window"] > span')
         .css('visibility', pixels_window_visible ? 'visible' : 'hidden');
     if (drawing_window_visible || pixels_window_visible || $('#b').html() !== '') {
         vm.setAttribute('data-cb-show-playground', true);
@@ -768,7 +1137,7 @@ CodeBootVM.prototype.menuLangHTML = function () {
   <div class="dropdown-menu cb-menu-settings-lang">\
 ' + vm.menuSettingsLangHTML() + '\
   <div class="dropdown-divider"></div>\
-  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v3.1.2</a>\
+  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v' + CodeBoot.prototype.cb.version + '</a>\
   <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-help-box">Help</a>\
   </div>\
 </span>\
@@ -834,12 +1203,33 @@ CodeBootVM.prototype.menuSettingsHTML = function () {
 \
     <div class="dropdown-divider"></div>\
 \
-    <h5 class="dropdown-header">Graphics</h5>\
-    <a href="#" class="dropdown-item" data-cb-setting-graphics="show-drawing-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show drawing window</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-graphics="show-pixels-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show pixels window</a>\
+    <h5 class="dropdown-header">Playground</h5>\
+    <a href="#" class="dropdown-item" data-cb-setting-playground="show-drawing-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show drawing window</a>\
+    <a href="#" class="dropdown-item" data-cb-setting-playground="show-pixels-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show pixels window</a>\
 \
   </div>\
 </span>\
+';
+};
+
+CodeBootVM.prototype.menuContextHTML = function () {
+
+    var vm = this;
+
+    return '\
+<div class="cb-menu-context dropdown-menu" style="display: none;">\
+\
+  <a href="#" class="dropdown-item" data-cb-context-presentation="full">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Full window</a>\
+\
+  <a href="#" class="dropdown-item" data-cb-context-presentation="floating">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Floating window</a>\
+\
+  <a href="#" class="dropdown-item" data-cb-context-presentation="hidden">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Hide codeBoot</a>\
+\
+  <a href="#" class="dropdown-item" data-cb-context-bundle-state>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Bundle state to clipboard</a>\
+\
+  <a href="#" class="dropdown-item" data-cb-context-bundle-executable>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Bundle executable to clipboard</a>\
+\
+</div>\
 ';
 };
 
@@ -988,7 +1378,7 @@ CodeBootVM.prototype.consoleHTML = function () {
   <div class="cb-playground cb-pane-rigid">\
     <div class="cb-drawing-window"></div>\
     <div class="cb-pixels-window"></div>\
-    <div class="cb-body"></div>\
+    <div class="cb-html-window"></div>\
   </div>\
 </div>\
 ';
@@ -1135,6 +1525,115 @@ CodeBootVM.prototype.initRoot = function (opts) {
     }
 
     return initLast;
+};
+
+CodeBootVM.prototype.initCommon = function (opts) {
+
+    var vm = this;
+
+    var common = document.createElement('div');
+
+    common.innerHTML = vm.menuContextHTML();
+
+    var ctxmenu = common.querySelector('.cb-menu-context');
+
+    if (ctxmenu) {
+
+        var bundle_state_url = null;
+        var bundle_executable_url = null;
+
+        function dismiss() {
+            ctxmenu.style.display = 'none';
+        }
+
+        ctxmenu.addEventListener('mouseleave', function (event) {
+            dismiss();
+        });
+
+        common.querySelectorAll('.dropdown-item').forEach(function (elem) {
+            elem.addEventListener('click', function (event) {
+
+                var elem = event.currentTarget;
+                var val;
+
+                if (val = elem.getAttribute('data-cb-context-presentation')) {
+                    if (val === 'hidden') {
+                        vm.setHidden(true);
+                    } else if (val === 'floating') {
+                        vm.setHidden(false);
+                        vm.setFloating(true);
+                    } else {
+                        vm.setHidden(false);
+                        vm.setFloating(false);
+                    }
+                } else if (elem.hasAttribute('data-cb-context-bundle-state')) {
+                    vm.copyTextToClipboard(bundle_state_url);
+                    vm.focusLastFocusedEditor();
+                } else if (elem.hasAttribute('data-cb-context-bundle-executable')) {
+                    vm.copyTextToClipboard(bundle_executable_url);
+                    vm.focusLastFocusedEditor();
+                }
+
+                dismiss();
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        });
+
+        document.addEventListener('contextmenu', function (event) {
+
+            var vm = getCodeBootVM(event.target);
+
+            function done() {
+                ctxmenu.querySelectorAll('.cb-svg-checkmark').forEach(function (elem) {
+                    elem.style.visibility = 'hidden';
+                });
+                if (vm.root.hasAttribute('data-cb-hidden')) {
+                    elem = ctxmenu.querySelector('[data-cb-context-presentation="hidden"] .cb-svg-checkmark');
+                } else if (vm.root.hasAttribute('data-cb-floating')) {
+                    elem = ctxmenu.querySelector('[data-cb-context-presentation="floating"] .cb-svg-checkmark');
+                } else {
+                    elem = ctxmenu.querySelector('[data-cb-context-presentation="full"] .cb-svg-checkmark');
+                }
+                if (elem) {
+                    elem.style.visibility = 'visible';
+                }
+                elem = ctxmenu.querySelector('a[data-cb-context-bundle-state]');
+                if (elem) {
+                    elem.style.display = (bundle_state_url === null) ? 'none' : 'inline';
+                }
+                elem = ctxmenu.querySelector('a[data-cb-context-bundle-executable]');
+                if (elem) {
+                    elem.style.display = (bundle_executable_url === null) ? 'none' : 'inline';
+                }
+                ctxmenu.style.left = (event.pageX - 15) + 'px';
+                ctxmenu.style.top = (event.pageY - 15) + 'px';
+                ctxmenu.style.display = 'block';
+            }
+
+            if (vm) {
+
+                event.stopPropagation();
+                event.preventDefault();
+
+                if (ctxmenu.style.display === 'none') {
+                    vm.toURL(
+                        false,
+                        function (state_url) {
+                            vm.toURL(
+                                true,
+                                function (executable_url) {
+                                    bundle_state_url = state_url;
+                                    bundle_executable_url = executable_url;
+                                    done();
+                                })
+                        })
+                }
+            }
+        });
+    }
+
+    document.body.appendChild(common);
 };
 
 CodeBootVM.prototype.setupSplitter = function (containerElem, setSize) {
@@ -1387,7 +1886,7 @@ CodeBootVM.prototype.setupEventHandlers = function () {
                 vm.setShowLineNumbers(!vm.showLineNumbers);
             } else if (elem.hasAttribute('data-cb-setting-large-font')) {
                 vm.setLargeFont(!vm.largeFont);
-            } else if (val = elem.getAttribute('data-cb-setting-graphics')) {
+            } else if (val = elem.getAttribute('data-cb-setting-playground')) {
                 if (val === 'show-drawing-window') {
                     vm.setPlaygroundToShow(vm.ui.dw.showing()?null:'drawing');
                 } else if (val === 'show-pixels-window') {
@@ -1489,6 +1988,92 @@ CodeBootVM.prototype.setupEventHandlers = function () {
     vm.setupMoveRezizeHandlers();
 };
 
+CodeBootVM.prototype.toggleHidden = function () {
+
+    var vm = this;
+
+    vm.setHidden(!vm.root.hasAttribute('data-cb-hidden'));
+};
+
+CodeBootVM.prototype.setHidden = function (hidden) {
+
+    var vm = this;
+
+    vm.setAttribute('data-cb-hidden', hidden);
+};
+
+CodeBootVM.prototype.toggleFloating = function () {
+
+    var vm = this;
+
+    vm.setFloating(!vm.root.hasAttribute('data-cb-floating'));
+};
+
+CodeBootVM.prototype.setFloating = function (floating) {
+
+    var vm = this;
+
+    vm.setAttribute('data-cb-floating', floating);
+    vm.setAttribute('data-cb-resizable', floating);
+
+    var elem = vm.root;
+
+    elem.removeAttribute('style');
+
+    if (floating) {
+        var maxX = window.innerWidth;
+        var maxY = window.innerHeight;
+        var width = Math.max(vm.minWidth, Math.floor(maxX/2));
+        var height = Math.max(vm.minHeight, Math.floor(maxY/2));
+        var left = Math.max(0, maxX - width - 20);
+        var top = Math.max(0, maxY - height - 20);
+
+        if (elem.latest_width_height !== undefined) {
+            width = elem.latest_width_height.width;
+            height = elem.latest_width_height.height;
+        }
+
+        change_width_height(elem, width, height);
+
+        if (elem.latest_left_top !== undefined) {
+            left = elem.latest_left_top.left;
+            top = elem.latest_left_top.top;
+        }
+
+        change_left_top(elem, left, top);
+    }
+};
+
+function change_width_height(elem, width, height) {
+
+    if (elem.latest_width_height === undefined) {
+        var maxX = window.innerWidth;
+        var maxY = window.innerHeight;
+        elem.latest_width_height = { width: width, height: height };
+    } else {
+        elem.latest_width_height.width = width;
+        elem.latest_width_height.height = height;
+    }
+
+    elem.style.width = width + 'px';
+    elem.style.height = height + 'px';
+}
+
+function change_left_top(elem, left, top) {
+
+    if (elem.latest_left_top === undefined) {
+        var maxX = window.innerWidth;
+        var maxY = window.innerHeight;
+        elem.latest_left_top = { left: left, top: top };
+    } else {
+        elem.latest_left_top.left = left;
+        elem.latest_left_top.top = top;
+    }
+
+    elem.style.left = left + 'px';
+    elem.style.top = top + 'px';
+}
+
 CodeBootVM.prototype.setupMoveRezizeHandlers = function () {
 
     var vm = this;
@@ -1500,13 +2085,17 @@ CodeBootVM.prototype.setupMoveRezizeHandlers = function () {
     var resize = false;
 
     function mousedownMove(event) {
-        resize = false;
-        mousedown(event);
+        if (vm.root.hasAttribute('data-cb-floating')) {
+            resize = false;
+            mousedown(event);
+        }
     }
 
     function mousedownResize(event) {
-        resize = true;
-        mousedown(event);
+        if (vm.root.hasAttribute('data-cb-floating')) {
+            resize = true;
+            mousedown(event);
+        }
     }
 
     function mousedown(event) {
@@ -1543,22 +2132,21 @@ CodeBootVM.prototype.setupMoveRezizeHandlers = function () {
         var dx = clientX - latestX;
         var dy = clientY - latestY;
 
+        var curX = elem.offsetLeft;
+        var curY = elem.offsetTop;
+
         if (resize) {
-            var newW = Math.min(9999, Math.max(575, curW+dx));
-            var newH = Math.min(9999, Math.max(400, curH+dy));
+            var newW = Math.min(maxX-curX, Math.max(vm.minWidth, curW+dx));
+            var newH = Math.min(maxY-curY, Math.max(vm.minHeight, curH+dy));
             dx = newW - curW;
             dy = newH - curH;
-            elem.style.width = newW + 'px';
-            elem.style.height = newH + 'px';
+            change_width_height(elem, newW, newH);
         } else {
-            var curX = elem.offsetLeft;
-            var curY = elem.offsetTop;
-            var newX = Math.min(maxX-20, Math.max(10-curW, curX+dx));
-            var newY = Math.min(maxY-10, Math.max(-10, curY+dy));
+            var newX = Math.min(maxX-30, Math.max(20-curW, curX+dx));
+            var newY = Math.min(maxY-20, Math.max(-20, curY+dy));
             dx = newX - curX;
             dy = newY - curY;
-            elem.style.left = newX + 'px';
-            elem.style.top = newY + 'px';
+            change_left_top(elem, newX, newY);
         }
 
         latestX += dx;
@@ -1570,17 +2158,13 @@ CodeBootVM.prototype.setupMoveRezizeHandlers = function () {
         eventScope.removeEventListener('mousemove', mousemove);
     }
 
-    if (vm.root.hasAttribute('data-cb-floating')) {
-        vm.forEachElem('.cb-navbar', function (elem) {
-            elem.addEventListener('mousedown', mousedownMove);
-        });
-    }
+    vm.forEachElem('.cb-navbar', function (elem) {
+        elem.addEventListener('mousedown', mousedownMove);
+    });
 
-    if (vm.root.hasAttribute('data-cb-resizable')) {
-        vm.forEachElem('.cb-resize-handle', function (elem) {
-            elem.addEventListener('mousedown', mousedownResize);
-        });
-    }
+    vm.forEachElem('.cb-resize-handle', function (elem) {
+        elem.addEventListener('mousedown', mousedownResize);
+    });
 };
 
 CodeBootVM.prototype.setClass = function (cls, add) {
@@ -1621,14 +2205,15 @@ CodeBootVM.prototype.setDevMode = function (devMode) {
 
     if (change) {
 
+        if (devMode) {
+            var privkey = prompt('Private key?');
+            if (privkey !== null && privkey !== '')
+                vm.cb.privkey = privkey;
+        }
+
         vm.devMode = devMode;
 
         vm.setAttribute('data-cb-dev-mode', devMode);
-        if (vm.devMode) {
-            $('.cb-menu-brand-btn-mode').text(' (dev mode)');
-        } else {
-            $('.cb-menu-brand-btn-mode').text('');
-        }
 
         vm.stateChanged();
     }

@@ -97,6 +97,7 @@ CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
             // },
 
             'Ctrl-L': function (cm) { cm.cb.vm.eventClearConsole(); },
+            'Shift-Ctrl-/': function (cm) { cm.cb.vm.toggleDevMode(); },
             'Esc': function (cm) { cm.cb.vm.eventStop(); },
             'Enter': enter,
             'Shift-Enter': shiftEnter,
@@ -509,7 +510,7 @@ CodeBootVM.prototype.replSetup = function () {
             fixedGutter: false,
             extraKeys: {
                 'Ctrl-L': function (cm) { cm.cb.vm.eventClearConsole(); },
-                'Ctrl-\\': function (cm) { cm.cb.vm.toggleDevMode(); },
+                'Shift-Ctrl-/': function (cm) { cm.cb.vm.toggleDevMode(); },
                 'Up': cursorUp,
                 'Ctrl-P': cursorUp,
                 'Down': cursorDown,
@@ -657,6 +658,16 @@ CodeBootVM.prototype.replEmptyInput = function () {
     var start = transcriptPos ? transcriptPos.to : vm.beginningOfEditor();
     var cursor = editor.getCursor();
     return start.line === cursor.line;
+};
+
+CodeBootVM.prototype.replGetTranscript = function () {
+
+    var vm = this;
+    var editor = vm.repl;
+
+//    console.log('replGetTranscript');
+//    return editor.getRange(vm.beginningOfEditor(), vm.endOfEditor());
+    return editor.display.wrapper.innerText;
 };
 
 CodeBootVM.prototype.replGetInput = function () {

@@ -402,7 +402,7 @@ DrawingWindow.prototype.setShow = function (show) {
     var dw = this;
     var vm = dw.vm;
 
-    vm.setCheckmark('data-cb-setting-graphics', 'show-drawing-window', show);
+    vm.setCheckmark('data-cb-setting-playground', 'show-drawing-window', show);
 
     if (show) {
         $('.cb-pixels-window').css('display', 'none');
@@ -693,7 +693,7 @@ PixelsWindow.prototype.setShow = function (show) {
     var pw = this;
     var vm = pw.vm;
 
-    vm.setCheckmark('data-cb-setting-graphics', 'show-pixels-window', show);
+    vm.setCheckmark('data-cb-setting-playground', 'show-pixels-window', show);
 
     if (show) {
         $('.cb-drawing-window').css('display', 'none');

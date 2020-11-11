@@ -397,6 +397,7 @@ function drawing_cs(rte, width, height) {
 
             dw = new DrawingWindow(vm, width, height);
 
+            vm.ui.playground_showing = undefined;
             vm.ui.dw = dw;
         }
     }
@@ -582,6 +583,93 @@ function runtime_read_file(rte, filename) {
     } else {
         return undefined;
     }
+}
+
+function runtime_readFile(rte, filename) {
+
+    var vm = rte.vm;
+
+    return vm.readFileInternal(filename).content;
+}
+
+function runtime_writeFile(rte, filename, content) {
+
+    var vm = rte.vm;
+
+    vm.writeFileInternal(filename, content);
+}
+
+function runtime_querySelector(rte, selector) {
+
+    var vm = rte.vm;
+
+    return document.querySelector(selector);
+}
+
+function runtime_getInnerHTML(rte, elem) {
+
+    var vm = rte.vm;
+
+    if (typeof(elem) === 'string') {
+        elem = document.querySelector(elem);
+    }
+
+    return elem.innerHTML;
+}
+
+function runtime_setInnerHTML(rte, elem, html) {
+
+    var vm = rte.vm;
+
+    if (typeof(elem) === 'string') {
+        elem = document.querySelector(elem);
+    }
+
+    elem.innerHTML = html;
+}
+
+function runtime_hasAttribute(rte, elem, attr) {
+
+    var vm = rte.vm;
+
+    if (typeof(elem) === 'string') {
+        elem = document.querySelector(elem);
+    }
+
+    return elem.hasAttribute(attr);
+}
+
+function runtime_removeAttribute(rte, elem, attr) {
+
+    var vm = rte.vm;
+
+    if (typeof(elem) === 'string') {
+        elem = document.querySelector(elem);
+    }
+
+    elem.removeAttribute(attr);
+}
+
+function runtime_getAttribute(rte, elem, attr) {
+
+    var vm = rte.vm;
+
+    if (typeof(elem) === 'string') {
+        elem = document.querySelector(elem);
+    }
+
+    return elem.getAttribute(attr);
+}
+
+function runtime_setAttribute(rte, elem, attr, val) {
+
+    var vm = rte.vm;
+
+    if (typeof(elem) === 'string') {
+        elem = document.querySelector(elem);
+    }
+
+    elem.setAttribute(attr, val);
 }
 
 function attach_to_container(ast, container) {

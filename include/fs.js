@@ -557,6 +557,18 @@ CodeBootFile.prototype.email = function () {
     if (w) w.close();
 };
 
+CodeBootVM.prototype.copyTextToClipboard = function (text) {
+
+    var vm = this;
+
+    var textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+};
+
 CodeBootFile.prototype.copyToClipboard = function () {
 
     var file = this;
@@ -630,7 +642,7 @@ CodeBootFileSystem.prototype.openFile = function (fileOrFilename) {
     file.fe.edit();
 };
 
-CodeBootFileSystem.prototype.newFile = function (filename, content, opts) {
+CodeBootFileSystem.prototype.createFile = function (filename, content, opts) {
 
     var fs = this;
 
@@ -642,6 +654,15 @@ CodeBootFileSystem.prototype.newFile = function (filename, content, opts) {
 
     fs.addFile(file);
     fs.rebuildFileMenu();
+
+    return file;
+};
+
+CodeBootFileSystem.prototype.newFile = function (filename, content, opts) {
+
+    var fs = this;
+
+    var file = fs.createFile(filename, content, opts);
 
     file.fe.edit();
 
@@ -950,7 +971,7 @@ CodeBootFileEditor.prototype.enable = function () {
                      function (event) { fs.fem.remove(fe); return false; });
 
     var fileTabLabel = document.createElement('span');
-    fileTabLabel.className = 'tab-label';
+    fileTabLabel.className = 'cb-tab-label';
     fileTabLabel.innerText = filename;
 
     fileTab.appendChild(fileTabLabel);
@@ -999,7 +1020,7 @@ CodeBootFileEditor.prototype.enable = function () {
     //fileTab.attr('data-cb-filename', filename);
 
     var fileTabCloseButton = fe.file.fs.vm.makeCloseButton();
-    var fileTabLabel = $('<span class="tab-label"/>').text(filename);
+    var fileTabLabel = $('<span class="cb-tab-label"/>').text(filename);
 
     fileTab.append(fileTabCloseButton).append(fileTabLabel);
 

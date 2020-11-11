@@ -133,6 +133,49 @@ function decode_utf8(str) {
     return decodeURIComponent(escape(str));
 }
 
+function toSafeBase64(str) {
+    return convertToSafeBase64(btoa(unescape(encodeURIComponent(str))));
+}
+
+function toSafeBase64FromUint8Array(bytes) {
+    var str = '';
+    var len = bytes.byteLength;
+    for (var i=0; i<len; i++) {
+        str += String.fromCharCode(bytes[i]);
+    }
+    return convertToSafeBase64(btoa(str));
+}
+
+function fromSafeBase64(b64) {
+    return decodeURIComponent(escape(atob(convertFromSafeBase64(b64))));
+}
+
+function fromSafeBase64ToUint8Array(b64) {
+    var str = atob(convertFromSafeBase64(b64));
+    var len = str.length;
+    var bytes = new Uint8Array(len);
+    for (var i=0; i<len; i++) {
+        bytes[i] = str.charCodeAt(i);
+    }
+    return bytes;
+}
+
+function convertToSafeBase64(b64) {
+    return b64.replace(/\+/g,'-').replace(/\//g,'_');
+}
+
+function convertFromSafeBase64(b64) {
+    return b64.replace(/-/g,'+').replace(/_/g,'/');
+}
+
+function toUint8Array(str) {
+    return new TextEncoder().encode(str);
+}
+
+function fromUint8Array(arr) {
+    return new TextDecoder().decode(arr);
+}
+
 CodeBootVM.prototype.handle_query = function () {
 
     var vm = this;
@@ -452,6 +495,7 @@ CodeBootVM.prototype.enterMode = function (newMode) {
 
     if (isStopped) {
 
+        vm.pauseAtStepCount = Infinity; // don't force pause next time
         vm.focusLastFocusedEditor();
         vm.stopAnimation();
         vm.hideExecPoint();
@@ -552,7 +596,13 @@ CodeBootVM.prototype.execEvent = function (event) {
 
 CodeBootVM.prototype.steppause = function () {
     var vm = this;
-    vm.exec(Infinity);
+    if (vm.ui.mode !== vm.modeAnimating()) {
+        vm.exec(Infinity);
+    } else {
+        vm.stopAnimation();
+        vm.showExecPoint();
+        vm.enterMode(vm.modeStepping());
+    }
 };
 
 CodeBootVM.prototype.animate = function () {
@@ -1135,12 +1185,22 @@ CodeBootVM.prototype.exec_continue = function (delay) {
 
     if (!lang.isExecuting()) return;
 
-    var stepChunk = 51151;
+    var maxStepChunk = 51151;
+    var stepChunk = maxStepChunk;
+
+    if (delay > 0) {
+        stepChunk = 1; // execute single step
+    } else {
+        stepChunk = Math.max(1,
+                             Math.min(stepChunk,
+                                      vm.pauseAtStepCount -
+                                      vm.lang.getStepCount()));
+    }
 
     var was_animating = vm.stopAnimation(); // cancel execution animation timer if any
 
     try {
-        lang.continueExecution(delay > 0 ? 1 : stepChunk, delay);
+        lang.continueExecution(stepChunk, delay);
     }
     catch (e) {
         vm.updatePlayground();
@@ -1178,21 +1238,23 @@ CodeBootVM.prototype.exec_continue = function (delay) {
         // after the requested delay, or we must wait for an execution
         // event)
 
-        var newMode = vm.modeStopped();
+        var newMode = vm.modeStepping();
 
-        if (delay === Infinity) {
-
-            // single-stepping mode
-
-            newMode = vm.modeStepping();
-
-        } else {
+        if (delay < Infinity) {
 
             // execution with animation mode
 
+            var forceStepping = vm.pauseAtStepCount <= vm.lang.getStepCount();
+
+            if (vm.pauseAtStepCount <= vm.lang.getStepCount()) {
+                newMode = vm.modeStepping();
+                vm.pauseAtStepCount = Infinity; // don't force pause next time
+                maxStepChunk = 0; // force showing step counter
+            }
+
             if (vm.showingStepCounter()) {
                 vm.updateStepCounter();
-            } else if (vm.lang.getStepCount() >= stepChunk) {
+            } else if (vm.lang.getStepCount() >= maxStepChunk || forceStepping) {
                 vm.showStepCounter();
             }
 
@@ -1202,7 +1264,7 @@ CodeBootVM.prototype.exec_continue = function (delay) {
 
                 newMode = vm.modeAnimatingSleeping();
 
-            } else {
+            } else if (!forceStepping) {
 
                 // resume execution after appropriate delay
 
@@ -1218,7 +1280,9 @@ CodeBootVM.prototype.exec_continue = function (delay) {
             }
         }
 
-        if (delay > 0 || newMode === vm.modeAnimatingSleeping()) {
+        if (forceStepping) {
+            vm.showExecPoint();
+        } else if (delay > 0 || newMode === vm.modeAnimatingSleeping()) {
             vm.showExecPoint(delay <= 10);
         } else {
             vm.hideExecPoint();
@@ -1346,26 +1410,6 @@ CodeBootVM.prototype.run_setup_and_execute = function (compile, single_step) {
 };
 */
 
-function writeFileInternal(filename, content) {
-
-    var file;
-
-    if (vm.fs.hasFile(filename)) {
-        file = vm.fs.getByName(filename);
-    } else {
-        file = new CodeBootFile(vm.fs, filename);
-        vm.fs.addFile(file);
-        vm.fs.addFileToMenu(file);
-    }
-
-    file.setContent(content);
-}
-
-
-
-
-
-
 //-----------------------------------------------------------------------------
 
 // Compilation of source code (at the REPL, files and URLs)
@@ -1456,6 +1500,21 @@ CodeBootVM.prototype.readFileInternal = function (filename) {
         content: file.getContent(),
     };
 };
+
+CodeBootVM.prototype.writeFileInternal = function (filename, content) {
+
+    var vm = this;
+    var file;
+
+    if (vm.fs.hasFile(filename)) {
+        file = vm.fs.getByName(filename);
+        file.setContent(content);
+    } else {
+        file = new CodeBootFile(vm.fs, filename, content);
+        vm.fs.addFile(file);
+        vm.fs.rebuildFileMenu();
+    }
+}
 
 CodeBootVM.prototype.compile = function (source, container, force_reset) {
 
