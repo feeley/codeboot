@@ -17,6 +17,7 @@ body {
 //    overflow: hidden;
     display: flex;
     flex-direction: column;
+    height: 100vh;
 }
 
 .cb-vm[data-cb-hidden] {
@@ -207,10 +208,6 @@ body {
 .dropdown-item[data-cb-filename] > span > .close:hover {
 //    opacity: 1;
     filter: invert(0%);
-}
-
-#cb-form-download {
-    display: none;
 }
 
 .cb-file-container {
@@ -489,12 +486,6 @@ body {
     border-color: transparent;
     background-color: transparent;
     box-shadow: none;
-}
-
-.zzzcb-button.btn-secondary {
-    border-color: transparent !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
 }
 
 .cb-navbar-footer {
@@ -1016,8 +1007,7 @@ body {
 }
 
 div.tab-content,
-pre.tab-content,
-#zzzcb-repl {
+pre.tab-content {
     margin-bottom: 20px;
 }
 
@@ -1049,13 +1039,15 @@ div.tab-pane {
             background-clip: padding-box;
 }
 
-/* ----- Pseudo-body for DOM experimentation ----- */
+/* ----- DOM element for experimentation ----- */
 
-#b table {
+.cb-html-window table,
+#main table {
     float: left;
 }
 
-#b td {
+.cb-html-window td,
+#main td {
     table-layout: fixed;
     width: 70px;
     height: 98px;
@@ -1065,7 +1057,8 @@ div.tab-pane {
     font-size: 24px;
 }
 
-#b img {
+.cb-html-window img,
+#main img {
     vertical-align: middle;
     width: 100%;
 }
@@ -1113,70 +1106,6 @@ div.tab-pane {
     box-shadow: -3px 3px 3px 0 #999;
 }
 
-
-
-
-
-.cont {
-    display: flex;
-    margin: 15px 15px 15px 15px;
-    padding: 10px 0 10px 0;
-    border-radius: 4px;
-    background-color: gray;
-}
-
-.cons {
-    flex: 1 1 auto;
-    min-width: 0;
-    flex-flow: row wrap;
-    background-color: red;
-    white-space: wrap;
-}
-
-.cons-transcript {
-    overflow: auto;
-    background-color: pink;
-}
-
-.cons-input {
-    background-color: green;
-}
-
-.draw1 {
-    background-color: purple;
-}
-
-.draw2 {
-    display: none;
-    background-color: purple;
-}
-
-.draw-window {
-    background-color: blue;
-}
-
-
-
-
-.console-line {
-  padding-left: 14px;
-}
-
-.console-output {
-  padding-left: 14px;
-}
-
-.console-result {
-  padding-left: 14px;
-  margin-left: 14px;
-}
-
-.console-error {
-  margin-top: 3px;
-  margin-bottom: 3px;
-  margin-left: 14px;
-}
-
 .cb-menu-context {
     position: absolute;
     top: 0;
@@ -1204,15 +1133,15 @@ div.tab-pane {
     display: none;
 }
 
-[data-cb-lang=js-novice] ~ #cb-help-box .js-novice,
-[data-cb-lang=js-standard] ~ #cb-help-box .js-standard,
-[data-cb-lang=py-novice] ~ #cb-help-box .py-novice {
+[data-cb-lang=js-novice] ~ div #cb-help-box .js-novice,
+[data-cb-lang=js-standard] ~ div #cb-help-box .js-standard,
+[data-cb-lang=py-novice] ~ div #cb-help-box .py-novice {
     display: block;
 }
 
-[data-cb-lang=js-novice] ~ #cb-help-box span.js-novice,
-[data-cb-lang=js-standard] ~ #cb-help-box span.js-standard,
-[data-cb-lang=py-novice] ~ #cb-help-box span.py-novice {
+[data-cb-lang=js-novice] ~ div #cb-help-box span.js-novice,
+[data-cb-lang=js-standard] ~ div #cb-help-box span.js-standard,
+[data-cb-lang=py-novice] ~ div #cb-help-box span.py-novice {
     display: inline;
 }
 
@@ -1269,8 +1198,6 @@ table.cb-keybindings td:nth-child(1)
     padding-left: 9px;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
-
 .grammar-production .grammar-category {
     color: black;
     font-weight: normal;
@@ -1292,7 +1219,7 @@ table.cb-keybindings td:nth-child(1)
     background-color: #e6e6e6;
     border-radius: .2rem;
     color: #333;
-    font-family: 'Roboto Mono', monospace;
+    font-family: "Lucida Console", "Hack", Monaco, monospace;
     font-style: normal;
     margin: 0 1px ;
     padding: .1rem .3rem;

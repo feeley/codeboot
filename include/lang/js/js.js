@@ -22,6 +22,7 @@ LangJs.prototype.properties =
             novice: 'JavaScript novice',
             standard: 'JavaScript standard'
         },
+        scriptType: 'text/cb_javascript',
         prompt: '>',
         promptCont: '',
         editorOpts: { mode: 'javascript', indentUnit: 4 },

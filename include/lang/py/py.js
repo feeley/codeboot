@@ -22,6 +22,7 @@ LangPy.prototype.properties =
             novice: 'Python novice',
 //            standard: 'Python standard'
         },
+        scriptType: 'text/python',
         prompt: '>>>',
         promptCont: '...',
         editorOpts: { mode: 'python', indentUnit: 4 },

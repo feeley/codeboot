@@ -24,6 +24,10 @@
 //                 that contains the SVG definition for an image of the
 //                 language level appropriate for displaying on light and
 //                 dark backgrounds respectively
+//
+// lang.getScriptType()
+//                 returns the script's MIME type for this language, such
+//                 as 'text/python'.
 
 // A language instance responds to the following methods:
 //
@@ -114,6 +118,13 @@ Lang.prototype.getSVG = function (level) {
         return { onLight: lang.properties.SVG.color,
                  onDark: lang.properties.SVG.color };
     }
+};
+
+Lang.prototype.getScriptType = function () {
+
+    var lang = this;
+
+    return lang.properties.scriptType;
 };
 
 Lang.prototype.create = function (id, vm) {
