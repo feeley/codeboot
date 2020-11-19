@@ -989,7 +989,7 @@ CodeBootVM.prototype.UI = function (vm) {
     ui.timeoutId = null;
     ui.stepDelay = 0;
     ui.mode = null;
-    ui.code_queue = [];
+    ui.event_queue = [];
 
     ui.playground_to_show = null;
     ui.playground_showing = undefined;
@@ -1022,6 +1022,20 @@ CodeBootVM.prototype.UI = function (vm) {
     }
 };
 
+CodeBootVM.prototype.updateHTMLWindow = function () {
+
+    var vm = this;
+
+    if (vm.root.querySelector('.cb-html-window:empty')) {
+        if (vm.ui.playground_showing === 'html' ||
+            vm.ui.playground_to_show === 'html') {
+            vm.setPlaygroundToShow(null); // hide playground
+        }
+    } else {
+        vm.setPlaygroundToShow('html'); // show HTML window
+    }
+};
+
 CodeBootVM.prototype.setPlaygroundToShow = function (which) {
 
     var vm = this;
@@ -1046,8 +1060,17 @@ CodeBootVM.prototype.updatePlayground = function () {
             vm.ui.pw.setShow(true);
             break;
 
+        case 'html':
+            vm.ui.dw.setShow(false);
+            vm.ui.pw.setShow(false);
+            vm.setCheckmark('data-cb-setting-playground', 'show-html-window', true);
+            $('.cb-html-window').css('display', 'inline');
+            break;
+
         default:
             to_show = null;
+            vm.setCheckmark('data-cb-setting-playground', 'show-html-window', false);
+            $('.cb-html-window').css('display', 'none');
             vm.ui.dw.setShow(false);
             vm.ui.pw.setShow(false);
             break;
@@ -1247,6 +1270,7 @@ CodeBootVM.prototype.menuSettingsHTML = function () {
     <h5 class="dropdown-header">Playground</h5>\
     <a href="#" class="dropdown-item" data-cb-setting-playground="show-drawing-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show drawing window</a>\
     <a href="#" class="dropdown-item" data-cb-setting-playground="show-pixels-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show pixels window</a>\
+    <a href="#" class="dropdown-item" data-cb-setting-playground="show-html-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show HTML window</a>\
 \
   </div>\
 </span>\
@@ -3055,7 +3079,9 @@ CodeBootVM.prototype.initCommon = function (opts) {
                 ctxmenu.style.display = 'block';
             }
 
-            if (vm) {
+            if (vm &&
+                !(event.target.closest('.cb-drawing-window') ||
+                  event.target.closest('.cb-pixels-window'))) {
 
                 event.stopPropagation();
                 event.preventDefault();
@@ -3337,6 +3363,8 @@ CodeBootVM.prototype.setupEventHandlers = function () {
                     vm.setPlaygroundToShow(vm.ui.dw.showing()?null:'drawing');
                 } else if (val === 'show-pixels-window') {
                     vm.setPlaygroundToShow(vm.ui.pw.showing()?null:'pixels');
+                } else if (val === 'show-html-window') {
+                    vm.setPlaygroundToShow(vm.ui.playground_showing === 'html' ? null : 'html');
                 }
                 vm.updatePlayground();
             }

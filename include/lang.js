@@ -194,10 +194,13 @@ SourceContainer.prototype.toString = function () {
 
     var sc = this;
 
-    if (sc.is_repl())
+    if (sc.is_repl()) {
         return '<REPL>';
-    else
+    } else if (sc.is_html()) {
+        return '<HTML>';
+    } else {
         return sc.tostr;
+    }
 };
 
 SourceContainer.prototype.is_repl = function () {
@@ -205,6 +208,13 @@ SourceContainer.prototype.is_repl = function () {
     var sc = this;
 
     return sc.tostr === false;
+}
+
+SourceContainer.prototype.is_html = function () {
+
+    var sc = this;
+
+    return sc.tostr === null;
 }
 
 SourceContainer.prototype.toString = function () {
@@ -226,6 +236,10 @@ function SourceContainerInternalFile(source, tostr, start_line0, start_column0, 
 }
 
 SourceContainerInternalFile.prototype.is_repl = function () {
+    return false;
+}
+
+SourceContainerInternalFile.prototype.is_html = function () {
     return false;
 }
 

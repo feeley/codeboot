@@ -405,6 +405,7 @@ DrawingWindow.prototype.setShow = function (show) {
     vm.setCheckmark('data-cb-setting-playground', 'show-drawing-window', show);
 
     if (show) {
+        $('.cb-html-window').css('display', 'none');
         $('.cb-pixels-window').css('display', 'none');
         $('.cb-drawing-window').css('display', 'inline');
         var parent = vm.root.querySelector('.cb-drawing-window');
@@ -696,6 +697,7 @@ PixelsWindow.prototype.setShow = function (show) {
     vm.setCheckmark('data-cb-setting-playground', 'show-pixels-window', show);
 
     if (show) {
+        $('.cb-html-window').css('display', 'none');
         $('.cb-drawing-window').css('display', 'none');
         $('.cb-pixels-window').css('display', 'inline');
         var parent = document.querySelector('.cb-pixels-window');

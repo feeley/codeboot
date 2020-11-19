@@ -67,7 +67,9 @@ CodeBootVM.prototype.createCodeEditor = function (node, fileEditor) {
     var vm = this;
 
     function enter(cm) {
-        if (cm.cb.vm.ui.mode === cm.cb.vm.modeStopped()) return CodeMirror.Pass;
+        if (!cm.cb.vm.isRunning()) {
+            return CodeMirror.Pass;
+        }
         cm.cb.vm.eventEval();
     };
 

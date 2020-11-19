@@ -82,7 +82,7 @@ LangPy.prototype.RunTime = function (lang) {
     rt.rte = null;
 };
 
-LangPy.prototype.compile = function (source, container, reboot) {
+LangPy.prototype.compile = function (source, container, reboot, event) {
 
     // Parameters:
     //
@@ -91,9 +91,10 @@ LangPy.prototype.compile = function (source, container, reboot) {
     //   container  a Container object indicating where the code is
     //              located (a file/REPL, the starting line, etc)
     //
-    //   reboot     a boolean indicating if, when the code is executed,
-    //              the execution state of the program should be
-    //              reset (reboot == false is useful for REPL evaluation)
+    //   reboot     boolean indicating if execution state of
+    //              the program should be reset
+    //
+    //   event      an event to add to the environment (or undefined)
 
     var lang = this;
     var from_repl = container.is_repl();
@@ -111,7 +112,7 @@ LangPy.prototype.compile = function (source, container, reboot) {
 
     var ast = pyinterp.parse(source,
                              '<unknown>',
-                             from_repl ? 'single' : 'exec',
+                             from_repl || event ? 'single' : 'exec',
                              external_context);
 
     // REPL input must end in a blank line, unless it contains a single line
@@ -123,14 +124,27 @@ LangPy.prototype.compile = function (source, container, reboot) {
 
     attach_to_container(ast, container);
 
-    var code = pyinterp.comp(ast, external_context);
+    var code;
+
+    if (event) {
+        var code_handler = pyinterp.comp_event_handler(ast, external_context);
+        if (code_handler === null) {
+            code = null;
+        } else {
+            code = function (rte, cont) {
+                return code_handler(rte, cont, event);
+            };
+        }
+    } else {
+        code = pyinterp.comp(ast, external_context);
+    }
 
     if (code === null) // empty program?
         return null;
 
-    var execution_point = lang.initRunTimeState(code, reboot);
+    lang.initRunTimeState(reboot);
 
-    return execution_point;
+    return pyinterp.prepare_execution(code, lang.rt.rte);
 };
 
 LangPy.prototype.startExecution = function (cont) {
@@ -323,7 +337,7 @@ LangPy.prototype.objectRepresentation = function (obj, format, limit) {
 
 //-----------------------------------------------------------------------------
 
-LangPy.prototype.initRunTimeState = function (code, reboot) {
+LangPy.prototype.initRunTimeState = function (reboot) {
 
     var lang = this;
     // default 'trace' option to false
@@ -335,8 +349,6 @@ LangPy.prototype.initRunTimeState = function (code, reboot) {
         lang.rt.rte = pyinterp.fresh_rte(options);
         lang.rt.rte.vm = lang.vm;
     }
-
-    return pyinterp.prepare_execution(code, lang.rt.rte);
 };
 
 function runtime_print(msg, rte) {
@@ -627,6 +639,10 @@ function runtime_setInnerHTML(rte, elem, html) {
     }
 
     elem.innerHTML = html;
+
+    CodeBoot.prototype.rewrite_event_handlers_children(vm, elem);
+
+    vm.updateHTMLWindow();
 }
 
 function runtime_hasAttribute(rte, elem, attr) {
@@ -649,6 +665,8 @@ function runtime_removeAttribute(rte, elem, attr) {
     }
 
     elem.removeAttribute(attr);
+
+    vm.updateHTMLWindow();
 }
 
 function runtime_getAttribute(rte, elem, attr) {
@@ -670,7 +688,13 @@ function runtime_setAttribute(rte, elem, attr, val) {
         elem = document.querySelector(elem);
     }
 
+    if (CodeBoot.prototype.event_attrs.indexOf(attr) >= 0) {
+        val = CodeBoot.prototype.rewrite_event_handler(vm, val);
+    }
+
     elem.setAttribute(attr, val);
+
+    vm.updateHTMLWindow();
 }
 
 function attach_to_container(ast, container) {

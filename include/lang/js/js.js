@@ -89,7 +89,7 @@ LangJs.prototype.setGlobal = function (id, val) {
     lang.rt.globalObject[id] = val;
 };
 
-LangJs.prototype.compile = function (source, container, reboot) {
+LangJs.prototype.compile = function (source, container, reboot, event) {
 
     // Parameters:
     //
@@ -98,9 +98,10 @@ LangJs.prototype.compile = function (source, container, reboot) {
     //   container  a Container object indicating where the code is
     //              located (a file/REPL, the starting line, etc)
     //
-    //   reboot     a boolean indicating if, when the code is executed,
-    //              the execution state of the program should be
-    //              reset (reboot == false is useful for REPL evaluation)
+    //   reboot     boolean indicating if execution state of
+    //              the program should be reset
+    //
+    //   event      null or an event to add to the environment
 
     var lang = this;
     var code = jev.compile(source,

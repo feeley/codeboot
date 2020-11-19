@@ -340,8 +340,22 @@ CodeBootVM.prototype.showExecControlsMessage = function (msg, timeout) {
     }
 };
 
+CodeBootVM.prototype.isRunning = function () {
+    var vm = this;
+    return vm.isModeRunning(vm.ui.mode);
+};
+
+CodeBootVM.prototype.isModeRunning = function (mode) {
+    var vm = this;
+    return mode !== vm.modeStopped() && mode !== vm.modeDone();
+};
+
 CodeBootVM.prototype.modeStopped = function () {
     return 'stopped';
+};
+
+CodeBootVM.prototype.modeDone = function () {
+    return 'done';
 };
 
 CodeBootVM.prototype.modeAnimating = function () {
@@ -356,27 +370,39 @@ CodeBootVM.prototype.modeStepping = function () {
     return 'stepping';
 };
 
-CodeBootVM.prototype.code_queue_add = function (code) {
-    var vm = this;
-    vm.ui.code_queue.push(code);
-    vm.code_queue_check();
-};
+CodeBootVM.prototype.event_queue_trim = function (n) {
 
-CodeBootVM.prototype.code_queue_check = function () {
     var vm = this;
-    if (vm.ui.mode === vm.modeStopped()) {
-        vm.code_queue_service();
+
+    while (vm.ui.event_queue.length > n) {
+        vm.ui.event_queue.shift();
     }
 };
 
-CodeBootVM.prototype.code_queue_service = function () {
-    //TODO: fix
+CodeBootVM.prototype.event_queue_add = function (thunk) {
+
     var vm = this;
-    if (vm.ui.code_queue.length > 0) {
-        var code = vm.ui.code_queue.shift();
-        vm.lang.rt.rte = jev.runSetup(code,
-                                      {globalObject: vm.globalObject});
-        vm.exec_continue(false);
+
+    vm.event_queue_trim(5);
+
+    vm.ui.event_queue.push(thunk);
+};
+
+CodeBootVM.prototype.event_queue_check = function () {
+
+    var vm = this;
+
+    if (vm.ui.mode === vm.modeDone()) {
+        vm.event_queue_service();
+    }
+};
+
+CodeBootVM.prototype.event_queue_service = function () {
+
+    var vm = this;
+
+    if (vm.ui.event_queue.length > 0) {
+        vm.ui.event_queue.shift()();
     }
 };
 
@@ -472,28 +498,34 @@ CodeBootVM.prototype.enterMode = function (newMode) {
 
     var vm = this;
 
-    // newMode is one of 'stopped', 'animating', 'animatingSleeping', 'stepping'
+    // newMode is one of 'stopped', 'done', 'animating',
+    // 'animatingSleeping', 'stepping'
 
     if (vm.ui.mode === newMode)
-        return false;
+        return;
 
-    var isStopped = newMode === vm.modeStopped();
+    var isRunning = vm.isModeRunning(newMode);
     var isStepping = newMode === vm.modeStepping();
-    var isAnimating = !(isStopped || isStepping);
+    var isAnimating = isRunning && !isStepping;
 
     // Show either play-1, pause or play-pause
 
     vm.setDisplay('.cb-exec-play-1',     isStepping  ? 'inline' : 'none');
     vm.setDisplay('.cb-exec-pause',      isAnimating ? 'inline' : 'none');
-    vm.setDisplay('.cb-exec-play-pause', isStopped   ? 'inline' : 'none');
+    vm.setDisplay('.cb-exec-play-pause', !isRunning  ? 'inline' : 'none');
 
-    var running = !isStopped;
+    vm.setClass('cb-mode-running', isRunning);
+    vm.replSetReadOnly(isRunning);
+    vm.fs.fem.setReadOnlyAllEditors(isRunning);
 
-    vm.setClass('cb-mode-running', running);
-    vm.replSetReadOnly(running);
-    vm.fs.fem.setReadOnlyAllEditors(running);
+    if (isRunning) {
 
-    if (isStopped) {
+        // Update step counter
+
+        if (vm.showingStepCounter()) {
+            vm.updateStepCounter();
+        }
+    } else {
 
         vm.pauseAtStepCount = Infinity; // don't force pause next time
         vm.focusLastFocusedEditor();
@@ -505,18 +537,11 @@ CodeBootVM.prototype.enterMode = function (newMode) {
 
         //TODO: interferes?
         //vm.repl.focus();
-    } else {
-
-        // Update step counter
-
-        if (vm.showingStepCounter()) {
-            vm.updateStepCounter();
-        }
     }
 
     vm.ui.mode = newMode;
 
-    return true;
+    vm.event_queue_check();
 };
 
 // UI event handling
@@ -623,20 +648,16 @@ CodeBootVM.prototype.exec = function (delay) {
 
     var vm = this;
 
-    if (vm.ui.mode === vm.modeStopped()) {
-        vm.exec_start(delay);
-    } else {
+    if (vm.isRunning()) {
         vm.exec_continue(delay);
+    } else {
+        vm.exec_start(delay);
     }
 };
 
 CodeBootVM.prototype.exec_start = function (delay) {
 
     var vm = this;
-    var compile;
-    var after_failed_compile;
-    var after_successful_compile;
-    var source;
 
     if (vm.lastFocusedEditor === null) return;
 
@@ -646,80 +667,119 @@ CodeBootVM.prototype.exec_start = function (delay) {
 
         /* running REPL input */
 
-        source = vm.replGetInput();
-
-        if (source.trim() === '') { // accept empty input but do nothing else
-            vm.replAcceptInput();
-            vm.replAllowInput();
-            return;
-        }
-
-        /* deprecated
-        if (false && source.trim() === '') {
-            if (vm.lang.isExecuting()) {
-                vm.exec_continue(true);
-                return;
-            }
-            if (single_step) {
-                vm.enterMode(vm.modeStopped());
-                vm.code_queue_check();
-                return;
-            }
-        }
-        */
-
-        var line = vm.replInputPos().line;
-
-        // remove trailing whitespace to undo effect of automatic indent
-        var cleaned_source = source.replace(/[ \t\f]*$/,'');
-
-        compile = function () {
-            return vm.compile_repl_expression(cleaned_source + '\n', line+1, 1, false); // don't force reset to preserve execution state
-        };
-
-        after_successful_compile = function () {
-            // accept input and add it to history
-            vm.replAddHistory(cleaned_source);
-            vm.replAcceptInput();
-        };
-
-        after_failed_compile = after_successful_compile;
+        vm.exec_start_repl(delay);
 
     } else {
 
         /* running file */
 
-        var filename = vm.lastFocusedEditor.cb.fileEditor.filename;
+        vm.exec_start_file(delay);
+    }
+};
 
-        if (vm.root.hasAttribute('data-cb-runable-code')) {
-            source = '';
-        } else {
-            source = vm.lang.loadCommand(filename);
-            vm.replSetInput(source);
-            vm.replAcceptInput();
-        }
+CodeBootVM.prototype.exec_start_repl = function (delay) {
 
-        compile = function () {
-            return vm.compile_internal_file(filename, true); // force reset state
-        };
+    var vm = this;
 
-        after_successful_compile = function () {
+    var source = vm.replGetInput();
 
-            drawing_window.cs(); // clear drawing window when running file
-            pixels_window.clear();
-
-            vm.replAddHistory(source);
-        };
-
-        after_failed_compile = function () { };
+    if (source.trim() === '') { // accept empty input but do nothing else
+        vm.replAcceptInput();
+        vm.replAllowInput();
+        return;
     }
 
-    vm.hideReasonHighlight();
+    var line = vm.replInputPos().line;
+
+    // remove trailing whitespace to undo effect of automatic indent
+    var cleaned_source = source.replace(/[ \t\f]*$/,'');
+
+    function compile() {
+        return vm.compile_repl(cleaned_source + '\n',
+                               line+1,
+                               1,
+                               false, // preserve execution state
+                               null);
+    }
+
+    function after_compile() {
+        // accept input and add it to history
+        vm.replAddHistory(cleaned_source);
+        vm.replAcceptInput();
+    }
+
+    vm.comp_and_run_code(compile,
+                         after_compile,
+                         after_compile,
+                         delay);
+};
+
+CodeBootVM.prototype.exec_start_file = function (delay) {
+
+    var vm = this;
+
+    var filename = vm.lastFocusedEditor.cb.fileEditor.filename;
+
+    if (vm.root.hasAttribute('data-cb-runable-code')) {
+        source = '';
+    } else {
+        source = vm.lang.loadCommand(filename);
+        vm.replSetInput(source);
+        vm.replAcceptInput();
+    }
+
+    function compile() {
+        return vm.compile_internal_file(filename,
+                                        true, // force reset state
+                                        null);
+    }
+
+    function after_successful_compile() {
+        drawing_window.cs(); // clear drawing window when running file
+        pixels_window.clear();
+        vm.replAddHistory(source);
+    }
+
+    function after_failed_compile() {
+    }
+
+    vm.comp_and_run_code(compile,
+                         after_successful_compile,
+                         after_failed_compile,
+                         delay);
+};
+
+CodeBootVM.prototype.exec_start_event_handler = function (source, event, delay) {
+
+    var vm = this;
+
+    function compile() {
+        return vm.compile_event_handler(source + '\n',
+                                        1,
+                                        1,
+                                        false, // preserve execution state
+                                        event);
+    }
+
+    function after_compile() {
+    }
+
+    vm.comp_and_run_code(compile,
+                         after_compile,
+                         after_compile,
+                         delay);
+};
+
+CodeBootVM.prototype.comp_and_run_code = function (compile, after_successful_compile, after_failed_compile, delay) {
+
+    var vm = this;
 
     var code = null;
 
-    try {
+    vm.hideReasonHighlight();
         code = compile();
+    try {
+//        code = compile();
     }
     catch (e) {
         //console.log(e);
@@ -736,12 +796,18 @@ CodeBootVM.prototype.exec_start = function (delay) {
 
     after_successful_compile();
 
-    // run code
+    vm.run_code(code, delay);
+};
+
+CodeBootVM.prototype.run_code = function (code, delay) {
+
+    var vm = this;
 
     if (code === null) {
         vm.replAllowInput();
     } else {
         vm.ui.mode = vm.modeAnimating();
+        vm.event_queue_trim(0); // clear event queue
         vm.lang.startExecution(code);
         vm.ui.mode = vm.modeStopped();
         vm.enterMode(vm.modeAnimating());
@@ -802,14 +868,16 @@ CodeBootVM.prototype.stop = function (reason) {
 
     var vm = this;
 
-    if (vm.ui.mode !== vm.modeStopped()) {
+    var mode = (reason === '') ? vm.modeDone() : vm.modeStopped();
+
+    if (vm.ui.mode !== mode) {
 
         if (reason !== null) {
             if (reason === undefined) reason = 'stopped';
             vm.showReason(reason);
         }
 
-        vm.enterMode(vm.modeStopped());
+        vm.enterMode(mode);
     }
 };
 
@@ -1178,6 +1246,66 @@ CodeBootVM.prototype.exec_continue = function (delay) {
 };
 */
 
+CodeBoot.prototype.rewrite_event_handler = function (vm, src) {
+    var id;
+    var key = (vm === null ? '' : vm.index) + '/' + src;
+    var map = CodeBoot.prototype.event_handler_map;
+    if (Object.prototype.hasOwnProperty.call(map, key)) {
+        id = map[key];
+    } else {
+        var descrs = CodeBoot.prototype.event_handler_descrs;
+        id = descrs.push({ vm: vm, src: src })-1;
+        map[key] = id;
+    }
+    return 'CodeBoot.prototype.event_handle(' + id + ',event)';
+};
+
+CodeBoot.prototype.rewrite_event_handlers = function (vm, elem) {
+    CodeBoot.prototype.event_attrs.forEach(function (attr) {
+        if (elem.hasAttribute(attr)) {
+            var val = elem.getAttribute(attr);
+            elem.setAttribute(attr,
+                              CodeBoot.prototype.rewrite_event_handler(vm, val));
+        }
+    });
+};
+
+CodeBoot.prototype.rewrite_event_handlers_children = function (vm, elem) {
+    var child = elem.firstElementChild;
+    while (child) {
+        CodeBoot.prototype.rewrite_event_handlers(vm, child);
+        CodeBoot.prototype.rewrite_event_handlers_children(vm, child);
+        child = child.nextElementSibling;
+    }
+};
+
+CodeBoot.prototype.event_attrs =
+    ['onfocus','onblur','onfocusin','onfocusout',
+     'onkeydown','onkeypress','onkeyup',
+     'onclick','ondblclick','oncontextmenu','onmousedown','onmouseup',
+     'onmousemove','onmouseenter','onmouseleave','onmouseover','onmouseout'];
+
+CodeBoot.prototype.event_handler_map = Object.create(null);
+CodeBoot.prototype.event_handler_descrs = [];
+
+CodeBoot.prototype.event_handle = function (id, event) {
+    var descr = CodeBoot.prototype.event_handler_descrs[id];
+    descr.vm.event_handle(descr.src, event);
+};
+
+CodeBootVM.prototype.event_handle = function (src, event) {
+
+    var vm = this;
+
+    if (vm.ui.mode !== vm.modeStopped()) {
+        vm.event_queue_add(function () {
+            vm.exec_start_event_handler(src, event, 0);
+        });
+
+        vm.event_queue_check();
+    }
+};
+
 CodeBootVM.prototype.exec_continue = function (delay) {
 
     var vm = this;
@@ -1414,19 +1542,28 @@ CodeBootVM.prototype.run_setup_and_execute = function (compile, single_step) {
 
 // Compilation of source code (at the REPL, files and URLs)
 
-CodeBootVM.prototype.compile_repl_expression = function (source, line, ch, force_reset) {
+CodeBootVM.prototype.compile_repl = function (source, line, ch, force_reset, event) {
     var vm = this;
     return vm.compile(source,
                       new SourceContainer(source, false, line-1, ch-1),
-                      force_reset);
+                      force_reset,
+                      event);
 };
 
-CodeBootVM.prototype.compile_file = function (filename, force_reset) {
+CodeBootVM.prototype.compile_event_handler = function (source, line, ch, force_reset, event) {
+    var vm = this;
+    return vm.compile(source,
+                      new SourceContainer(source, null, line-1, ch-1),
+                      force_reset,
+                      event);
+};
+
+CodeBootVM.prototype.compile_file = function (filename, force_reset, event) {
     var vm = this;
     if (/^http:\/\//.test(filename)) {
-        return vm.compile_url_file(filename, force_reset);
+        return vm.compile_url_file(filename, force_reset, event);
     } else {
-        return vm.compile_internal_file(filename, force_reset);
+        return vm.compile_internal_file(filename, force_reset, event);
     }
 };
 
@@ -1466,7 +1603,7 @@ CodeBootVM.prototype.getURL = function (url) {
     return content;
 };
 
-CodeBootVM.prototype.compile_url_file = function (url, force_reset) {
+CodeBootVM.prototype.compile_url_file = function (url, force_reset, event) {
 
     var vm = this;
     var source = vm.readURL(url);
@@ -1474,12 +1611,13 @@ CodeBootVM.prototype.compile_url_file = function (url, force_reset) {
 
     return vm.compile(source,
                       new SourceContainer(source, url, 0, 0),
-                      force_reset);
+                      force_reset,
+                      event);
 };
 
 // end deprecated
 
-CodeBootVM.prototype.compile_internal_file = function (filename, force_reset) {
+CodeBootVM.prototype.compile_internal_file = function (filename, force_reset, event) {
 
     var vm = this;
     var state = vm.readFileInternal(filename);
@@ -1487,7 +1625,8 @@ CodeBootVM.prototype.compile_internal_file = function (filename, force_reset) {
 
     return vm.compile(source,
                       new SourceContainerInternalFile(source, filename, 0, 0, state.stamp),
-                      force_reset);
+                      force_reset,
+                      event);
 };
 
 CodeBootVM.prototype.readFileInternal = function (filename) {
@@ -1516,14 +1655,17 @@ CodeBootVM.prototype.writeFileInternal = function (filename, content) {
     }
 }
 
-CodeBootVM.prototype.compile = function (source, container, force_reset) {
+CodeBootVM.prototype.compile = function (source, container, force_reset, event) {
 
     var vm = this;
 
     force_reset = force_reset || vm.force_reset;
     vm.force_reset = false;
 
-    return vm.lang.compile(source, container, force_reset);
+    return vm.lang.compile(source,
+                           container,
+                           force_reset,
+                           event);
 };
 
 CodeBootVM.prototype.filterAST = function (ast, source) {
