@@ -708,6 +708,8 @@ CodeBootVM.prototype.exec_start_repl = function (delay) {
         vm.replAcceptInput();
     }
 
+    vm.stepDelayForEventHandler = delay;
+
     vm.comp_and_run_code(compile,
                          after_compile,
                          after_compile,
@@ -743,6 +745,8 @@ CodeBootVM.prototype.exec_start_file = function (delay) {
     function after_failed_compile() {
     }
 
+    vm.stepDelayForEventHandler = delay;
+
     vm.comp_and_run_code(compile,
                          after_successful_compile,
                          after_failed_compile,
@@ -777,9 +781,9 @@ CodeBootVM.prototype.comp_and_run_code = function (compile, after_successful_com
     var code = null;
 
     vm.hideReasonHighlight();
-        code = compile();
+
     try {
-//        code = compile();
+        code = compile();
     }
     catch (e) {
         //console.log(e);
@@ -1299,12 +1303,27 @@ CodeBootVM.prototype.event_handle = function (src, event) {
 
     if (vm.ui.mode !== vm.modeStopped()) {
         vm.event_queue_add(function () {
-            vm.exec_start_event_handler(src, event, 0);
+            vm.exec_start_event_handler(src, vm.copy_event(event), vm.stepDelayForEventHandler);
         });
 
         vm.event_queue_check();
     }
 };
+
+CodeBootVM.prototype.copy_event = function (event) {
+
+    var vm = this;
+
+    var copy = {};
+
+    ['type', 'pageX', 'pageY', 'buttons', 'key', 'code',
+     'altKey', 'ctrlKey', 'shiftKey', 'target'].forEach(function (prop) {
+        if (prop in event) copy[prop] = event[prop];
+    });
+
+    return copy;
+};
+
 
 CodeBootVM.prototype.exec_continue = function (delay) {
 

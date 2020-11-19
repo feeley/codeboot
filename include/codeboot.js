@@ -652,6 +652,7 @@ function CodeBootVM(opts) {
     vm.largeFont = undefined;
     vm.animationSpeed = undefined;
     vm.stepDelay = normalStepDelay;
+    vm.stepDelayForEventHandler = normalStepDelay;
     vm.pauseAtStepCount = Infinity;
 
     vm.saveInProgress = false;
