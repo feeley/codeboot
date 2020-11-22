@@ -20,6 +20,8 @@ function CodeBoot() {
 
     document.addEventListener('DOMContentLoaded', function () {
 
+        cb.rewrite_event_handlers(null, document.body);
+
         function done() {
             cb.init();
         }
@@ -303,6 +305,31 @@ CodeBoot.prototype.verify = function (data, signature, cont) {
     try_next_key();
 };
 
+CodeBoot.prototype.ajax = function (url, data, timeout, success, fail) {
+
+    var cb = this;
+    var xhr = new XMLHttpRequest();
+
+    xhr.timeout = timeout;
+
+    xhr.onload    = function () { success(xhr.responseText); };
+    xhr.ontimeout = function () { fail('timeout'); };
+    xhr.onerror   = function () { fail('error'); };
+
+    if (data === null) {
+        console.log('GET ' + url);
+        xhr.open('GET', url, true);
+    } else {
+        console.log('POST ' + url);
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    }
+
+    xhr.send(data);
+
+    return xhr;
+};
+
 CodeBoot.prototype.init = function () {
 
     var cb = this;
@@ -349,62 +376,101 @@ CodeBoot.prototype.saveAllVM = function () {
     }
 };
 
-CodeBoot.prototype.collectScripts = function (elem, script_type) {
+CodeBoot.prototype.collectScripts = function (elem, script_type, cont) {
 
     var cb = this;
 
     var nb_scripts = 0;
-    var scripts = '';
+    var source = '';
+    var script_elems = elem.querySelectorAll('script');
+    var index = 0;
 
-    elem.querySelectorAll('script').forEach(function (script) {
-        if (script.getAttribute('type') === script_type) {
-            nb_scripts++;
-            scripts += script.innerText + '\n';
+    function loop() {
+        if (index < script_elems.length) {
+            var script = script_elems[index++];
+            if (script.getAttribute('type') !== script_type) {
+                loop();
+            } else if (script.hasAttribute('src')) {
+                cb.ajax(script.getAttribute('src'),
+                        null,
+                        10000, // timeout = 10 seconds
+                        function (text) {
+                            nb_scripts++;
+                            source += text;
+                            loop();
+                        },
+                        function (reason) {
+                            loop();
+                        });
+            } else {
+                nb_scripts++;
+                source += script.innerText + '\n';
+                loop();
+            }
+        } else if (nb_scripts === 0) {
+            cont(null);
+        } else {
+            cont(source);
         }
-    });
-
-    if (nb_scripts === 0) {
-        return null;
-    } else {
-        return scripts;
     }
+
+    loop();
 };
 
 CodeBoot.prototype.setupAllVM = function (elem) {
 
     var cb = this;
 
-    Lang.prototype.forEachRegisteredLang(function (lang) {
-        var script_type = lang.prototype.getScriptType();
-        var scripts = cb.collectScripts(document, script_type);
-        if (scripts !== null) {
-            var levels = lang.prototype.getLevels();
-            var exts = lang.prototype.getExts();
-            var cmds = ['F' + toSafeBase64('script' + exts[0]),
-                        toSafeBase64(scripts),
-                        'e'];
-            var opts = {
-                lang: lang.prototype.getId() + '-' + Object.keys(levels)[0],
-                cmds: cmds,
-                hidden: true,
-                floating: true,
-                persistent: false
-            };
-            new CodeBootVM(opts);
-        }
-    });
-
-    elem.querySelectorAll('.cb-vm').forEach(function (root) {
-        if (!getCodeBootVM(root)) {
-            var opts = { root: root };
-            var cmds = CodeBoot.prototype.cb.cmds;
-            if (cmds) {
-                CodeBoot.prototype.cb.cmds = null;
-                opts.cmds = cmds;
+    function done() {
+        elem.querySelectorAll('.cb-vm').forEach(function (root) {
+            if (!getCodeBootVM(root)) {
+                var opts = { root: root };
+                var cmds = CodeBoot.prototype.cb.cmds;
+                if (cmds) {
+                    CodeBoot.prototype.cb.cmds = null;
+                    opts.cmds = cmds;
+                }
+                new CodeBootVM(opts);
             }
-            new CodeBootVM(opts);
+        });
+    }
+
+    var langs = [];
+    var index = 0;
+    Lang.prototype.forEachRegisteredLang(function (lang) { langs.push(lang); });
+
+    function loop() {
+        if (index < langs.length) {
+            var lang = langs[index++];
+            var script_type = lang.prototype.getScriptType();
+            cb.collectScripts(
+                document,
+                script_type,
+                function (source) {
+                    if (source !== null) {
+                        var levels = lang.prototype.getLevels();
+                        var exts = lang.prototype.getExts();
+                        var cmds = ['F' + toSafeBase64('script' + exts[0]),
+                                    toSafeBase64(source),
+                                    'e'];
+                        var opts = {
+                            lang: lang.prototype.getId() + '-' +
+                                Object.keys(levels)[0],
+                            cmds: cmds,
+                            hidden: true,
+                            floating: true,
+                            persistent: false
+                        };
+                        new CodeBootVM(opts);
+                    }
+                    loop();
+                });
+        } else {
+            done();
         }
-    });
+    }
+
+    loop();
 };
 
 CodeBoot.prototype.vms = {};
@@ -745,6 +811,14 @@ function CodeBootVM(opts) {
 
     if (opts.cmds !== undefined)
         vm.execCommands(opts.cmds);
+
+    if (cb.vmsCreated === 1) {
+        var handlers = CodeBoot.prototype.onload_handlers;
+        CodeBoot.prototype.onload_handlers = [];
+        handlers.forEach(function (descr) {
+            CodeBoot.prototype.event_handle(descr.id, { target: descr.elem });
+        });
+    }
 };
 
 CodeBootVM.prototype.execCommands = function (cmds) {

@@ -68,7 +68,7 @@ CodeBootVM.prototype.codeHighlight = function (loc, cssClass, markEnd) {
         }
         vm.fs.openFile(filename);
         editor = vm.fs.getEditor(filename);
-    } else if (container instanceof SourceContainer) {
+    } else if (container instanceof SourceContainer && container.is_repl()) {
         editor = vm.repl;
     } else {
         // unknown source container
@@ -383,8 +383,6 @@ CodeBootVM.prototype.event_queue_add = function (thunk) {
 
     var vm = this;
 
-    vm.event_queue_trim(5);
-
     vm.ui.event_queue.push(thunk);
 };
 
@@ -534,6 +532,10 @@ CodeBootVM.prototype.enterMode = function (newMode) {
         vm.hideStepCounter();
         vm.lang.stopExecution();
         vm.replAllowInput();
+
+        if (newMode === vm.modeStopped) {
+            vm.event_queue_trim(0); // clear event queue
+        }
 
         //TODO: interferes?
         //vm.repl.focus();
@@ -811,7 +813,6 @@ CodeBootVM.prototype.run_code = function (code, delay) {
         vm.replAllowInput();
     } else {
         vm.ui.mode = vm.modeAnimating();
-        vm.event_queue_trim(0); // clear event queue
         vm.lang.startExecution(code);
         vm.ui.mode = vm.modeStopped();
         vm.enterMode(vm.modeAnimating());
@@ -1202,8 +1203,10 @@ CodeBootVM.prototype.showExecPoint = function (skipExecPointBubble) {
     if (loc) loc = vm.lang.relativeLocation(loc); // convert to relative loc
     vm.ui.execPointMark = vm.codeHighlight(loc, 'cb-exec-point-code', true);
 
-    if (vm.ui.execPointMark)
-        vm.scrollToMarker(vm.ui.execPointMark.end);
+    if (!vm.ui.execPointMark)
+        return false;
+
+    vm.scrollToMarker(vm.ui.execPointMark.end);
 
     var value = vm.lang.getResult();
     var $container;
@@ -1227,6 +1230,8 @@ CodeBootVM.prototype.showExecPoint = function (skipExecPointBubble) {
             vm.execPointCodeElement(),
             vm.lang.executionStateHTML());
     }
+
+    return true;
 /*
     $('.cb-exec-point-code').hover(function (event) {
         if (!vm.ui.execPointBubble.isVisible()) {
@@ -1250,7 +1255,7 @@ CodeBootVM.prototype.exec_continue = function (delay) {
 };
 */
 
-CodeBoot.prototype.rewrite_event_handler = function (vm, src) {
+CodeBoot.prototype.register_event_handler = function (vm, src) {
     var id;
     var key = (vm === null ? '' : vm.index) + '/' + src;
     var map = CodeBoot.prototype.event_handler_map;
@@ -1261,40 +1266,49 @@ CodeBoot.prototype.rewrite_event_handler = function (vm, src) {
         id = descrs.push({ vm: vm, src: src })-1;
         map[key] = id;
     }
-    return 'CodeBoot.prototype.event_handle(' + id + ',event)';
+    return id;
 };
 
 CodeBoot.prototype.rewrite_event_handlers = function (vm, elem) {
     CodeBoot.prototype.event_attrs.forEach(function (attr) {
         if (elem.hasAttribute(attr)) {
             var val = elem.getAttribute(attr);
-            elem.setAttribute(attr,
-                              CodeBoot.prototype.rewrite_event_handler(vm, val));
+            var id = CodeBoot.prototype.register_event_handler(vm, val);
+            if (attr === 'onload') {
+                elem.removeAttribute(attr);
+                CodeBoot.prototype.onload_handlers.push({ id: id, elem: elem });
+            } else {
+                var handler = 'CodeBoot.prototype.event_handle(' + id + ',event)';
+                elem.setAttribute(attr, handler);
+            }
         }
     });
+    CodeBoot.prototype.rewrite_event_handlers_children(vm, elem);
 };
 
 CodeBoot.prototype.rewrite_event_handlers_children = function (vm, elem) {
     var child = elem.firstElementChild;
     while (child) {
         CodeBoot.prototype.rewrite_event_handlers(vm, child);
-        CodeBoot.prototype.rewrite_event_handlers_children(vm, child);
         child = child.nextElementSibling;
     }
 };
 
 CodeBoot.prototype.event_attrs =
-    ['onfocus','onblur','onfocusin','onfocusout',
+    ['onload','onfocus','onblur','onfocusin','onfocusout',
      'onkeydown','onkeypress','onkeyup',
      'onclick','ondblclick','oncontextmenu','onmousedown','onmouseup',
      'onmousemove','onmouseenter','onmouseleave','onmouseover','onmouseout'];
 
 CodeBoot.prototype.event_handler_map = Object.create(null);
 CodeBoot.prototype.event_handler_descrs = [];
+CodeBoot.prototype.onload_handlers = [];
 
 CodeBoot.prototype.event_handle = function (id, event) {
     var descr = CodeBoot.prototype.event_handler_descrs[id];
-    descr.vm.event_handle(descr.src, event);
+    var vm = descr.vm;
+    if (!vm) vm = getCodeBootVM();
+    vm.event_handle(descr.src, event);
 };
 
 CodeBootVM.prototype.event_handle = function (src, event) {
@@ -1334,6 +1348,7 @@ CodeBootVM.prototype.exec_continue = function (delay) {
 
     var maxStepChunk = 51151;
     var stepChunk = maxStepChunk;
+    var newMode;
 
     if (delay > 0) {
         stepChunk = 1; // execute single step
@@ -1378,14 +1393,39 @@ CodeBootVM.prototype.exec_continue = function (delay) {
             vm.executionEndedWithError(vm.lang.getError());
         }
 
+    } else if (vm.lang.getLocation().container.is_html()) {
+
+        if (vm.ui.timeoutId !== null) {
+
+            // program is executing a "sleep"?
+
+            newMode = vm.modeAnimatingSleeping();
+
+        } else {
+
+            // resume execution after appropriate delay
+
+            newMode = vm.modeAnimating();
+
+            vm.stepDelay = delay;
+
+            vm.ui.timeoutId =
+                vm.afterDelay(function () {
+                                  vm.exec_continue(vm.stepDelay);
+                              });
+        }
+
+        vm.enterMode(newMode);
+
     } else {
+
         //console.log('lang.isExecuting() === true');
 
         // determine how execution will continue (either we continue
         // after the requested delay, or we must wait for an execution
         // event)
 
-        var newMode = vm.modeStepping();
+        newMode = vm.modeStepping();
 
         if (delay < Infinity) {
 
