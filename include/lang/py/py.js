@@ -697,6 +697,24 @@ function runtime_setAttribute(rte, elem, attr, val) {
     vm.updateHTMLWindow();
 }
 
+function runtime_is_domelement(val) {
+    try {
+        // Will not work with IE7
+        return val instanceof Element;
+    }
+    catch (e) {
+        // Support for IE7, see: https://stackoverflow.com/questions/384286/how-do-you-check-if-a-javascript-object-is-a-dom-object
+        // Unless someone does something weird with codeBoot, this should be a good indication that an object is and element
+        return (typeof obj === "object") &&
+            (obj.nodeType===1) && (typeof obj.style === "object") &&
+            (typeof obj.ownerDocument === "object");
+    }
+}
+
+function runtime_is_null(val) {
+    return val === null;
+}
+
 function attach_to_container(ast, container) {
     if (typeof ast === 'object') {
         if (Object.prototype.hasOwnProperty.call(ast, '_fields')) {
