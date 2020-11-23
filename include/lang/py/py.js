@@ -645,6 +645,30 @@ function runtime_setInnerHTML(rte, elem, html) {
     vm.updateHTMLWindow();
 }
 
+function runtime_getValue(rte, elem) {
+
+    var vm = rte.vm;
+
+    if (typeof(elem) === 'string') {
+        elem = document.querySelector(elem);
+    }
+
+    return elem.value;
+}
+
+function runtime_setValue(rte, elem, val) {
+
+    var vm = rte.vm;
+
+    if (typeof(elem) === 'string') {
+        elem = document.querySelector(elem);
+    }
+
+    elem.value = val;
+
+    vm.updateHTMLWindow();
+}
+
 function runtime_hasAttribute(rte, elem, attr) {
 
     var vm = rte.vm;

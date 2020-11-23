@@ -415,11 +415,14 @@ CodeBootFileSystem.prototype.addButton = function (buttons, title, html, onClick
     var button = document.createElement('button');
 
     button.className = 'close';
-    button.setAttribute('data-toggle', 'tooltip');
-    button.setAttribute('data-delay', '750');
-    button.setAttribute('data-animation', 'false');
-    button.setAttribute('data-placement', 'bottom');
-    button.setAttribute('data-title', title);
+
+    if (title) {
+        button.setAttribute('data-toggle', 'tooltip');
+        button.setAttribute('data-delay', '750');
+        button.setAttribute('data-animation', 'false');
+        button.setAttribute('data-placement', 'bottom');
+        button.setAttribute('data-title', title);
+    }
 
     button.innerHTML = html;
 
@@ -966,7 +969,7 @@ CodeBootFileEditor.prototype.enable = function () {
 
     var fileTabCloseButton =
         fs.addButton(fileTab,
-                     'Close',
+                     '',
                      vm.SVG['close'],
                      function (event) { fs.fem.remove(fe); return false; });
 
@@ -1010,67 +1013,6 @@ CodeBootFileEditor.prototype.enable = function () {
         editor.focus();
     });
 
-/*
-
-
-    // create file tab
-
-    var fileTab = $('<li class="nav-link cb-file-tab"/>');
-
-    //fileTab.attr('data-cb-filename', filename);
-
-    var fileTabCloseButton = fe.file.fs.vm.makeCloseButton();
-    var fileTabLabel = $('<span class="cb-tab-label"/>').text(filename);
-
-    fileTab.append(fileTabCloseButton).append(fileTabLabel);
-
-    // create file container
-
-    var fileContainer = $('<div class="cb-file-container"/>');
-
-    //fileContainer.attr('data-cb-filename', filename);
-
-    var textarea = $('<textarea class="cb-file-editor"/>');
-
-    fileContainer.append(textarea);
-
-    // add file tab and file container to page
-
-    $('.cb-file-tabs').append(fileTab);
-    $('.cb-editors').append(fileContainer);
-
-    // create code editor
-
-    var editor = fe.file.fs.vm.createCodeEditor(textarea.get(0), file);
-
-    editor.setValue(file.content);
-
-    if (file.cursor) {
-        editor.setCursor(file.cursor);
-    }
-
-    var saveHandler = function () {
-        file.save();
-        editor.currentSaveTimeout = (void 0);
-    };
-
-    editor.on('change', function (cm, change) {
-        if (editor.currentSaveTimeout !== (void 0)) {
-            // extend the window
-            clearTimeout(editor.currentSaveTimeout);
-        }
-        editor.currentSaveTimeout = setTimeout(saveHandler, SAVE_DELAY);
-    });
-
-    editor.on('cursorActivity', function () {
-        file.cursor = editor.getCursor();
-    });
-
-    fileContainer.on('click', function (event) {
-        editor.focus();
-    });
-*/
-
     // remember each element for quick access
 
     fe.fileTab = fileTab;
@@ -1091,7 +1033,7 @@ CodeBootFileEditor.prototype.enable = function () {
         if (fe.isEnabled()) fe.disable();
     };
 
-    fe.fileTabCloseButton.addEventListener('click', fe.fileCloseHandler);
+    fe.fileTabCloseButton.addEventListener('click', fe.fileTabCloseHandler);
 
     fe.normalTabEvents();
 

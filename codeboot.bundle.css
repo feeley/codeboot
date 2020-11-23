@@ -1433,6 +1433,7 @@ div.tab-pane {
 
 .cb-html-window table,
 #main table {
+    float: left;
     table-layout: fixed;
     border-collapse: collapse;
 }
@@ -1440,10 +1441,10 @@ div.tab-pane {
 .cb-html-window table td,
 #main table td {
     padding: 0;
-    border: 1px solid black;
     font-family: Helvetica;
     text-align: center;
     vertical-align: center;
+    border: 1px solid black;
 }
 
 .cb-html-window table td {
