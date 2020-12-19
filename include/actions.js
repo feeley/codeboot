@@ -1270,16 +1270,20 @@ CodeBoot.prototype.register_event_handler = function (vm, src) {
 };
 
 CodeBoot.prototype.rewrite_event_handlers = function (vm, elem) {
+    var prefix = 'CodeBoot.prototype.event_handle(event,';
     CodeBoot.prototype.event_attrs.forEach(function (attr) {
         if (elem.hasAttribute(attr)) {
             var val = elem.getAttribute(attr);
-            var id = CodeBoot.prototype.register_event_handler(vm, val);
-            if (attr === 'onload') {
-                elem.removeAttribute(attr);
-                CodeBoot.prototype.onload_handlers.push({ id: id, elem: elem });
-            } else {
-                var handler = 'CodeBoot.prototype.event_handle(' + id + ',event)';
-                elem.setAttribute(attr, handler);
+            if (val.indexOf(prefix) !== 0) {
+                // register handler only if it is not already transformed
+                var id = CodeBoot.prototype.register_event_handler(vm, val);
+                if (attr === 'onload') {
+                    elem.removeAttribute(attr);
+                    CodeBoot.prototype.onload_handlers.push({ id: id, elem: elem });
+                } else {
+                    var handler = prefix + id + ')';
+                    elem.setAttribute(attr, handler);
+                }
             }
         }
     });
@@ -1304,7 +1308,7 @@ CodeBoot.prototype.event_handler_map = Object.create(null);
 CodeBoot.prototype.event_handler_descrs = [];
 CodeBoot.prototype.onload_handlers = [];
 
-CodeBoot.prototype.event_handle = function (id, event) {
+CodeBoot.prototype.event_handle = function (event, id) {
     var descr = CodeBoot.prototype.event_handler_descrs[id];
     var vm = descr.vm;
     if (!vm) vm = getCodeBootVM();
@@ -1330,8 +1334,8 @@ CodeBootVM.prototype.copy_event = function (event) {
 
     var copy = {};
 
-    ['type', 'pageX', 'pageY', 'buttons', 'key', 'code',
-     'altKey', 'ctrlKey', 'shiftKey', 'target'].forEach(function (prop) {
+    ['type', 'target', 'currentTarget', 'pageX', 'pageY', 'buttons',
+     'key', 'code', 'altKey', 'ctrlKey', 'shiftKey'].forEach(function (prop) {
         if (prop in event) copy[prop] = event[prop];
     });
 

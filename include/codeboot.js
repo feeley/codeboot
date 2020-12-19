@@ -4,7 +4,7 @@ function CodeBoot() {
 
     var cb = this;
 
-    cb.version = '3.1.6';
+    cb.version = '3.1.8';
 
     cb.cmds = null;
     cb.cmds_valid = false;
@@ -2985,6 +2985,28 @@ CodeBootVM.prototype.initRoot = function (opts) {
         if (content !== null) {
             vm.fs.newFile(filename, content);
         }
+
+        // In order to resize the repl's height, the CodeMirror-scroll
+        // element's max-height must be explicitly changed
+
+        var bodyElem = vm.root.querySelector('.cb-body');
+        if (bodyElem) {
+            var replContElem = bodyElem.querySelector('.cb-repl-container');
+            if (replContElem) {
+                vm.setupSplitter(bodyElem, function (size) {
+                    var replScrollElem = replContElem.querySelector('.CodeMirror-scroll');
+                    if (replScrollElem) {
+                        replScrollElem.style.maxHeight = size + 'px';
+                        vm.replScrollToEnd();
+                    }
+                });
+            }
+        }
+
+        var consoleElem = vm.root.querySelector('.cb-console');
+        if (consoleElem) {
+            vm.setupSplitter(consoleElem);
+        }
     }
 
     if (vm.root.tagName === 'PRE') {
@@ -3044,28 +3066,6 @@ CodeBootVM.prototype.initRoot = function (opts) {
         }
 
         vm.editable = (content === null);
-    }
-
-    // In order to resize the repl's height, the CodeMirror-scroll
-    // element's max-height must be explicitly changed
-
-    var bodyElem = vm.root.querySelector('.cb-body');
-    if (bodyElem) {
-        var replContElem = bodyElem.querySelector('.cb-repl-container');
-        if (replContElem) {
-            vm.setupSplitter(bodyElem, function (size) {
-                var replScrollElem = replContElem.querySelector('.CodeMirror-scroll');
-                if (replScrollElem) {
-                    replScrollElem.style.maxHeight = size + 'px';
-                    vm.replScrollToEnd();
-                }
-            });
-        }
-    }
-
-    var consoleElem = vm.root.querySelector('.cb-console');
-    if (consoleElem) {
-        vm.setupSplitter(consoleElem);
     }
 
     return initLast;
