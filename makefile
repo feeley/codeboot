@@ -1,5 +1,5 @@
 ZIPI_REPO ?= git@github.com:udem-dlteam/zipi
-ZIPI_BRANCH ?=
+ZIPI_BRANCH ?= codeboot
 ZIPI_FOR_CODEBOOT = zipi-for-codeboot
 PYTHON38 ?= $(ZIPI_FOR_CODEBOOT)/venv/bin/python
 
@@ -8,10 +8,8 @@ all: bundle
 $(ZIPI_FOR_CODEBOOT):
 	rm -rf ./$(ZIPI_FOR_CODEBOOT)
 	@if test "$(ZIPI_BRANCH)" != "" || echo $(ZIPI_REPO) | grep "^\(http://\|https://\|git@\)" > /dev/null; then \
-	  echo "git clone $(ZIPI_REPO) ./$(ZIPI_FOR_CODEBOOT)"; \
-	  git clone $(ZIPI_REPO) ./$(ZIPI_FOR_CODEBOOT); \
-	  echo "cd ./$(ZIPI_FOR_CODEBOOT) && git checkout $(if $(ZIPI_BRANCH),$(ZIPI_BRANCH),master)"; \
-	  cd ./$(ZIPI_FOR_CODEBOOT) && git checkout $(if $(ZIPI_BRANCH),$(ZIPI_BRANCH),master); \
+	  echo "git clone --branch=codeboot $(ZIPI_REPO) ./$(ZIPI_FOR_CODEBOOT)"; \
+	  git clone --branch=$(ZIPI_BRANCH) $(ZIPI_REPO) ./$(ZIPI_FOR_CODEBOOT); \
 	else \
 	  echo "cp -r $(ZIPI_REPO) ./$(ZIPI_FOR_CODEBOOT)"; \
 	  cp -r $(ZIPI_REPO) ./$(ZIPI_FOR_CODEBOOT); \
@@ -79,6 +77,7 @@ codeboot.bundle.js: include/jquery-3.2.1.min.js include/jquery.clippy.min.js inc
 	  cat $$f >> $@; \
 	  echo >> $@; \
 	done
+
 
 clean:
 	rm -rf ./$(ZIPI_FOR_CODEBOOT) codeboot.bundle.js codeboot.bundle.css
