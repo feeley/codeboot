@@ -1,0 +1,2 @@
+assert True
+print("done!")

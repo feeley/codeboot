@@ -1,0 +1,10 @@
+print(repr("\U0000ffff"))
+print(repr("\U0001A101"))
+print(repr("\U0001F60A"))
+print(repr("\U0000aaaa"))
+print(repr("\x12"))
+print(repr("\x0A"))
+print(repr("\x23"))
+print(repr("\uffff"))
+print(repr(chr(0)))
+

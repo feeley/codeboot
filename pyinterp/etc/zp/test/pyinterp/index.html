@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <title>pyinterp</title>
+    <link rel="stylesheet" href="lib/codemirror.css">
+    <script src="lib/codemirror.js"></script>
+    <script src="mode/python/python.js"></script>
+    <script src="pyinterp_browser.js"></script>
+  </head>
+  <body>
+    <h1>pyinterp.js</h1>
+    <textarea cols="30" id="codeMirror" name="" rows="10"></textarea>
+    <button onclick="run_code()">Run code</button>
+    <script>
+     function run_code() {
+       let code = editor.getValue();
+       pyinterp.interp_source(code);
+     }
+
+     var editor = CodeMirror.fromTextArea(codeMirror, {
+       mode: "python",
+       lineNumbers: true,
+       textWrapping: false,
+       indentUnit: 4,
+       parserConfig: {'pythonVersion': 3, 'strictErrors': true}
+     });
+    </script>
+  </body>
+</html>

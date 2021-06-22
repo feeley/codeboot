@@ -1,0 +1,5 @@
+print(ord("a"))
+print(ord("\n"))
+print(ord("\x00"))
+print(ord("\xFF"))
+print(ord("\uFFFF"))

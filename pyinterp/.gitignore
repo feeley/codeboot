@@ -1,0 +1,4 @@
+*.egg-info
+etc/zp/_tmpdir
+etc/zp/_tmpdir/*
+*__pycache__*

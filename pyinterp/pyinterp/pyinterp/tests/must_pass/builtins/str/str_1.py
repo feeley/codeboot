@@ -1,0 +1,8 @@
+print(str(123))
+print(str(str(123)))
+print(str("hello\n"))
+print(str('hello\n'))
+print(str('\'"'))
+print(str('a"b'))
+print(str("a'b"))
+print(str("\xff"))

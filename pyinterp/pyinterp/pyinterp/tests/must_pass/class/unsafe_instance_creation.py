@@ -1,0 +1,1 @@
+print(object.__new__(int))

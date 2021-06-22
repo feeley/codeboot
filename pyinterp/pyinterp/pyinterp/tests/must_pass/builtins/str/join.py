@@ -1,0 +1,5 @@
+print(''.join(["foo", "bar", "baz"]))
+print('-'.join(["foo", "bar", "baz"]))
+print('foo'.join(["foo"]))
+print('a'.join([]))
+print(''.join([]))
