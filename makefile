@@ -47,4 +47,4 @@ codeboot.bundle.js: include/jquery-3.2.1.min.js include/jquery.clippy.min.js inc
 
 
 clean:
-	rm -rf ./pyinterp codeboot.bundle.js codeboot.bundle.css
+	rm -rf codeboot.bundle.js codeboot.bundle.css
