@@ -1,3 +1,4 @@
+# zp is built to work with python3.8 ast module be careful if changing PYTHON38
 PYTHON38 = python3.8
 
 venv: venv/bin/activate

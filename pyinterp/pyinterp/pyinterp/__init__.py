@@ -9892,7 +9892,6 @@ def gen_Pass(cte, ast):
     return (cte, code)
 
 
-
 def gen_while(cte, ast):
     ast_test = ast.test
     ast_body = ast.body
@@ -9902,24 +9901,25 @@ def gen_while(cte, ast):
     body_cte, body_code = comp_stmt_seq(test_cte, ast_body)
     orelse_cte, orelse_code = comp_stmt_seq(body_cte, ast_orelse)
 
-    def code(external_rte, cont):
+    def code(rte, cont):
+        stmt_end_cont = do_stmt_end(cont, ast, 0)
+
         def loop():
             def get_test_value(_, val):
                 def branch(_, cond):
                     if om_is(cond, om_False):
-                        return orelse_code(external_rte, cont)
+                        return orelse_code(rte, stmt_end_cont)
                     else:
                         return body_code(loop_rte, lambda _: loop())
 
-                return sem_bool(Context(external_rte, branch, ast_test), val)
-            return test_code(external_rte, get_test_value)
+                return sem_bool(Context(rte, branch, ast_test), val)
+            return test_code(rte, get_test_value)
 
-        loop_rte = make_loop_rte(external_rte, lambda: cont(external_rte), loop)
+        loop_rte = make_loop_rte(rte, lambda: stmt_end_cont(rte), loop)
 
         return loop()
 
     return orelse_cte, code
-
 
 
 def gen_if(cte, ast, code1, code2, code3):
