@@ -1392,7 +1392,8 @@ CodeBootVM.prototype.exec_continue = function (delay) {
         // execution has finished... check if with result or error
 
         if (lang.isEndedWithResult()) {
-            vm.executionEndedWithResult(lang.getResult());
+            var is_repl = vm.lang.getLocation().container.is_repl();
+            vm.executionEndedWithResult(lang.getResult(), is_repl);
         } else {
             vm.executionEndedWithError(vm.lang.getError());
         }
@@ -1488,15 +1489,17 @@ CodeBootVM.prototype.executionEndedWithError = function (err) {
     vm.stop(err);
 };
 
-CodeBootVM.prototype.executionEndedWithResult = function (result) {
+CodeBootVM.prototype.executionEndedWithResult = function (result, is_repl) {
 
     var vm = this;
 
-    vm.lastResult = result;
-    vm.lastResultRepresentation = vm.lang.printedRepresentation(result);
+    if (is_repl) {
+      vm.lastResult = result;
+      vm.lastResultRepresentation = vm.lang.printedRepresentation(result);
 
-    if (result !== void 0) {
-        vm.replAddTranscript(vm.lastResultRepresentation, 'cb-repl-result');
+      if (result !== void 0) {
+          vm.replAddTranscript(vm.lastResultRepresentation, 'cb-repl-result');
+      }
     }
 
     vm.executionHook();
