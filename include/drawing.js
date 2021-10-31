@@ -272,12 +272,14 @@ DrawingWindow.prototype.set_thickness = function (width) {
 
 DrawingWindow.prototype.pu = function () {
     var dw = this;
-    dw.pen_height = 1;
+    dw.pen_height++;
 };
 
 DrawingWindow.prototype.pd = function () {
-  var dw = this;
-  dw.pen_height = 0;
+    var dw = this;
+    if (--dw.pen_height <= 0) {
+        dw.pen_height = 0;
+    }
 };
 
 DrawingWindow.prototype.triangle = function (h, base) {
