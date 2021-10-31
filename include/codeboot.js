@@ -4,7 +4,7 @@ function CodeBoot() {
 
     var cb = this;
 
-    cb.version = '3.1.9';
+    cb.version = '3.1.10';
 
     cb.cmds = null;
     cb.cmds_valid = false;
