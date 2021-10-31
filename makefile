@@ -26,6 +26,10 @@ serve: bundle
 	$(PYTHON38) -m http.server 8999 --bind 127.0.0.1
 
 bundle: codeboot.bundle.css codeboot.bundle.js
+	# requires inliner (from npm) installed
+	# The 'sed' call solves a weird bug from inliner (https://github.com/remy/inliner/issues/221)
+	# We probably should move away from inliner eventually...
+	inliner index.html | awk -v RS="\0" -v ORS="" '{gsub(/~~s\ns~~/," nl ")}7' > codeboot_bundle.html
 
 codeboot.bundle.css: include/bootstrap-4.5.0-dist/css/bootstrap.min.css include/codemirror-5.56.0/lib/codemirror.css include/codemirror-5.56.0/addon/dialog/dialog.css include/codeboot.css
 	@echo "*** Building codeboot.bundle.css"
