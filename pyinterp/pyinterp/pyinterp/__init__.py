@@ -7197,11 +7197,12 @@ def om_breakpoint_code(rte, cont):
 def om_input_code(rte, cont):
     def return_value(rte1, obj_str):
         obj_str_value = OM_get_boxed_value(obj_str)
-        # TODO: raise EOFError on EOF
         result = runtime_input(obj_str_value)
-        if om_is(result, None):
-            ctx = make_out_of_ast_context(rte, cont)
-            return sem_raise(ctx, class_EOFError)
+        if result is None:
+            # The Python 'input' function always returns a string
+            # In codeBoot the 'cancel' button of the prompt thus returns
+            # an empty string
+            return unwind_return(rte1, om_str(""))
         else:
             return unwind_return(rte1, om_str(result))
 
