@@ -1,0 +1,1 @@
+print(math.acos(-2.0))

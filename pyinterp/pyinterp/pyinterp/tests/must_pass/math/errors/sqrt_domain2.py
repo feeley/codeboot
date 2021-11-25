@@ -1,0 +1,1 @@
+print(math.sqrt(-math.inf))

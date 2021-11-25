@@ -1,0 +1,6 @@
+print(math.atan2(1, 1))
+print(math.atan2(1, 0))
+print(math.atan2(0, 1))
+print(math.atan2(1, math.inf))
+print(math.atan2(1, math.nan))
+print(math.atan2(math.inf, math.inf))

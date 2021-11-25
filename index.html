@@ -1,206 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<!---------------------------------------------------------------------------->
-
 <head>
 
-  <meta charset="utf-8">
-  <title>codeBoot</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+<meta charset="utf-8">
+<title>codeBoot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="include/font-awesome-4.7.0/css/font-awesome.min.css">
-  <link rel="stylesheet" href="include/tippyjs-1.2.0/dist/tippy.css">
-  <link rel="stylesheet" href="include/bootstrap-4.0.0-beta-dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="include/CodeMirror/lib/codemirror.css">
-  <link rel="stylesheet" href="include/codeboot.css">
+<link rel="stylesheet" href="codeboot.bundle.css">
+<script src="codeboot.bundle.js"></script>
 
 </head>
 
-<!---------------------------------------------------------------------------->
+<body>
 
-<body class="cb-hide-header cb-hide-playground cb-hide-footer" data-cb-lang-level="novice" onunload="cb.unload();">
+<div id="main"></div>
 
-  <div id="cb-header"></div>
-
-  <div id="cb-navbar">
-
-    <div id="cb-navbar-header"></div>
-
-    <div id="cb-navbar-controls">
-
-      <!-- Menus -->
-
-      <div id="cb-menu">
-
-        <span id="cb-menu-brand">
-          <button class="btn btn-secondary cb-button" type="button" id="cb-menu-brand-btn" data-toggle="modal" data-target="#cb-about-box">codeBoot v2.1<span id="cb-menu-brand-btn-mode"></span></button>
-        </span>
-
-        <span id="cb-menu-file" class="dropdown">
-          <button class="btn btn-secondary cb-button" type="button" id="cb-menu-file-btn" data-toggle="dropdown">&nbsp;&nbsp;<i class="fa fa-file">&nbsp;</i></button>
-          <div id="cb-file-selection" class="dropdown-menu">
-          </div>
-        </span>
-
-        <span id="cb-menu-settings" class="dropdown">
-
-          <button class="btn btn-secondary cb-button" type="button" id="cb-menu-settings-btn" data-toggle="dropdown">&nbsp;&nbsp;<i class="fa fa-cogs"></i>&nbsp;</button>
-          <div class="dropdown-menu">
-
-            <h5 class="dropdown-header">Language level</h5>
-            <a href="#" class="dropdown-item" data-cb-setting-level="novice"><span><i class="fa fa-check"></i></span>&nbsp;&nbsp;Novice</a>
-            <a href="#" class="dropdown-item" data-cb-setting-level="standard"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Standard</a>
-
-            <div class="dropdown-divider"></div>
-
-            <h5 class="dropdown-header">Animation speed</h5>
-            <a href="#" class="dropdown-item" data-cb-setting-speed="slow"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Slow</a>
-            <a href="#" class="dropdown-item" data-cb-setting-speed="normal"><span><i class="fa fa-check"></i></span>&nbsp;&nbsp;Normal</a>
-            <a href="#" class="dropdown-item" data-cb-setting-speed="fast"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Fast</a>
-            <a href="#" class="dropdown-item" data-cb-setting-speed="turbo"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Turbo</a>
-            <a href="#" class="dropdown-item" data-cb-setting-speed="lightning"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Lightning</a>
-
-            <div class="dropdown-divider"></div>
-
-            <h5 class="dropdown-header">Editing</h5>
-            <a href="#" class="dropdown-item" data-cb-setting-editor="line-numbers"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Show line numbers</a>
-            <a href="#" class="dropdown-item" data-cb-setting-editor="large-font"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Large font</a>
-
-            <div class="dropdown-divider"></div>
-
-            <h5 class="dropdown-header">Graphics</h5>
-            <a href="#" class="dropdown-item" data-cb-setting-graphics="show-drawing-window"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Show drawing window</a>
-            <a href="#" class="dropdown-item" data-cb-setting-graphics="show-pixels-window"><span style="visibility: hidden;"><i class="fa fa-check"></i></span>&nbsp;&nbsp;Show pixels window</a>
-
-          </div>
-        </span>
-
-      </div>
-
-      <!-- Execution control buttons -->
-
-      <div id="cb-exec-controls">
-
-        <div id="cb-exec-controls-counter">
-          <span id="cb-exec-step-counter" class="badge badge-primary badge-pill cb-step-counter"></span>
-        </div>
-
-        <div id="cb-exec-controls-buttons" class="btn-group" role="group" data-toggle="tooltip" data-delay="2000" data-trigger="manual" data-placement="left" title="TRY ME!">
-
-          <button id="cb-exec-btn-step" type="button" class="btn btn-secondary cb-button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Single step/Pause">
-            <img id="cb-exec-img-play-1" src="include/img/play-1.png"></img>
-            <img id="cb-exec-img-pause" src="include/img/pause.png"></img>
-            <img id="cb-exec-img-play-pause" src="include/img/play-pause.png"></img>
-          </button>
-
-          <button id="cb-exec-btn-animate" type="button" class="btn btn-secondary cb-button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Execute with animation">
-            <img id="cb-exec-img-play" src="include/img/play.png"></img>
-          </button>
-
-          <button id="cb-exec-btn-eval" type="button" class="btn btn-secondary cb-button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Execute to end">
-            <img id="cb-exec-img-play-inf" src="include/img/play-inf.png"></img>
-          </button>
-
-          <button id="cb-exec-btn-stop" type="button" class="btn btn-secondary cb-button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Stop">
-            <img id="cb-exec-img-stop" src="include/img/stop.png"></img>
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
-
-    <div id="cb-navbar-footer"></div>
-
-  </div>
-
-  <div id="cb-console">
-    <div id="cb-repl-container">
-      <textarea id="cb-repl"></textarea>
-    </div>
-    <div id="cb-playground">
-      <div id="cb-drawing-window" ondblclick="drawing_window.screenshot();"></div>
-      <div id="cb-pixels-window" ondblclick="pixels_window.screenshot();"></div>
-      <div id="b"></div>
-    </div>
-  </div>
-
-  <div id="cb-editors">
-    <ul id="cb-file-tabs" class="nav nav-tabs"></ul>
-  </div>
-    
-  <div id="cb-footer"></div>
-    
-<!---------------------------------------------------------------------------->
-
-<!-- Hidden elements -->
-
-<div id="cb-exec-point-bubble-template"></div>
-
-<div id="cb-about-box" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">About codeBoot</h4>
-      </div>
-      <div class="modal-body">
-        <p>codeBoot is developped by Marc Feeley and Bruno Dufour using the following components:</p>
-        <ul>
-          <li><a href="http://github.com/twbs/bootstrap" target="_blank">Bootstrap</a></li>
-          <li><a href="http://jquery.com/" target="_blank">jQuery</a></li>
-          <li><a href="http://codemirror.net/" target="_blank">CodeMirror</a></li>
-        </ul>
-        <p>The code is freely <a href="https://github.com/feeley/codeboot" target="_blank">available on Github</a>. Feel free
-          to <a href="https://github.com/feeley/codeboot/issues/new" target="_blank">report issues</a> or contribute.</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<form id="cb-form-download" class="hide" action="download.php" method="post">
-  <textarea id="cb-form-download-content" name="content"></textarea>
-  <textarea id="cb-form-download-filename" name="filename"></textarea>
-</form>
-
-<!---------------------------------------------------------------------------->
-
-<!-- Load JavaScript code last -->
-
-<script src="include/jquery-3.2.1.min.js"></script>
-<script src="include/popper-1.11.0.min.js"></script>
-<script src="include/tippyjs-1.2.0/dist/tippy.standalone.js"></script>
-<script src="include/jquery.clippy.min.js"></script>
-<script src="include/bootstrap-4.0.0-beta-dist/js/bootstrap.min.js"></script>
-
-<script src="include/CodeMirror/lib/codemirror.js"></script>
-<script src="include/CodeMirror/addon/edit/matchbrackets.js"></script>
-<script src="include/CodeMirror/addon/comment/continuecomment.js"></script>
-<script src="include/CodeMirror/addon/comment/comment.js"></script>
-<script src="include/CodeMirror/mode/javascript/javascript.js"></script>
-
-<script src="include/jseval/system.js"></script>
-<script src="include/jseval/num.js"></script>
-<script src="include/jseval/scanner.js"></script>
-<script src="include/jseval/parser.js"></script>
-<script src="include/jseval/pp.js"></script>
-<script src="include/jseval/ast-passes.js"></script>
-<script src="include/jseval/eval.js"></script>
-
-<script src="include/codeboot.js"></script>
-<script src="include/drawing.js"></script>
-<script src="include/actions.js"></script>
-<script src="include/editors.js"></script>
-<script src="include/builtins.js"></script>
-<script src="include/fs.js"></script>
-<script src="include/storage.js"></script>
-<script src="include/tutorial.js"></script>
-<script src="include/jquery.visibility.js"></script>
-<script>cb.query(null);</script>
+<div class="cb-vm" data-cb-lang="py-novice"></div>
 
 </body>
 

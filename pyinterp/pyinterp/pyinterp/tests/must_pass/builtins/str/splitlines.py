@@ -1,0 +1,15 @@
+print("a\nb\n\nc\n\n\nd\ne".splitlines())
+print("a\nb\n\nc\n\n\nd\ne".splitlines(True))
+print("a\nb\n\nc\n\n\nd\ne".splitlines(False))
+print("a\nb\n\nc\n\n\nd\ne".splitlines(keepends=True))
+print("a\nb\n\nc\n\n\nd\ne".splitlines(keepends=False))
+
+print("".splitlines())
+print("a".splitlines())
+print("\n".splitlines())
+print("\n\n\n".splitlines())
+
+print("".splitlines(True))
+print("a".splitlines(True))
+print("\n".splitlines(True))
+print("\n\n\n".splitlines(True))

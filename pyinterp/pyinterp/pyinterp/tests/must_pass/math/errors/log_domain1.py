@@ -1,0 +1,1 @@
+print(math.log(0.0))

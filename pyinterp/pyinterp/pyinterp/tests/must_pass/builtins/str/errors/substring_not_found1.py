@@ -1,0 +1,1 @@
+print("foo bar".index("foo", 1))

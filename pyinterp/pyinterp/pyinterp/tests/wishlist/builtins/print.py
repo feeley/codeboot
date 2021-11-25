@@ -1,0 +1,6 @@
+print("hello")
+print("hello", "world")
+print("hi my name is ", 42)
+print("This ", "is ", True)
+print("This ", "is ", False)
+print([1, 2, 3, 4, 5], "False", False, b"hi there", br"\\\\\\")

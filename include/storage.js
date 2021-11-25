@@ -1,57 +1,86 @@
-CodeBoot.prototype.getState = function () {
+CodeBootVM.prototype.getStorageId = function () {
+
+    var vm = this;
+
+    return vm.storageId;
+};
+
+CodeBootVM.prototype.getStorage = function () {
+
+    var vm = this;
+
     try {
-        return localStorage['codeboot'];
+        var storage = localStorage[vm.getStorageId()];
+        if (storage)
+            return storage;
+        else
+            return null;
     } catch (e) {
         return null;
     }
 };
 
-CodeBoot.prototype.setState = function (value) {
+CodeBootVM.prototype.setStorage = function (value) {
+
+    var vm = this;
+
     try {
-        localStorage['codeboot'] = value;
+        localStorage[vm.getStorageId()] = value;
     } catch (e) {
     }
 };
 
-CodeBoot.prototype.clearSession = function () {
-    localStorage.removeItem('codeboot');
+CodeBootVM.prototype.clearStorage = function () {
+
+    var vm = this;
+
+    localStorage.removeItem(vm.getStorageId());
 };
 
-CodeBoot.prototype.saveSession = function () {
-    var state = cb.serializeState();
-    cb.setState(JSON.stringify(state));
+CodeBootVM.prototype.saveSession = function () {
+
+    var vm = this;
+    var state = vm.serializeState();
+
+    vm.setStorage(JSON.stringify(state));
 };
 
-CodeBoot.prototype.loadSession = function () {
-    var state = cb.getState();
+CodeBootVM.prototype.loadSession = function () {
+
+    var vm = this;
+    var state = vm.getStorage();
+
     if (state) {
-        cb.fs.init();
-        cb.restoreState(JSON.parse(state));
+        vm.restoreState(JSON.parse(state));
     }
 };
 
-CodeBoot.prototype.serializeState = function () {
+CodeBootVM.prototype.serializeState = function () {
+
+    var vm = this;
+
     var state = {
-        tabs: [],
         repl: {
             history: undefined
         },
-        languageLevel: cb.languageLevel,
-        devMode: cb.devMode,
-        animationSpeed: cb.animationSpeed,
-        options: cb.options
+        lang: vm.lang.getId() + '-' + vm.level,
+        devMode: vm.devMode,
+        showLineNumbers: vm.showLineNumbers,
+        largeFont: vm.largeFont,
+        animationSpeed: vm.animationSpeed,
+        options: vm.options
     };
 
-    state.repl.history = cb.repl.cb.history.serializeState();
+    state.repl.history = vm.repl.cb.hm.serializeState();
 
-    state.files = cb.fs.serialize();
+    state.files = vm.fs.serialize();
     state.openEditors = [];
-    cb.fs.forEachEditor(function (editor) {
+    vm.fs.forEachEditor(function (editor) {
         state.openEditors.push(editor.file.filename);
     });
     state.activeEditor = null;
-    if (cb.fs.editorManager.activated >= 0) {
-        state.activeEditor = cb.fs.editorManager.editors[cb.fs.editorManager.activated].file.filename;
+    if (vm.fs.fem.activated >= 0) {
+        state.activeEditor = vm.fs.fem.editors[vm.fs.fem.activated].file.filename;
     }
 
     return state;
@@ -60,13 +89,15 @@ CodeBoot.prototype.serializeState = function () {
 function cb_internal_attempt(operation) {
     try {
         operation();
-        return true;
-    } catch (e) {
         return false;
+    } catch (e) {
+        return true;
     }
 }
 
-CodeBoot.prototype.restoreState = function (state) {
+CodeBootVM.prototype.restoreState = function (state) {
+
+    var vm = this;
 
     if (state === undefined) return;
 
@@ -77,52 +108,53 @@ CodeBoot.prototype.restoreState = function (state) {
     }
 
     failed = cb_internal_attempt(function () {
-        cb.repl.cb.history.restoreState(state.repl.history);
+        vm.repl.cb.hm.restoreState(state.repl.history);
     }) || failed;
 
     failed = cb_internal_attempt(function () {
-        cb.setLanguageLevel(state.languageLevel || 'novice');
+        vm.setLang(state.lang || 'js-novice');
+        vm.setLangUI();
     }) || failed;
 
     failed = cb_internal_attempt(function () {
-        cb.setDevMode(!!state.devMode);
+        vm.setDevMode(!!state.devMode);
     }) || failed;
 
     failed = cb_internal_attempt(function () {
-        cb.setAnimationSpeed(state.animationSpeed);
+        vm.setShowLineNumbers(!!state.showLineNumbers);
     }) || failed;
 
     failed = cb_internal_attempt(function () {
-        cb.setShowLineNumbers(!!state.options.showLineNumbers);
+        vm.setLargeFont(!!state.largeFont);
     }) || failed;
 
     failed = cb_internal_attempt(function () {
-        cb.setLargeFont(!!state.options.largeFont);
+        vm.setAnimationSpeed(state.animationSpeed);
     }) || failed;
 
     if (state.files) {
         failed = cb_internal_attempt(function () {
-            cb.fs.restore(state.files);
-            cb.fs.rebuildFileMenu();
+            vm.fs.restore(state.files);
+            vm.fs.rebuildFileMenu();
         }) || failed;
     }
 
     if (state.openEditors) {
         failed = cb_internal_attempt(function () {
             state.openEditors.forEach(function (filename) {
-                cb.fs.openFile(filename);
+                vm.fs.openFile(filename);
             });
         }) || failed;
     }
 
     if (state.activeEditor) {
         failed = cb_internal_attempt(function () {
-            var file = cb.fs._asFile(state.activeEditor);
-            file.editor.activate();
+            var file = vm.fs._asFile(state.activeEditor);
+            file.fe.activate();
         }) || failed;
     }
 
     if (failed) {
-        cb.reportError('Failed to restore state');
+        vm.reportError('Failed to restore state');
     }
 };

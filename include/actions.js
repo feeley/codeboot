@@ -1,4 +1,6 @@
-CodeBoot.prototype.setupDrop = function (elt, handler) {
+CodeBootVM.prototype.setupDrop = function (elem, handler) {
+
+    var vm = this;
 
     var onDragEnter = function (e) {
         onDragOver(e);
@@ -22,31 +24,17 @@ CodeBoot.prototype.setupDrop = function (elt, handler) {
         }
     };
 
-    elt.addEventListener('dragenter', onDragEnter);
-    elt.addEventListener('dragleave', onDragLeave);
-    elt.addEventListener('dragover', onDragOver);
-    elt.addEventListener('drop', onDrop);
+    elem.addEventListener('dragenter', onDragEnter);
+    elem.addEventListener('dragleave', onDragLeave);
+    elem.addEventListener('dragover', onDragOver);
+    elem.addEventListener('drop', onDrop);
 };
 
-CodeBoot.prototype.addAlert = function (text, title, kind) {
-    var alertDiv = $('<div/>').addClass('alert');
-    if (kind) alertDiv.addClass('alert-' + kind);
-    alertDiv.text(text);
-    if (title) {
-        alertDiv.prepend($('<strong/>').text(title), ' ');
-    }
-    alertDiv.prepend('<button class="close" data-dismiss="alert">&times;</button>');
-    $(cb.alerts).append(alertDiv);
-};
+CodeBootVM.prototype.reportError = function (text) {
 
-CodeBoot.prototype.reportError = function (text, title) {
-    if (title === undefined) title = 'Error!';
-    cb.addAlert(text, title, 'error');
-};
+    var vm = this;
 
-CodeBoot.prototype.reportWarning = function (text, title) {
-    if (title === undefined) title = 'Warning!';
-    cb.addAlert(text, title);
+    alert(text);
 };
 
 function removeTrailingNewline(text) {
@@ -58,29 +46,30 @@ function removeTrailingNewline(text) {
 }
 
 function position_to_line_ch(pos) {
-    return { line: position_to_line(pos)-1,
-             ch: position_to_column(pos)-1
-           };
+    var line0 = position_to_line0(pos);
+    var column0 = position_to_column0(pos);
+    return { line: line0, ch: column0 };
 }
 
-CodeBoot.prototype.codeHighlight = function (loc, cssClass, markEnd) {
+CodeBootVM.prototype.codeHighlight = function (loc, cssClass, markEnd) {
 
+    var vm = this;
     var container = loc.container;
     var editor;
 
     if (container instanceof SourceContainerInternalFile) {
         var filename = container.toString();
-        if (!cb.fs.hasFile(filename)) {
+        if (!vm.fs.hasFile(filename)) {
             return null; // the file is not known
         }
-        var state = readFileInternal(filename);
+        var state = vm.readFileInternal(filename);
         if (container.stamp !== state.stamp) {
             return null; // the content of the editor has changed so can't highlight
         }
-        cb.fs.openFile(filename);
-        editor = cb.fs.getEditor(filename);
-    } else if (container instanceof SourceContainer) {
-        editor = cb.repl;
+        vm.fs.openFile(filename);
+        editor = vm.fs.getEditor(filename);
+    } else if (container instanceof SourceContainer && container.is_repl()) {
+        editor = vm.repl;
     } else {
         // unknown source container
         return null;
@@ -88,82 +77,31 @@ CodeBoot.prototype.codeHighlight = function (loc, cssClass, markEnd) {
 
     var end = position_to_line_ch(loc.end_pos);
     var start = position_to_line_ch(loc.start_pos);
-    var allMarker = editor.markText(start, end, { 'className': cssClass });
-    allMarker.cb_editor = editor;
+    var allMarker = null;
+    var endMarker = null;
+    var eol = null;
 
-    if (markEnd) {
-        start.line = end.line;
-        start.ch = end.ch-1;
-        var endMarker = editor.markText(start, end, { 'className': cssClass+'-end' });
-        endMarker.cb_editor = editor;
-        return { all: allMarker, end: endMarker };
+    if (start.line === end.line && start.ch < 0 && end.ch <= 0) {
+
+        if (end.ch < 0) return;
+
+        eol = editor.addLineClass(end.line-1, 'text', cssClass+'-eol');
+
     } else {
-        return { all: allMarker, end: null };
-    }
-};
 
-CodeBoot.prototype.printedRepresentation_old = function (x) {
+        allMarker = editor.markText(start, end, { 'className': cssClass });
+        allMarker.cb_editor = editor;
 
-    //TODO: avoid infinite loops for circular data!
-    //TODO: avoid printing wider than page!
-    //TODO: emit HTML markup, so that objects with a toHTML method can be represented specially (such as images)
-
-    if (typeof x === "string") {
-        var chars = [];
-        chars.push("\"");
-        for (var i=0; i<x.length; i++) {
-            var c = x.charAt(i);
-            if (c === "\"") {
-                chars.push("\\\"");
-            } else if (c === "\\") {
-                chars.push("\\\\");
-            } else if (c === "\n") {
-                chars.push("\\n");
-            } else {
-                var n = x.charCodeAt(i);
-                if (n <= 31 || n >= 256) {
-                    chars.push("\\u" + (n+65536).toString(16).slice(1));
-                } else {
-                    chars.push(c);
-                }
-            }
+        if (markEnd) {
+            // mark the last character (useful for pointing bubble to it)
+            start.line = end.line;
+            start.ch = end.ch-1;
+            endMarker = editor.markText(start, end, { 'className': cssClass+'-end' });
+            endMarker.cb_editor = editor;
         }
-        chars.push("\"");
-        return chars.join("");
-    } else if (typeof x === "object") {
-        if (x === null) {
-            return "null";
-        } else if (x instanceof Array) {
-            var a = [];
-            for (var i=0; i<x.length; i++)
-                a.push(cb.printedRepresentation(x[i]));
-            return "[" + a.join(", ") + "]";
-        } else {
-            var a = [];
-            for (var p in x)
-                a.push(cb.printedRepresentation(p)+": "+cb.printedRepresentation(x[p]));
-            return "{" + a.join(", ") + "}";
-        }
-    } else if (typeof x === "undefined") {
-        return "undefined";
-    } else {
-        return String(x);
-    }
-};
-
-CodeBoot.prototype.printedRepresentation = function (obj, format) {
-
-    if (format === void 0) {
-        format = 'plain';
     }
 
-    return cb.objectRepresentation(obj, format, 80).text;
-};
-
-function escape_HTML(text) {
-  return text.replace(/[&<>"'`]/g, function (chr) {
-    return '&#' + chr.charCodeAt(0) + ';';
-  });
+    return { editor: editor, all: allMarker, eol: eol, end: endMarker };
 };
 
 function editor_URL(content, filename) {
@@ -177,141 +115,14 @@ function editor_URL(content, filename) {
                              content + '@E').replace(/\n/g,'@N')));
 }
 
-CodeBoot.prototype.objectRepresentation = function (obj, format, limit) {
+CodeBootVM.prototype.query = function (query) {
 
-    var string_key_required = function (key) {
+    var vm = this;
 
-        return !((Scanner.prototype.is_identifier(key) &&
-                  !Scanner.prototype.is_keyword(key)) ||
-                 (''+key === ''+(+key) &&
-                  +key >= 0));
-
-    };
-
-    var xform = function (str) {
-        var text;
-        if (format === 'HTML') {
-            text = escape_HTML(str);
-        } else {
-            text = str;
-        }
-        return { text: text, len: str.length };
-    };
-
-    if (typeof obj === 'object') {
-
-        if (obj === null) {
-
-            return xform('null');
-
-        } else if ('obj_repr' in obj) {
-
-            return obj.obj_repr(format, limit);
-
-        } else if (obj instanceof Array) {
-
-            var a = ['['];
-            var len = 1;
-
-            for (var i=0; i<obj.length; i++) {
-                if (i > 0) {
-                    a.push(', ');
-                    len += 2;
-                }
-                var r = cb.objectRepresentation(obj[i], format, limit-len-1);
-                if (len + r.len + 1 > limit) {
-                    a.push('...');
-                    len += 3;
-                    break;
-                } else {
-                    a.push(r.text);
-                    len += r.len;
-                }
-            }
-
-            a.push(']');
-            len += 1;
-
-            return { text: a.join(''), len: len };
-
-        } else {
-
-            var a = ['{'];
-            var len = 1;
-            var i = 0;
-
-            for (var p in obj) {
-                if (i++ > 0) {
-                    a.push(', ');
-                    len += 2;
-                }
-                var r1;
-                if (string_key_required(p)) {
-                    r1 = cb.objectRepresentation(p, format, limit);
-                } else {
-                    r1 = xform(''+p);
-                }
-                var r2 = cb.objectRepresentation(obj[p], format, limit-len-r1.len-3);
-                if (len + r1.len + r2.len + 3 > limit) {
-                    a.push('...');
-                    len += 3;
-                    break;
-                } else {
-                    a.push(r1.text);
-                    a.push(': ');
-                    a.push(r2.text);
-                    len += r1.len + 2 + r2.len;
-                }
-            }
-
-            a.push('}');
-            len += 1;
-
-            return { text: a.join(''), len: len };
-
-        }
-    } else if (typeof obj === 'string') {
-
-        var delim = '"';
-        var chars = [];
-        chars.push(delim);
-        for (var i=0; i<obj.length; i++) {
-            var c = obj.charAt(i);
-            if (c === delim) {
-                chars.push('\\'+delim);
-            } else if (c === '\\') {
-                chars.push('\\\\');
-            } else if (c === '\n') {
-                chars.push('\\n');
-            } else {
-                var n = obj.charCodeAt(i);
-                if (n <= 31 || n >= 256) {
-                    chars.push('\\u' + (n+65536).toString(16).slice(1));
-                } else {
-                    chars.push(c);
-                }
-            }
-        }
-        chars.push(delim);
-
-        return xform(chars.join(''));
-
-    } else if (typeof obj === 'undefined') {
-
-        return xform('undefined');
-
-    } else {
-
-        return xform(String(obj));
-
-    }
-};
-
-CodeBoot.prototype.query = function (query) {
-    cb.saved_query = query;
-    cb.replay_command = '';
-    cb.replay_command_index = 0;
-    cb.replay_parameters = [];
+    vm.saved_query = query;
+    vm.replay_command = '';
+    vm.replay_command_index = 0;
+    vm.replay_parameters = [];
 };
 
 function encode_utf8(str) {
@@ -322,52 +133,97 @@ function decode_utf8(str) {
     return decodeURIComponent(escape(str));
 }
 
-CodeBoot.prototype.handle_query = function () {
+function toSafeBase64(str) {
+    return convertToSafeBase64(btoa(unescape(encodeURIComponent(str))));
+}
 
-    var query = cb.saved_query;
+function toSafeBase64FromUint8Array(bytes) {
+    var str = '';
+    var len = bytes.byteLength;
+    for (var i=0; i<len; i++) {
+        str += String.fromCharCode(bytes[i]);
+    }
+    return convertToSafeBase64(btoa(str));
+}
+
+function fromSafeBase64(b64) {
+    return decodeURIComponent(escape(atob(convertFromSafeBase64(b64))));
+}
+
+function fromSafeBase64ToUint8Array(b64) {
+    var str = atob(convertFromSafeBase64(b64));
+    var len = str.length;
+    var bytes = new Uint8Array(len);
+    for (var i=0; i<len; i++) {
+        bytes[i] = str.charCodeAt(i);
+    }
+    return bytes;
+}
+
+function convertToSafeBase64(b64) {
+    return b64.replace(/\+/g,'-').replace(/\//g,'_');
+}
+
+function convertFromSafeBase64(b64) {
+    return b64.replace(/-/g,'+').replace(/_/g,'/');
+}
+
+function toUint8Array(str) {
+    return new TextEncoder().encode(str);
+}
+
+function fromUint8Array(arr) {
+    return new TextDecoder().decode(arr);
+}
+
+CodeBootVM.prototype.handle_query = function () {
+
+    var vm = this;
+    var query = vm.saved_query;
 
     if (query && query.slice(0, 7) === 'replay=') {
 
-        cb.replay_command = decodeURIComponent(query.slice(7));
-        cb.replay_command_index = 0;
-        cb.replay_syntax = 1;
+        vm.replay_command = decodeURIComponent(query.slice(7));
+        vm.replay_command_index = 0;
+        vm.replay_syntax = 1;
 
-        setTimeout(function () { cb.replay(); }, 100);
+        setTimeout(function () { vm.replay(); }, 100);
     } else if (query && query.slice(0, 7) === 'REPLAY=') {
 
-        cb.replay_command = decode_utf8(atob(query.slice(7)));
-        cb.replay_command_index = 0;
-        cb.replay_syntax = 2;
+        vm.replay_command = decode_utf8(atob(query.slice(7)));
+        vm.replay_command_index = 0;
+        vm.replay_syntax = 2;
 
-        setTimeout(function () { cb.replay(); }, 100);
+        setTimeout(function () { vm.replay(); }, 100);
     } else if (query && query.slice(0, 10) === 'replay%25=') {
 
-        cb.replay_command = decodeURIComponent(decodeURIComponent(query.slice(10)));
-        cb.replay_command_index = 0;
-        cb.replay_syntax = 2;
+        vm.replay_command = decodeURIComponent(decodeURIComponent(query.slice(10)));
+        vm.replay_command_index = 0;
+        vm.replay_syntax = 2;
 
-        setTimeout(function () { cb.replay(); }, 100);
+        setTimeout(function () { vm.replay(); }, 100);
     } else if (query && query.slice(0, 8) === 'replay%=') {
 
-        cb.replay_command = decodeURIComponent(query.slice(8));
-        cb.replay_command_index = 0;
-        cb.replay_syntax = 2;
+        vm.replay_command = decodeURIComponent(query.slice(8));
+        vm.replay_command_index = 0;
+        vm.replay_syntax = 2;
 
-        setTimeout(function () { cb.replay(); }, 100);
+        setTimeout(function () { vm.replay(); }, 100);
     }
 };
 
-CodeBoot.prototype.replay = function () {
+CodeBootVM.prototype.replay = function () {
 
-    var command = cb.replay_command;
-    var i = cb.replay_command_index;
+    var vm = this;
+    var command = vm.replay_command;
+    var i = vm.replay_command_index;
 
     if (i < command.length) {
         var j = i;
         while (j < command.length &&
                (command.charAt(j) !== '@' ||
                 (command.charAt(j+1) === '@' ||
-                 (cb.replay_syntax === 2 && command.charAt(j+1) === 'N')))) {
+                 (vm.replay_syntax === 2 && command.charAt(j+1) === 'N')))) {
             if (command.charAt(j) === '@') {
                 j += 2;
             } else {
@@ -377,7 +233,7 @@ CodeBoot.prototype.replay = function () {
 
         var str;
 
-        if (cb.replay_syntax === 2) {
+        if (vm.replay_syntax === 2) {
             str = command.slice(i, j).replace(/@N/g,'\n').replace(/@@/g,'@');
         } else {
             str = command.slice(i, j).replace(/@@/g,'\n');
@@ -385,44 +241,44 @@ CodeBoot.prototype.replay = function () {
 
         if (command.charAt(j) === '@') {
             if (command.charAt(j+1) >= '0' && command.charAt(j+1) <= '9') {
-                cb.replay_parameters[+command.charAt(j+1)] = str;
+                vm.replay_parameters[+command.charAt(j+1)] = str;
                 j += 2;
             } else if (command.charAt(j+1) === 'P') {
                 if (str !== '') {
-                    cb.setInputREPL(str);
-                    cb.repl.refresh();
-                    cb.repl.focus();
+                    vm.replSetInput(str);
+                    vm.repl.refresh();
+                    vm.repl.focus();
                 } else {
-                    cb.execEval();
+                    vm.execEval();
                     j += 2;
                 }
             } else if (command.charAt(j+1) === 'S') {
                 if (str !== '') {
-                    cb.setInputREPL(str);
-                    cb.repl.refresh();
-                    cb.repl.focus();
+                    vm.replSetInput(str);
+                    vm.repl.refresh();
+                    vm.repl.focus();
                 } else {
-                    cb.execStep();
+                    vm.execStepPause();
                     j += 2;
                 }
             } else if (command.charAt(j+1) === 'A') {
                 if (str !== '') {
-                    cb.setInputREPL(str);
-                    cb.repl.refresh();
-                    cb.repl.focus();
+                    vm.replSetInput(str);
+                    vm.repl.refresh();
+                    vm.repl.focus();
                 } else {
-                    cb.execAnimate();
+                    vm.execAnimate();
                     j += 2;
                 }
             } else if (command.charAt(j+1) === 'E') {
                 var default_filename = 'scratch';
                 var filename = default_filename;
-                if (cb.replay_parameters[0] !== void 0) {
-                    filename = cb.replay_parameters[0];
-                    cb.replay_parameters[0] = void 0;
+                if (vm.replay_parameters[0] !== void 0) {
+                    filename = vm.replay_parameters[0];
+                    vm.replay_parameters[0] = void 0;
                 }
-                var existing = cb.fs.openFileExistingOrNew(filename);
-                var editor = cb.fs.getEditor(filename);
+                var existing = vm.fs.openFileExistingOrNew(filename);
+                var editor = vm.fs.getEditor(filename);
                 var replace = true;
                 if (existing &&
                     filename !== default_filename &&
@@ -431,11 +287,11 @@ CodeBoot.prototype.replay = function () {
                 }
                 if (replace) {
                     editor.setValue(str);
-                    cb.showTryMeTooltip();
+                    vm.showTryMeTooltip();
                 }
                 j += 2;
             } else if (command.charAt(j+1) === 'C') {
-                cb.fs.removeAllEditors();
+                vm.fs.removeAllEditors();
                 drawing_window.cs();
                 pixels_window.clear();
                 j += 2;
@@ -445,332 +301,729 @@ CodeBoot.prototype.replay = function () {
             }
         } else {
             if (str !== '') {
-                cb.setInputREPL(str);
+                vm.replSetInput(str);
                 if (j === command.length) {
-                    cb.showTryMeTooltip();
+                    vm.showTryMeTooltip();
                 }
             }
         }
 
-        cb.replay_command_index = j;
+        vm.replay_command_index = j;
 
         if (j < command.length) {
-            setTimeout(function () { cb.replay(); }, 1);
+            setTimeout(function () { vm.replay(); }, 1);
         }
     }
 };
 
-CodeBoot.prototype.showTryMeTooltip = function (filename) {
-    $('#cb-exec-controls-buttons').tooltip('show');
+CodeBootVM.prototype.showTryMeTooltip = function () {
 
-    // Auto hide the tooltip after 2 secs
-    setTimeout(function () { $('#cb-exec-controls-buttons').tooltip('hide'); }, 2000);
+    var vm = this;
+
+    vm.showExecControlsMessage('TRY ME!', 2000);
 };
 
-CodeBoot.prototype.modeStopped = function () {
+CodeBootVM.prototype.showExecControlsMessage = function (msg, timeout) {
+
+    var vm = this;
+
+    var execControls = vm.root.querySelector('.cb-exec-controls-buttons');
+
+    if (execControls) {
+        execControls.setAttribute('data-original-title', msg);
+        $(execControls).tooltip('show');
+        vm.afterDelay(function () {
+            $(execControls).tooltip('hide');
+            execControls.setAttribute('data-original-title',
+                                      execControls.getAttribute('title'));
+        }, timeout);
+    }
+};
+
+CodeBootVM.prototype.isRunning = function () {
+    var vm = this;
+    return vm.isModeRunning(vm.ui.mode);
+};
+
+CodeBootVM.prototype.isModeRunning = function (mode) {
+    var vm = this;
+    return mode !== vm.modeStopped() && mode !== vm.modeDone();
+};
+
+CodeBootVM.prototype.modeStopped = function () {
     return 'stopped';
 };
 
-CodeBoot.prototype.modeAnimating = function () {
+CodeBootVM.prototype.modeDone = function () {
+    return 'done';
+};
+
+CodeBootVM.prototype.modeAnimating = function () {
     return 'animating';
 };
 
-CodeBoot.prototype.modeAnimatingSleeping = function () {
+CodeBootVM.prototype.modeAnimatingSleeping = function () {
     return 'animatingSleeping';
 };
 
-CodeBoot.prototype.modeStepping = function () {
+CodeBootVM.prototype.modeStepping = function () {
     return 'stepping';
 };
 
-CodeBoot.prototype.initProgramState = function () {
-    cb.programState = {
-        rte: null,
-        errorMark: null,
-        execPointMark: null,
-        execPointBubble: new CBExecPointBubble(),
-        value_bubble: null, //TODO: deprecated
-        timeoutId: null,
-        stepDelay: 0,
-        mode: null,
-        code_queue: []
-    };
-};
+CodeBootVM.prototype.event_queue_trim = function (n) {
 
-function code_queue_add(code) {
-    cb.programState.code_queue.push(code);
-    code_queue_check();
-}
+    var vm = this;
 
-function code_queue_check() {
-    if (cb.programState.mode === cb.modeStopped()) {
-        code_queue_service();
+    while (vm.ui.event_queue.length > n) {
+        vm.ui.event_queue.shift();
     }
-}
+};
 
-function code_queue_service() {
-    if (cb.programState.code_queue.length > 0) {
-        var code = cb.programState.code_queue.shift();
-        cb.programState.rte = jev.runSetup(code,
-                                           {globalObject: cb.globalObject});
-        cb.execute(false);
+CodeBootVM.prototype.event_queue_add = function (thunk) {
+
+    var vm = this;
+
+    vm.ui.event_queue.push(thunk);
+};
+
+CodeBootVM.prototype.event_queue_check = function () {
+
+    var vm = this;
+
+    if (vm.ui.mode === vm.modeDone()) {
+        vm.event_queue_service();
     }
-}
-
-CodeBoot.prototype.showingStepCounter = function () {
-    return $('#cb-exec-step-counter').is(':visible');
 };
 
-CodeBoot.prototype.showStepCounter = function () {
-    var counter = $('#cb-exec-step-counter');
-    counter.css('display', 'inline');
-    counter.text(cb.textStepCounter());
+CodeBootVM.prototype.event_queue_service = function () {
+
+    var vm = this;
+
+    if (vm.ui.event_queue.length > 0) {
+        vm.ui.event_queue.shift()();
+    }
 };
 
-CodeBoot.prototype.hideStepCounter = function () {
-    var counter = $('#cb-exec-step-counter');
-    counter.css('display', 'none');
+// Step counter
+
+CodeBootVM.prototype.updateStepCounter = function () {
+    var vm = this;
+    if (vm.ui.execStepCounter) {
+        vm.ui.execStepCounter.innerText = vm.textStepCounter();
+    }
 };
 
-CodeBoot.prototype.textStepCounter = function () {
-    var count = cb.programState.rte.step_count;
-    return + count + ' step' + (count>1 ? 's' : '');
+CodeBootVM.prototype.showingStepCounter = function () {
+    var vm = this;
+    if (vm.ui.execStepCounter)
+        return vm.ui.execStepCounter.style.display !== 'none';
+    else
+        return false;
 };
 
-CodeBoot.prototype.updatePopupPos = function () {
-    if (cb.programState.execPointMark !== null &&
-        cb.programState.execPointMark.end !== null &&
-        cb.programState.execPointBubble !== null) {
-        if (cb.isMarkerVisible(cb.programState.execPointMark.end)) {
-            cb.programState.execPointBubble.show();
+CodeBootVM.prototype.showStepCounter = function () {
+    var vm = this;
+    if (vm.ui.execStepCounter) {
+        vm.ui.execStepCounter.style.display = 'inline';
+        vm.updateStepCounter();
+    }
+};
+
+CodeBootVM.prototype.hideStepCounter = function () {
+    var vm = this;
+    if (vm.ui.execStepCounter) {
+        vm.ui.execStepCounter.style.display = 'none';
+    }
+};
+
+CodeBootVM.prototype.textStepCounter = function () {
+    var vm = this;
+    var count = vm.lang.getStepCount();
+    return count + ' step' + (count>1 ? 's' : '');
+};
+
+CodeBootVM.prototype.updatePopupPos = function () {
+    var vm = this;
+    //console.log('called updatePopupPos');
+    if (vm.ui.execPointMark !== null &&
+        vm.ui.execPointMark.end !== null &&
+        vm.ui.execPointBubble !== null) {
+        //console.log('==> updatePopupPos ' + vm.isMarkerVisible(vm.ui.execPointMark.end));
+        if (vm.isMarkerVisible(vm.ui.execPointMark.end)) {
+            vm.ui.execPointBubble.show();
         } else {
-            cb.programState.execPointBubble.hide();
+            vm.ui.execPointBubble.hide();
         }
     }
 };
 
-CodeBoot.prototype.enterMode = function (newMode) {
+/*
+CodeBootVM.prototype.hasDisplayNone = function (selector) {
+    var vm = this;
+    var result = true;
+    vm.forEachElem(selector, function (elem) {
+        if (elem.style.display !== 'none') result = false;
+    });
+    return result;
+};
 
-    // newMode is one of 'stopped', 'animating', 'animatingSleeping', 'stepping'
+CodeBootVM.prototype.setText = function (selector, text) {
+    var vm = this;
+    vm.forEachElem(selector, function (elem) {
+        elem.innerText = text;
+    });
+};
 
-    if (cb.programState.mode === newMode)
-        return false;
+*/
 
-    var isStopped = newMode === cb.modeStopped();
-    var isStepping = newMode === cb.modeStepping();
-    var isAnimating = newMode === cb.modeAnimating();
-    var isAnimatingSleeping = newMode === cb.modeAnimatingSleeping();
+CodeBootVM.prototype.setDisplay = function (selector, display) {
+
+    var vm = this;
+
+    vm.forEachElem(selector, function (elem) {
+        elem.style.display = display;
+    });
+};
+
+CodeBootVM.prototype.replSetReadOnly = function (val) {
+
+    var vm = this;
+
+    vm.setReadOnly(vm.repl, val);
+};
+
+CodeBootVM.prototype.enterMode = function (newMode) {
+
+    var vm = this;
+
+    // newMode is one of 'stopped', 'done', 'animating',
+    // 'animatingSleeping', 'stepping'
+
+    if (vm.ui.mode === newMode)
+        return;
+
+    var isRunning = vm.isModeRunning(newMode);
+    var isStepping = newMode === vm.modeStepping();
+    var isAnimating = isRunning && !isStepping;
 
     // Show either play-1, pause or play-pause
 
-    if (isStopped) {
-        $('#cb-exec-img-play-1'    ).css('display', 'none');
-        $('#cb-exec-img-pause'     ).css('display', 'none');
-        $('#cb-exec-img-play-pause').css('display', 'inline');
-    } else if (isAnimating || isAnimatingSleeping) {
-        $('#cb-exec-img-play-1'    ).css('display', 'none');
-        $('#cb-exec-img-pause'     ).css('display', 'inline');
-        $('#cb-exec-img-play-pause').css('display', 'none');
-    } else {
-        $('#cb-exec-img-play-1'    ).css('display', 'inline');
-        $('#cb-exec-img-pause'     ).css('display', 'none');
-        $('#cb-exec-img-play-pause').css('display', 'none');
-    }
+    vm.setDisplay('.cb-exec-play-1',     isStepping  ? 'inline' : 'none');
+    vm.setDisplay('.cb-exec-pause',      isAnimating ? 'inline' : 'none');
+    vm.setDisplay('.cb-exec-play-pause', !isRunning  ? 'inline' : 'none');
 
-    if (isStopped) {
-        $('body').removeClass('cb-mode-running');
-        cb.repl.setOption('readOnly', false);
-        cb.fs.editorManager.setReadOnlyAllEditors(false);
-    } else {
-        $('body').addClass('cb-mode-running');
-        cb.repl.setOption('readOnly', true);
-        cb.fs.editorManager.setReadOnlyAllEditors(true);
-    }
+    vm.setClass('cb-mode-running', isRunning);
+    vm.replSetReadOnly(isRunning);
+    vm.fs.fem.setReadOnlyAllEditors(isRunning);
 
-    if (isStopped) {
+    if (isRunning) {
 
-        cb.focusLastFocusedEditor();
-        cb.stopAnimation();
-        cb.hideExecPoint();
-        cb.hideStepCounter();
-        cb.programState.rte = null;
-        cb.setPromptREPL();
-        //TODO: interferes?
-        //cb.repl.focus();
-    } else {
         // Update step counter
-        if (cb.showingStepCounter()) {
-            cb.showStepCounter(cb.programState.rte.step_count);
+
+        if (vm.showingStepCounter()) {
+            vm.updateStepCounter();
         }
+    } else {
+
+        vm.pauseAtStepCount = Infinity; // don't force pause next time
+        vm.focusLastFocusedEditor();
+        vm.stopAnimation();
+        vm.hideExecPoint();
+        vm.hideStepCounter();
+        vm.lang.stopExecution();
+        vm.replAllowInput();
+
+        if (newMode === vm.modeStopped) {
+            vm.event_queue_trim(0); // clear event queue
+        }
+
+        //TODO: interferes?
+        //vm.repl.focus();
     }
 
-    cb.programState.mode = newMode;
+    vm.ui.mode = newMode;
 
-    return true;
+    vm.event_queue_check();
 };
 
 // UI event handling
 
 // Control of execution
 
-CodeBoot.prototype.execStep = function () {
-    cb.execEvent('step');
+CodeBootVM.prototype.execStepPause = function () {
+    var vm = this;
+    vm.execEvent('steppause');
 };
 
-CodeBoot.prototype.execAnimate = function () {
-    cb.execEvent('animate');
+CodeBootVM.prototype.execAnimate = function () {
+    var vm = this;
+    vm.execEvent('animate');
 };
 
-CodeBoot.prototype.execEval = function () {
-    cb.execEvent('eval');
+CodeBootVM.prototype.execEval = function () {
+    var vm = this;
+    vm.execEvent('eval');
 };
 
-CodeBoot.prototype.execStop = function () {
-    cb.execEvent('stop');
+CodeBootVM.prototype.execStop = function () {
+    var vm = this;
+    vm.execEvent('stop');
 };
 
-CodeBoot.prototype.repeatLastExecEvent = function () {
-    cb.execEvent(cb.lastExecEvent);
+CodeBootVM.prototype.execReset = function () {
+    var vm = this;
+    vm.execEvent('reset');
 };
 
-CodeBoot.prototype.execStepOrEval = function () {
-    if (cb.programState.rte !== null) // currently running code?
-        cb.execStep();
+CodeBootVM.prototype.repeatLatestExecEvent = function () {
+    var vm = this;
+    vm.execEvent(vm.latestExecEvent);
+};
+
+/*
+TODO: useless?
+CodeBootVM.prototype.execStepOrEval = function () {
+    var vm = this;
+    if (vm.lang.isRunning()) // currently running code?
+        vm.execStep();
     else
-        cb.execEval();
+        vm.execEval();
 };
+*/
 
-CodeBoot.prototype.execEvent = function (event) {
+CodeBootVM.prototype.execEvent = function (event) {
 
-    cb.lastExecEvent = event;
+    var vm = this;
+
+    vm.latestExecEvent = event;
 
     switch (event) {
 
-    case 'step':
-        cb.animate(0);
+    case 'steppause':
+        vm.steppause();
         break;
 
     case 'animate':
-        cb.animate(cb.stepDelay);
+        vm.animate();
         break;
 
     case 'eval':
-        cb.eval();
+        vm.eval();
         break;
 
     case 'stop':
-        cb.stop();
+        vm.stop();
+        break;
+
+    case 'reset':
+        vm.reset();
         break;
     }
 };
 
-CodeBoot.prototype.animate = function (newStepDelay) {
-    var was_animating = cb.stopAnimation();
-    cb.programState.stepDelay = newStepDelay;
-    if (newStepDelay === 0) {
-        cb.enterMode(cb.modeStepping());
-        if (!was_animating)
-            cb.step_or_animate(true);
-        else
-            cb.showExecPoint();
+CodeBootVM.prototype.steppause = function () {
+    var vm = this;
+    if (vm.ui.mode !== vm.modeAnimating()) {
+        vm.exec(Infinity);
     } else {
-        cb.enterMode(cb.modeAnimating());
-        cb.step_or_animate(true);
+        vm.stopAnimation();
+        vm.showExecPoint();
+        vm.enterMode(vm.modeStepping());
     }
 };
 
-CodeBoot.prototype.eval = function () {
-    cb.enterMode(cb.modeAnimating());
-    cb.hideExecPoint();
-    cb.step_or_animate(false);
+CodeBootVM.prototype.animate = function () {
+    var vm = this;
+    vm.exec(vm.ui.stepDelay);
 };
 
-CodeBoot.prototype.step_or_animate = function (single_step) {
+CodeBootVM.prototype.eval = function () {
+    var vm = this;
+    vm.exec(0);
+};
+
+CodeBootVM.prototype.exec = function (delay) {
+
+    // delay = 0 : execute code without stepping
+    // delay = Infinity : pause execution (after one step if currently paused)
+    // 0 < delay < Infinity : animate execution with that delay between steps
+
+    var vm = this;
+
+    if (vm.isRunning()) {
+        vm.exec_continue(delay);
+    } else {
+        vm.exec_start(delay);
+    }
+};
+
+CodeBootVM.prototype.exec_start = function (delay) {
+
+    var vm = this;
+
+    if (vm.lastFocusedEditor === null) return;
+
+    vm.replSetCursorToEnd();
+
+    if (vm.lastFocusedEditor === vm.repl) {
+
+        /* running REPL input */
+
+        vm.exec_start_repl(delay);
+
+    } else {
+
+        /* running file */
+
+        vm.exec_start_file(delay);
+    }
+};
+
+CodeBootVM.prototype.exec_start_repl = function (delay) {
+
+    var vm = this;
+
+    var source = vm.replGetInput();
+
+    if (source.trim() === '') { // accept empty input but do nothing else
+        vm.replAcceptInput();
+        vm.replAllowInput();
+        return;
+    }
+
+    var line = vm.replInputPos().line;
+
+    // remove trailing whitespace to undo effect of automatic indent
+    var cleaned_source = source.replace(/[ \t\f]*$/,'');
+
+    function compile() {
+        return vm.compile_repl(cleaned_source + '\n',
+                               line+1,
+                               1,
+                               false, // preserve execution state
+                               null);
+    }
+
+    function after_compile() {
+        // accept input and add it to history
+        vm.replAddHistory(cleaned_source);
+        vm.replAcceptInput();
+    }
+
+    vm.stepDelayForEventHandler = delay;
+
+    vm.comp_and_run_code(compile,
+                         after_compile,
+                         after_compile,
+                         delay);
+};
+
+CodeBootVM.prototype.exec_start_file = function (delay) {
+
+    var vm = this;
+
+    var filename = vm.lastFocusedEditor.cb.fileEditor.filename;
+
+    if (vm.root.hasAttribute('data-cb-runable-code')) {
+        source = '';
+    } else {
+        source = vm.lang.loadCommand(filename);
+        vm.replSetInput(source);
+        vm.replAcceptInput();
+    }
+
+    function compile() {
+        return vm.compile_internal_file(filename,
+                                        true, // force reset state
+                                        null);
+    }
+
+    function after_successful_compile() {
+        drawing_window.cs(); // clear drawing window when running file
+        pixels_window.clear();
+        vm.replAddHistory(source);
+    }
+
+    function after_failed_compile() {
+    }
+
+    vm.stepDelayForEventHandler = delay;
+
+    vm.comp_and_run_code(compile,
+                         after_successful_compile,
+                         after_failed_compile,
+                         delay);
+};
+
+CodeBootVM.prototype.exec_start_event_handler = function (source, event, delay) {
+
+    var vm = this;
+
+    function compile() {
+        return vm.compile_event_handler(source + '\n',
+                                        1,
+                                        1,
+                                        false, // preserve execution state
+                                        event);
+    }
+
+    function after_compile() {
+    }
+
+    vm.comp_and_run_code(compile,
+                         after_compile,
+                         after_compile,
+                         delay);
+};
+
+CodeBootVM.prototype.comp_and_run_code = function (compile, after_successful_compile, after_failed_compile, delay) {
+
+    var vm = this;
+
+    var code = null;
+
+    vm.hideReasonHighlight();
+
+    try {
+        code = compile();
+    }
+    catch (e) {
+        //console.log(e);
+        if (e === 'continuable REPL input') {
+            vm.replNewline();
+        } else {
+            after_failed_compile();
+            vm.showReason(e);
+        }
+
+        vm.replAllowInput();
+        return;
+    }
+
+    after_successful_compile();
+
+    vm.run_code(code, delay);
+};
+
+CodeBootVM.prototype.run_code = function (code, delay) {
+
+    var vm = this;
+
+    if (code === null) {
+        vm.replAllowInput();
+    } else {
+        vm.ui.mode = vm.modeAnimating();
+        vm.lang.startExecution(code);
+        vm.ui.mode = vm.modeStopped();
+        vm.enterMode(vm.modeAnimating());
+        vm.exec_continue(delay);
+        //TODO: interferes?
+        //vm.repl.focus();
+    }
+};
+
+/*
+deprecated
+CodeBootVM.prototype.update_mode = function (delay) {
+
+    var vm = this;
+
+    if (delay === 0) {
+        vm.enterMode(vm.modeAnimating());
+        vm.hideExecPoint();
+    } else {
+        var was_animating = vm.stopAnimation();
+        vm.ui.stepDelay = delay;
+        vm.enterMode(vm.modeStepping());
+//        if (was_animating)
+//            vm.showExecPoint();
+    }
+};
+
+CodeBootVM.prototype.step_or_animate = function (single_step) {
+    var vm = this;
     //TODO: interferes?
-    //cb.repl.focus();
-    if (cb.programState.rte !== null) // currently running code?
-        cb.execute(single_step);
+    //vm.repl.focus();
+    if (vm.lang.isExecuting()) // currently executing code?
+        vm.exec_continue(single_step);
     else
-        cb.run(single_step);
+        vm.run(single_step);
 };
+*/
 
-CodeBoot.prototype.stopAnimation = function () {
+CodeBootVM.prototype.stopAnimation = function () {
+
+    var vm = this;
 
     // Stops any time-based animation of the program
 
-    var id = cb.programState.timeoutId;
+    var id = vm.ui.timeoutId;
 
     if (id !== null) {
         clearTimeout(id); // cancel the scheduled execution step
-        cb.programState.timeoutId = null;
+        vm.ui.timeoutId = null;
     }
 
     return id !== null; // returns true if a time-based animation was cancelled
 };
 
-CodeBoot.prototype.stop = function (reason) {
+CodeBootVM.prototype.stop = function (reason) {
 
-    if (cb.programState.mode !== cb.modeStopped()) {
+    // when reason is not null, an error message will be displayed
 
-        var msg = $('<span class="cb-repl-error"/>');
-        var withStepCounter = cb.showingStepCounter();
+    var vm = this;
+
+    var mode = (reason === '') ? vm.modeDone() : vm.modeStopped();
+
+    if (vm.ui.mode !== mode) {
 
         if (reason !== null) {
-            if (reason === void 0) {
-                reason = 'stopped';
-            } else {
-                var loc = cb.programState.rte.ast.loc;
-                cb.showError(loc);
-                reason = cb.errorMessage(loc, null, reason);
-            }
-            if (withStepCounter) {
-                reason += ' after ';
-            }
-            msg.text(reason);
+            if (reason === undefined) reason = 'stopped';
+            vm.showReason(reason);
+        }
+
+        vm.enterMode(mode);
+    }
+};
+
+CodeBootVM.prototype.reset = function () {
+
+    var vm = this;
+
+    if (vm.ui.mode !== vm.modeStopped()) {
+        vm.enterMode(vm.modeStopped());
+    }
+
+    vm.force_reset = true;
+};
+
+CodeBootVM.prototype.showReason = function (reason) {
+
+    // reason can be a string or an Error object
+
+    var vm = this;
+
+    var elem = $('<span class="cb-repl-error"/>');
+    var withStepCounter = vm.showingStepCounter();
+    var loc = null;
+    var kind = null;
+    var msg;
+
+    if (typeof reason === 'string') {
+        msg = reason;
+    } else {
+
+        if (reason instanceof vm.Error) {
+            loc = reason.loc;
+            kind = reason.kind;
+            msg = reason.msg;
+        } else {
+            loc = vm.lang.getLocation();
+            msg = 'Internal error -- ' + String(reason);
+        }
+    }
+
+    if (msg !== '' || withStepCounter) {
+
+        if (loc) {
+            loc = vm.lang.relativeLocation(loc);   // convert to relative loc
+            msg = vm.errorMessage(loc, kind, msg); // add location to message
+            vm.showReasonHighlight(loc);           // and highlight location
         }
 
         if (withStepCounter) {
+            if (msg !== '') msg += ' after ';
+            elem.text(msg);
             var counter = $('<span class="badge badge-primary badge-pill cb-step-counter"/>');
-            counter.text(cb.textStepCounter());
-            msg.append(counter);
-            cb.hideStepCounter();
+            counter.text(vm.textStepCounter());
+            elem.append(counter);
+            vm.hideStepCounter(); //TODO: belongs elsewhere
+        } else {
+            elem.text(msg);
         }
 
-        if (reason !== null || withStepCounter) {
-            cb.addLineWidgetTranscriptREPL(msg.get(0));
-        }
-
-        cb.enterMode(cb.modeStopped());
+        vm.replAddLineWidgetTranscript(elem.get(0));
     }
 };
 
-CodeBoot.prototype.showError = function (loc) {
-
-    cb.hide_error();
-
-    cb.programState.errorMark = cb.codeHighlight(loc, 'cb-code-error', false);
-
-    cb.scrollToMarker(cb.programState.errorMark.all);
+CodeBootVM.prototype.Error = function (loc, kind, msg) {
+    var se = this;
+    se.loc = loc;
+    se.kind = kind;
+    se.msg = msg;
 };
 
-CodeBoot.prototype.hide_error = function () {
-    if (cb.programState.errorMark !== null) {
-        cb.clearMarker(cb.programState.errorMark);
-        cb.programState.errorMark = null;
+CodeBootVM.prototype.syntaxError = function (loc, kind, msg) {
+
+    var vm = this;
+
+    if (kind !== 'warning -- ') {
+        throw new vm.Error(loc, kind, msg);
     }
 };
 
-CodeBoot.prototype.clearMarker = function (marker) {
+CodeBootVM.prototype.errorMessage = function (loc, kind, msg) {
+
+    var vm = this;
+    var locText = '';
+
+    if (loc && vm.showLineNumbers && !loc.container.is_repl()) {
+        locText = loc.toString('simple') + ': ';
+    }
+
+    return locText + ((kind === null) ? '' : kind) + msg;
+};
+
+CodeBootVM.prototype.displayError = function (loc, kind, msg) {
+
+    var vm = this;
+
+    if (loc) vm.showReasonHighlight(loc);
+    vm.replAddTranscript(vm.errorMessage(loc, kind, msg) + '\n',
+                         'cb-repl-error');
+};
+
+CodeBootVM.prototype.showReasonHighlight = function (loc) {
+
+    var vm = this;
+
+    vm.hideReasonHighlight();
+
+    vm.ui.errorMark = vm.codeHighlight(loc, 'cb-code-error', false);
+
+    if (vm.ui.errorMark)
+        vm.scrollToMarker(vm.ui.errorMark.all);
+};
+
+CodeBootVM.prototype.hideReasonHighlight = function () {
+
+    var vm = this;
+    var mark = vm.ui.errorMark;
+
+    if (mark) {
+        vm.clearMarker(mark);
+        vm.ui.errorMark = null;
+    }
+};
+
+CodeBootVM.prototype.clearMarker = function (marker) {
+
+    var vm = this;
+
     if (marker.all !== null) {
         marker.all.clear();
+    }
+    if (marker.eol !== null) {
+        marker.editor.removeLineClass(marker.eol, 'text');
     }
     if (marker.end !== null) {
         marker.end.clear();
     }
 };
 
-CodeBoot.prototype.within = function (rect, viewport) {
+CodeBootVM.prototype.within = function (rect, viewport) {
 
+    var vm = this;
     var x = (rect.left + rect.right) / 2;
     var y = (rect.top + rect.bottom) / 2;
 
@@ -784,24 +1037,27 @@ CodeBoot.prototype.within = function (rect, viewport) {
     return true;
 };
 
-CodeBoot.prototype.isCharacterVisible = function (pos, editor) {
+CodeBootVM.prototype.isCharacterVisible = function (pos, editor) {
+    var vm = this;
     var point = editor.charCoords(pos, 'local');
     var scrollInfo = editor.getScrollInfo();
-    return cb.within(point, scrollInfo);
+    return vm.within(point, scrollInfo);
 };
 
-CodeBoot.prototype.isMarkerVisible = function (marker, editor) {
+CodeBootVM.prototype.isMarkerVisible = function (marker, editor) {
+    var vm = this;
     var res = false;
     if (!editor) editor = marker.cb_editor;
     var range = marker.find();
-    if (range) res = cb.isCharacterVisible(range.from, editor);
+    if (range) res = vm.isCharacterVisible(range.from, editor);
     return res;
 };
 
-CodeBoot.prototype.scrollToMarker = function (marker, editor) {
+CodeBootVM.prototype.scrollToMarker = function (marker, editor) {
+    var vm = this;
     if (!marker) return;
     if (!editor) editor = marker.cb_editor;
-    if (!cb.isMarkerVisible(marker, editor)) {
+    if (!vm.isMarkerVisible(marker, editor)) {
         var range = marker.find();
         if (range) {
             var rect = editor.charCoords(range.from, 'local');
@@ -812,157 +1068,119 @@ CodeBoot.prototype.scrollToMarker = function (marker, editor) {
     }
 };
 
-function CBExecPointBubble() {
-    this.tip  = null;
-    this.elem = null;
+function CodeBootExecPointBubble(vm) {
+
+    var bubble = this;
+
+    bubble.vm   = vm;
+    bubble.tip  = null;
+    bubble.elem = null;
 };
 
-CBExecPointBubble.prototype.isVisible = function () {
+CodeBootExecPointBubble.prototype.isVisible = function () {
 
-    if (this.tip !== null) {
-        var popper = this.tip.getPopperElement(this.elem);
-        if (popper !== null) {
-            return popper.style.visibility !== 'hidden';
-        }
+    var bubble = this;
+
+    if (bubble.tip !== null) {
+        return !bubble.tip.hidden;
     }
 
     return false;
 };
 
-CBExecPointBubble.prototype.show = function () {
+CodeBootExecPointBubble.prototype.show = function () {
 
-    if (this.tip !== null) {
-        var popper = this.tip.getPopperElement(this.elem);
-        if (popper !== null) {
-            this.tip.show(popper);
-        }
+    var bubble = this;
+
+    if (bubble.tip !== null) {
+        //console.log('bubble.tip.show()');
+        bubble.tip.show();
+    }
+};
+
+CodeBootExecPointBubble.prototype.hide = function () {
+
+    var bubble = this;
+
+    if (bubble.tip !== null) {
+        //console.log('bubble.tip.hide()');
+        bubble.tip.hide();
+    }
+};
+
+CodeBootExecPointBubble.prototype.destroy = function () {
+
+    var bubble = this;
+
+    if (bubble.tip !== null) {
+        bubble.tip.destroy();
     }
 
+    bubble.tip  = null;
+    bubble.elem = null;
 };
 
-CBExecPointBubble.prototype.hide = function () {
+CodeBootExecPointBubble.prototype.setContent = function (html) {
 
-    if (this.tip !== null) {
-        var popper = this.tip.getPopperElement(this.elem);
-        if (popper !== null) {
-            this.tip.hide(popper);
-        }
+    var bubble = this;
+
+    if (bubble.tip !== null) {
+        bubble.tip.setContent(html);
     }
-
 };
 
-CBExecPointBubble.prototype.destroy = function () {
+CodeBootVM.prototype.execPointCodeElement = function () {
 
-    if (this.tip !== null) {
-        var popper = this.tip.getPopperElement(this.elem);
-        if (popper !== null) {
-            this.tip.destroy(popper);
-        }
-    }
+    var vm = this;
 
-    this.tip  = null;
-    this.elem = null;
-
+    return vm.root.querySelector('.cb-exec-point-code-end');
 };
 
-CBExecPointBubble.prototype.replaceContent = function (html) {
+CodeBootExecPointBubble.prototype.attachTo = function (elem, html) {
 
-    if (this.tip !== null) {
-        var popper = this.tip.getPopperElement(this.elem);
-        if (popper !== null) {
-            var contentElem = popper.querySelector('.tippy-tooltip-content');
-            if (contentElem !== null) {
-                contentElem.innerHTML = html;
-            }
-        }
-    }
-
-};
-
-CodeBoot.prototype.execPointCodeElement = function () {
-
-    var elems = [].slice.call(document.querySelectorAll('.cb-exec-point-code-end'),-1);
-
-    if (elems.length === 0)
-        return null;
-    else
-        return elems[0];
-};
-
-CBExecPointBubble.prototype.attachTo = function (elem, html) {
+    var bubble = this;
+    var vm = bubble.vm;
 
     if (elem === null) return;
 
-    var _this = this;
-
-    if (this.elem === null || this.elem !== elem) {
+    if (bubble.elem === null || bubble.elem !== elem) {
 
         /* create a new bubble */
 
-        if (this.elem !== null)
-            this.destroy();
+        if (bubble.elem !== null)
+            bubble.destroy();
 
-        //count++; $('#cb-menu-brand-btn').text(count);
         var tip = tippy(elem, {
-            html: '#cb-exec-point-bubble-template',
-            theme: 'cb-exec-point-bubble',
-            position: 'bottom-start',
+            appendTo: vm.root, //elem.closest('.CodeMirror-scroll'),
+            allowHTML: true,
+            placement: 'bottom-start',
+            maxWidth: 9999,
             trigger: 'manual',
-            sticky: 'true',
-            zIndex: 999, /* just under dropdown menu */
-            arrow: true,
-            interactive: true,
-            duration: 0,
-            popperOptions: {
-                modifiers: {
-                    flip: {
-                        enabled: true
-                    }
-                }
-            }
+            hideOnClick: false,
+            theme: 'cb-exec-point-bubble'
         });
 
-        this.tip = tip;
-        this.elem = elem;
+        bubble.tip = tip;
+        bubble.elem = elem;
+        //console.log('called tippy');
     }
+    //else console.log('not calling tippy');
 
-    this.replaceContent(html);
-    setTimeout(function () { _this.show(); }, 0);
-
+    bubble.setContent(html);
+    vm.afterDelay(function () { bubble.show(); });
 };
 
-CodeBoot.prototype.execPointBubbleHTML = function () {
+CodeBootVM.prototype.hideExecPoint = function () {
 
-    var val = cb.programState.rte.result;
-    var valHTML = (val === void 0)
-                  ? '<i>no value</i>'
-                  : cb.printedRepresentation(val, 'HTML');
+    var vm = this;
 
-    var contextHTML = cb.dumpContext();
+    vm.ui.execPointBubble.destroy();
 
-    if (contextHTML === '') {
-        return '<div class="cb-exec-point-bubble-value-no-context">' +
-               valHTML +
-               '</div>';
-    } else {
-        return '<div class="cb-exec-point-bubble-value">' +
-               valHTML +
-               '</div>' +
-               '<div class="cb-exec-point-bubble-context">' +
-               contextHTML +
-               '</div>';
-    }
-};
-
-CodeBoot.prototype.hideExecPoint = function () {
-
-    cb.programState.execPointBubble.destroy();
-
-    var mark = cb.programState.execPointMark;
+    var mark = vm.ui.execPointMark;
 
     if (mark !== null) {
-        cb.clearMarker(mark);
-        cb.programState.execPointMark = null;
+        vm.clearMarker(mark);
+        vm.ui.execPointMark = null;
     }
 
         // Somehow, CodeMirror seems to hold on to the marked elements
@@ -973,20 +1191,24 @@ CodeBoot.prototype.hideExecPoint = function () {
 //        $('.cb-exec-point-code').removeClass('cb-exec-point-code');
 };
 
-CodeBoot.prototype.showExecPoint = function () {
+CodeBootVM.prototype.showExecPoint = function (skipExecPointBubble) {
 
-    cb.showStepCounter();
+    var vm = this;
 
-    cb.hideExecPoint();
+    vm.showStepCounter();
 
-    var loc = cb.programState.rte.ast.loc;
-    cb.programState.execPointMark = cb.codeHighlight(loc, 'cb-exec-point-code', true);
+    vm.hideExecPoint();
 
-    if (cb.programState.execPointMark !== null) {
-        cb.scrollToMarker(cb.programState.execPointMark.end);
-    }
+    var loc = vm.lang.getLocation();
+    if (loc) loc = vm.lang.relativeLocation(loc); // convert to relative loc
+    vm.ui.execPointMark = vm.codeHighlight(loc, 'cb-exec-point-code', true);
 
-    var value = cb.programState.rte.result;
+    if (!vm.ui.execPointMark)
+        return false;
+
+    vm.scrollToMarker(vm.ui.execPointMark.end);
+
+    var value = vm.lang.getResult();
     var $container;
     if (loc.container instanceof SourceContainerInternalFile) {
         $container = $('#cb-editors');
@@ -995,943 +1217,543 @@ CodeBoot.prototype.showExecPoint = function () {
     }
 
     if ($container !== null &&
-        !$('.cb-exec-point-code-end').last().isInView($container)) {
+       true //TODO: fix    !$('.cb-exec-point-code-end').last().isInView($container)
+       ) {
         var filename = loc.container.toString();
-        cb.fs.openFile(filename);
-        cb.scrollTo(cb.getFileContainerFor(filename));
+        vm.fs.openFile(filename);
+        var file = vm.fs._asFile(filename);
+        vm.scrollTo(file.fe.fileContainer);
     }
 
-    cb.programState.execPointBubble.attachTo(
-        cb.execPointCodeElement(),
-        cb.execPointBubbleHTML());
+    if (!skipExecPointBubble) {
+        vm.ui.execPointBubble.attachTo(
+            vm.execPointCodeElement(),
+            vm.lang.executionStateHTML());
+    }
 
+    return true;
+/*
     $('.cb-exec-point-code').hover(function (event) {
-        if (!cb.programState.execPointBubble.isVisible()) {
-            cb.showExecPoint();
+        if (!vm.ui.execPointBubble.isVisible()) {
+            vm.showExecPoint();
         }
     });
+*/
 };
 
-CodeBoot.prototype.dumpContext = function () {
-
-    var rte = cb.programState.rte;
-    var f = rte.frame;
-    var cte = f.cte;
-    var result = [];
-    var seen = {};
-
-    var add = function (id, val) {
-        if (seen[id] === void 0) {
-            if (val !== void 0) { // don't show undefined variables
-                result.push('<div class="cb-exec-point-bubble-binding"><span class="cb-code-font">' + id + '</span>: ' + cb.printedRepresentation(val, 'HTML') + '</div>');
-            }
-            seen[id] = true;
-        }
-    };
-
-    while (cte !== null) {
-        for (var id_str in cte.params) {
-            var i = cte.params[id_str];
-            add(id_str, f.params[i]);
-        }
-        for (var id_str in cte.locals) {
-            if (cte.parent !== null) {
-                var i = cte.locals[id_str];
-                add(id_str, f.locals[i]);
-            } else {
-                if (!well_known_global[id_str]) {
-                    add(id_str, rte.glo[id_str]);
-                }
-            }
-        }
-        if (cte.callee !== null) {
-            add(cte.callee, f.callee);
-        }
-        cte = cte.parent;
-        f = f.parent;
-    }
-
-    return result.join('');
-};
-
-CodeBoot.prototype.undeclareGlobals = function (rte) {
-
-    var glo = rte.glo;
-
-    for (var v in glo) {
-        if (!well_known_global[v]) {
-            delete glo[v];
-        }
-    }
-};
-
-var well_known_global = {};
-well_known_global['NaN'] = true;
-well_known_global['Infinity'] = true;
-well_known_global['undefined'] = true;
-well_known_global['parseInt'] = true;
-well_known_global['parseFloat'] = true;
-well_known_global['isNaN'] = true;
-well_known_global['isFinite'] = true;
-well_known_global['decodeURI'] = true;
-well_known_global['encodeURI'] = true;
-well_known_global['decodeURIComponent'] = true;
-well_known_global['encodeURIComponent'] = true;
-well_known_global['Object'] = true;
-well_known_global['Function'] = true;
-well_known_global['Array'] = true;
-well_known_global['String'] = true;
-well_known_global['Boolean'] = true;
-well_known_global['Number'] = true;
-well_known_global['Date'] = true;
-well_known_global['RegExp'] = true;
-well_known_global['Error'] = true;
-well_known_global['EvalError'] = true;
-well_known_global['RangeError'] = true;
-well_known_global['ReferenceError'] = true;
-well_known_global['SyntaxError'] = true;
-well_known_global['TypeError'] = true;
-well_known_global['URIError'] = true;
-well_known_global['Math'] = true;
-well_known_global['JSON'] = true;
-well_known_global['document'] = true;
-well_known_global['print'] = true;
-well_known_global['alert'] = true;
-well_known_global['prompt'] = true;
-well_known_global['confirm'] = true;
-well_known_global['load'] = true;
-well_known_global['pause'] = true;
-well_known_global['assert'] = true;
-well_known_global['setScreenMode'] = true;
-well_known_global['getScreenWidth'] = true;
-well_known_global['getScreenHeight'] = true;
-well_known_global['setPixel'] = true;
-well_known_global['fillRectangle'] = true;
-well_known_global['exportScreen'] = true;
-well_known_global['getMouse'] = true;
-well_known_global['cs'] = true;
-well_known_global['pu'] = true;
-well_known_global['pd'] = true;
-well_known_global['st'] = true;
-well_known_global['ht'] = true;
-well_known_global['fd'] = true;
-well_known_global['bk'] = true;
-well_known_global['mv'] = true;
-well_known_global['lt'] = true;
-well_known_global['rt'] = true;
-well_known_global['setpc'] = true;
-well_known_global['setpw'] = true;
-well_known_global['drawtext'] = true;
-well_known_global['setTimeout'] = true;
-well_known_global['clearTimeout'] = true;
-well_known_global['readFile'] = true;
-well_known_global['writeFile'] = true;
-
-CodeBoot.prototype.execute = function (single_step) {
-    if (false && cb.hideExecPoint()) { //TODO: find a better way... this causes too much flicker
+/*
+deprecated
+CodeBootVM.prototype.exec_continue = function (delay) {
+    var vm = this;
+    if (false && vm.hideExecPoint()) { //TODO: find a better way... this causes too much flicker
         // give some time for the browser to refresh the page
-        setTimeout(function () { cb.execute2(single_step); }, 10);
+        setTimeout(function () { vm.exec_continue2(single_step); }, 10);
     } else {
         // step was not shown, so no need to wait
-        cb.execute2(single_step);
+        vm.exec_continue2(delay);
     }
 };
+*/
 
-CodeBoot.prototype.execute2 = function (single_step) {
-
-    var stepChunk = 51151;
-    var newMode = cb.modeStopped();
-    cb.stopAnimation();
-
-    var rte = cb.programState.rte;
-
-    if (rte !== null && !rte.finished()) {
-
-        try {
-            rte.step(single_step ? 1 : stepChunk);
-        }
-        catch (e) {
-            update_playground_visibility();
-            if (e !== false)
-                cb.stop(String(e));
-            else
-                cb.stop(null);
-            return;
-        }
-
-        update_playground_visibility();
-
-        if (cb.programState.mode === cb.modeStepping()) {
-            single_step = true;
-        }
-
-        //$('#cb-menu-brand').text(cb.programState.mode);
-
-        if (!rte.finished()) {
-            newMode = cb.modeStepping();
-            if (single_step) {
-                cb.showExecPoint();
-                if (cb.programState.stepDelay > 0) {
-                    newMode = cb.modeAnimating();
-                    cb.programState.timeoutId = setTimeout(function ()
-                                                           { cb.execute(true); },
-                                                           cb.programState.stepDelay);
-                } else if (cb.programState.timeoutId !== null) {
-                    newMode = cb.modeAnimatingSleeping();
-                }
-            } else {
-                if (cb.showingStepCounter() ||
-                    cb.programState.rte.step_count >= stepChunk) {
-                    cb.showStepCounter();
-                }
-                newMode = cb.modeAnimating();
-                cb.programState.timeoutId = setTimeout(function ()
-                                                       { cb.execute(false); },
-                                                       1);
-            }
-        } else {
-
-            if (rte.error !== null) {
-                cb.executionEndedWithError(String(rte.error));
-            } else {
-                cb.executionEndedWithResult(rte.getResult());
-            }
-        }
-    }
-
-    cb.enterMode(newMode);
-
-    code_queue_check();
-};
-
-CodeBoot.prototype.executionEndedWithError = function (msg) {
-    cb.stop(msg);
-};
-
-CodeBoot.prototype.executionEndedWithResult = function (result) {
-
-    cb.lastResult = result;
-    cb.lastResultRepresentation = cb.printedRepresentation(result);
-
-    if (result !== void 0) {
-        cb.addTranscriptREPL(cb.lastResultRepresentation + '\n',
-                             'cb-repl-result');
-    }
-
-    cb.executionHook();
-
-    cb.stop(null);
-};
-
-CodeBoot.prototype.executionHook = function () {
-};
-
-CodeBoot.prototype.run = function (single_step) {
-
-    var code_gen;
-    var source;
-
-    if (cb.lastFocusedEditor === cb.repl) {
-
-        /* running REPL input */
-
-        source = cb.getInputREPL();
-
-        if (false && source.trim() === '') {
-            if (cb.programState.rte !== null) {
-                cb.execute(true);
-                return;
-            }
-            if (single_step) {
-                cb.enterMode(cb.modeStopped());
-                code_queue_check();
-                return;
-            }
-        }
-
-        var line = cb.inputPosREPL().line;
-
-        code_gen = function () {
-            return cb.compile_repl_expression(source, line+1, 1);
-        };
-
+CodeBoot.prototype.register_event_handler = function (vm, src) {
+    var id;
+    var key = (vm === null ? '' : vm.index) + '/' + src;
+    var map = CodeBoot.prototype.event_handler_map;
+    if (Object.prototype.hasOwnProperty.call(map, key)) {
+        id = map[key];
     } else {
-
-        /* running file */
-
-        var filename = cb.lastFocusedEditor.cb.fileEditor.filename;
-
-        source = 'load("' + filename + '")';
-
-        cb.replaceInputREPL(source);
-
-        drawing_window.cs(); /* clear drawing window when running file */
-        pixels_window.clear();
-
-        code_gen = function () {
-            var code = cb.compile_internal_file(filename);
-            return function (rte, cont) {
-                cb.undeclareGlobals(rte);
-                return code(rte, cont);
-            };
-        };
+        var descrs = CodeBoot.prototype.event_handler_descrs;
+        id = descrs.push({ vm: vm, src: src })-1;
+        map[key] = id;
     }
-
-    if (source.trim() !== '')
-        cb.repl.cb.history.add(source);
-
-    cb.acceptInputREPL();
-
-    cb.run_setup_and_execute(code_gen, single_step);
+    return id;
 };
 
-CodeBoot.prototype.run_setup_and_execute = function (code_gen, single_step) {
+CodeBoot.prototype.rewrite_event_handlers = function (vm, elem) {
+    var prefix = 'CodeBoot.prototype.event_handle(event,';
+    CodeBoot.prototype.event_attrs.forEach(function (attr) {
+        if (elem.hasAttribute(attr)) {
+            var val = elem.getAttribute(attr);
+            if (val.indexOf(prefix) !== 0) {
+                // register handler only if it is not already transformed
+                var id = CodeBoot.prototype.register_event_handler(vm, val);
+                if (attr === 'onload') {
+                    elem.removeAttribute(attr);
+                    CodeBoot.prototype.onload_handlers.push({ id: id, elem: elem });
+                } else {
+                    var handler = prefix + id + ')';
+                    elem.setAttribute(attr, handler);
+                }
+            }
+        }
+    });
+    CodeBoot.prototype.rewrite_event_handlers_children(vm, elem);
+};
 
-    cb.hide_error();
+CodeBoot.prototype.rewrite_event_handlers_children = function (vm, elem) {
+    var child = elem.firstElementChild;
+    while (child) {
+        CodeBoot.prototype.rewrite_event_handlers(vm, child);
+        child = child.nextElementSibling;
+    }
+};
+
+CodeBoot.prototype.event_attrs =
+    ['onload','onfocus','onblur','onfocusin','onfocusout',
+     'onkeydown','onkeypress','onkeyup',
+     'onclick','ondblclick','oncontextmenu','onmousedown','onmouseup',
+     'onmousemove','onmouseenter','onmouseleave','onmouseover','onmouseout'];
+
+CodeBoot.prototype.event_handler_map = Object.create(null);
+CodeBoot.prototype.event_handler_descrs = [];
+CodeBoot.prototype.onload_handlers = [];
+
+CodeBoot.prototype.event_handle = function (event, id) {
+    var descr = CodeBoot.prototype.event_handler_descrs[id];
+    var vm = descr.vm;
+    if (!vm) vm = getCodeBootVM();
+    vm.event_handle(descr.src, event);
+};
+
+CodeBootVM.prototype.event_handle = function (src, event) {
+
+    var vm = this;
+
+    if (vm.ui.mode !== vm.modeStopped()) {
+        vm.event_queue_add(function () {
+            vm.exec_start_event_handler(src, vm.copy_event(event), vm.stepDelayForEventHandler);
+        });
+
+        vm.event_queue_check();
+    }
+};
+
+CodeBootVM.prototype.copy_event = function (event) {
+
+    var vm = this;
+
+    var copy = {};
+
+    ['type', 'target', 'currentTarget', 'pageX', 'pageY', 'buttons',
+     'key', 'code', 'altKey', 'ctrlKey', 'shiftKey'].forEach(function (prop) {
+        if (prop in event) copy[prop] = event[prop];
+    });
+
+    return copy;
+};
+
+
+CodeBootVM.prototype.exec_continue = function (delay) {
+
+    var vm = this;
+    var lang = vm.lang;
+
+    if (!lang.isExecuting()) return;
+
+    var maxStepChunk = 51151;
+    var stepChunk = maxStepChunk;
+    var newMode;
+
+    if (delay > 0) {
+        stepChunk = 1; // execute single step
+    } else {
+        stepChunk = Math.max(1,
+                             Math.min(stepChunk,
+                                      vm.pauseAtStepCount -
+                                      vm.lang.getStepCount()));
+    }
+
+    var was_animating = vm.stopAnimation(); // cancel execution animation timer if any
 
     try {
-        var code = code_gen();
-        if (code === null) {
-            cb.stop(null);
-            return;
-        } else {
-            cb.programState.rte = jev.runSetup(code,
-                                               {globalObject: cb.globalObject});
-        }
+        lang.continueExecution(stepChunk, delay);
     }
     catch (e) {
-        if (e !== false)
-            cb.stop(String(e));
-        else
-            cb.stop(null);
+        vm.updatePlayground();
+        //console.log(e);
+        vm.showReason(e);
+        vm.stop(null);
         return;
     }
 
-    cb.execute(single_step);
+    vm.updatePlayground();
+
+    /*
+      if (vm.ui.mode === vm.modeStepping()) {
+      single_step = true;
+      }
+    */
+
+    //$('#cb-menu-brand').text(vm.ui.mode);
+
+    if (!lang.isExecuting()) {
+
+        //console.log('lang.isExecuting() === false');
+        // execution has finished... check if with result or error
+
+        if (lang.isEndedWithResult()) {
+            var is_repl = vm.lang.getLocation().container.is_repl();
+            vm.executionEndedWithResult(lang.getResult(), is_repl);
+        } else {
+            vm.executionEndedWithError(vm.lang.getError());
+        }
+
+    } else if (vm.lang.getLocation().container.is_html()) {
+
+        if (vm.ui.timeoutId !== null) {
+
+            // program is executing a "sleep"?
+
+            newMode = vm.modeAnimatingSleeping();
+
+        } else {
+
+            // resume execution after appropriate delay
+
+            newMode = vm.modeAnimating();
+
+            vm.stepDelay = delay;
+
+            vm.ui.timeoutId =
+                vm.afterDelay(function () {
+                                  vm.exec_continue(vm.stepDelay);
+                              });
+        }
+
+        vm.enterMode(newMode);
+
+    } else {
+
+        //console.log('lang.isExecuting() === true');
+
+        // determine how execution will continue (either we continue
+        // after the requested delay, or we must wait for an execution
+        // event)
+
+        newMode = vm.modeStepping();
+
+        if (delay < Infinity) {
+
+            // execution with animation mode
+
+            var forceStepping = vm.pauseAtStepCount <= vm.lang.getStepCount();
+
+            if (vm.pauseAtStepCount <= vm.lang.getStepCount()) {
+                newMode = vm.modeStepping();
+                vm.pauseAtStepCount = Infinity; // don't force pause next time
+                maxStepChunk = 0; // force showing step counter
+            }
+
+            if (vm.showingStepCounter()) {
+                vm.updateStepCounter();
+            } else if (vm.lang.getStepCount() >= maxStepChunk || forceStepping) {
+                vm.showStepCounter();
+            }
+
+            if (vm.ui.timeoutId !== null) {
+
+                // program is executing a "sleep"?
+
+                newMode = vm.modeAnimatingSleeping();
+
+            } else if (!forceStepping) {
+
+                // resume execution after appropriate delay
+
+                newMode = vm.modeAnimating();
+
+                vm.stepDelay = delay;
+
+                vm.ui.timeoutId =
+                    vm.afterDelay(function () {
+                                      vm.exec_continue(vm.stepDelay);
+                                  },
+                                  delay);
+            }
+        }
+
+        if (forceStepping) {
+            vm.showExecPoint();
+        } else if (delay > 0 || newMode === vm.modeAnimatingSleeping()) {
+            vm.showExecPoint(delay <= 10);
+        } else {
+            vm.hideExecPoint();
+        }
+
+        vm.enterMode(newMode);
+    }
+};
+
+CodeBootVM.prototype.executionEndedWithError = function (err) {
+    var vm = this;
+    vm.stop(err);
+};
+
+CodeBootVM.prototype.executionEndedWithResult = function (result, is_repl) {
+
+    var vm = this;
+
+    if (is_repl) {
+      vm.lastResult = result;
+      vm.lastResultRepresentation = vm.lang.printedRepresentation(result);
+
+      if (result !== void 0) {
+          vm.replAddTranscript(vm.lastResultRepresentation, 'cb-repl-result');
+      }
+    }
+
+    vm.executionHook();
+
+    vm.stop('');
+};
+
+CodeBootVM.prototype.executionHook = function () {
+};
+
+CodeBootVM.prototype.executionSleep = function(sleepTime, afterSleepDelay) {
+    var vm = this;
+
+    if (sleepTime === Infinity){
+        // Infinite sleep is a switch to single-step mode
+        vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(Infinity); });
+    }
+    else if (sleepTime < 100) {
+        // For short sleep, do not display bubble
+        vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(afterSleepDelay); }, sleepTime);
+    } else {
+        function executionSleepLoop(sleepTime, afterSleepDelay, contextHTML){
+            // For longer time, display a count-down
+            var sleepStep = Math.min(sleepTime, 100);
+            var remainingSleepTime = sleepTime - sleepStep;
+
+            var bubbleContent =
+                '<div class="cb-exec-point-bubble-value">' +
+                '<code><i>sleeping ' + (sleepTime / 1000).toFixed(1) + 's</i></code>' +
+                '</div>' +
+                contextHTML;
+
+            vm.ui.execPointBubble.attachTo(vm.execPointCodeElement(), bubbleContent);
+
+            if (remainingSleepTime <= 0){
+                // Restart execution after next micro-sleep
+                vm.ui.timeoutId = vm.afterDelay(function () { vm.exec_continue(afterSleepDelay); }, sleepTime);
+            }
+            else {
+                // Sleep for 100ms then comeback to update counter
+                vm.ui.timeoutId = vm.afterDelay(function () {
+                    vm.executionSleep(remainingSleepTime, afterSleepDelay);
+                }, sleepStep);
+            }
+        }
+
+        // Compute the context once before the sleep instead of at each step
+        var context = vm.lang.contextHTML();
+
+        var contextHTML =
+            context === ''
+                ? ''
+                : '<div class="cb-exec-point-bubble-context">' +
+                    vm.lang.contextHTML() +
+                    '</div>';
+
+        $('.cb-exec-point-code').hover(function (event) {
+        if (!vm.ui.execPointBubble.isVisible()) {
+            vm.showExecPoint();
+        }})
+
+        executionSleepLoop(sleepTime, afterSleepDelay, contextHTML);
+    }
+}
+
+
+/*
+deprecated
+CodeBootVM.prototype.run_setup_and_execute = function (compile, single_step) {
+
+    var vm = this;
+    var code = null;
+
+    vm.hideReasonHighlight();
+
+    try {
+        code = compile();
+        if (code === null) {
+            vm.stop(null);
+            return true;
+        } else {
+            vm.lang.startExecution(code);
+        }
+    }
+    catch (e) {
+        //console.log(e);//TODO: remove
+        if (e === 'continuable REPL input')
+            return false;
+        if (e !== false)
+            vm.stop(String(e));
+        else
+            vm.stop(null);
+        return true;
+    }
+
+    vm.execute(single_step);
 
     //TODO: interferes?
-    //cb.repl.focus();
+    //vm.repl.focus();
+
+    return true;
+};
+*/
+
+//-----------------------------------------------------------------------------
+
+// Compilation of source code (at the REPL, files and URLs)
+
+CodeBootVM.prototype.compile_repl = function (source, line, ch, force_reset, event) {
+    var vm = this;
+    return vm.compile(source,
+                      new SourceContainer(source, false, line-1, ch-1),
+                      force_reset,
+                      event);
 };
 
-function abort_fn_body(rte, result, msg) {
-
-    cb.programState.stepDelay = 0;
-    rte.step_limit = rte.step_count; // exit trampoline
-
-    if (msg !== void 0) {
-        cb.stop(msg);
-    } else {
-        cb.enterMode(cb.modeStepping());
-    }
-
-    return return_fn_body(rte, result);
-}
-
-function return_fn_body(rte, result) {
-
-    var cont = rte.stack.cont;
-
-    rte.frame = rte.stack.frame;
-    rte.stack = rte.stack.stack;
-
-    return cont(rte, result);
-}
-
-function builtin_pause(filename) {
-    throw 'unimplemented';///////////////////////////
-}
-
-builtin_pause._apply_ = function (rte, cont, this_, params) {
-
-    var code = function (rte, cont) {
-
-        var delay = params[0];
-
-        if (params.length === 0) {
-            delay = Infinity;
-        } else if (typeof delay !== 'number' || !(delay >= 0)) {
-            throw 'delay parameter of pause must be a non-negative number';
-        }
-
-        if (delay !== Infinity) {
-            cb.stopAnimation();
-            cb.programState.timeoutId = setTimeout(function () {
-                                                       cb.repeatLastExecEvent();
-                                                   },
-                                                   delay*1000);
-        }
-
-        return abort_fn_body(rte, void 0);
-    };
-
-    return exec_fn_body(code,
-                        builtin_pause,
-                        rte,
-                        cont,
-                        this_,
-                        params,
-                        [],
-                        null,
-                        null);
+CodeBootVM.prototype.compile_event_handler = function (source, line, ch, force_reset, event) {
+    var vm = this;
+    return vm.compile(source,
+                      new SourceContainer(source, null, line-1, ch-1),
+                      force_reset,
+                      event);
 };
 
-function builtin_assert(condition) {
-    throw 'unimplemented';///////////////////////////
-}
-
-builtin_assert._apply_ = function (rte, cont, this_, params) {
-
-    var code = function (rte, cont) {
-
-        if (!params[0]) {
-            return abort_fn_body(rte,
-                                 params[1] ? String(params[1]) : 'THIS ASSERTION FAILED');
-        }
-
-        return return_fn_body(rte, void 0);
-    };
-
-    return exec_fn_body(code,
-                        builtin_assert,
-                        rte,
-                        cont,
-                        this_,
-                        params,
-                        [],
-                        null,
-                        null);
-};
-
-function builtin_setScreenMode(width, height) {
-    throw 'unimplemented';///////////////////////////
-}
-
-builtin_setScreenMode._apply_ = function (rte, cont, this_, params) {
-
-    var code = function (rte, cont) {
-
-        if (params.length !== 2) {
-            throw 'setScreenMode expects 2 parameters';
-        }
-
-        var max_width = 360;
-        var max_height = 240;
-        var width = params[0];
-        var height = params[1];
-
-        if (typeof width !== 'number' ||
-            Math.floor(width) !== width ||
-            width < 1 ||
-            width > max_width) {
-            throw 'width parameter of setScreenMode must be a positive integer no greater than ' + max_width;
-        }
-
-        if (typeof height !== 'number' ||
-            Math.floor(height) !== height ||
-            height < 1 ||
-            height > max_height) {
-            throw 'height parameter of setScreenMode must be a positive integer no greater than ' + max_height;
-        }
-
-        var scale = Math.min(20,
-                             Math.floor(max_width / width),
-                             Math.floor(max_height / height));
-
-        pixels_window.setScreenMode(width, height, scale);
-
-        return return_fn_body(rte, void 0);
-    };
-
-    return exec_fn_body(code,
-                        builtin_setScreenMode,
-                        rte,
-                        cont,
-                        this_,
-                        params,
-                        [],
-                        null,
-                        null);
-};
-
-function builtin_getScreenWidth() {
-    throw 'unimplemented';///////////////////////////
-}
-
-builtin_getScreenWidth._apply_ = function (rte, cont, this_, params) {
-
-    var code = function (rte, cont) {
-        return return_fn_body(rte, pixels_window.width);
-    };
-
-    return exec_fn_body(code,
-                        builtin_getScreenWidth,
-                        rte,
-                        cont,
-                        this_,
-                        params,
-                        [],
-                        null,
-                        null);
-};
-
-function builtin_getScreenHeight() {
-    throw 'unimplemented';///////////////////////////
-}
-
-builtin_getScreenHeight._apply_ = function (rte, cont, this_, params) {
-
-    var code = function (rte, cont) {
-        return return_fn_body(rte, pixels_window.height);
-    };
-
-    return exec_fn_body(code,
-                        builtin_getScreenHeight,
-                        rte,
-                        cont,
-                        this_,
-                        params,
-                        [],
-                        null,
-                        null);
-};
-
-function convertRGB(rgb) {
-
-  if (typeof rgb !== 'object' ||
-      rgb === null ||
-      !('r' in rgb) ||
-      typeof rgb.r !== 'number' ||
-      Math.floor(rgb.r) !== rgb.r ||
-      rgb.r < 0 || rgb.r > 255 ||
-      !('g' in rgb) ||
-      typeof rgb.g !== 'number' ||
-      Math.floor(rgb.g) !== rgb.g ||
-      rgb.g < 0 || rgb.g > 255 ||
-      !('b' in rgb) ||
-      typeof rgb.b !== 'number' ||
-      Math.floor(rgb.b) !== rgb.b ||
-      rgb.b < 0 || rgb.b > 255) {
-    return null;
-  }
-
-  return '#' + ((((((1<<8)+rgb.r)<<8)+rgb.g)<<8)+rgb.b).toString(16).slice(1);
-}
-
-function builtin_setPixel(x, y, color) {
-    throw 'unimplemented';///////////////////////////
-}
-
-builtin_setPixel._apply_ = function (rte, cont, this_, params) {
-
-    var code = function (rte, cont) {
-
-        if (params.length !== 3) {
-            throw 'setPixel expects 3 parameters';
-        }
-
-        var x = params[0];
-        var y = params[1];
-        var color = convertRGB(params[2]);
-
-        if (typeof x !== 'number' ||
-            Math.floor(x) !== x ||
-            x < 0 ||
-            x >= pixels_window.width) {
-            throw 'x parameter of setPixel must be a positive integer less than ' + pixels_window.width;
-        }
-
-        if (typeof y !== 'number' ||
-            Math.floor(y) !== y ||
-            y < 0 ||
-            y >= pixels_window.height) {
-            throw 'y parameter of setPixel must be a positive integer less than ' + pixels_window.height;
-        }
-
-        if (color === null) {
-            throw 'color parameter of setPixel must be a RGB structure';
-        }
-
-        pixels_window.setPixel(x, y, color);
-
-        return return_fn_body(rte, void 0);
-    };
-
-    return exec_fn_body(code,
-                        builtin_setPixel,
-                        rte,
-                        cont,
-                        this_,
-                        params,
-                        [],
-                        null,
-                        null);
-};
-
-function builtin_fillRectangle(x, y, color) {
-    throw 'unimplemented';///////////////////////////
-}
-
-builtin_fillRectangle._apply_ = function (rte, cont, this_, params) {
-
-    var code = function (rte, cont) {
-
-        if (params.length !== 5) {
-            throw 'fillRectangle expects 5 parameters';
-        }
-
-        var x = params[0];
-        var y = params[1];
-        var w = params[2];
-        var h = params[3];
-        var color = convertRGB(params[4]);
-
-        if (typeof x !== 'number' ||
-            Math.floor(x) !== x ||
-            x < 0 ||
-            x >= pixels_window.width) {
-            throw 'x parameter of fillRectangle must be a positive integer less than ' + pixels_window.width;
-        }
-
-        if (typeof y !== 'number' ||
-            Math.floor(y) !== y ||
-            y < 0 ||
-            y >= pixels_window.height) {
-            throw 'y parameter of fillRectangle must be a positive integer less than ' + pixels_window.height;
-        }
-
-        var max_width = pixels_window.width - x;
-        var max_height = pixels_window.height - y;
-
-        if (typeof w !== 'number' ||
-            Math.floor(w) !== w ||
-            w < 0 ||
-            w > max_width) {
-            throw 'width parameter of fillRectangle must be a positive integer less than ' + (max_width+1);
-        }
-
-        if (typeof h !== 'number' ||
-            Math.floor(h) !== h ||
-            h < 0 ||
-            h > max_height) {
-            throw 'height parameter of fillRectangle must be a positive integer less than ' + (max_height+1);
-        }
-
-        if (color === null) {
-            throw 'color parameter of fillRectangle must be a RGB structure';
-        }
-
-        pixels_window.fillRectangle(x, y, w, h, color);
-
-        return return_fn_body(rte, void 0);
-    };
-
-    return exec_fn_body(code,
-                        builtin_fillRectangle,
-                        rte,
-                        cont,
-                        this_,
-                        params,
-                        [],
-                        null,
-                        null);
-};
-
-function builtin_exportScreen() {
-    throw 'unimplemented';///////////////////////////
-}
-
-builtin_exportScreen._apply_ = function (rte, cont, this_, params) {
-
-    var code = function (rte, cont) {
-        return return_fn_body(rte, pixels_window.exportScreen());
-    };
-
-    return exec_fn_body(code,
-                        builtin_exportScreen,
-                        rte,
-                        cont,
-                        this_,
-                        params,
-                        [],
-                        null,
-                        null);
-};
-
-function builtin_getMouse() {
-    throw 'unimplemented';///////////////////////////
-}
-
-builtin_getMouse._apply_ = function (rte, cont, this_, params) {
-
-    var code = function (rte, cont) {
-        var state;
-        if (showing_drawing_window()) {
-            var pos = drawing_window.pageToRelative(cb.mousePos);
-            state = { x: pos.x, y: pos.y, down: cb.mouseDown };
-        } else if (showing_pixels_window()) {
-            var pos = pixels_window.pageToRelative(cb.mousePos);
-            state = { x: pos.x, y: pos.y, down: cb.mouseDown };
-        } else {
-            state = { x: cb.mousePos.x, y: cb.mousePos.y, down: cb.mouseDown };
-        }
-        return return_fn_body(rte, state);
-    };
-
-    return exec_fn_body(code,
-                        builtin_getMouse,
-                        rte,
-                        cont,
-                        this_,
-                        params,
-                        [],
-                        null,
-                        null);
-};
-
-function builtin_load(filename) {
-    throw 'unimplemented';///////////////////////////
-}
-
-builtin_load._apply_ = function (rte, cont, this_, params) {
-
-    var filename = params[0];
-    var code = cb.compile_file(filename);
-
-    if (code === null) {
-        code = function (rte, cont) {
-            return return_fn_body(rte, void 0);
-        };
-    }
-
-    return exec_fn_body(code,
-                        builtin_load,
-                        rte,
-                        cont,
-                        this_,
-                        params,
-                        [],
-                        null,
-                        null);
-};
-
-function builtin_readFile(filename) {
-    throw 'unimplemented';///////////////////////////
-}
-
-builtin_readFile._apply_ = function (rte, cont, this_, params) {
-
-    var code = function (rte, cont) {
-
-        if (params.length !== 1) {
-            throw 'readFile expects 1 parameter';
-        }
-
-        var filename = params[0];
-
-        if (typeof filename !== 'string') {
-            throw 'filename parameter of readFile must be a string';
-        }
-
-        var state = readFileInternal(filename);
-
-        return return_fn_body(rte, state.content);
-    };
-
-    return exec_fn_body(code,
-                        builtin_readFile,
-                        rte,
-                        cont,
-                        this_,
-                        params,
-                        [],
-                        null,
-                        null);
-};
-
-function builtin_writeFile(filename, content) {
-    throw 'unimplemented';///////////////////////////
-}
-
-builtin_writeFile._apply_ = function (rte, cont, this_, params) {
-
-    var code = function (rte, cont) {
-
-        if (params.length !== 2) {
-            throw 'writeFile expects 2 parameters';
-        }
-
-        var filename = params[0];
-        var content = params[1];
-
-        if (typeof filename !== 'string') {
-            throw 'filename parameter of writeFile must be a string';
-        }
-
-        if (typeof content !== 'string') {
-            throw 'content parameter of writeFile must be a string';
-        }
-
-        writeFileInternal(filename, content);
-
-        return return_fn_body(rte, void 0);
-    };
-
-    return exec_fn_body(code,
-                        builtin_writeFile,
-                        rte,
-                        cont,
-                        this_,
-                        params,
-                        [],
-                        null,
-                        null);
-};
-
-CodeBoot.prototype.compile_repl_expression = function (source, line, ch) {
-    return cb.compile(source,
-                      new SourceContainer(source, '<REPL>', line, ch));
-};
-
-CodeBoot.prototype.compile_file = function (filename) {
+CodeBootVM.prototype.compile_file = function (filename, force_reset, event) {
+    var vm = this;
     if (/^http:\/\//.test(filename)) {
-        return cb.compile_url_file(filename);
+        return vm.compile_url_file(filename, force_reset, event);
     } else {
-        return cb.compile_internal_file(filename);
+        return vm.compile_internal_file(filename, force_reset, event);
     }
 };
 
-CodeBoot.prototype.urlGet = function (url) {
+// begin deprecated
+
+CodeBootVM.prototype.cacheURL = {};
+
+CodeBootVM.prototype.readURL = function (url) {
+    var vm = this;
+    var cache = vm.cacheURL;
+    if (Object.prototype.hasOwnProperty.call(cache, url)) {
+        return cache[url];
+    } else {
+        var source = vm.getURL(url);
+        if (source !== undefined) cache[url] = source;
+        return source;
+    }
+};
+
+CodeBootVM.prototype.getURL = function (url) {
+    var vm = this;
     var content;
     $.ajax({
-        url: 'urlget.cgi',
+        url: 'geturl.cgi',
         type: 'POST',
-        data: {url: url},
+        data: { url: url },
         dataType: 'text',
         async: false,
         success: function (data) {
             content = data;
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            cb.addTranscriptREPL('Failed to load remote ressource\n',
+            vm.replAddTranscript('Failed to load remote ressource\n',
                                  'cb-repl-error');
         }
     });
     return content;
 };
 
-cb.cacheURL = {};
+CodeBootVM.prototype.compile_url_file = function (url, force_reset, event) {
 
-CodeBoot.prototype.readURL = function (url) {
-    if (Object.prototype.hasOwnProperty.call(cb.cacheURL, url)) {
-        return cb.cacheURL[url];
-    } else {
-        var source = cb.urlGet(url);
-        if (source !== (void 0)) cb.cacheURL[url] = source;
-        return source;
-    }
+    var vm = this;
+    var source = vm.readURL(url);
+    if (source === undefined) source = '';
+
+    return vm.compile(source,
+                      new SourceContainer(source, url, 0, 0),
+                      force_reset,
+                      event);
 };
 
-CodeBoot.prototype.compile_url_file = function (url) {
+// end deprecated
 
-    var source = cb.readURL(url);
-    if (source === (void 0)) source = '';
+CodeBootVM.prototype.compile_internal_file = function (filename, force_reset, event) {
 
-    return cb.compile(source,
-                      new SourceContainer(source, url, 1, 1));
-};
-
-CodeBoot.prototype.compile_internal_file = function (filename) {
-
-    var state = readFileInternal(filename);
+    var vm = this;
+    var state = vm.readFileInternal(filename);
     var source = state.content;
 
-    return cb.compile(source,
-                      new SourceContainerInternalFile(source, filename, 1, 1, state.stamp));
+    return vm.compile(source,
+                      new SourceContainerInternalFile(source, filename, 0, 0, state.stamp),
+                      force_reset,
+                      event);
 };
 
-function readFileInternal(filename) {
+CodeBootVM.prototype.readFileInternal = function (filename) {
 
-    var file = cb.fs.getByName(filename);
+    var vm = this;
+    var file = vm.fs.getByName(filename);
 
     return {
         stamp: file.stamp,
         content: file.getContent(),
     };
-}
-
-function writeFileInternal(filename, content) {
-
-    var file;
-
-    if (cb.fs.hasFile(filename)) {
-        file = cb.fs.getByName(filename);
-    } else {
-        file = new CBFile(cb.fs, filename);
-        cb.fs.addFile(file);
-        cb.fs.addFileToMenu(file);
-    }
-
-    file.setContent(content);
-}
-
-CodeBoot.prototype.compile = function (source, container) {
-    return jev.compile(source,
-                       {
-                           container: container,
-                           error: function (loc, kind, msg) {
-                               cb.syntaxError(loc, kind, msg);
-                           },
-                           detectEmpty: true,
-                           languageLevel: cb.languageLevel,
-                           filterAST: function (ast, source) {
-                               return cb.filterAST(ast, source);
-                           }
-                       });
 };
 
-CodeBoot.prototype.filterAST = function (ast, source) {
-    cb.lastAST = ast;
-    cb.lastSource = source;
-    cb.lastResult = null;
-    cb.lastResultRepresentation = null;
+CodeBootVM.prototype.writeFileInternal = function (filename, content) {
+
+    var vm = this;
+    var file;
+
+    if (vm.fs.hasFile(filename)) {
+        file = vm.fs.getByName(filename);
+        file.setContent(content);
+    } else {
+        file = new CodeBootFile(vm.fs, filename, content);
+        vm.fs.addFile(file);
+        vm.fs.rebuildFileMenu();
+    }
+}
+
+CodeBootVM.prototype.compile = function (source, container, force_reset, event) {
+
+    var vm = this;
+
+    force_reset = force_reset || vm.force_reset;
+    vm.force_reset = false;
+
+    return vm.lang.compile(source,
+                           container,
+                           force_reset,
+                           event);
+};
+
+CodeBootVM.prototype.filterAST = function (ast, source) {
+
+    var vm = this;
+
+    vm.lastAST = ast;
+    vm.lastSource = source;
+    vm.lastResult = null;
+    vm.lastResultRepresentation = null;
+
     return ast;
 };
 
-var warnSemicolon = true;
+//-----------------------------------------------------------------------------
 
-CodeBoot.prototype.syntaxError = function (loc, kind, msg) {
+// TODO: deprecated
 
-    if (warnSemicolon && msg === '\';\' missing after this token') {
-        cb.displayError(loc, 'syntax error', msg);
-        throw false;
-    }
-
-    if (kind !== 'warning') {
-        cb.displayError(loc, kind, msg);
-        throw false;
-    }
-};
-
-CodeBoot.prototype.errorMessage = function (loc, kind, msg) {
-    var locText = '';
-    if (cb.options.showLineNumbers && loc.container.toString() != '<REPL>') {
-        locText = loc.toString('simple') + ': ';
-    }
-    return locText + ((kind === null) ? '' : kind + ' -- ') + msg;
-};
-
-CodeBoot.prototype.displayError = function (loc, kind, msg) {
-    cb.showError(loc);
-    cb.addTranscriptREPL(cb.errorMessage(loc, kind, msg) + '\n',
-                         'cb-repl-error');
-};
-
-CodeBoot.prototype.undo = function (cm) {
+CodeBootVM.prototype.undo = function (cm) {
     cm.undo();
 };
 
-CodeBoot.prototype.redo = function (cm) {
+CodeBootVM.prototype.redo = function (cm) {
     cm.redo();
 };
-
-cb.initProgramState();

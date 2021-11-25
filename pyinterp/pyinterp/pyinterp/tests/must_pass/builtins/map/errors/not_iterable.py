@@ -1,0 +1,1 @@
+map(print, 1)
