@@ -816,7 +816,7 @@ function CodeBootVM(opts) {
         var handlers = CodeBoot.prototype.onload_handlers;
         CodeBoot.prototype.onload_handlers = [];
         handlers.forEach(function (descr) {
-            CodeBoot.prototype.event_handle(descr.id, { target: descr.elem });
+            CodeBoot.prototype.event_handle({ target: descr.elem }, descr.id);
         });
     }
 };
