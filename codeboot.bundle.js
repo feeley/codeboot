@@ -32031,7 +32031,7 @@ function runtime_setAttribute(rte, elem, attr, val) {
     }
 
     if (CodeBoot.prototype.event_attrs.indexOf(attr) >= 0) {
-        val = CodeBoot.prototype.rewrite_event_handler(vm, val);
+        val = CodeBoot.prototype.rewrite_event_handlers(vm, val);
     }
 
     elem.setAttribute(attr, val);
@@ -33940,7 +33940,7 @@ function CodeBootVM(opts) {
         var handlers = CodeBoot.prototype.onload_handlers;
         CodeBoot.prototype.onload_handlers = [];
         handlers.forEach(function (descr) {
-            CodeBoot.prototype.event_handle(descr.id, { target: descr.elem });
+            CodeBoot.prototype.event_handle({ target: descr.elem }, descr.id);
         });
     }
 };
