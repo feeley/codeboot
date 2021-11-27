@@ -1302,7 +1302,8 @@ CodeBoot.prototype.event_attrs =
     ['onload','onfocus','onblur','onfocusin','onfocusout',
      'onkeydown','onkeypress','onkeyup',
      'onclick','ondblclick','oncontextmenu','onmousedown','onmouseup',
-     'onmousemove','onmouseenter','onmouseleave','onmouseover','onmouseout'];
+     'onmousemove','onmouseenter','onmouseleave','onmouseover','onmouseout',
+     'onanimationcancel','onanimationend','onanimationiteration'];
 
 CodeBoot.prototype.event_handler_map = Object.create(null);
 CodeBoot.prototype.event_handler_descrs = [];
