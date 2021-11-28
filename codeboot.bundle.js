@@ -32030,11 +32030,11 @@ function runtime_setAttribute(rte, elem, attr, val) {
         elem = document.querySelector(elem);
     }
 
-    if (CodeBoot.prototype.event_attrs.indexOf(attr) >= 0) {
-        val = CodeBoot.prototype.rewrite_event_handlers(vm, val);
-    }
-
     elem.setAttribute(attr, val);
+
+    if (CodeBoot.prototype.event_attrs.indexOf(attr) >= 0) {
+        val = CodeBoot.prototype.rewrite_event_handlers(vm, elem);
+    }
 
     vm.updateHTMLWindow();
 }
