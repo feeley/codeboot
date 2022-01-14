@@ -18,12 +18,19 @@ body {
 }
 
 .cb-vm {
-//    overflow: hidden;
+    all:initial;
+    font-family: Helvetica;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    /*height: 100vh;*/
     border-radius: var(--cb-main-border-radius); /****************/
     text-align: left;
+    z-index: 10;
+}
+
+pre.cb-vm{
+    white-space: pre-wrap;
 }
 
 .cb-vm[data-cb-hidden] {
@@ -574,20 +581,8 @@ ul.cb-file-tabs {
     opacity: 1;
 }
 
-.cb-editors .CodeMirror {
-    border: 0;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 100%;
-}
-
 /*--------------------------- CodeMirror ----------------------------*/
 
-.cb-vm .CodeMirror-lines {
-}
 
 .cb-file-container .CodeMirror {
     height: 100%;
@@ -1079,7 +1074,7 @@ div.tab-pane {
 
 /* ----- DOM element for experimentation ----- */
 
-.cb-html-window table,
+/*.cb-html-window table,
 #main table {
     float: left;
     table-layout: fixed;
@@ -1114,7 +1109,7 @@ div.tab-pane {
     vertical-align: middle;
     width: 100%;
     height: 100%;
-}
+}*/
 
 /* ----- Drawing window ----- */
 
