@@ -389,8 +389,8 @@ span.CodeMirror-selectedtext { background: none; }
 }
 
 body {
-    --cb-navbar-controls-color: #7db6d5;
-    --cb-focus-repl-navbar-controls-color: red; /* unused? */
+    --cb-navbar-color: #90c0ff;
+    --cb-focus-repl-navbar-controls-color: #7db6d5;
     --cb-focus-repl-navbar-controls-hover-color: #afd3e6;
     --cb-repl-container-color: #e0f0f6;
     --cb-exec-point-color: yellow;
@@ -408,12 +408,19 @@ body {
 }
 
 .cb-vm {
-//    overflow: hidden;
+    all:initial;
+    font-family: Helvetica;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    /*height: 100vh;*/
     border-radius: var(--cb-main-border-radius); /****************/
     text-align: left;
+    z-index: 10;
+}
+
+pre.cb-vm{
+    white-space: pre-wrap;
 }
 
 .cb-vm[data-cb-hidden] {
@@ -508,7 +515,7 @@ body {
 }
 
 .cb-navbar-controls {
-    background-color: var(--cb-navbar-color);
+    background-color: var(--cb-focus-repl-navbar-controls-color);
     border-radius: var(--cb-main-border-radius) var(--cb-main-border-radius) 0 0; /****************/
 }
 
@@ -555,7 +562,7 @@ body {
 }
 
 .cb-navbar-controls {
-    background-color: var(--cb-navbar-controls-color);
+    background-color: #7db6d5;
 }
 
 .cb-repl-container {
@@ -962,16 +969,6 @@ ul.cb-file-tabs {
 
 .cb-file-tabs > .cb-file-tab.active:hover > .close:hover {
     opacity: 1;
-}
-
-.cb-editors .CodeMirror {
-    border: 0;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 100%;
 }
 
 /*--------------------------- CodeMirror ----------------------------*/
@@ -1469,7 +1466,7 @@ div.tab-pane {
 
 /* ----- DOM element for experimentation ----- */
 
-.cb-html-window table,
+/*.cb-html-window table,
 #main table {
     float: left;
     table-layout: fixed;
@@ -1504,7 +1501,7 @@ div.tab-pane {
     vertical-align: middle;
     width: 100%;
     height: 100%;
-}
+}*/
 
 /* ----- Drawing window ----- */
 
