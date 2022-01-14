@@ -695,6 +695,7 @@ function CodeBootVM(opts) {
     vm.level = null;   // the selected level of the language
     vm.vmClone = null;
     vm.isOpen = true;
+    vm.embedded = false; // assume the vm is not embedded. Will be if pre tag is used
 
     vm.storageId = get_option_attr('storageId', 'data-cb-storage-id', id);
     vm.minWidth  = get_option_attr('minWidth', 'data-cb-min-width', 575);
@@ -763,7 +764,7 @@ function CodeBootVM(opts) {
 
     cb.registerVM(vm);
 
-    if (cb.vmsCreated === 1) {
+    if (cb.vmsCreated === 1 && !vm.embedded) {
         vm.initCommon(opts);
     }
 
@@ -3028,6 +3029,7 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
         vm.setAttribute('data-cb-show-editors', true);
         vm.setAttribute('data-cb-runable-code', true);
 
+        vm.embedded = true
         vm.editable = (content === null);
 
     } else if (nChildren === 0) {
