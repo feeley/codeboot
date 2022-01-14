@@ -4,7 +4,7 @@ function CodeBoot() {
 
     var cb = this;
 
-    cb.version = '3.1.11';
+    cb.version = '3.1.12';
 
     cb.cmds = null;
     cb.cmds_valid = false;
@@ -747,7 +747,10 @@ function CodeBootVM(opts) {
 
     vm.setLang(id_and_level);
 
-    var initLast = vm.initRoot(opts);
+    var floating =
+        get_option_attr('floating', 'data-cb-floating', false);
+
+    var initLast = vm.initRoot(opts, floating);
 
     if (opts.root === undefined) {
         var parent;
@@ -792,8 +795,7 @@ function CodeBootVM(opts) {
     vm.setHidden(
         get_option_attr('hidden', 'data-cb-hidden', false));
 
-    vm.setFloating(
-        get_option_attr('floating', 'data-cb-floating', false));
+    vm.setFloating(floating);
 
     if (get_option('persistent', 'data-cb-persistent', true)) {
         vm.beginSession();
@@ -2971,7 +2973,7 @@ CodeBootVM.prototype.resizeHandleHTML = function () {
 };
 
 
-CodeBootVM.prototype.initRoot = function (opts) {
+CodeBootVM.prototype.initRoot = function (opts, floating) {
 
     var vm = this;
     var nChildren = vm.root.childNodes.length;
@@ -3032,7 +3034,7 @@ CodeBootVM.prototype.initRoot = function (opts) {
 
         vm.root.innerHTML =
             vm.headerHTML() +
-            vm.navbarHTML(true, vm.root.hasAttribute('data-cb-floating'), false) +
+            vm.navbarHTML(true, floating, false) +
             vm.bodyHTML(false, true) +
             vm.footerHTML() +
             vm.resizeHandleHTML();
