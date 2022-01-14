@@ -3047,6 +3047,7 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
 
         vm.editable = true;
 
+
         if (opts.filename !== undefined)
             filename = opts.filename;
 
@@ -3598,6 +3599,12 @@ CodeBootVM.prototype.setFloating = function (floating) {
         }
 
         change_left_top(elem, left, top);
+    }
+    else{
+      if (!vm.embedded){
+        elem.style.height = '100vh';
+        elem.style.width = '100%'
+      }
     }
 };
 
