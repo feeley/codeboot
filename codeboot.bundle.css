@@ -417,6 +417,7 @@ body {
     border-radius: var(--cb-main-border-radius); /****************/
     text-align: left;
     z-index: 10;
+    width: 100%;
 }
 
 pre.cb-vm{
@@ -602,17 +603,17 @@ ul.cb-file-tabs {
 }
 
 .dropdown-item[data-cb-filename] > span > .close {
-    //    opacity: 0;
+    opacity: 0;
     filter: invert(100%);
 }
 
 .dropdown-item[data-cb-filename]:hover > span > .close {
-//    opacity: 0.5;
+    opacity: 0.5;
     filter: invert(50%);
 }
 
 .dropdown-item[data-cb-filename] > span > .close:hover {
-//    opacity: 1;
+    opacity: 1;
     filter: invert(0%);
 }
 
@@ -973,8 +974,6 @@ ul.cb-file-tabs {
 
 /*--------------------------- CodeMirror ----------------------------*/
 
-.cb-vm .CodeMirror-lines {
-}
 
 .cb-file-container .CodeMirror {
     height: 100%;
@@ -1466,7 +1465,7 @@ div.tab-pane {
 
 /* ----- DOM element for experimentation ----- */
 
-/*.cb-html-window table,
+.cb-html-window table,
 #main table {
     float: left;
     table-layout: fixed;
@@ -1501,7 +1500,7 @@ div.tab-pane {
     vertical-align: middle;
     width: 100%;
     height: 100%;
-}*/
+}
 
 /* ----- Drawing window ----- */
 
