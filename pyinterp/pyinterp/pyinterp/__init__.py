@@ -1289,6 +1289,10 @@ def populate_builtin_MethodWrapper():
     builtin_add_method_with_kwargs(class_MethodWrapper, '__call__', om_MethodWrapper_call)
     builtin_add_method(class_MethodWrapper, '__repr__', om_MethodWrapper_repr)
 
+def populate_builtin_TextIOWrapper():
+    builtin_add_method(class_TextIOWrapper, '__repr__', om_TextIOWrapper_repr)
+    builtin_add_method(class_TextIOWrapper, 'close', om_TextIOWrapper_close)
+
 def populate_builtin_int():
     builtin_add_method(class_int, '__new__', om_int_new)
     builtin_add_method(class_int, '__int__', om_int_int)
@@ -1634,10 +1638,11 @@ def om_exception(exn, args):
     OM_set(obj, 'args', args)
     return obj
 
-def om_TextIOWrapper(cls, name, mode):
+def om_TextIOWrapper(cls, name, mode, opened):
     obj = om(cls)
     OM_set_TextIOWrapper_name(obj, name)
     OM_set_TextIOWrapper_mode(obj, mode)
+    OM_set_TextIOWrapper_opened(obj, opened)
     return obj
 
 def om_WrapperDescriptor(name, cls, code, requires_kwargs):
@@ -2024,6 +2029,12 @@ def OM_get_TextIOWrapper_mode(o):
 
 def OM_set_TextIOWrapper_mode(o, mode):
     o.mode = mode
+
+def OM_get_TextIOWrapper_opened(o):
+    return o.opened
+
+def OM_set_TextIOWrapper_opened(o, opened):
+    o.opened = opened
 
 # hidden fields for methods
 
@@ -2954,6 +2965,26 @@ def om_getset_descriptor_set_code(ctx, args):
 
 om_getset_descriptor_set = do_magic_method(class_getset_descriptor, "__set__", om_getset_descriptor_set_code)
 
+
+# class_TextIOWrapper
+def om_format_TextIOWrapper(self, rte):
+    return "<TextIOWrapper name='" + OM_get_TextIOWrapper_name(self) + \
+           "' mode='" + OM_get_TextIOWrapper_mode(self) + "'>"
+
+def om_TextIOWrapper_repr(ctx, args):
+    if len(args) == 1:
+        self = args[0]
+        return cont_str(ctx, om_format_TextIOWrapper(self))
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
+
+def om_TextIOWrapper_close(ctx, args):
+    if len(args) == 1:
+        self = args[0]
+        OM_set_TextIOWrapper_opened(self, False)
+        return cont_obj(ctx, om_None)
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
 
 # class_NotImplementedType
 def om_format_NotImplementedType(self, rte):
@@ -7187,6 +7218,7 @@ bootstrap_populate_base_types()
 populate_builtin_getset_descriptor()
 populate_builtin_NotImplementedType()
 populate_builtin_MethodWrapper()
+populate_builtin_TextIOWrapper()
 
 # Basic type and date structure.
 populate_builtin_int()
@@ -7407,7 +7439,7 @@ def om_open_code(rte, _):
         return sem_raise_with_message(next_ctx, class_TypeError, "open() argument 'file' must be str")
 
     if runtime_file_exists(rte, file_value):
-        return unwind_return(rte, om_TextIOWrapper(class_TextIOWrapper, file_value, mode_value))
+        return unwind_return(rte, om_TextIOWrapper(class_TextIOWrapper, file_value, mode_value, True))
     else:
         return sem_raise_with_message(next_ctx, class_FileNotFoundError,
                                       "No such file: '" + file_value + "'")
@@ -12138,7 +12170,8 @@ simple_repr_formatters = {
     "wrapper_descriptor": om_format_WrapperDescriptor_repr,
     "module": om_format_module_repr,
     "object": om_format_object_repr,
-    "NotImplementedType" : om_format_NotImplementedType
+    "NotImplementedType" : om_format_NotImplementedType,
+    "TextIOWrapper": om_format_TextIOWrapper
 }
 
 def om_simple_repr(ctx, value):
