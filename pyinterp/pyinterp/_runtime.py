@@ -722,16 +722,19 @@ def drawing_lt(rte, angle):
 def drawing_rt(rte, angle):
     pass
 
-def drawing_ht(rte):
+def drawing_st(rte):
     pass
 
-def drawing_st(rte):
+def drawing_ht(rte):
     pass
 
 def drawing_pd(rte):
     pass
 
 def drawing_pu(rte):
+    pass
+
+def drawing_nextpu(rte):
     pass
 
 def drawing_mv(rte, x, y):

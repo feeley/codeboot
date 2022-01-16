@@ -25,6 +25,7 @@ LangPy.prototype.properties =
         scriptType: 'text/python',
         prompt: '>>>',
         promptCont: '...',
+        singleLineComment: '#',
         editorOpts: { mode: 'python', indentUnit: 4 },
         SVG:
         {
@@ -419,15 +420,15 @@ function drawing_cs(rte, width, height) {
     dw.prepareToShow();
 }
 
-function drawing_ht(rte) {
-    var dw = rte.vm.ui.dw;
-    dw.ht();
-    dw.prepareToShow();
-}
-
 function drawing_st(rte) {
     var dw = rte.vm.ui.dw;
     dw.st();
+    dw.prepareToShow();
+}
+
+function drawing_ht(rte) {
+    var dw = rte.vm.ui.dw;
+    dw.ht();
     dw.prepareToShow();
 }
 
@@ -440,6 +441,12 @@ function drawing_pd(rte) {
 function drawing_pu(rte) {
     var dw = rte.vm.ui.dw;
     dw.pu();
+    dw.prepareToShow();
+}
+
+function drawing_nextpu(rte) {
+    var dw = rte.vm.ui.dw;
+    dw.nextpu();
     dw.prepareToShow();
 }
 

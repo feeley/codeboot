@@ -7647,8 +7647,9 @@ def make_module_turtle():
 
     om_module_turtle_st = make_set_option_fn(drawing_st, 'st')
     om_module_turtle_ht = make_set_option_fn(drawing_ht, 'ht')
-    om_module_turtle_pu = make_set_option_fn(drawing_pu, 'pu')
     om_module_turtle_pd = make_set_option_fn(drawing_pd, 'pd')
+    om_module_turtle_pu = make_set_option_fn(drawing_pu, 'pu')
+    om_module_turtle_nextpu = make_set_option_fn(drawing_nextpu, 'nextpu')
 
     def make_translation_fn(fn, name, arg1_name, arg2_name):
         def code(rte, cont):
@@ -7813,8 +7814,9 @@ def make_module_turtle():
     dict_set(module_turtle_env, 'clear', om_module_turtle_clear)
     dict_set(module_turtle_env, 'st', om_module_turtle_st)
     dict_set(module_turtle_env, 'ht', om_module_turtle_ht)
-    dict_set(module_turtle_env, 'pu', om_module_turtle_pu)
     dict_set(module_turtle_env, 'pd', om_module_turtle_pd)
+    dict_set(module_turtle_env, 'pu', om_module_turtle_pu)
+    dict_set(module_turtle_env, 'nextpu', om_module_turtle_nextpu)
     dict_set(module_turtle_env, 'fd', om_module_turtle_fd)
     dict_set(module_turtle_env, 'bk', om_module_turtle_bk)
     dict_set(module_turtle_env, 'goto', om_module_turtle_goto)
