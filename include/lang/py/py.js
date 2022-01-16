@@ -813,3 +813,102 @@ function runtime_get_syntaxError_thrower(compilationError) {
 
     return syntaxError
 }
+
+// FFI
+var host_eval = eval;
+
+var _foreign_counter = 0;
+function gen_foreign() { return "___f" + _foreign_counter++; }
+
+// Host type predicates available to pyinterp
+// is_host_foo => foo is the Python type name
+function is_host_bool(obj) {
+    return typeof obj === "boolean";
+}
+function is_host_str(obj) {
+    return typeof obj === "string";
+}
+function is_host_function(obj) {
+    return typeof obj === "function";
+}
+function is_host_float(obj) {
+    return (typeof obj === "number") && !Number.isInteger(obj);
+}
+function is_host_list(obj) {
+    return obj instanceof Array;
+}
+function is_host_dict(obj) {
+    return obj instanceof Object;
+}
+function is_host_int(obj) {
+    return Number.isInteger(obj);
+}
+
+// Convert a pyinterp object to a JS object
+function py2host(obj) {
+    var type = (t) => pyinterp.om_isinstance(obj, t);
+
+    if (type(pyinterp.class_int)) {
+        return int_to_num(obj.value);
+    }
+    if (type(pyinterp.class_float)) {
+        return obj.value;
+    }
+    if (type(pyinterp.class_str)) {
+        return obj.value;
+    }
+    if (type(pyinterp.class_tuple)) {
+        return obj.seq.map(py2host);
+    }
+    if (type(pyinterp.class_list)) {
+        return obj.seq.map(py2host);
+    }
+    // TODO: dicts
+    if (type(pyinterp.class_bool)) {
+        return obj.value && true;
+    }
+    if (type(pyinterp.class_NoneType)) {
+        return null
+    }
+}
+
+// Convert a JS object to a pyinterp object
+function host2py(obj) {
+    if (typeof obj === "boolean") {
+        return pyinterp.om_bool(true && obj);
+    }
+    if (typeof obj === "number") {
+        if (Number.isInteger(obj)) {
+            return pyinterp.om_int(obj);
+        }
+        return pyinterp.om_float(obj);
+    }
+    if (typeof obj === "string") {
+        return pyinterp.om_str(obj);
+    }
+    if (typeof obj === "function") {
+        return host_function2py(obj);
+    }
+    if (obj instanceof Array) {
+        return pyinterp.om_list(obj.map(host2py));
+    }
+    if ((obj === null) || (obj === undefined)) {
+        return pyinterp.om_None;
+    }
+    // This comes last to match only dicts
+    if (obj instanceof Object) {
+        return pyinterp.om_str("object conversion not implemented");
+    }
+}
+
+// Convert a JS function to a pyinterp function
+function host_function2py(fn) {
+    var name = gen_foreign();
+    var signature = pyinterp.make_vararg_only_signature('args');
+    function code(rte, cont) {
+        var fn_args = py2host(pyinterp.rte_lookup_locals(rte, 'args'));
+        var result = host2py(fn.apply(null, fn_args));
+        return pyinterp.unwind_return(rte, result);
+    }
+    return pyinterp.om_make_builtin_function_with_signature(name, code, signature);
+}
