@@ -875,8 +875,6 @@ function py2host(obj) {
 
 // Convert a JS object to a pyinterp object
 function host2py(obj) {
-    console.log("host2py");
-    console.log(obj);
     if (typeof obj === "boolean") {
         return pyinterp.om_bool(true);
     }
