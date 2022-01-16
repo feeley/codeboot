@@ -1,5 +1,7 @@
 // codeBoot state
 
+DEBUG = true;
+
 function CodeBoot() {
 
     var cb = this;
@@ -18,15 +20,15 @@ function CodeBoot() {
                  alt: false
                };
 
-    document.addEventListener('DOMContentLoaded', function () {
 
+    function codeboot_start(){
         cb.rewrite_event_handlers(null, document.body);
 
         function done() {
             cb.init();
         }
 
-        var search =  window.location.search;
+        var search = window.location.search;
 
         if (search && search.slice(0, 6) === '?init=') {
 
@@ -40,14 +42,32 @@ function CodeBoot() {
             cb.cmds = cmds;
 
             cb.verify(toUint8Array(cmds_str),
-                      signature,
-                      function (isValid) {
-                          cb.cmds_valid = isValid;
-                          done();
-                      });
+                signature,
+                function (isValid) {
+                    cb.cmds_valid = isValid;
+                    done();
+                });
         } else {
             done();
         }
+    }
+
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof Reveal !== 'undefined'){
+            console.log("Reveal js detected... initilizing codeboot after its initialization")
+            // Only start initilizing codeboot once reveal.js is ready
+            Reveal.on('ready', (e)=> codeboot_start())
+            // refresh codemirror each time we change page see 
+            // https://github.com/codemirror/CodeMirror/issues/61
+            Reveal.on('slidechanged', e => 
+                e.currentSlide.querySelectorAll('.CodeMirror')
+                              .forEach(x => x.CodeMirror.refresh()))
+        }
+        else{
+            codeboot_start()
+        }
+
     });
 }
 
@@ -334,7 +354,9 @@ CodeBoot.prototype.init = function () {
 
     var cb = this;
 
-    cb.setupBeforeunloadHandling();
+    if (!DEBUG){
+      cb.setupBeforeunloadHandling();
+    }
     cb.setupResizeHandling();
     cb.setupMouseMotionTracking(document.body);
 
@@ -579,11 +601,6 @@ function getCodeBootVM(elem) {
         if (root) {
             vm = CodeBoot.prototype.vms['#' + root.getAttribute('id')];
         }
-    }
-
-    if (vm === undefined) {
-        for (id in CodeBoot.prototype.vms)
-            return CodeBoot.prototype.vms[id];
     }
 
     return vm;
@@ -2992,19 +3009,21 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
         // In order to resize the repl's height, the CodeMirror-scroll
         // element's max-height must be explicitly changed
 
-        var bodyElem = vm.root.querySelector('.cb-body');
-        if (bodyElem) {
-            var replContElem = bodyElem.querySelector('.cb-repl-container');
-            if (replContElem) {
-                vm.setupSplitter(bodyElem, function (size) {
-                    var replScrollElem = replContElem.querySelector('.CodeMirror-scroll');
-                    if (replScrollElem) {
-                        replScrollElem.style.maxHeight = size + 'px';
-                        vm.replScrollToEnd();
-                    }
-                });
-            }
-        }
+        // var bodyElem = vm.root.querySelector('.cb-body');
+        // if (bodyElem) {
+        //     var replContElem = bodyElem.querySelector('.cb-repl-container');
+        //     if (replContElem) {
+        //         vm.setupSplitter(bodyElem, function (size) {
+        //             var replScrollElem = replContElem.querySelector('.CodeMirror-scroll');
+        //             if (replScrollElem) {
+        //                 replScrollElem.style.maxHeight = size + 'px';
+        //                 vm.replScrollToEnd();
+        //             }
+        //         });
+        //     }
+        // }
+
+        vm.root.querySelector('.CodeMirror').CodeMirror.refresh()
 
         var consoleElem = vm.root.querySelector('.cb-console');
         if (consoleElem) {
@@ -3012,7 +3031,9 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
         }
     }
 
+    
     if (vm.root.tagName === 'PRE') {
+
 
         content = vm.root.innerText;
         var elem = document.createElement('div');
