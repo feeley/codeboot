@@ -3558,8 +3558,12 @@ CodeBootVM.prototype.setFloating = function (floating) {
         var maxY = window.innerHeight;
         var width = Math.max(vm.minWidth, Math.floor(maxX*2/3));
         var height = Math.max(vm.minHeight, Math.floor(maxY*2/3));
-        var left = Math.max(0, maxX - width - 20);
-        var top = Math.max(0, maxY - height - 20);
+        // var left = Math.max(0, (maxX - width) / 2);
+        // var top = Math.max(0, maxY - height - 20);
+        var left = 0
+        var top = 0
+
+        console.log(left, top)
 
         if (elem.latest_width_height !== undefined) {
             width = elem.latest_width_height.width;
@@ -3650,8 +3654,11 @@ CodeBootVM.prototype.setupMoveRezizeHandlers = function () {
     }
 
     function mousemove(event) {
+        
+        // All positions are relative to parent element
+        var boundingBox = elem.getBoundingClientRect()
 
-        event = event || window.event;
+        var event = event || window.event;
         event.preventDefault();
 
         if (event.buttons === 0) {
@@ -3671,8 +3678,14 @@ CodeBootVM.prototype.setupMoveRezizeHandlers = function () {
         var dx = clientX - latestX;
         var dy = clientY - latestY;
 
-        var curX = elem.offsetLeft;
+        var curX = elem.offsetLeft; 
         var curY = elem.offsetTop;
+
+        // Difference between the "left" and "top" properties and the actual x,y values
+        //   on the screen. We can only control the "left" and "top" values but there are
+        //   sometimes not representative of the actual x,y position of the div..
+        var diffXLeft = boundingBox.x - curX;
+        var diffYTop = boundingBox.y - curY;
 
         if (resize) {
             var newW = Math.min(maxX-curX, Math.max(vm.minWidth, curW+dx));
@@ -3681,8 +3694,8 @@ CodeBootVM.prototype.setupMoveRezizeHandlers = function () {
             dy = newH - curH;
             change_width_height(elem, newW, newH);
         } else {
-            var newX = Math.min(maxX-30, Math.max(20-curW, curX+dx));
-            var newY = Math.min(maxY-20, Math.max(-20, curY+dy));
+            var newX = Math.min(maxX-curW/2, Math.max(-curW/2, curX+diffXLeft+dx)) - diffXLeft;
+            var newY = Math.min(maxY-curH/2, Math.max(0, curY+diffYTop+dy)) - diffYTop;
             dx = newX - curX;
             dy = newY - curY;
             change_left_top(elem, newX, newY);
