@@ -82,15 +82,6 @@ CodeBoot.prototype.setupBeforeunloadHandling = function () {
     });
 };
 
-CodeBoot.prototype.setupResizeHandling = function () {
-
-    var cb = this;
-
-    window.addEventListener('resize', function (event) {
-        cb.resizeHandler();
-    });
-};
-
 CodeBoot.prototype.setupMouseMotionTracking = function (elem) {
 
     var cb = this;
@@ -357,7 +348,6 @@ CodeBoot.prototype.init = function () {
     if (!DEBUG){
       cb.setupBeforeunloadHandling();
     }
-    cb.setupResizeHandling();
     cb.setupMouseMotionTracking(document.body);
 
     cb.setupAllVM(document);
@@ -552,42 +542,6 @@ CodeBoot.prototype.refreshZIndex = function () {
         vm.root.style.zIndex = zIndex;
     }
 };
-
-CodeBoot.prototype.resizeHandler = function (event) {
-
-    var cb = this;
-
-    // undo scaling so VM stays same size
-
-    for (var id in CodeBoot.prototype.vms) {
-        var vm = CodeBoot.prototype.vms[id];
-        //console.log(id + ' ' + vm);
-        delete vm.root.style.transform;
-        var scale = getScale(vm.root);
-        if (scale !== 1) {
-            vm.root.style.transform = 'scale(' + (1/scale) + ')';
-        }
-    }
-};
-
-function getScale(elem) {
-
-    var style = window.getComputedStyle(elem, null);
-    var transform = style.getPropertyValue("-webkit-transform") ||
-                    style.getPropertyValue("-moz-transform") ||
-                    style.getPropertyValue("-ms-transform") ||
-                    style.getPropertyValue("-o-transform") ||
-                    style.getPropertyValue("transform");
-
-    if (transform && transform !== 'none') {
-        var values = transform.split('(')[1].split(')')[0].split(',');
-        var a = values[0];
-        var b = values[1];
-        return Math.sqrt(a*a + b*b);
-    } else {
-        return 1;
-    }
-}
 
 function getCodeBootVM(elem) {
 
