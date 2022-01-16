@@ -8607,6 +8607,8 @@ def inject_module_in_env(module, env):
 def om_js_eval_code(rte, cont):
     expr = rte_lookup_locals(rte, 'expr')
     result = host2py(host_eval(py2host(expr)))
+    if result == absent:
+        return sem_raise_with_message(make_out_of_ast_context(rte, cont), class_ValueError, "Could not convert JavaScript type to Python")
     return unwind_return(rte, result)
 
 def fresh_rte(options):

@@ -870,12 +870,15 @@ function py2host(obj) {
     if (type(pyinterp.class_NoneType)) {
         return null
     }
+    throw "Could not convert Python type to JavaScript";
 }
 
 // Convert a JS object to a pyinterp object
 function host2py(obj) {
+    console.log("host2py");
+    console.log(obj);
     if (typeof obj === "boolean") {
-        return pyinterp.om_bool(true && obj);
+        return pyinterp.om_bool(true);
     }
     if (typeof obj === "number") {
         if (Number.isInteger(obj)) {
@@ -895,10 +898,7 @@ function host2py(obj) {
     if ((obj === null) || (obj === undefined)) {
         return pyinterp.om_None;
     }
-    // This comes last to match only dicts
-    if (obj instanceof Object) {
-        return pyinterp.om_str("object conversion not implemented");
-    }
+    return pyinterp.absent;
 }
 
 // Convert a JS function to a pyinterp function
@@ -908,6 +908,9 @@ function host_function2py(fn) {
     function code(rte, cont) {
         var fn_args = py2host(pyinterp.rte_lookup_locals(rte, 'args'));
         var result = host2py(fn.apply(null, fn_args));
+        if (result === pyinterp.absent) {
+            return pyinterp.sem_raise_with_message(pyinterp.make_out_of_ast_context(rte, cont), pyinterp.class_ValueError, "Could not convert JavaScript type to Python")
+        }
         return pyinterp.unwind_return(rte, result);
     }
     return pyinterp.om_make_builtin_function_with_signature(name, code, signature);
