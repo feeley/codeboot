@@ -251,7 +251,6 @@ DrawingWindow.prototype.mv = function (x, y, relative) {
     var y0 = dw.pos.y;
     var x1 = x;
     var y1 = y;
-    console.log('dw.nextpu_mode='+dw.nextpu_mode);
     if ((relative ? dw.nextpu_mode !== 1 : dw.nextpu_mode === 0) &&
         dw.pen_height === 0) {
         dom_line_to(dw.drawing_context, x0, y0, x1, y1);
