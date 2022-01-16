@@ -378,6 +378,12 @@ class OM_BaseException(OM_object):
     locations: stack of ast nodes where the exception was thrown
     """
 
+class OM_TextIOWrapper(OM_object):
+    """
+    name: filename
+    mode: file mode
+    """
+
 
 def make_frame(rte, cont, ast):
     return [rte, cont, ast]
@@ -1628,6 +1634,12 @@ def om_exception(exn, args):
     OM_set(obj, 'args', args)
     return obj
 
+def om_TextIOWrapper(cls, name, mode):
+    obj = om(cls)
+    OM_set_TextIOWrapper_name(obj, name)
+    OM_set_TextIOWrapper_mode(obj, mode)
+    return obj
+
 def om_WrapperDescriptor(name, cls, code, requires_kwargs):
     obj = om(class_WrapperDescriptor)
     OM_set_code(obj, code)
@@ -1750,6 +1762,9 @@ def OM_NoneType_create():
 
 def OM_BaseException_create():
     return OM_BaseException()
+
+def OM_TextIOWrapper_create():
+    return OM_TextIOWrapper()
 
 # Manipulation of om object.
 def OM_set(o, name, value):
@@ -1997,6 +2012,18 @@ def OM_get_function_lexical_scope(o):
 
 def OM_set_function_lexical_scope(o, lexical_scope):
     o.lexical_scope = lexical_scope
+
+def OM_get_TextIOWrapper_name(o):
+    return o.name
+
+def OM_set_TextIOWrapper_name(o, name):
+    o.name = name
+
+def OM_get_TextIOWrapper_mode(o):
+    return o.mode
+
+def OM_set_TextIOWrapper_mode(o, mode):
+    o.mode = mode
 
 # hidden fields for methods
 
@@ -2265,6 +2292,8 @@ class_function = make_builtin_class('function', OM_function_create, ())
 class_method = make_builtin_class('method', OM_method_create, ())
 class_slice = make_builtin_class('slice', OM_slice_create, ())
 
+class_TextIOWrapper = make_builtin_class('TextIOWrapper', OM_TextIOWrapper_create, ())
+
 # class available and populated in 'more_builtins' module
 class_struct = make_builtin_class('struct', OM_struct_create, ())
 class_DOMDocument = make_builtin_class('DOMDocument', OM_DOMDocument_create, ())
@@ -2292,6 +2321,8 @@ class_ZeroDivisionError = make_builtin_class('ZeroDivisionError', OM_BaseExcepti
 class_AssertionError = make_builtin_class('AssertionError', OM_BaseException_create, (class_Exception,))
 class_ImportError = make_builtin_class('ImportError', OM_BaseException_create, (class_Exception,))
 class_ModuleNotFoundError = make_builtin_class('ModuleNotFoundError', OM_BaseException_create, (class_ImportError,))
+class_OSError = make_builtin_class('OSError', OM_BaseException_create, (class_Exception,))
+class_FileNotFoundError = make_builtin_class('FileNotFoundError', OM_BaseException_create, (class_OSError,))
 
 om_None = om(class_NoneType)
 om_True = om_boxval(class_bool, int_from_num(1))
@@ -7355,6 +7386,32 @@ def om_iter_code(rte, _):
     else:
         return sem_raise(next_ctx, class_NotImplementedError)
 
+def om_open_code(rte, _):
+    next_ctx = make_out_of_ast_context(rte, unwind_return)
+
+    file = rte_lookup_locals(rte, 'file')
+    mode = rte_lookup_locals(rte, 'mode')
+
+    # cPython applies checks on mode first
+    if om_isinstance(mode, class_str):
+        mode_value = OM_get_boxed_value(mode)
+
+        if mode_value != 'r' and mode_value != 'w':
+            return sem_raise_with_message(next_ctx, class_ValueError, "invalid mode: '" + mode_value + "'")
+    else:
+        return sem_raise_with_message(next_ctx, class_TypeError, "open() argument 'mode' must be str")
+
+    if om_isinstance(file, class_str):
+        file_value = OM_get_boxed_value(file)
+    else:
+        return sem_raise_with_message(next_ctx, class_TypeError, "open() argument 'file' must be str")
+
+    if runtime_file_exists(rte, file_value):
+        return unwind_return(rte, om_TextIOWrapper(class_TextIOWrapper, file_value, mode_value))
+    else:
+        return sem_raise_with_message(next_ctx, class_FileNotFoundError,
+                                      "No such file: '" + file_value + "'")
+
 def om_abs_code(rte, _):
     next_ctx = make_out_of_ast_context(rte, unwind_return)
 
@@ -8337,9 +8394,12 @@ def make_module_more_builtins():
             if len(filename_value) == 0:
                 return sem_raise_with_message(make_out_of_ast_context(rte, cont), class_TypeError,
                                               "filename must be a non-empty str")
-            else:
-                content = runtime_readFile(rte, filename_value)
+            elif runtime_file_exists(rte, filename_value):
+                content = runtime_read_file(rte, filename_value)
                 return unwind_return(rte, om_str(content))
+            else:
+                return sem_raise_with_message(make_out_of_ast_context(rte, cont), class_FileNotFoundError,
+                                              "No such file: '" + filename_value + "'")
 
 
     om_readFile = om_make_builtin_function_with_signature('readFile', readFile_code,
@@ -8361,7 +8421,7 @@ def make_module_more_builtins():
                 return sem_raise_with_message(make_out_of_ast_context(rte, cont), class_TypeError,
                                               "filename must be a non-empty str")
             else:
-                runtime_writeFile(rte, filename_value, content_value)
+                runtime_write_file(rte, filename_value, content_value)
                 return unwind_return(rte, om_None)
 
 
@@ -8624,6 +8684,8 @@ def fresh_rte(options):
     om_builtin_len = om_make_builtin_function_with_signature('len', om_len_code, make_posonly_only_signature(('obj',)))
     om_builtin_next = om_make_builtin_function_with_signature('next', om_next_code,
                                                               make_posonly_defaults_signature(('obj', 'default'), (absent,)))
+    om_builtin_open = om_make_builtin_function_with_signature('open', om_open_code,
+                                                              make_args_defaults_signature(('file', 'mode'), (om_str('r'),)))
     om_builtin_iter = om_make_builtin_function_with_signature('iter', om_iter_code,
                                                               make_posonly_defaults_signature(('obj', 'sentinel'), (absent,)))
     om_builtin_abs = om_make_builtin_function_with_signature('abs', om_abs_code, make_posonly_only_signature(('obj',)))
@@ -8661,6 +8723,7 @@ def fresh_rte(options):
     dict_set(builtins_env, 'len', om_builtin_len)
     dict_set(builtins_env, 'next', om_builtin_next)
     dict_set(builtins_env, 'iter', om_builtin_iter)
+    dict_set(builtins_env, 'open', om_builtin_open)
     dict_set(builtins_env, 'abs', om_builtin_abs)
     dict_set(builtins_env, 'min', om_builtin_min)
     dict_set(builtins_env, 'max', om_builtin_max)
@@ -8684,6 +8747,8 @@ def fresh_rte(options):
     dict_set(builtins_env, 'AssertionError', class_AssertionError)
     dict_set(builtins_env, 'ImportError', class_ImportError)
     dict_set(builtins_env, 'ModuleNotFoundError', class_ModuleNotFoundError)
+    dict_set(builtins_env, 'OSError', class_OSError)
+    dict_set(builtins_env, 'FileNotFoundError', class_FileNotFoundError)
 
     # Pyinterp functions
     om_builtin_alert = om_make_builtin_function_with_signature('alert', om_alert_code, make_posonly_defaults_signature(('obj',), (om_str(''),)))
@@ -10577,9 +10642,9 @@ def gen_import_alias(cte, ast, alias):
 
         # Always re-import in repl as CodeBoot usage allows to use the repl to test files as they are edited
         if existing_module is absent or import_is_in_repl:
-            module_src = runtime_read_file(rte, filename)
+            if runtime_file_exists(rte, filename):
+                module_src = runtime_read_file(rte, filename)
 
-            if module_src is None:
                 if import_is_in_repl and existing_module is not absent:
                     # When repl fails to re-import a module (deleted of not a file), take existing one from sys.modules
                     return set_code(rte, cont, existing_module)
