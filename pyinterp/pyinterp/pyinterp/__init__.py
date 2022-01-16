@@ -8605,6 +8605,14 @@ def inject_module_in_env(module, env):
         value = key_value[1]
         dict_set(env, key, value)
 
+# JS FFI
+def om_js_eval_code(rte, cont):
+    expr = rte_lookup_locals(rte, 'expr')
+    result = host2py(host_eval(py2host(expr)))
+    if result == absent:
+        return sem_raise_with_message(make_out_of_ast_context(rte, cont), class_ValueError, "Could not convert JavaScript type to Python")
+    return unwind_return(rte, result)
+
 def fresh_rte(options):
     locals_env = absent
     globals_env = make_dict()
@@ -8635,6 +8643,9 @@ def fresh_rte(options):
     om_builtin_pow = om_make_builtin_function_with_signature('pow', om_pow_code, make_posonly_defaults_only_signature(('base', 'power', 'mod'), (absent,)))
 
     om_builtin_isinstance = om_make_builtin_function_with_signature('isinstance', om_isinstance_code, make_posonly_only_signature(('object', 'classinfo')))
+
+    # JS FFI
+    om_js_eval = om_make_builtin_function_with_signature('js_eval', om_js_eval_code, make_posonly_only_signature(('expr',)))
 
     dict_set(builtins_env, 'type', class_type)
     dict_set(builtins_env, 'object', class_object)
@@ -8668,6 +8679,9 @@ def fresh_rte(options):
     dict_set(builtins_env, 'max', om_builtin_max)
     dict_set(builtins_env, 'round', om_builtin_round)
     dict_set(builtins_env, 'pow', om_builtin_pow)
+
+    # JS FFI
+    dict_set(builtins_env, 'js_eval', om_js_eval)
 
     dict_set(builtins_env, 'BaseException', class_BaseException)
     dict_set(builtins_env, 'Exception', class_Exception)

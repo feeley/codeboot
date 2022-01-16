@@ -870,3 +870,44 @@ def runtime_removeAttribute(rte, elem, attr):
 
 def runtime_getAttribute(rte, elem, attr):
     raise NotImplementedError("not running in a browser")
+
+###
+# FFI
+###
+
+def runtime_js_eval(expr):
+    raise NotImplementedError("not running in a browser")
+
+def gen_foreign():
+    raise NotImplementedError("not running in a browser")
+
+def host_eval(expr):
+    raise NotImplementedError("not running in a browser")
+
+def py2host(expr):
+    raise NotImplementedError("not running in a browser")
+
+def host2py(expr):
+    raise NotImplementedError("not running in a browser")
+
+# Host type predicates
+def is_host_bool(obj):
+    raise NotImplementedError("not running in a browser")
+
+def is_host_str(obj):
+    raise NotImplementedError("not running in a browser")
+
+def is_host_function(obj):
+    raise NotImplementedError("not running in a browser")
+
+def is_host_int(obj):
+    raise NotImplementedError("not running in a browser")
+
+def is_host_float(obj):
+    raise NotImplementedError("not running in a browser")
+
+def is_host_list(obj):
+    raise NotImplementedError("not running in a browser")
+
+def is_host_dict(obj):
+    raise NotImplementedError("not running in a browser")
