@@ -903,6 +903,7 @@ function host2py(obj) {
     if ((obj === null) || (obj === undefined)) {
         return pyinterp.om_None;
     }
+    // TODO: Return a foreign
     return pyinterp.absent;
 }
 
