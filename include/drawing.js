@@ -214,9 +214,11 @@ DrawingWindow.prototype.init = function () {
     dom_clear(dw.drawing_canvas);
     dw.turtle_height = 0;
     dw.pen_height = 0;
+    dw.nextpu_mode = -1; // -1 = skip mv only, 1 = skip all, 0 = skip none
     dw.orientation = 0;
     dw.pos = { x:0, y:0 };
-    dw.draw_turtle();
+    dw.turtle_visible = false;
+    dw.update_turtle_visibility(true);
     dw.set_color('#000');
     dw.set_thickness(1);
 };
@@ -234,7 +236,7 @@ DrawingWindow.prototype.fd = function (xdistance, ydistance) {
     var y0 = dw.pos.y;
     var x1 = x0 + xdistance * Math.cos(rad) - ydistance * Math.sin(rad);
     var y1 = y0 + xdistance * Math.sin(rad) + ydistance * Math.cos(rad);
-    dw.mv(x1, y1);
+    dw.mv(x1, y1, true);
 };
 
 DrawingWindow.prototype.bk = function (xdistance, ydistance) {
@@ -243,19 +245,20 @@ DrawingWindow.prototype.bk = function (xdistance, ydistance) {
     dw.fd(-xdistance,-ydistance);
 };
 
-DrawingWindow.prototype.mv = function (x, y) {
+DrawingWindow.prototype.mv = function (x, y, relative) {
     var dw = this;
     var x0 = dw.pos.x;
     var y0 = dw.pos.y;
     var x1 = x;
     var y1 = y;
-    if (dw.pen_height === 0) {
+    if ((relative ? dw.nextpu_mode !== 1 : dw.nextpu_mode === 0) &&
+        dw.pen_height === 0) {
         dom_line_to(dw.drawing_context, x0, y0, x1, y1);
     }
+    dw.update_turtle_visibility(false);
     dw.pos = { x:x1, y:y1 };
-    if (dw.turtle_height === 0) {
-        dw.draw_turtle();
-    }
+    dw.update_turtle_visibility(!!relative);
+    dw.nextpu_mode = 0;
 };
 
 DrawingWindow.prototype.set_color = function (color) {
@@ -270,16 +273,21 @@ DrawingWindow.prototype.set_thickness = function (width) {
     dom_set_thickness(ctx, width);
 };
 
-DrawingWindow.prototype.pu = function () {
-    var dw = this;
-    dw.pen_height++;
-};
-
 DrawingWindow.prototype.pd = function () {
     var dw = this;
     if (--dw.pen_height <= 0) {
         dw.pen_height = 0;
     }
+};
+
+DrawingWindow.prototype.pu = function () {
+    var dw = this;
+    dw.pen_height++;
+};
+
+DrawingWindow.prototype.nextpu = function () {
+    var dw = this;
+    dw.nextpu_mode = 1;
 };
 
 DrawingWindow.prototype.triangle = function (h, base) {
@@ -304,7 +312,10 @@ DrawingWindow.prototype.draw_turtle = function () {
         var save_canvas = dw.drawing_canvas;
         var save_context = dw.drawing_context;
         var save_pen = dw.pen_height;
+        var save_nextpu_mode = dw.nextpu_mode;
+        var save_turtle_visible = dw.turtle_visible;
         dw.pen_height = 0;
+        dw.nextpu_mode = 0;
         dw.drawing_canvas = dw.turtle_canvas;
         dw.drawing_context = dw.turtle_context;
         dom_clear(dw.drawing_canvas);
@@ -314,38 +325,48 @@ DrawingWindow.prototype.draw_turtle = function () {
         dw.drawing_canvas = save_canvas;
         dw.drawing_context = save_context;
         dw.pen_height = save_pen;
+        dw.nextpu_mode = save_nextpu_mode;
+        dw.turtle_visible = save_turtle_visible;
     });
 };
 
-DrawingWindow.prototype.ht = function () {
+DrawingWindow.prototype.update_turtle_visibility = function (show) {
     var dw = this;
-    if (dw.turtle_height++ === 0) {
-        dom_clear(dw.turtle_canvas);
+    var should_be_visible = (show && dw.turtle_height <= 0);
+    if (dw.turtle_visible !== should_be_visible) {
+        dw.turtle_visible = should_be_visible;
+        if (should_be_visible) {
+            dw.draw_turtle();
+        } else {
+            dom_clear(dw.turtle_canvas);
+        }
     }
 };
 
 DrawingWindow.prototype.st = function () {
     var dw = this;
-    if (--dw.turtle_height <= 0) {
-        dw.turtle_height = 0;
-        dw.draw_turtle();
-    }
+    dw.update_turtle_visibility(false);
+    if (--dw.turtle_height < 0) dw.turtle_height = 0;
+    dw.update_turtle_visibility(true);
+};
+
+DrawingWindow.prototype.ht = function () {
+    var dw = this;
+    dw.update_turtle_visibility(false);
+    dw.turtle_height++;
+    dw.update_turtle_visibility(true);
 };
 
 DrawingWindow.prototype.lt = function (angle) {
     var dw = this;
+    dw.update_turtle_visibility(false);
     dw.orientation += angle;
-    if (dw.turtle_height === 0) {
-        dw.draw_turtle();
-    }
+    dw.update_turtle_visibility(true);
 };
 
 DrawingWindow.prototype.rt = function (angle) {
     var dw = this;
-    dw.orientation -= angle;
-    if (dw.turtle_height === 0) {
-        dw.draw_turtle();
-    }
+    dw.lt(-angle);
 };
 
 DrawingWindow.prototype.setpc = function (r, g, b) {
@@ -453,15 +474,21 @@ function builtin_ht() {
     dw.prepareToShow();
 }
 
+function builtin_pd() {
+    var dw = drawing_window;
+    dw.pd();
+    dw.prepareToShow();
+}
+
 function builtin_pu() {
     var dw = drawing_window;
     dw.pu();
     dw.prepareToShow();
 }
 
-function builtin_pd() {
+function builtin_nextpu() {
     var dw = drawing_window;
-    dw.pd();
+    dw.nextpu();
     dw.prepareToShow();
 }
 

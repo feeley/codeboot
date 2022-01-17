@@ -1,5 +1,7 @@
 // codeBoot state
 
+DEBUG = true;
+
 function CodeBoot() {
 
     var cb = this;
@@ -18,15 +20,15 @@ function CodeBoot() {
                  alt: false
                };
 
-    document.addEventListener('DOMContentLoaded', function () {
 
+    function codeboot_start(){
         cb.rewrite_event_handlers(null, document.body);
 
         function done() {
             cb.init();
         }
 
-        var search =  window.location.search;
+        var search = window.location.search;
 
         if (search && search.slice(0, 6) === '?init=') {
 
@@ -40,14 +42,32 @@ function CodeBoot() {
             cb.cmds = cmds;
 
             cb.verify(toUint8Array(cmds_str),
-                      signature,
-                      function (isValid) {
-                          cb.cmds_valid = isValid;
-                          done();
-                      });
+                signature,
+                function (isValid) {
+                    cb.cmds_valid = isValid;
+                    done();
+                });
         } else {
             done();
         }
+    }
+
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof Reveal !== 'undefined'){
+            console.log("Reveal js detected... initilizing codeboot after its initialization")
+            // Only start initilizing codeboot once reveal.js is ready
+            Reveal.on('ready', (e)=> codeboot_start())
+            // refresh codemirror each time we change page see 
+            // https://github.com/codemirror/CodeMirror/issues/61
+            Reveal.on('slidechanged', e => 
+                e.currentSlide.querySelectorAll('.CodeMirror')
+                              .forEach(x => x.CodeMirror.refresh()))
+        }
+        else{
+            codeboot_start()
+        }
+
     });
 }
 
@@ -59,15 +79,6 @@ CodeBoot.prototype.setupBeforeunloadHandling = function () {
 
     window.addEventListener('beforeunload', function (event) {
         return cb.beforeunloadHandler(event);
-    });
-};
-
-CodeBoot.prototype.setupResizeHandling = function () {
-
-    var cb = this;
-
-    window.addEventListener('resize', function (event) {
-        cb.resizeHandler();
     });
 };
 
@@ -334,8 +345,9 @@ CodeBoot.prototype.init = function () {
 
     var cb = this;
 
-    cb.setupBeforeunloadHandling();
-    cb.setupResizeHandling();
+    if (!DEBUG){
+      cb.setupBeforeunloadHandling();
+    }
     cb.setupMouseMotionTracking(document.body);
 
     cb.setupAllVM(document);
@@ -531,42 +543,6 @@ CodeBoot.prototype.refreshZIndex = function () {
     }
 };
 
-CodeBoot.prototype.resizeHandler = function (event) {
-
-    var cb = this;
-
-    // undo scaling so VM stays same size
-
-    for (var id in CodeBoot.prototype.vms) {
-        var vm = CodeBoot.prototype.vms[id];
-        //console.log(id + ' ' + vm);
-        delete vm.root.style.transform;
-        var scale = getScale(vm.root);
-        if (scale !== 1) {
-            vm.root.style.transform = 'scale(' + (1/scale) + ')';
-        }
-    }
-};
-
-function getScale(elem) {
-
-    var style = window.getComputedStyle(elem, null);
-    var transform = style.getPropertyValue("-webkit-transform") ||
-                    style.getPropertyValue("-moz-transform") ||
-                    style.getPropertyValue("-ms-transform") ||
-                    style.getPropertyValue("-o-transform") ||
-                    style.getPropertyValue("transform");
-
-    if (transform && transform !== 'none') {
-        var values = transform.split('(')[1].split(')')[0].split(',');
-        var a = values[0];
-        var b = values[1];
-        return Math.sqrt(a*a + b*b);
-    } else {
-        return 1;
-    }
-}
-
 function getCodeBootVM(elem) {
 
     var vm = undefined;
@@ -579,11 +555,6 @@ function getCodeBootVM(elem) {
         if (root) {
             vm = CodeBoot.prototype.vms['#' + root.getAttribute('id')];
         }
-    }
-
-    if (vm === undefined) {
-        for (id in CodeBoot.prototype.vms)
-            return CodeBoot.prototype.vms[id];
     }
 
     return vm;
@@ -695,6 +666,7 @@ function CodeBootVM(opts) {
     vm.level = null;   // the selected level of the language
     vm.vmClone = null;
     vm.isOpen = true;
+    vm.embedded = false; // assume the vm is not embedded. Will be if pre tag is used
 
     vm.storageId = get_option_attr('storageId', 'data-cb-storage-id', id);
     vm.minWidth  = get_option_attr('minWidth', 'data-cb-min-width', 575);
@@ -763,7 +735,7 @@ function CodeBootVM(opts) {
 
     cb.registerVM(vm);
 
-    if (cb.vmsCreated === 1) {
+    if (cb.vmsCreated === 1 && !vm.embedded) {
         vm.initCommon(opts);
     }
 
@@ -2991,19 +2963,21 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
         // In order to resize the repl's height, the CodeMirror-scroll
         // element's max-height must be explicitly changed
 
-        var bodyElem = vm.root.querySelector('.cb-body');
-        if (bodyElem) {
-            var replContElem = bodyElem.querySelector('.cb-repl-container');
-            if (replContElem) {
-                vm.setupSplitter(bodyElem, function (size) {
-                    var replScrollElem = replContElem.querySelector('.CodeMirror-scroll');
-                    if (replScrollElem) {
-                        replScrollElem.style.maxHeight = size + 'px';
-                        vm.replScrollToEnd();
-                    }
-                });
-            }
-        }
+        // var bodyElem = vm.root.querySelector('.cb-body');
+        // if (bodyElem) {
+        //     var replContElem = bodyElem.querySelector('.cb-repl-container');
+        //     if (replContElem) {
+        //         vm.setupSplitter(bodyElem, function (size) {
+        //             var replScrollElem = replContElem.querySelector('.CodeMirror-scroll');
+        //             if (replScrollElem) {
+        //                 replScrollElem.style.maxHeight = size + 'px';
+        //                 vm.replScrollToEnd();
+        //             }
+        //         });
+        //     }
+        // }
+
+        vm.root.querySelector('.CodeMirror').CodeMirror.refresh()
 
         var consoleElem = vm.root.querySelector('.cb-console');
         if (consoleElem) {
@@ -3011,7 +2985,9 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
         }
     }
 
+    
     if (vm.root.tagName === 'PRE') {
+
 
         content = vm.root.innerText;
         var elem = document.createElement('div');
@@ -3028,6 +3004,7 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
         vm.setAttribute('data-cb-show-editors', true);
         vm.setAttribute('data-cb-runable-code', true);
 
+        vm.embedded = true
         vm.editable = (content === null);
 
     } else if (nChildren === 0) {
@@ -3044,6 +3021,7 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
         vm.setAttribute('data-cb-show-editors', true);
 
         vm.editable = true;
+
 
         if (opts.filename !== undefined)
             filename = opts.filename;
@@ -3580,8 +3558,12 @@ CodeBootVM.prototype.setFloating = function (floating) {
         var maxY = window.innerHeight;
         var width = Math.max(vm.minWidth, Math.floor(maxX*2/3));
         var height = Math.max(vm.minHeight, Math.floor(maxY*2/3));
-        var left = Math.max(0, maxX - width - 20);
-        var top = Math.max(0, maxY - height - 20);
+        // var left = Math.max(0, (maxX - width) / 2);
+        // var top = Math.max(0, maxY - height - 20);
+        var left = 0
+        var top = 0
+
+        console.log(left, top)
 
         if (elem.latest_width_height !== undefined) {
             width = elem.latest_width_height.width;
@@ -3596,6 +3578,12 @@ CodeBootVM.prototype.setFloating = function (floating) {
         }
 
         change_left_top(elem, left, top);
+    }
+    else{
+      if (!vm.embedded){
+        elem.style.height = '100vh';
+        elem.style.width = '100%'
+      }
     }
 };
 
@@ -3666,8 +3654,11 @@ CodeBootVM.prototype.setupMoveRezizeHandlers = function () {
     }
 
     function mousemove(event) {
+        
+        // All positions are relative to parent element
+        var boundingBox = elem.getBoundingClientRect()
 
-        event = event || window.event;
+        var event = event || window.event;
         event.preventDefault();
 
         if (event.buttons === 0) {
@@ -3687,8 +3678,14 @@ CodeBootVM.prototype.setupMoveRezizeHandlers = function () {
         var dx = clientX - latestX;
         var dy = clientY - latestY;
 
-        var curX = elem.offsetLeft;
+        var curX = elem.offsetLeft; 
         var curY = elem.offsetTop;
+
+        // Difference between the "left" and "top" properties and the actual x,y values
+        //   on the screen. We can only control the "left" and "top" values but there are
+        //   sometimes not representative of the actual x,y position of the div..
+        var diffXLeft = boundingBox.x - curX;
+        var diffYTop = boundingBox.y - curY;
 
         if (resize) {
             var newW = Math.min(maxX-curX, Math.max(vm.minWidth, curW+dx));
@@ -3697,8 +3694,8 @@ CodeBootVM.prototype.setupMoveRezizeHandlers = function () {
             dy = newH - curH;
             change_width_height(elem, newW, newH);
         } else {
-            var newX = Math.min(maxX-30, Math.max(20-curW, curX+dx));
-            var newY = Math.min(maxY-20, Math.max(-20, curY+dy));
+            var newX = Math.min(maxX-curW/2, Math.max(-curW/2, curX+diffXLeft+dx)) - diffXLeft;
+            var newY = Math.min(maxY-curH/2, Math.max(0, curY+diffYTop+dy)) - diffYTop;
             dx = newX - curX;
             dy = newY - curY;
             change_left_top(elem, newX, newY);

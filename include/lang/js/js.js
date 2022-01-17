@@ -25,6 +25,7 @@ LangJs.prototype.properties =
         scriptType: 'text/cb_javascript',
         prompt: '>',
         promptCont: '',
+        singleLineComment: '//',
         editorOpts: { mode: 'javascript', indentUnit: 4 },
         SVG:
         {

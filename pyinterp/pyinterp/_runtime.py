@@ -715,16 +715,19 @@ def drawing_lt(rte, angle):
 def drawing_rt(rte, angle):
     pass
 
-def drawing_ht(rte):
+def drawing_st(rte):
     pass
 
-def drawing_st(rte):
+def drawing_ht(rte):
     pass
 
 def drawing_pd(rte):
     pass
 
 def drawing_pu(rte):
+    pass
+
+def drawing_nextpu(rte):
     pass
 
 def drawing_mv(rte, x, y):
@@ -864,4 +867,45 @@ def runtime_removeAttribute(rte, elem, attr):
     raise NotImplementedError("not running in a browser")
 
 def runtime_getAttribute(rte, elem, attr):
+    raise NotImplementedError("not running in a browser")
+
+###
+# FFI
+###
+
+def runtime_js_eval(expr):
+    raise NotImplementedError("not running in a browser")
+
+def gen_foreign():
+    raise NotImplementedError("not running in a browser")
+
+def host_eval(expr):
+    raise NotImplementedError("not running in a browser")
+
+def py2host(expr):
+    raise NotImplementedError("not running in a browser")
+
+def host2py(expr):
+    raise NotImplementedError("not running in a browser")
+
+# Host type predicates
+def is_host_bool(obj):
+    raise NotImplementedError("not running in a browser")
+
+def is_host_str(obj):
+    raise NotImplementedError("not running in a browser")
+
+def is_host_function(obj):
+    raise NotImplementedError("not running in a browser")
+
+def is_host_int(obj):
+    raise NotImplementedError("not running in a browser")
+
+def is_host_float(obj):
+    raise NotImplementedError("not running in a browser")
+
+def is_host_list(obj):
+    raise NotImplementedError("not running in a browser")
+
+def is_host_dict(obj):
     raise NotImplementedError("not running in a browser")

@@ -389,8 +389,8 @@ span.CodeMirror-selectedtext { background: none; }
 }
 
 body {
-    --cb-navbar-controls-color: #7db6d5;
-    --cb-focus-repl-navbar-controls-color: red; /* unused? */
+    --cb-navbar-color: #90c0ff;
+    --cb-focus-repl-navbar-controls-color: #7db6d5;
     --cb-focus-repl-navbar-controls-hover-color: #afd3e6;
     --cb-repl-container-color: #e0f0f6;
     --cb-exec-point-color: yellow;
@@ -408,12 +408,20 @@ body {
 }
 
 .cb-vm {
-//    overflow: hidden;
+    all:initial;
+    font-family: Helvetica;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    /*height: 100vh;*/
     border-radius: var(--cb-main-border-radius); /****************/
     text-align: left;
+    z-index: 10;
+    width: 100%;
+}
+
+pre.cb-vm{
+    white-space: pre-wrap;
 }
 
 .cb-vm[data-cb-hidden] {
@@ -508,7 +516,7 @@ body {
 }
 
 .cb-navbar-controls {
-    background-color: var(--cb-navbar-color);
+    background-color: var(--cb-focus-repl-navbar-controls-color);
     border-radius: var(--cb-main-border-radius) var(--cb-main-border-radius) 0 0; /****************/
 }
 
@@ -555,7 +563,7 @@ body {
 }
 
 .cb-navbar-controls {
-    background-color: var(--cb-navbar-controls-color);
+    background-color: #7db6d5;
 }
 
 .cb-repl-container {
@@ -595,17 +603,17 @@ ul.cb-file-tabs {
 }
 
 .dropdown-item[data-cb-filename] > span > .close {
-    //    opacity: 0;
+    opacity: 0;
     filter: invert(100%);
 }
 
 .dropdown-item[data-cb-filename]:hover > span > .close {
-//    opacity: 0.5;
+    opacity: 0.5;
     filter: invert(50%);
 }
 
 .dropdown-item[data-cb-filename] > span > .close:hover {
-//    opacity: 1;
+    opacity: 1;
     filter: invert(0%);
 }
 
@@ -964,20 +972,8 @@ ul.cb-file-tabs {
     opacity: 1;
 }
 
-.cb-editors .CodeMirror {
-    border: 0;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 100%;
-}
-
 /*--------------------------- CodeMirror ----------------------------*/
 
-.cb-vm .CodeMirror-lines {
-}
 
 .cb-file-container .CodeMirror {
     height: 100%;
