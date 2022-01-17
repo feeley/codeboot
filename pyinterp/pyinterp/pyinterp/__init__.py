@@ -1132,6 +1132,13 @@ def make_builtin_class(name, instance_creator, bases):
     OM_set_type_is_builtin(cls, True)
     return cls
 
+def make_stdlib_class(name, module_name, instance_creator, bases):
+    # Set base classes when they do exist
+    cls = make_class(name, module_name, bases, class_type)
+    OM_set_type_instance_creator(cls, instance_creator)
+    OM_set_type_is_builtin(cls, False)
+    return cls
+
 def bootstrap_base_types():
     # init class_type
     class_type = om_with_instance_creator(absent, OM_type_create)
@@ -1292,6 +1299,7 @@ def populate_builtin_MethodWrapper():
 def populate_builtin_TextIOWrapper():
     builtin_add_method(class_TextIOWrapper, '__repr__', om_TextIOWrapper_repr)
     builtin_add_method(class_TextIOWrapper, 'close', om_TextIOWrapper_close)
+    builtin_add_method(class_TextIOWrapper, 'read', om_TextIOWrapper_read)
 
 def populate_builtin_int():
     builtin_add_method(class_int, '__new__', om_int_new)
@@ -1638,10 +1646,11 @@ def om_exception(exn, args):
     OM_set(obj, 'args', args)
     return obj
 
-def om_TextIOWrapper(cls, name, mode, opened):
+def om_TextIOWrapper(cls, name, mode, pointer, opened):
     obj = om(cls)
     OM_set_TextIOWrapper_name(obj, name)
     OM_set_TextIOWrapper_mode(obj, mode)
+    OM_set_TextIOWrapper_pointer(obj, pointer)
     OM_set_TextIOWrapper_opened(obj, opened)
     return obj
 
@@ -1808,6 +1817,16 @@ def OM_get_class_name(o):
 
 def OM_get_object_class_name(o):
     return OM_get_class_name(OM_get_object_class(o))
+
+def OM_get_class_qualname(cls):
+    cls_name = OM_get(cls, '__name__')
+    cls_module = OM_get(cls, '__module__')
+    cls_name_value = OM_get_boxed_value(cls_name)
+    cls_module_value = OM_get_boxed_value(cls_module)
+    return cls_module_value + "." + cls_name_value
+
+def OM_get_object_class_qualname(o):
+    return OM_get_class_qualname(OM_get_object_class(o))
 
 def OM_get_getset_descriptor_getter(o):
     return o.getter
@@ -2029,6 +2048,12 @@ def OM_get_TextIOWrapper_mode(o):
 
 def OM_set_TextIOWrapper_mode(o, mode):
     o.mode = mode
+
+def OM_get_TextIOWrapper_pointer(o):
+    return o.pointer
+
+def OM_set_TextIOWrapper_pointer(o, pointer):
+    o.pointer = pointer
 
 def OM_get_TextIOWrapper_opened(o):
     return o.opened
@@ -2335,10 +2360,15 @@ class_ModuleNotFoundError = make_builtin_class('ModuleNotFoundError', OM_BaseExc
 class_OSError = make_builtin_class('OSError', OM_BaseException_create, (class_Exception,))
 class_FileNotFoundError = make_builtin_class('FileNotFoundError', OM_BaseException_create, (class_OSError,))
 
+# Constants
 om_None = om(class_NoneType)
 om_True = om_boxval(class_bool, int_from_num(1))
 om_False = om_boxval(class_bool, int_from_num(0))
 om_NotImplemented = om(class_NotImplementedType)
+
+# Non top-level exceptions
+# io module
+class_UnsupportedOperation = make_stdlib_class("UnsupportedOperation", "io", OM_BaseException_create, (class_OSError,))
 
 # Helper to build magic_methods
 
@@ -2660,14 +2690,15 @@ def om_type_setattr_code(ctx, args):
 om_type_setattr = do_magic_method(class_type, "__setattr__", om_type_setattr_code)
 
 def om_format_type_repr(self, rte):
-    self_name = OM_get(self, '__name__')
-    self_name_value = OM_get_boxed_value(self_name)
-    return "<class '" + self_name_value + "'>"
+    if OM_get_type_is_builtin(self):
+        self_name = OM_get(self, '__name__')
+        self_name_value = OM_get_boxed_value(self_name)
+        return "<class '" + self_name_value + "'>"
+    else:
+        return "<class '" + OM_get_class_qualname(self) + "'>"
 
 def om_type_repr(ctx, args):
     self = args[0]
-    self_name = OM_get(self, '__name__')
-    self_name_value = OM_get_boxed_value(self_name)
     result = om_format_type_repr(self, ctx.rte)
     return ctx.cont(ctx.rte, om_str(result))
 
@@ -2967,6 +2998,12 @@ om_getset_descriptor_set = do_magic_method(class_getset_descriptor, "__set__", o
 
 
 # class_TextIOWrapper
+def raise_operation_on_closed_file(ctx):
+    return sem_raise_with_message(ctx, class_ValueError, "I/O operation on closed file.")
+
+def is_read_file_mode(mode):
+    return mode == 'r'
+
 def om_format_TextIOWrapper(self, rte):
     return "<TextIOWrapper name='" + OM_get_TextIOWrapper_name(self) + \
            "' mode='" + OM_get_TextIOWrapper_mode(self) + "'>"
@@ -2983,6 +3020,33 @@ def om_TextIOWrapper_close(ctx, args):
         self = args[0]
         OM_set_TextIOWrapper_opened(self, False)
         return cont_obj(ctx, om_None)
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
+
+def om_TextIOWrapper_read(ctx, args):
+    if len(args) == 1:
+        self = args[0]
+        opened = OM_get_TextIOWrapper_opened(self)
+        if opened:
+            mode = OM_get_TextIOWrapper_mode(self)
+
+            if is_read_file_mode(mode):
+                name = OM_get_TextIOWrapper_name(self)
+                if runtime_file_exists(ctx.rte, name):
+                    # Mimic file buffer by slicing file content
+                    content = runtime_read_file(ctx.rte, name)
+                    file_len = len(content)
+                    pointer = OM_get_TextIOWrapper_pointer(self)
+                    OM_set_TextIOWrapper_pointer(self, file_len)
+                    return cont_str(ctx, content[pointer:file_len])
+                else:
+                    # cPython returns an empty string if the file
+                    # no longer exists at a read() after being opened
+                    return cont_str(ctx, "")
+            else:
+                return sem_raise_with_message(ctx, class_UnsupportedOperation, "not readable")
+        else:
+            return raise_operation_on_closed_file(ctx)
     else:
         return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
 
@@ -7439,7 +7503,7 @@ def om_open_code(rte, _):
         return sem_raise_with_message(next_ctx, class_TypeError, "open() argument 'file' must be str")
 
     if runtime_file_exists(rte, file_value):
-        return unwind_return(rte, om_TextIOWrapper(class_TextIOWrapper, file_value, mode_value, True))
+        return unwind_return(rte, om_TextIOWrapper(class_TextIOWrapper, file_value, mode_value, 0, True))
     else:
         return sem_raise_with_message(next_ctx, class_FileNotFoundError,
                                       "No such file: '" + file_value + "'")
@@ -7980,6 +8044,11 @@ def make_module_time():
 
     return om_module('time', module_time_env)
 
+
+def make_module_io():
+    module_io_env = make_dict()
+    dict_set(module_io_env, 'UnsupportedOperation', class_UnsupportedOperation)
+    return om_module('io', module_io_env)
 
 def make_module_functools():
     module_functools_env = make_dict()
@@ -8813,6 +8882,7 @@ def fresh_rte(options):
     turtle_module = make_module_turtle()
     random_module = make_module_random()
     time_module = make_module_time()
+    io_module = make_module_io()
     functools_module = make_module_functools()
     mouse_module = make_module_mouse()
     pixels_module = make_module_pixels()
@@ -8824,6 +8894,7 @@ def fresh_rte(options):
     rte_add_to_sys_modules(rte, 'turtle', turtle_module)
     rte_add_to_sys_modules(rte, 'random', random_module)
     rte_add_to_sys_modules(rte, 'time', time_module)
+    rte_add_to_sys_modules(rte, 'io', io_module)
     rte_add_to_sys_modules(rte, 'functools', functools_module)
     rte_add_to_sys_modules(rte, 'mouse', mouse_module)
     rte_add_to_sys_modules(rte, 'pixels', pixels_module)
@@ -10690,15 +10761,14 @@ def gen_import_alias(cte, ast, alias):
 
         # Always re-import in repl as CodeBoot usage allows to use the repl to test files as they are edited
         if existing_module is absent or import_is_in_repl:
-            if runtime_file_exists(rte, filename):
-                module_src = runtime_read_file(rte, filename)
-
+            if not runtime_file_exists(rte, filename):
                 if import_is_in_repl and existing_module is not absent:
                     # When repl fails to re-import a module (deleted of not a file), take existing one from sys.modules
                     return set_code(rte, cont, existing_module)
                 else:
                     return sem_raise_with_message(Context(rte, cont, ast), class_ModuleNotFoundError, "No module named '" + name + "'")
             else:
+                module_src = runtime_read_file(rte, filename)
                 container = runtime_get_file_container(rte, filename)
 
                 compilation_error_thrower = runtime_get_compilationError_thrower(rte_vm(rte), container, module_src)
@@ -12223,7 +12293,7 @@ def om_simple_repr_with_max_length(ctx, value, max_length):
     return repr_res
 
 def om_simple_exception_format(ctx, exn):
-    exn_name = OM_get_object_class_name(exn)
+    exn_name = OM_get_object_class_qualname(exn)
     exn_args = OM_get(exn, 'args')
 
     if exn_args is absent or not om_isinstance(exn_args, class_tuple):
