@@ -1173,7 +1173,7 @@ def bootstrap_base_types():
     return class_object, class_str, class_type, class_WrapperDescriptor
 
 def bootstrap_populate_base_types():
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_type,
         (('__new__', om_type_new),
          ('__call__', om_type_call, True),
@@ -1181,7 +1181,7 @@ def bootstrap_populate_base_types():
          ('__setattr__', om_type_setattr),
          ('__repr__', om_type_repr)))
 
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_object,
         (('__new__', om_object_new, True),
          ('__init__', om_object_init, True),
@@ -1194,13 +1194,13 @@ def bootstrap_populate_base_types():
 
     OM_set(class_object, '__class__', make_getset_readonly_slot('__class__', class_object, OM_get_object_class))
 
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_WrapperDescriptor,
         (('__get__', om_WrapperDescriptor_get),
          ('__call__', om_WrapperDescriptor_call, True),
          ('__repr__', om_WrapperDescriptor_repr)))
 
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_str,
         (('__new__', om_str_new),
          ('__repr__', om_str_repr),
@@ -1256,7 +1256,7 @@ def builtin_add_method_with_kwargs(o, name, code):
     OM_set(o, name, wrapper)
 
 
-def buitlin_add_methods_to_class(cls, methods_table):
+def builtin_add_methods_to_class(cls, methods_table):
     for params in methods_table:
         name = params[0]
         code = params[1]
@@ -1269,7 +1269,7 @@ def buitlin_add_methods_to_class(cls, methods_table):
 
 
 def populate_builtin_getset_descriptor():
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_getset_descriptor,
         (('__get__', om_getset_descriptor_get),
          ('__set__', om_getset_descriptor_set)))
@@ -1372,7 +1372,7 @@ def populate_builtin_bool():
     builtin_add_method(class_bool, '__repr__', om_bool_repr)
 
 def populate_builtin_tuple():
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_tuple,
         (('__new__', om_tuple_new),
          ('__eq__', om_tuple_eq),
@@ -1414,7 +1414,7 @@ def populate_builtin_dict():
 
 
 def populate_builtin_range():
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_range,
         (('__new__', om_range_new),
          ('__repr__', om_range_repr),
@@ -1424,7 +1424,7 @@ def populate_builtin_range():
 
 
 def populate_builtin_map():
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_map,
         (('__new__', om_map_new),
          ('__iter__', om_map_iter),
@@ -1432,7 +1432,7 @@ def populate_builtin_map():
 
 
 def populate_builtin_filter():
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_filter,
         (('__new__', om_filter_new),
          ('__iter__', om_filter_iter),
@@ -1440,7 +1440,7 @@ def populate_builtin_filter():
 
 
 def populate_builtin_slice():
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_slice,
         (('__new__', om_slice_new),
          ('__repr__', om_slice_repr),
@@ -1452,7 +1452,7 @@ def populate_builtin_iterator():
     builtin_add_method(class_iterator, '__next__', om_iterator_next)
 
 def populate_builtin_dict():
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_dict,
         (('__new__', om_dict_new),
          ('__getitem__', om_dict_getitem),
@@ -1469,14 +1469,14 @@ def populate_builtin_NoneType():
     builtin_add_method(class_NoneType, '__repr__', om_NoneType_repr)
 
 def populate_builtin_function():
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_function,
         (('__get__', om_function_get),
          ('__call__', om_function_call, True),
          ('__repr__', om_function_repr)))
 
 def populate_builtin_method():
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_method,
         (('__new__', om_method_new),
          ('__call__', om_method_call, True),
@@ -8319,7 +8319,7 @@ def make_module_more_builtins():
 
     om_struct_setattr = do_magic_method(class_struct, "__setattr__", om_struct_setattr_code)
 
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_struct,
         (('__new__', om_struct_new, True),
          ('__repr__', om_struct_repr),
@@ -8409,7 +8409,7 @@ def make_module_more_builtins():
     om_DOMDocument_querySelector = do_magic_method(class_DOMDocument, "querySelector", om_DOMDocument_querySelector_code)
 
 
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_DOMDocument,
         (('__new__', om_DOMDocument_new),
          ('querySelector', om_DOMDocument_querySelector)))
@@ -8512,7 +8512,7 @@ def make_module_more_builtins():
                                                                 lambda ctx, _: cont_obj(ctx, om_None))
 
 
-    buitlin_add_methods_to_class(
+    builtin_add_methods_to_class(
         class_DOMElement,
         (('hasAttribute', om_DOMElement_hasAttribute),
          ('getAttribute', om_DOMElement_getAttribute),
@@ -8605,8 +8605,8 @@ def inject_module_in_env(module, env):
         value = key_value[1]
         dict_set(env, key, value)
 
-# JS FFI
-def om_js_eval_code(rte, cont):
+# FFI
+def om_host_eval_code(rte, cont):
     expr = rte_lookup_locals(rte, 'expr')
     result = host2py(host_eval(py2host(expr)))
     if result == absent:
@@ -8644,8 +8644,8 @@ def fresh_rte(options):
 
     om_builtin_isinstance = om_make_builtin_function_with_signature('isinstance', om_isinstance_code, make_posonly_only_signature(('object', 'classinfo')))
 
-    # JS FFI
-    om_js_eval = om_make_builtin_function_with_signature('js_eval', om_js_eval_code, make_posonly_only_signature(('expr',)))
+    # FFI
+    om_host_eval = om_make_builtin_function_with_signature('host_eval', om_host_eval_code, make_posonly_only_signature(('expr',)))
 
     dict_set(builtins_env, 'type', class_type)
     dict_set(builtins_env, 'object', class_object)
@@ -8680,8 +8680,8 @@ def fresh_rte(options):
     dict_set(builtins_env, 'round', om_builtin_round)
     dict_set(builtins_env, 'pow', om_builtin_pow)
 
-    # JS FFI
-    dict_set(builtins_env, 'js_eval', om_js_eval)
+    # FFI
+    dict_set(builtins_env, 'host_eval', om_host_eval)
 
     dict_set(builtins_env, 'BaseException', class_BaseException)
     dict_set(builtins_env, 'Exception', class_Exception)
