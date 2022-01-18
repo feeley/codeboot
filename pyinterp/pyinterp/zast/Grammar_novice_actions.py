@@ -753,7 +753,7 @@ def parse_function_signature(ts, posonly_and_default, args_and_defaults, vararg,
 
 ,"compound_stmt: try_stmt.":    ["return try_stmt1"]
 
-,"compound_stmt: with_stmt.":   ["return with_stmt1"]
+,"compound_stmt: with_stmt.":    ["return with_stmt1"]
 
 ,"compound_stmt: funcdef.":     ["return funcdef1"]
 
@@ -821,6 +821,22 @@ def parse_function_signature(ts, posonly_and_default, args_and_defaults, vararg,
     "set_end_ast(ast, (suite2 if len(suite2) > 0 else suite1)[-1])\n"
     "return ast"]
 
+,"with_stmt: .'with' with_item (',' with_item)* ':' [TYPE_COMMENT] suite":
+    ["lineno = get_lineno(ts); col_offset = get_col_offset(ts)\n"
+     "type_comment = None\n"
+     "withitems = []"]
+,"with_stmt: 'with' with_item. (',' with_item)* ':' [TYPE_COMMENT] suite":
+    ["withitems.append(with_item1)"]
+,"with_stmt: 'with' with_item (',' with_item.)* ':' [TYPE_COMMENT] suite":
+    ["withitems.append(with_item2)"]
+,"with_stmt: 'with' with_item (',' with_item)* ':' [TYPE_COMMENT] suite.":
+    ["ast = With(withitems, suite1, type_comment)\n"
+     "return set_start_end(ts, lineno, col_offset, ast)"]
+
+,"with_item: .test ['as' expr]":
+    ["expr1 = None"]
+,"with_item: test ['as' expr].":
+    ["return withitem(test1, expr1)"]
 
 ,"try_stmt: .'try' ':' suite (finally_block | (handlers_list ['else' ':' suite] [finally_block]))":
     ["lineno = get_lineno(ts); col_offset = get_col_offset(ts)"]
