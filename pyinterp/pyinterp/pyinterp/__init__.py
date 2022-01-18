@@ -1299,7 +1299,8 @@ def populate_builtin_MethodWrapper():
 def populate_builtin_TextIOWrapper():
     builtin_add_method(class_TextIOWrapper, '__repr__', om_TextIOWrapper_repr)
     builtin_add_method(class_TextIOWrapper, 'close', om_TextIOWrapper_close)
-    builtin_add_method(class_TextIOWrapper, 'read', om_TextIOWrapper_read)
+    builtin_add_method(class_TextIOWrapper, 'readall', om_TextIOWrapper_readall)
+    builtin_add_method(class_TextIOWrapper, 'write', om_TextIOWrapper_write)
 
 def populate_builtin_int():
     builtin_add_method(class_int, '__new__', om_int_new)
@@ -1819,11 +1820,16 @@ def OM_get_object_class_name(o):
     return OM_get_class_name(OM_get_object_class(o))
 
 def OM_get_class_qualname(cls):
+    # TODO: qualname should be an attribute, it should not be computed
     cls_name = OM_get(cls, '__name__')
-    cls_module = OM_get(cls, '__module__')
     cls_name_value = OM_get_boxed_value(cls_name)
-    cls_module_value = OM_get_boxed_value(cls_module)
-    return cls_module_value + "." + cls_name_value
+
+    if OM_get_type_is_builtin(cls):
+        return cls_name_value
+    else:
+        cls_module = OM_get(cls, '__module__')
+        cls_module_value = OM_get_boxed_value(cls_module)
+        return cls_module_value + "." + cls_name_value
 
 def OM_get_object_class_qualname(o):
     return OM_get_class_qualname(OM_get_object_class(o))
@@ -3004,6 +3010,9 @@ def raise_operation_on_closed_file(ctx):
 def is_read_file_mode(mode):
     return mode == 'r'
 
+def is_write_truncate_mode(mode):
+    return mode == 'w'
+
 def om_format_TextIOWrapper(self, rte):
     return "<TextIOWrapper name='" + OM_get_TextIOWrapper_name(self) + \
            "' mode='" + OM_get_TextIOWrapper_mode(self) + "'>"
@@ -3023,7 +3032,7 @@ def om_TextIOWrapper_close(ctx, args):
     else:
         return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
 
-def om_TextIOWrapper_read(ctx, args):
+def om_TextIOWrapper_readall(ctx, args):
     if len(args) == 1:
         self = args[0]
         opened = OM_get_TextIOWrapper_opened(self)
@@ -3049,6 +3058,38 @@ def om_TextIOWrapper_read(ctx, args):
             return raise_operation_on_closed_file(ctx)
     else:
         return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
+
+def om_TextIOWrapper_write(ctx, args):
+    if len(args) == 2:
+        self = args[0]
+        content = args[1]
+
+        if om_isinstance(content, class_str):
+            opened = OM_get_TextIOWrapper_opened(self)
+            content_value = OM_get_boxed_value(content)
+            content_length = len(content_value)
+
+            if opened:
+                mode = OM_get_TextIOWrapper_mode(self)
+
+                if is_write_truncate_mode(mode):
+                    name = OM_get_TextIOWrapper_name(self)
+
+                    # TODO: cPython on Linux does not recreate file if it was deleted
+                    # is that expected or quirk of my OS?
+                    runtime_write_file(ctx.rte, name, content_value)
+
+                    # TODO: we should in fact return the number of written bytes
+                    # fix that once we have a better filesystem in codeBoot?
+                    return cont_int(ctx, int_from_num(content_length))
+                else:
+                    return sem_raise_with_message(ctx, class_UnsupportedOperation, "not writable")
+            else:
+                return raise_operation_on_closed_file(ctx)
+        else:
+            return sem_raise_with_message(ctx, class_TypeError, "write() argument must be str")
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 1 argument, got " + str(len(args) - 1))
 
 # class_NotImplementedType
 def om_format_NotImplementedType(self, rte):
@@ -7502,7 +7543,10 @@ def om_open_code(rte, _):
     else:
         return sem_raise_with_message(next_ctx, class_TypeError, "open() argument 'file' must be str")
 
-    if runtime_file_exists(rte, file_value):
+    if mode_value == "r" and runtime_file_exists(rte, file_value):
+        return unwind_return(rte, om_TextIOWrapper(class_TextIOWrapper, file_value, mode_value, 0, True))
+    elif mode_value == "w":
+        runtime_write_file(rte, file_value, "")
         return unwind_return(rte, om_TextIOWrapper(class_TextIOWrapper, file_value, mode_value, 0, True))
     else:
         return sem_raise_with_message(next_ctx, class_FileNotFoundError,
