@@ -14,8 +14,9 @@ def set_ctx(targets, ctx):
 def set_ctx1(t, ctx):
     t.ctx = ctx
     if isinstance(t, Tuple):
-        for i in range(len(t.elts)):
-            t.elts[i].ctx = ctx
+        set_ctx(t.elts, ctx)
+    elif isinstance(t, List):
+        set_ctx(t.elts, ctx)
 
 def check_assignable(ts, t):
     if isinstance(t, Constant):
@@ -34,6 +35,9 @@ def check_assignable(ts, t):
     elif isinstance(t, BinOp) or isinstance(t, UnaryOp) or isinstance(t, BoolOp):
         py_syntax_error_ast(ts, t, 'cannot assign to operator')
     elif isinstance(t, Tuple):
+        for i in range(len(t.elts)):
+            check_assignable(ts, t.elts[i])
+    elif isinstance(t, List):
         for i in range(len(t.elts)):
             check_assignable(ts, t.elts[i])
     elif isinstance(t, Dict):
@@ -742,6 +746,8 @@ def py_parse_with_item(ts):
         if ts.token == AS:
             py_advance(ts)
             expr1 = py_parse_expr(ts)
+            check_assignable(ts, expr1)
+            set_ctx1(expr1, Store())
         return withitem(test1, expr1)
     else:
         return py_syntax_error(ts, None)

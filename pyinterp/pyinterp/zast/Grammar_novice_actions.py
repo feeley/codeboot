@@ -21,8 +21,9 @@ def set_ctx(targets, ctx):
 def set_ctx1(t, ctx):
     t.ctx = ctx
     if isinstance(t, Tuple):
-        for i in range(len(t.elts)):
-            t.elts[i].ctx = ctx
+        set_ctx(t.elts, ctx)
+    elif isinstance(t, List):
+        set_ctx(t.elts, ctx)
 
 def check_assignable(ts, t):
     if isinstance(t, Constant):
@@ -41,6 +42,9 @@ def check_assignable(ts, t):
     elif isinstance(t, BinOp) or isinstance(t, UnaryOp) or isinstance(t, BoolOp):
         py_syntax_error_ast(ts, t, 'cannot assign to operator')
     elif isinstance(t, Tuple):
+        for i in range(len(t.elts)):
+            check_assignable(ts, t.elts[i])
+    elif isinstance(t, List):
         for i in range(len(t.elts)):
             check_assignable(ts, t.elts[i])
     elif isinstance(t, Dict):
@@ -835,6 +839,9 @@ def parse_function_signature(ts, posonly_and_default, args_and_defaults, vararg,
 
 ,"with_item: .test ['as' expr]":
     ["expr1 = None"]
+,"with_item: test ['as' expr.]":
+    ["check_assignable(ts, expr1)\n"
+     "set_ctx1(expr1, Store())"]
 ,"with_item: test ['as' expr].":
     ["return withitem(test1, expr1)"]
 
