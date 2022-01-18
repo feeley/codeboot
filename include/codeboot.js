@@ -56,7 +56,28 @@ CodeBoot.prototype.preInit = function () {
         cb.init();
     }
 
-    
+    var search = window.location.search;
+
+    if (search && search.slice(0, 6) === '?init=') {
+
+        var init_str = search.slice(6);
+        var parts = init_str.split(',');
+        var cmds = parts.slice(1);
+        var cmds_str = cmds.join(',');
+        var signature = fromSafeBase64ToUint8Array(parts[0]);
+        var i = 0;
+
+        cb.cmds = cmds;
+
+        cb.verify(toUint8Array(cmds_str),
+            signature,
+            function (isValid) {
+                cb.cmds_valid = isValid;
+                done();
+            });
+    } else {
+        done();
+    }
 
 }
 
