@@ -2,7 +2,7 @@ PYTHON38 ?= pyinterp/venv/bin/python
 
 all: bundle
 
-include/lang/py/pyinterp.js:
+include/lang/py/pyinterp.js: ./pyinterp/pyinterp/pyinterp/__init__.py
 	@echo "*** Building include/lang/py/pyinterp.js:"
 	@echo "***   Running make on pyinterp"
 	cd ./pyinterp && $(MAKE) clean-venv  # Delete the venv, may have absolute references to copied folder
