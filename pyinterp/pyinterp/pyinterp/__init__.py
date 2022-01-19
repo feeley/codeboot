@@ -4831,7 +4831,7 @@ def om_str_new_code(ctx, args):
         return ctx.cont(ctx, om_boxval(cls, ""))
     elif len(args) == 2:
         value = args[1]
-        return sem_str(ctx, value)
+        return sem_str(ctx.rte, value)
     else:
         return sem_raise_with_message(ctx, class_TypeError, "str() takes 0 or 1 argument")
 

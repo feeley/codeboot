@@ -11,6 +11,7 @@ include/lang/py/pyinterp.js:
 	cp ./include/lang/py/pyinterp.js ./include/lang/py/pyinterp.js.bk 2>/dev/null || :
 	@echo "***   Creating include/lang/py/pyinterp.js"
 	cp ./pyinterp/etc/zp/_tmpdir/pyinterp.js ./include/lang/py/pyinterp.js
+	js-beautify -r -s 2 ./include/lang/py/pyinterp.js
 
 include/lang/py/style.js:
 	@echo "*** Building include/lang/py/style.js:"
