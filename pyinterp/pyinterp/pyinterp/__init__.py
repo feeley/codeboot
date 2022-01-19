@@ -10876,7 +10876,7 @@ def gen_with(cte, ast):
                 def exit_before_continue(_):
                     return finally_code(enter_rte, cont)
 
-                def exec_body(body_rte, body_cont):
+                def exec_body(body_rte):
                     return body_code(body_rte, exit_before_continue)
 
                 activated_context_rte = make_rte_with_handler_and_finally(enter_rte, exit_before_reraise, exit_before_flow)
