@@ -10828,7 +10828,7 @@ def gen_with(cte, ast):
         # No target, no set
         def set_target(rte, cont, val): return cont(rte, val)
     elif isinstance(optional_vars, AST.Name):
-        set_cte, set_target = gen_var_set(expr_cte, optional_vars, optional_vars)
+        set_cte, set_target = gen_var_set(expr_cte, optional_vars, optional_vars.id)
     else:
         return CT_raise_syntax_error_with_msg(expr_cte, optional_vars,
                                               "with-statement does not support multiple assignments")
