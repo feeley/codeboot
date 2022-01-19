@@ -9113,10 +9113,40 @@ def s2s_format_lambda_body(cte, ast):
 
         return ret
 
+    def update_With_nested_node(stmt):
+        items = stmt.items
+
+        if len(items) > 1:
+            body = stmt.body
+            type_comment = stmt.type_comment
+            nested_with = With(items[1:], body, type_comment)
+
+            nested_with.lineno = stmt.lineno
+            nested_with.col_offset = stmt.col_offset
+            nested_with.end_lineno = stmt.end_lineno
+            nested_with.end_col_offset = stmt.end_col_offset
+
+            # Special case which only happens in py.js
+            if hasattr(stmt, 'container'):
+                nested_with.container = stmt.container
+
+            stmt.body = [nested_with]
+            stmt.items = [items[0]]
+
+
     def walk_fn(cte, ast, _):
         if isinstance(ast, AST.Lambda):
             expression_body = ast.body
             ast.body = [make_Return_pseudo_node(expression_body)]
+            return True
+        elif isinstance(ast, AST.With):
+            # Transform all With to simple With
+            # A simple with is a With statement with a single with item
+            # ex: 'with x as a' is simple and 'with x as a, y as b' is not
+            # All With statement are converted into nested With as they are semantically
+            # equivalent. It is also easier to implement this way since each withitem
+            # needs its own finally block in case another item fails when entered
+            update_With_nested_node(ast)
             return True
         else:
             return True
@@ -9756,6 +9786,9 @@ def comp_stmt(cte, ast):
 
     elif isinstance(ast, AST.Try):
         return gen_try(cte, ast)
+
+    elif isinstance(ast, AST.With):
+        return gen_with(cte, ast)
 
     else:
         return CT_raise_syntax_error_with_msg(cte, ast, "unsupported statements")
@@ -10768,6 +10801,91 @@ def gen_raise(cte, ast, code):
                 return sem_raise(ctx, exn)
             return code(rte, raise_exn)
         return cte, eval_raise_param
+
+def make_With_nested_node(items, body, type_comment, parent_with):
+    ast = With(items, body, type_comment)
+    ast.lineno = parent_with.lineno
+    ast.col_offset = parent_with.col_offset
+    ast.end_lineno = parent_with.end_lineno
+    ast.end_col_offset = parent_with.end_col_offset
+
+    # Special case which only happens in py.js
+    if hasattr(parent_with, 'container'):
+        ast.container = parent_with.container
+
+    return ast
+
+def gen_with(cte, ast):
+    # A single item is expected after s2s transformations
+    withitem = ast.items[0]
+    context_expr = withitem.context_expr
+    optional_vars = withitem.optional_vars
+    body = ast.body
+
+    expr_cte, expr_code = comp_expr(cte, context_expr)
+    if optional_vars is None:
+        set_cte = expr_cte
+        # No target, no set
+        def set_target(rte, cont, val): return cont(rte, val)
+    elif isinstance(optional_vars, AST.Name):
+        set_cte, set_target = gen_var_set(expr_cte, optional_vars, optional_vars)
+    else:
+        return CT_raise_syntax_error_with_msg(expr_cte, optional_vars,
+                                              "with-statement does not support multiple assignments")
+
+    body_cte, body_code = comp_stmt_seq(set_cte, body)
+
+    def code(rte, cont):
+        def exec_context_obj(rte, unopened_context):
+            # Context semantics is one of the rare semantics where
+            # magic methods are collected before any execution
+            # https://docs.python.org/3.8/reference/compound_stmts.html#with
+            item_enter = getattribute_from_obj_mro(unopened_context, '__enter__')
+            if item_enter is absent:
+                return sem_raise_with_message(Context(rte, cont, optional_vars), class_AttributeError, "__enter__")
+
+            item_exit = getattribute_from_obj_mro(unopened_context, '__exit__')
+            if item_exit is absent:
+                return sem_raise_with_message(Context(rte, cont, optional_vars), class_AttributeError, "__exit__")
+
+            def enter_context(enter_rte, context_val):
+                # Put a try-except-finally around the execution of the body
+                # To exit the context with __exit__
+                def finally_code(finally_rte, finally_cont):
+                    return sem_simple_call(Context(finally_rte, lambda r, _ : finally_cont(r), optional_vars),
+                                           item_exit,
+                                           [unopened_context, om_None, om_None, om_None])
+
+                def exit_before_flow(finally_cont):
+                    return finally_code(enter_rte, finally_cont)
+
+                def exit_before_reraise(exc):
+                    # If __exit__ return a truthy value, the exception is not reraised
+                    def maybe_reraise(reraise_rte, exit_val):
+                        def check_truthiness(rte, res):
+                            if om_is(res, om_True):
+                                return cont(enter_rte)
+                            else:
+                                return sem_raise_unsafe(enter_rte, exc)
+                        return sem_bool(Context(enter_rte, check_truthiness, optional_vars), exit_val)
+                    return sem_simple_call(Context(enter_rte, maybe_reraise, optional_vars),
+                                           item_exit,
+                                           # 4th argument should be traceback, but we do not have those yet
+                                           [unopened_context, OM_get_object_class(exc), exc, om_None])
+
+                def exit_before_continue(_):
+                    return finally_code(enter_rte, cont)
+
+                def exec_body(body_rte, body_cont):
+                    return body_code(body_rte, exit_before_continue)
+
+                activated_context_rte = make_rte_with_handler_and_finally(enter_rte, exit_before_reraise, exit_before_flow)
+                return set_target(activated_context_rte, exec_body, context_val)
+            return sem_simple_call(Context(rte, enter_context, optional_vars), item_enter, [unopened_context])
+        return expr_code(rte, exec_context_obj)
+
+    return body_cte, code
+
 
 def comp_import(cte, ast, names):
     if len(names) == 1:
