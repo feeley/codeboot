@@ -1,12 +1,11 @@
 // codeBoot state
 
-DEBUG = true;
-
 function CodeBoot() {
 
     var cb = this;
 
     cb.version = '3.1.12';
+    cb.debugMode = true
 
     cb.cmds = null;
     cb.cmds_valid = false;
@@ -20,55 +19,66 @@ function CodeBoot() {
                  alt: false
                };
 
+    document.addEventListener('DOMContentLoaded', e => cb.loaded());
+}
 
-    function codeboot_start(){
-        cb.rewrite_event_handlers(null, document.body);
+// Dispatch the preinit event depending on environnement and setup environnement
+CodeBoot.prototype.loaded = function () {
 
-        function done() {
-            cb.init();
-        }
+    var cb = this
 
-        var search = window.location.search;
+    if (typeof Reveal !== 'undefined'){
+        console.log("Reveal js detected... initilizing codeboot after its initialization")
 
-        if (search && search.slice(0, 6) === '?init=') {
+        // Only start initilizing codeboot once reveal.js is ready
+        Reveal.on('ready', e => cb.preInit())
 
-            var init_str = search.slice(6);
-            var parts = init_str.split(',');
-            var cmds = parts.slice(1);
-            var cmds_str = cmds.join(',');
-            var signature = fromSafeBase64ToUint8Array(parts[0]);
-            var i = 0;
-
-            cb.cmds = cmds;
-
-            cb.verify(toUint8Array(cmds_str),
-                signature,
-                function (isValid) {
-                    cb.cmds_valid = isValid;
-                    done();
-                });
-        } else {
-            done();
-        }
+        // refresh codemirror each time we change page see
+        // https://github.com/codemirror/CodeMirror/issues/61
+        Reveal.on('slidechanged', e =>
+            e.currentSlide.querySelectorAll('.CodeMirror')
+             .forEach(x => x.CodeMirror.refresh()))
+    }
+    else{
+        cb.preInit()
     }
 
-    
-    document.addEventListener('DOMContentLoaded', function () {
-        if (typeof Reveal !== 'undefined'){
-            console.log("Reveal js detected... initilizing codeboot after its initialization")
-            // Only start initilizing codeboot once reveal.js is ready
-            Reveal.on('ready', (e)=> codeboot_start())
-            // refresh codemirror each time we change page see 
-            // https://github.com/codemirror/CodeMirror/issues/61
-            Reveal.on('slidechanged', e => 
-                e.currentSlide.querySelectorAll('.CodeMirror')
-                              .forEach(x => x.CodeMirror.refresh()))
-        }
-        else{
-            codeboot_start()
-        }
+}
 
-    });
+// Function that pre-initialize codeboot
+CodeBoot.prototype.preInit = function () {
+
+    var cb = this
+
+    cb.rewrite_event_handlers(null, document.body);
+
+    function done() {
+        cb.init();
+    }
+
+    var search = window.location.search;
+
+    if (search && search.slice(0, 6) === '?init=') {
+
+        var init_str = search.slice(6);
+        var parts = init_str.split(',');
+        var cmds = parts.slice(1);
+        var cmds_str = cmds.join(',');
+        var signature = fromSafeBase64ToUint8Array(parts[0]);
+        var i = 0;
+
+        cb.cmds = cmds;
+
+        cb.verify(toUint8Array(cmds_str),
+            signature,
+            function (isValid) {
+                cb.cmds_valid = isValid;
+                done();
+            });
+    } else {
+        done();
+    }
+
 }
 
 CodeBoot.prototype.cb = new CodeBoot();
@@ -345,7 +355,7 @@ CodeBoot.prototype.init = function () {
 
     var cb = this;
 
-    if (!DEBUG){
+    if (cb.debugMode){
       cb.setupBeforeunloadHandling();
     }
     cb.setupMouseMotionTracking(document.body);
