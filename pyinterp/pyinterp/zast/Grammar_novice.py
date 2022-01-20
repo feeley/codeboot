@@ -131,7 +131,7 @@ nonlocal_stmt: 'nonlocal' NAME (',' NAME)*
 assert_stmt: 'assert' test [',' test]
 
 ####compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt
-compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | funcdef | classdef
+compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef
 ####async_stmt: ASYNC (funcdef | with_stmt | for_stmt)
 if_stmt: 'if' namedexpr_test ':' suite ('elif' namedexpr_test ':' suite)* ['else' ':' suite]
 while_stmt: 'while' namedexpr_test ':' suite ['else' ':' suite]
@@ -142,8 +142,8 @@ handlers_list: except_block except_block *
 except_block: 'except' [test ['as' NAME]] ':' suite
 finally_block: 'finally' ':' suite
 
-####with_stmt: 'with' with_item (',' with_item)*  ':' [TYPE_COMMENT] suite
-####with_item: test ['as' expr]
+with_stmt: 'with' with_item (',' with_item)* ':' [TYPE_COMMENT] suite
+with_item: test ['as' expr]
 # NB compile.c makes sure that the default except clause is last
 suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT
 

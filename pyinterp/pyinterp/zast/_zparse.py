@@ -14,8 +14,9 @@ def set_ctx(targets, ctx):
 def set_ctx1(t, ctx):
     t.ctx = ctx
     if isinstance(t, Tuple):
-        for i in range(len(t.elts)):
-            t.elts[i].ctx = ctx
+        set_ctx(t.elts, ctx)
+    elif isinstance(t, List):
+        set_ctx(t.elts, ctx)
 
 def check_assignable(ts, t):
     if isinstance(t, Constant):
@@ -34,6 +35,9 @@ def check_assignable(ts, t):
     elif isinstance(t, BinOp) or isinstance(t, UnaryOp) or isinstance(t, BoolOp):
         py_syntax_error_ast(ts, t, 'cannot assign to operator')
     elif isinstance(t, Tuple):
+        for i in range(len(t.elts)):
+            check_assignable(ts, t.elts[i])
+    elif isinstance(t, List):
         for i in range(len(t.elts)):
             check_assignable(ts, t.elts[i])
     elif isinstance(t, Dict):
@@ -209,6 +213,9 @@ def py_parse_compound_stmt(ts):
     elif ts.token == TRY:
         try_stmt1 = py_parse_try_stmt(ts)
         return try_stmt1
+    elif ts.token == WITH:
+        with_stmt1 = py_parse_with_stmt(ts)
+        return with_stmt1
     elif ts.token == DEF:
         funcdef1 = py_parse_funcdef(ts)
         return funcdef1
@@ -418,6 +425,30 @@ def py_parse_try_stmt(ts):
             return set_start_end(ts, lineno, col_offset, ast)
         else:
             return py_syntax_error(ts, None)
+    else:
+        return py_syntax_error(ts, None)
+
+def py_parse_with_stmt(ts):
+    if ts.token == WITH:
+        lineno = get_lineno(ts); col_offset = get_col_offset(ts)
+        type_comment = None
+        withitems = []
+        py_advance(ts)
+        with_item1 = py_parse_with_item(ts)
+        withitems.append(with_item1)
+        while ts.token == COMMA:
+            py_advance(ts)
+            with_item2 = py_parse_with_item(ts)
+            withitems.append(with_item2)
+        if ts.token == COLON:
+            py_advance(ts)
+        else:
+            return py_syntax_error(ts, None)
+        if ts.token == TYPE_COMMENT:
+            py_advance(ts)
+        suite1 = py_parse_suite(ts)
+        ast = With(withitems, suite1, type_comment)
+        return set_start_end(ts, lineno, col_offset, ast)
     else:
         return py_syntax_error(ts, None)
 
@@ -705,6 +736,19 @@ def py_parse_handlers_list(ts):
             except_block2 = py_parse_except_block(ts)
             handlers.append(except_block2)
         return handlers
+    else:
+        return py_syntax_error(ts, None)
+
+def py_parse_with_item(ts):
+    if ts.token in py_tokenset_1:
+        expr1 = None
+        test1 = py_parse_test(ts)
+        if ts.token == AS:
+            py_advance(ts)
+            expr1 = py_parse_expr(ts)
+            check_assignable(ts, expr1)
+            set_ctx1(expr1, Store())
+        return withitem(test1, expr1)
     else:
         return py_syntax_error(ts, None)
 
@@ -1639,10 +1683,10 @@ def py_tokenset(*elements):
     return elements
 
 py_tokenset_1 = py_tokenset(TILDE,NAME,NUMBER,STRING,LBRACE,LPAR,LSQB,PLUS,MINUS,NOT,LAMBDA,ELLIPSIS,FALSE,NONE,TRUE)
-py_tokenset_2 = py_tokenset(NAME,NUMBER,STRING,LPAR,LSQB,PLUS,MINUS,LBRACE,TILDE,ELLIPSIS,FALSE,NONE,TRUE,ASSERT,BREAK,CLASS,CONTINUE,DEF,FOR,GLOBAL,IF,IMPORT,LAMBDA,NONLOCAL,NOT,PASS,RAISE,RETURN,TRY,WHILE)
-py_tokenset_3 = py_tokenset(NAME,NUMBER,STRING,NEWLINE,LPAR,LSQB,PLUS,MINUS,LBRACE,TILDE,ELLIPSIS,FALSE,NONE,TRUE,ASSERT,BREAK,CLASS,CONTINUE,DEF,FOR,GLOBAL,IF,IMPORT,LAMBDA,NONLOCAL,NOT,PASS,RAISE,RETURN,TRY,WHILE)
+py_tokenset_2 = py_tokenset(NAME,NUMBER,STRING,LPAR,LSQB,PLUS,MINUS,LBRACE,TILDE,ELLIPSIS,FALSE,NONE,TRUE,ASSERT,BREAK,CLASS,CONTINUE,DEF,FOR,GLOBAL,IF,IMPORT,LAMBDA,NONLOCAL,NOT,PASS,RAISE,RETURN,TRY,WHILE,WITH)
+py_tokenset_3 = py_tokenset(NAME,NUMBER,STRING,NEWLINE,LPAR,LSQB,PLUS,MINUS,LBRACE,TILDE,ELLIPSIS,FALSE,NONE,TRUE,ASSERT,BREAK,CLASS,CONTINUE,DEF,FOR,GLOBAL,IF,IMPORT,LAMBDA,NONLOCAL,NOT,PASS,RAISE,RETURN,TRY,WHILE,WITH)
 py_tokenset_4 = py_tokenset(NAME,NUMBER,STRING,LPAR,LSQB,PLUS,MINUS,LBRACE,TILDE,ELLIPSIS,FALSE,NONE,TRUE,ASSERT,BREAK,CONTINUE,GLOBAL,IMPORT,LAMBDA,NONLOCAL,NOT,PASS,RAISE,RETURN)
-py_tokenset_5 = py_tokenset(DEF,FOR,IF,TRY,WHILE,CLASS)
+py_tokenset_5 = py_tokenset(DEF,FOR,IF,TRY,WHILE,WITH,CLASS)
 py_tokenset_6 = py_tokenset(TILDE,NAME,NUMBER,STRING,LBRACE,LPAR,LSQB,PLUS,MINUS,NOT,ELLIPSIS,FALSE,NONE,TRUE)
 py_tokenset_7 = py_tokenset(STAR,NAME,DOUBLESTAR)
 py_tokenset_8 = py_tokenset(CONTINUE,RAISE,RETURN,BREAK)

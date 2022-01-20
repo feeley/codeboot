@@ -378,6 +378,12 @@ class OM_BaseException(OM_object):
     locations: stack of ast nodes where the exception was thrown
     """
 
+class OM_TextIOWrapper(OM_object):
+    """
+    name: filename
+    mode: file mode
+    """
+
 
 def make_frame(rte, cont, ast):
     return [rte, cont, ast]
@@ -1126,6 +1132,13 @@ def make_builtin_class(name, instance_creator, bases):
     OM_set_type_is_builtin(cls, True)
     return cls
 
+def make_stdlib_class(name, module_name, instance_creator, bases):
+    # Set base classes when they do exist
+    cls = make_class(name, module_name, bases, class_type)
+    OM_set_type_instance_creator(cls, instance_creator)
+    OM_set_type_is_builtin(cls, False)
+    return cls
+
 def bootstrap_base_types():
     # init class_type
     class_type = om_with_instance_creator(absent, OM_type_create)
@@ -1282,6 +1295,14 @@ def populate_builtin_NotImplementedType():
 def populate_builtin_MethodWrapper():
     builtin_add_method_with_kwargs(class_MethodWrapper, '__call__', om_MethodWrapper_call)
     builtin_add_method(class_MethodWrapper, '__repr__', om_MethodWrapper_repr)
+
+def populate_builtin_TextIOWrapper():
+    builtin_add_method(class_TextIOWrapper, '__repr__', om_TextIOWrapper_repr)
+    builtin_add_method(class_TextIOWrapper, '__enter__', om_TextIOWrapper_enter)
+    builtin_add_method(class_TextIOWrapper, '__exit__', om_TextIOWrapper_exit)
+    builtin_add_method(class_TextIOWrapper, 'close', om_TextIOWrapper_close)
+    builtin_add_method(class_TextIOWrapper, 'read', om_TextIOWrapper_read)
+    builtin_add_method(class_TextIOWrapper, 'write', om_TextIOWrapper_write)
 
 def populate_builtin_int():
     builtin_add_method(class_int, '__new__', om_int_new)
@@ -1628,6 +1649,14 @@ def om_exception(exn, args):
     OM_set(obj, 'args', args)
     return obj
 
+def om_TextIOWrapper(cls, name, mode, pointer, opened):
+    obj = om(cls)
+    OM_set_TextIOWrapper_name(obj, name)
+    OM_set_TextIOWrapper_mode(obj, mode)
+    OM_set_TextIOWrapper_pointer(obj, pointer)
+    OM_set_TextIOWrapper_opened(obj, opened)
+    return obj
+
 def om_WrapperDescriptor(name, cls, code, requires_kwargs):
     obj = om(class_WrapperDescriptor)
     OM_set_code(obj, code)
@@ -1751,6 +1780,9 @@ def OM_NoneType_create():
 def OM_BaseException_create():
     return OM_BaseException()
 
+def OM_TextIOWrapper_create():
+    return OM_TextIOWrapper()
+
 # Manipulation of om object.
 def OM_set(o, name, value):
     attribs = OM_get_object_attribs(o)
@@ -1788,6 +1820,21 @@ def OM_get_class_name(o):
 
 def OM_get_object_class_name(o):
     return OM_get_class_name(OM_get_object_class(o))
+
+def OM_get_class_qualname(cls):
+    # TODO: qualname should be an attribute, it should not be computed
+    cls_name = OM_get(cls, '__name__')
+    cls_name_value = OM_get_boxed_value(cls_name)
+
+    if OM_get_type_is_builtin(cls):
+        return cls_name_value
+    else:
+        cls_module = OM_get(cls, '__module__')
+        cls_module_value = OM_get_boxed_value(cls_module)
+        return cls_module_value + "." + cls_name_value
+
+def OM_get_object_class_qualname(o):
+    return OM_get_class_qualname(OM_get_object_class(o))
 
 def OM_get_getset_descriptor_getter(o):
     return o.getter
@@ -1997,6 +2044,30 @@ def OM_get_function_lexical_scope(o):
 
 def OM_set_function_lexical_scope(o, lexical_scope):
     o.lexical_scope = lexical_scope
+
+def OM_get_TextIOWrapper_name(o):
+    return o.name
+
+def OM_set_TextIOWrapper_name(o, name):
+    o.name = name
+
+def OM_get_TextIOWrapper_mode(o):
+    return o.mode
+
+def OM_set_TextIOWrapper_mode(o, mode):
+    o.mode = mode
+
+def OM_get_TextIOWrapper_pointer(o):
+    return o.pointer
+
+def OM_set_TextIOWrapper_pointer(o, pointer):
+    o.pointer = pointer
+
+def OM_get_TextIOWrapper_opened(o):
+    return o.opened
+
+def OM_set_TextIOWrapper_opened(o, opened):
+    o.opened = opened
 
 # hidden fields for methods
 
@@ -2265,6 +2336,8 @@ class_function = make_builtin_class('function', OM_function_create, ())
 class_method = make_builtin_class('method', OM_method_create, ())
 class_slice = make_builtin_class('slice', OM_slice_create, ())
 
+class_TextIOWrapper = make_builtin_class('TextIOWrapper', OM_TextIOWrapper_create, ())
+
 # class available and populated in 'more_builtins' module
 class_struct = make_builtin_class('struct', OM_struct_create, ())
 class_DOMDocument = make_builtin_class('DOMDocument', OM_DOMDocument_create, ())
@@ -2292,11 +2365,18 @@ class_ZeroDivisionError = make_builtin_class('ZeroDivisionError', OM_BaseExcepti
 class_AssertionError = make_builtin_class('AssertionError', OM_BaseException_create, (class_Exception,))
 class_ImportError = make_builtin_class('ImportError', OM_BaseException_create, (class_Exception,))
 class_ModuleNotFoundError = make_builtin_class('ModuleNotFoundError', OM_BaseException_create, (class_ImportError,))
+class_OSError = make_builtin_class('OSError', OM_BaseException_create, (class_Exception,))
+class_FileNotFoundError = make_builtin_class('FileNotFoundError', OM_BaseException_create, (class_OSError,))
 
+# Constants
 om_None = om(class_NoneType)
 om_True = om_boxval(class_bool, int_from_num(1))
 om_False = om_boxval(class_bool, int_from_num(0))
 om_NotImplemented = om(class_NotImplementedType)
+
+# Non top-level exceptions
+# io module
+class_UnsupportedOperation = make_stdlib_class("UnsupportedOperation", "io", OM_BaseException_create, (class_OSError,))
 
 # Helper to build magic_methods
 
@@ -2618,14 +2698,15 @@ def om_type_setattr_code(ctx, args):
 om_type_setattr = do_magic_method(class_type, "__setattr__", om_type_setattr_code)
 
 def om_format_type_repr(self, rte):
-    self_name = OM_get(self, '__name__')
-    self_name_value = OM_get_boxed_value(self_name)
-    return "<class '" + self_name_value + "'>"
+    if OM_get_type_is_builtin(self):
+        self_name = OM_get(self, '__name__')
+        self_name_value = OM_get_boxed_value(self_name)
+        return "<class '" + self_name_value + "'>"
+    else:
+        return "<class '" + OM_get_class_qualname(self) + "'>"
 
 def om_type_repr(ctx, args):
     self = args[0]
-    self_name = OM_get(self, '__name__')
-    self_name_value = OM_get_boxed_value(self_name)
     result = om_format_type_repr(self, ctx.rte)
     return ctx.cont(ctx.rte, om_str(result))
 
@@ -2923,6 +3004,130 @@ def om_getset_descriptor_set_code(ctx, args):
 
 om_getset_descriptor_set = do_magic_method(class_getset_descriptor, "__set__", om_getset_descriptor_set_code)
 
+
+# class_TextIOWrapper
+def raise_operation_on_closed_file(ctx):
+    return sem_raise_with_message(ctx, class_ValueError, "I/O operation on closed file.")
+
+def is_read_file_mode(mode):
+    return mode == 'r'
+
+def is_write_truncate_mode(mode):
+    return mode == 'w'
+
+def om_format_TextIOWrapper(self, rte):
+    return "<TextIOWrapper name='" + OM_get_TextIOWrapper_name(self) + \
+           "' mode='" + OM_get_TextIOWrapper_mode(self) + "'>"
+
+def om_TextIOWrapper_repr(ctx, args):
+    if len(args) == 1:
+        self = args[0]
+        return cont_str(ctx, om_format_TextIOWrapper(self))
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
+
+def om_TextIOWrapper_enter(ctx, args):
+    if len(args) == 1:
+        self = args[0]
+        return cont_obj(ctx, self)
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
+
+def om_TextIOWrapper_exit(ctx, args):
+    if len(args) > 0:
+        self = args[0]
+        OM_set_TextIOWrapper_opened(self, False)
+        return cont_obj(ctx, om_None)
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected at least 1 argument, got " + str(len(args) - 1))
+
+def om_TextIOWrapper_close(ctx, args):
+    if len(args) == 1:
+        self = args[0]
+        OM_set_TextIOWrapper_opened(self, False)
+        return cont_obj(ctx, om_None)
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
+
+def om_TextIOWrapper_read(ctx, args):
+    if len(args) == 1:
+        self = args[0]
+        read_size = -1
+    elif len(args) == 2:
+        self = args[0]
+        size = args[1]
+
+        if size is om_None:
+            read_size = -1
+        elif om_isinstance(size, class_int):
+            read_size = int_to_num(OM_get_boxed_value(size))
+        else:
+            return sem_raise_with_message(ctx, class_TypeError, "argument should be integer or None")
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
+
+    opened = OM_get_TextIOWrapper_opened(self)
+    if opened:
+        mode = OM_get_TextIOWrapper_mode(self)
+
+        if is_read_file_mode(mode):
+            name = OM_get_TextIOWrapper_name(self)
+
+            if runtime_file_exists(ctx.rte, name):
+                # Mimic file buffer by slicing file content
+                content = runtime_read_file(ctx.rte, name)
+                file_len = len(content)
+                pointer = OM_get_TextIOWrapper_pointer(self)
+
+                if read_size >= 0:
+                    read_end = pointer + read_size
+                    if read_end > file_len:
+                        read_end = file_len
+                else:
+                    read_end = file_len
+
+                OM_set_TextIOWrapper_pointer(self, read_end)
+                return cont_str(ctx, content[pointer:read_end])
+            else:
+                # cPython returns an empty string if the file
+                # no longer exists at a read() after being opened
+                return cont_str(ctx, "")
+        else:
+            return sem_raise_with_message(ctx, class_UnsupportedOperation, "not readable")
+    else:
+        return raise_operation_on_closed_file(ctx)
+
+def om_TextIOWrapper_write(ctx, args):
+    if len(args) == 2:
+        self = args[0]
+        content = args[1]
+
+        if om_isinstance(content, class_str):
+            opened = OM_get_TextIOWrapper_opened(self)
+            content_value = OM_get_boxed_value(content)
+            content_length = len(content_value)
+
+            if opened:
+                mode = OM_get_TextIOWrapper_mode(self)
+
+                if is_write_truncate_mode(mode):
+                    name = OM_get_TextIOWrapper_name(self)
+
+                    # TODO: cPython on Linux does not recreate file if it was deleted
+                    # is that expected or quirk of my OS?
+                    runtime_write_file(ctx.rte, name, content_value)
+
+                    # TODO: we should in fact return the number of written bytes
+                    # fix that once we have a better filesystem in codeBoot?
+                    return cont_int(ctx, int_from_num(content_length))
+                else:
+                    return sem_raise_with_message(ctx, class_UnsupportedOperation, "not writable")
+            else:
+                return raise_operation_on_closed_file(ctx)
+        else:
+            return sem_raise_with_message(ctx, class_TypeError, "write() argument must be str")
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 1 argument, got " + str(len(args) - 1))
 
 # class_NotImplementedType
 def om_format_NotImplementedType(self, rte):
@@ -7156,6 +7361,7 @@ bootstrap_populate_base_types()
 populate_builtin_getset_descriptor()
 populate_builtin_NotImplementedType()
 populate_builtin_MethodWrapper()
+populate_builtin_TextIOWrapper()
 
 # Basic type and date structure.
 populate_builtin_int()
@@ -7354,6 +7560,35 @@ def om_iter_code(rte, _):
         return sem_iter(next_ctx, obj)
     else:
         return sem_raise(next_ctx, class_NotImplementedError)
+
+def om_open_code(rte, _):
+    next_ctx = make_out_of_ast_context(rte, unwind_return)
+
+    file = rte_lookup_locals(rte, 'file')
+    mode = rte_lookup_locals(rte, 'mode')
+
+    # cPython applies checks on mode first
+    if om_isinstance(mode, class_str):
+        mode_value = OM_get_boxed_value(mode)
+
+        if mode_value != 'r' and mode_value != 'w':
+            return sem_raise_with_message(next_ctx, class_ValueError, "invalid mode: '" + mode_value + "'")
+    else:
+        return sem_raise_with_message(next_ctx, class_TypeError, "open() argument 'mode' must be str")
+
+    if om_isinstance(file, class_str):
+        file_value = OM_get_boxed_value(file)
+    else:
+        return sem_raise_with_message(next_ctx, class_TypeError, "open() argument 'file' must be str")
+
+    if mode_value == "r" and runtime_file_exists(rte, file_value):
+        return unwind_return(rte, om_TextIOWrapper(class_TextIOWrapper, file_value, mode_value, 0, True))
+    elif mode_value == "w":
+        runtime_write_file(rte, file_value, "")
+        return unwind_return(rte, om_TextIOWrapper(class_TextIOWrapper, file_value, mode_value, 0, True))
+    else:
+        return sem_raise_with_message(next_ctx, class_FileNotFoundError,
+                                      "No such file: '" + file_value + "'")
 
 def om_abs_code(rte, _):
     next_ctx = make_out_of_ast_context(rte, unwind_return)
@@ -7892,6 +8127,11 @@ def make_module_time():
     return om_module('time', module_time_env)
 
 
+def make_module_io():
+    module_io_env = make_dict()
+    dict_set(module_io_env, 'UnsupportedOperation', class_UnsupportedOperation)
+    return om_module('io', module_io_env)
+
 def make_module_functools():
     module_functools_env = make_dict()
 
@@ -8339,9 +8579,12 @@ def make_module_more_builtins():
             if len(filename_value) == 0:
                 return sem_raise_with_message(make_out_of_ast_context(rte, cont), class_TypeError,
                                               "filename must be a non-empty str")
-            else:
-                content = runtime_readFile(rte, filename_value)
+            elif runtime_file_exists(rte, filename_value):
+                content = runtime_read_file(rte, filename_value)
                 return unwind_return(rte, om_str(content))
+            else:
+                return sem_raise_with_message(make_out_of_ast_context(rte, cont), class_FileNotFoundError,
+                                              "No such file: '" + filename_value + "'")
 
 
     om_readFile = om_make_builtin_function_with_signature('readFile', readFile_code,
@@ -8363,7 +8606,7 @@ def make_module_more_builtins():
                 return sem_raise_with_message(make_out_of_ast_context(rte, cont), class_TypeError,
                                               "filename must be a non-empty str")
             else:
-                runtime_writeFile(rte, filename_value, content_value)
+                runtime_write_file(rte, filename_value, content_value)
                 return unwind_return(rte, om_None)
 
 
@@ -8634,6 +8877,8 @@ def fresh_rte(options):
     om_builtin_len = om_make_builtin_function_with_signature('len', om_len_code, make_posonly_only_signature(('obj',)))
     om_builtin_next = om_make_builtin_function_with_signature('next', om_next_code,
                                                               make_posonly_defaults_signature(('obj', 'default'), (absent,)))
+    om_builtin_open = om_make_builtin_function_with_signature('open', om_open_code,
+                                                              make_args_defaults_signature(('file', 'mode'), (om_str('r'),)))
     om_builtin_iter = om_make_builtin_function_with_signature('iter', om_iter_code,
                                                               make_posonly_defaults_signature(('obj', 'sentinel'), (absent,)))
     om_builtin_abs = om_make_builtin_function_with_signature('abs', om_abs_code, make_posonly_only_signature(('obj',)))
@@ -8674,6 +8919,7 @@ def fresh_rte(options):
     dict_set(builtins_env, 'len', om_builtin_len)
     dict_set(builtins_env, 'next', om_builtin_next)
     dict_set(builtins_env, 'iter', om_builtin_iter)
+    dict_set(builtins_env, 'open', om_builtin_open)
     dict_set(builtins_env, 'abs', om_builtin_abs)
     dict_set(builtins_env, 'min', om_builtin_min)
     dict_set(builtins_env, 'max', om_builtin_max)
@@ -8700,6 +8946,8 @@ def fresh_rte(options):
     dict_set(builtins_env, 'AssertionError', class_AssertionError)
     dict_set(builtins_env, 'ImportError', class_ImportError)
     dict_set(builtins_env, 'ModuleNotFoundError', class_ModuleNotFoundError)
+    dict_set(builtins_env, 'OSError', class_OSError)
+    dict_set(builtins_env, 'FileNotFoundError', class_FileNotFoundError)
 
     # Pyinterp functions
     om_builtin_alert = om_make_builtin_function_with_signature('alert', om_alert_code, make_posonly_defaults_signature(('obj',), (om_str(''),)))
@@ -8716,6 +8964,7 @@ def fresh_rte(options):
     turtle_module = make_module_turtle()
     random_module = make_module_random()
     time_module = make_module_time()
+    io_module = make_module_io()
     functools_module = make_module_functools()
     mouse_module = make_module_mouse()
     pixels_module = make_module_pixels()
@@ -8727,6 +8976,7 @@ def fresh_rte(options):
     rte_add_to_sys_modules(rte, 'turtle', turtle_module)
     rte_add_to_sys_modules(rte, 'random', random_module)
     rte_add_to_sys_modules(rte, 'time', time_module)
+    rte_add_to_sys_modules(rte, 'io', io_module)
     rte_add_to_sys_modules(rte, 'functools', functools_module)
     rte_add_to_sys_modules(rte, 'mouse', mouse_module)
     rte_add_to_sys_modules(rte, 'pixels', pixels_module)
@@ -8901,10 +9151,40 @@ def s2s_format_lambda_body(cte, ast):
 
         return ret
 
+    def update_With_nested_node(stmt):
+        items = stmt.items
+
+        if len(items) > 1:
+            body = stmt.body
+            type_comment = stmt.type_comment
+            nested_with = With(items[1:], body, type_comment)
+
+            nested_with.lineno = stmt.lineno
+            nested_with.col_offset = stmt.col_offset
+            nested_with.end_lineno = stmt.end_lineno
+            nested_with.end_col_offset = stmt.end_col_offset
+
+            # Special case which only happens in py.js
+            if hasattr(stmt, 'container'):
+                nested_with.container = stmt.container
+
+            stmt.body = [nested_with]
+            stmt.items = [items[0]]
+
+
     def walk_fn(cte, ast, _):
         if isinstance(ast, AST.Lambda):
             expression_body = ast.body
             ast.body = [make_Return_pseudo_node(expression_body)]
+            return True
+        elif isinstance(ast, AST.With):
+            # Transform all With to simple With
+            # A simple with is a With statement with a single with item
+            # ex: 'with x as a' is simple and 'with x as a, y as b' is not
+            # All With statement are converted into nested With as they are semantically
+            # equivalent. It is also easier to implement this way since each withitem
+            # needs its own finally block in case another item fails when entered
+            update_With_nested_node(ast)
             return True
         else:
             return True
@@ -9544,6 +9824,9 @@ def comp_stmt(cte, ast):
 
     elif isinstance(ast, AST.Try):
         return gen_try(cte, ast)
+
+    elif isinstance(ast, AST.With):
+        return gen_with(cte, ast)
 
     else:
         return CT_raise_syntax_error_with_msg(cte, ast, "unsupported statements")
@@ -10557,6 +10840,91 @@ def gen_raise(cte, ast, code):
             return code(rte, raise_exn)
         return cte, eval_raise_param
 
+def make_With_nested_node(items, body, type_comment, parent_with):
+    ast = With(items, body, type_comment)
+    ast.lineno = parent_with.lineno
+    ast.col_offset = parent_with.col_offset
+    ast.end_lineno = parent_with.end_lineno
+    ast.end_col_offset = parent_with.end_col_offset
+
+    # Special case which only happens in py.js
+    if hasattr(parent_with, 'container'):
+        ast.container = parent_with.container
+
+    return ast
+
+def gen_with(cte, ast):
+    # A single item is expected after s2s transformations
+    withitem = ast.items[0]
+    context_expr = withitem.context_expr
+    optional_vars = withitem.optional_vars
+    body = ast.body
+
+    expr_cte, expr_code = comp_expr(cte, context_expr)
+    if optional_vars is None:
+        set_cte = expr_cte
+        # No target, no set
+        def set_target(rte, cont, val): return cont(rte, val)
+    elif isinstance(optional_vars, AST.Name):
+        set_cte, set_target = gen_var_set(expr_cte, optional_vars, optional_vars.id)
+    else:
+        return CT_raise_syntax_error_with_msg(expr_cte, optional_vars,
+                                              "with-statement does not support multiple assignments")
+
+    body_cte, body_code = comp_stmt_seq(set_cte, body)
+
+    def code(rte, cont):
+        def exec_context_obj(rte, unopened_context):
+            # Context semantics is one of the rare semantics where
+            # magic methods are collected before any execution
+            # https://docs.python.org/3.8/reference/compound_stmts.html#with
+            item_enter = getattribute_from_obj_mro(unopened_context, '__enter__')
+            if item_enter is absent:
+                return sem_raise_with_message(Context(rte, cont, optional_vars), class_AttributeError, "__enter__")
+
+            item_exit = getattribute_from_obj_mro(unopened_context, '__exit__')
+            if item_exit is absent:
+                return sem_raise_with_message(Context(rte, cont, optional_vars), class_AttributeError, "__exit__")
+
+            def enter_context(enter_rte, context_val):
+                # Put a try-except-finally around the execution of the body
+                # To exit the context with __exit__
+                def finally_code(finally_rte, finally_cont):
+                    return sem_simple_call(Context(finally_rte, lambda r, _ : finally_cont(r), optional_vars),
+                                           item_exit,
+                                           [unopened_context, om_None, om_None, om_None])
+
+                def exit_before_flow(finally_cont):
+                    return finally_code(enter_rte, finally_cont)
+
+                def exit_before_reraise(exc):
+                    # If __exit__ return a truthy value, the exception is not reraised
+                    def maybe_reraise(reraise_rte, exit_val):
+                        def check_truthiness(rte, res):
+                            if om_is(res, om_True):
+                                return cont(enter_rte)
+                            else:
+                                return sem_raise_unsafe(enter_rte, exc)
+                        return sem_bool(Context(enter_rte, check_truthiness, optional_vars), exit_val)
+                    return sem_simple_call(Context(enter_rte, maybe_reraise, optional_vars),
+                                           item_exit,
+                                           # 4th argument should be traceback, but we do not have those yet
+                                           [unopened_context, OM_get_object_class(exc), exc, om_None])
+
+                def exit_before_continue(_):
+                    return finally_code(enter_rte, cont)
+
+                def exec_body(body_rte):
+                    return body_code(body_rte, exit_before_continue)
+
+                activated_context_rte = make_rte_with_handler_and_finally(enter_rte, exit_before_reraise, exit_before_flow)
+                return set_target(activated_context_rte, exec_body, context_val)
+            return sem_simple_call(Context(rte, enter_context, optional_vars), item_enter, [unopened_context])
+        return expr_code(rte, exec_context_obj)
+
+    return body_cte, code
+
+
 def comp_import(cte, ast, names):
     if len(names) == 1:
         return gen_import_alias(cte, ast, names[0])
@@ -10593,15 +10961,14 @@ def gen_import_alias(cte, ast, alias):
 
         # Always re-import in repl as CodeBoot usage allows to use the repl to test files as they are edited
         if existing_module is absent or import_is_in_repl:
-            module_src = runtime_read_file(rte, filename)
-
-            if module_src is None:
+            if not runtime_file_exists(rte, filename):
                 if import_is_in_repl and existing_module is not absent:
                     # When repl fails to re-import a module (deleted of not a file), take existing one from sys.modules
                     return set_code(rte, cont, existing_module)
                 else:
                     return sem_raise_with_message(Context(rte, cont, ast), class_ModuleNotFoundError, "No module named '" + name + "'")
             else:
+                module_src = runtime_read_file(rte, filename)
                 container = runtime_get_file_container(rte, filename)
 
                 compilation_error_thrower = runtime_get_compilationError_thrower(rte_vm(rte), container, module_src)
@@ -12089,7 +12456,8 @@ simple_repr_formatters = {
     "wrapper_descriptor": om_format_WrapperDescriptor_repr,
     "module": om_format_module_repr,
     "object": om_format_object_repr,
-    "NotImplementedType" : om_format_NotImplementedType
+    "NotImplementedType" : om_format_NotImplementedType,
+    "TextIOWrapper": om_format_TextIOWrapper
 }
 
 def om_simple_repr(ctx, value):
@@ -12125,7 +12493,7 @@ def om_simple_repr_with_max_length(ctx, value, max_length):
     return repr_res
 
 def om_simple_exception_format(ctx, exn):
-    exn_name = OM_get_object_class_name(exn)
+    exn_name = OM_get_object_class_qualname(exn)
     exn_args = OM_get(exn, 'args')
 
     if exn_args is absent or not om_isinstance(exn_args, class_tuple):

@@ -170,6 +170,7 @@ def compile_file(input_file):
         runtime += "function drawing_st(rte) {};"
         runtime += "function drawing_pd(rte) {};"
         runtime += "function drawing_pu(rte) {};"
+        runtime += "function drawing_nextpu(rte) {};"
         runtime += "function drawing_setpc(rte, r, g, b) {};"
         runtime += "function drawing_setpw(rte, width) {};"
         runtime += "function drawing_drawtext(rte, text) {};"

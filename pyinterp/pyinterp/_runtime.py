@@ -685,13 +685,6 @@ def runtime_sleep(ms):
     time.sleep(ms / 1000)
 
 
-def runtime_read_file(rte, filename):
-    try:
-        with open(filename, 'r') as f:
-            return f.read()
-    except FileNotFoundError:
-        return None
-
 def runtime_attach_ast_to_file(rte, ast, filename):
     pass
 
@@ -830,14 +823,19 @@ def runtime_get_syntaxError_thrower(compilation_error):
 def runtime_get_file_container(rte, filename):
     return None
 
-def runtime_readFile(rte, filename):
+def runtime_read_file(rte, filename):
+    with open(filename, 'r') as f:
+        return f.read()
+
+def runtime_file_exists(rte, filename):
     try:
         with open(filename, 'r') as f:
             return f.read()
-    except OSError:
-        return None
+        return True
+    except FileNotFoundError:
+        return False
 
-def runtime_writeFile(rte, filename, content):
+def runtime_write_file(rte, filename, content):
     try:
         with open(filename, 'w') as f:
             return f.write(content)

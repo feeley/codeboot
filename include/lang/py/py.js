@@ -595,6 +595,12 @@ function getMouseAlt(rte) {
   return rte.vm.cb.mouse.alt;
 }
 
+function runtime_file_exists(rte, filename) {
+  var fs = rte.vm.fs;
+
+  return fs.hasFile(filename);
+}
+
 function runtime_read_file(rte, filename) {
     var fs = rte.vm.fs;
 
@@ -605,14 +611,7 @@ function runtime_read_file(rte, filename) {
     }
 }
 
-function runtime_readFile(rte, filename) {
-
-    var vm = rte.vm;
-
-    return vm.readFileInternal(filename).content;
-}
-
-function runtime_writeFile(rte, filename, content) {
+function runtime_write_file(rte, filename, content) {
 
     var vm = rte.vm;
 
