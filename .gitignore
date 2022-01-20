@@ -1,4 +1,17 @@
 .DS_Store
 .project
 .settings
+venv
+
+# pyinterp tmp files
 pyinterp/venv
+pyinterp/etc/zp/test/pyinterp/pyinterp_browser.js
+
+# codeBoot bundles
+codeboot.bundle.css
+codeboot.bundle.js
+codeboot_bundle.html
+
+# codeBoot py language
+include/lang/py/pyinterp.js
+include/lang/py/pyinterp.js.bk
