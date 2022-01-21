@@ -684,6 +684,21 @@ CodeBootFileSystem.prototype.openFileExistingOrNew = function (filename) {
     }
 };
 
+CodeBootFileSystem.prototype.openFileWithContentOrNew = function (content){
+
+    for (var filename in fs.files) {
+        file_content = fs.files[filename].getContent();
+        if (content == file_content) {
+            fs.openFile(filename)
+            return true
+        }
+    }
+
+    fs.newFile(undefined, content)
+    return false
+
+}
+
 CodeBootFileSystem.prototype.removeAllEditors = function () {
     var fs = this;
     fs.fem.removeAllEditors();
