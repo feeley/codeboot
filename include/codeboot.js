@@ -2967,7 +2967,12 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
         vm.setAttribute('data-cb-editable', vm.editable);
 
         if (content !== null) {
-            vm.fs.newFile(filename, content);
+            if (vm.editable){
+                vm.fs.parseContentIntoFiles(filename, content)
+            }
+            else{
+                vm.fs.openFileWithContentOrNew(content)
+            }
         }
 
         // In order to resize the repl's height, the CodeMirror-scroll
@@ -2998,8 +3003,7 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
     
     if (vm.root.tagName === 'PRE') {
 
-
-        content = vm.root.innerText;
+        content = $.trim(vm.root.innerText);
         var elem = document.createElement('div');
 
         elem.className = 'cb-vm';

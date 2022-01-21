@@ -686,6 +686,8 @@ CodeBootFileSystem.prototype.openFileExistingOrNew = function (filename) {
 
 CodeBootFileSystem.prototype.openFileWithContentOrNew = function (content){
 
+    var fs = this;
+
     for (var filename in fs.files) {
         file_content = fs.files[filename].getContent();
         if (content == file_content) {
@@ -703,6 +705,52 @@ CodeBootFileSystem.prototype.removeAllEditors = function () {
     var fs = this;
     fs.fem.removeAllEditors();
 };
+
+CodeBootFileSystem.prototype.parseContentIntoFiles = function (filename, content){
+
+    var fs = this;
+
+    var lines = $.trim(content).split("\n")
+    var files = []
+    var content = ""
+
+    for (let line of lines){
+        line = $.trim(line)
+        if (line.length > 0 && line[0] === "#"){    
+
+            i = 1;
+            while (line.length > i && line[i] === "#") i++
+            while (line.length > i && line[i] === " ") i++
+
+            if (line.length > i + 5 &&  line.substring(i, i+5).toLowerCase() === "file:"){
+                content = $.trim(content)
+                if (content.length > 0) files.push([filename, content])
+                content = ""
+                filename = $.trim(line.substring(i+5, line.length))
+            }
+
+        }
+        else {
+            content += line + "\n"
+        }
+
+    }
+
+    content = $.trim(content)
+    if (content.length > 0) files.push([filename, content])
+
+    for (file of files){
+        filename = file[0]
+        content = file[1]
+
+        if (filename === undefined){
+            fs.openFileWithContentOrNew(content)
+        }
+        else{
+            fs.newFile(filename, content)
+        }
+    }
+}
 
 //-----------------------------------------------------------------------------
 
