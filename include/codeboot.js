@@ -1260,8 +1260,8 @@ CodeBootVM.prototype.menuLangHTML = function () {
   <div class="dropdown-menu cb-menu-settings-lang">\
 ' + vm.menuSettingsLangHTML() + '\
   <div class="dropdown-divider"></div>\
-  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v' + CodeBoot.prototype.cb.version + '</a>\
-  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-help-box">Help</a>\
+  <a class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v' + CodeBoot.prototype.cb.version + '</a>\
+  <a class="dropdown-item" data-toggle="modal" data-target="#cb-help-box">Help</a>\
   </div>\
 </span>\
 ';
@@ -1312,24 +1312,24 @@ CodeBootVM.prototype.menuSettingsHTML = function () {
   <div class="dropdown-menu">\
 \
     <h5 class="dropdown-header">Animation speed</h5>\
-    <a href="#" class="dropdown-item" data-cb-setting-speed="slow">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Slow</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-speed="normal">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Normal</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-speed="fast">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Fast</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-speed="turbo">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Turbo</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-speed="lightning">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Lightning</a>\
+    <a class="dropdown-item" data-cb-setting-speed="slow">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Slow</a>\
+    <a class="dropdown-item" data-cb-setting-speed="normal">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Normal</a>\
+    <a class="dropdown-item" data-cb-setting-speed="fast">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Fast</a>\
+    <a class="dropdown-item" data-cb-setting-speed="turbo">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Turbo</a>\
+    <a class="dropdown-item" data-cb-setting-speed="lightning">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Lightning</a>\
 \
     <div class="dropdown-divider"></div>\
 \
     <h5 class="dropdown-header">Editing</h5>\
-    <a href="#" class="dropdown-item" data-cb-setting-show-line-numbers>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show line numbers</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-large-font>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Large font</a>\
+    <a class="dropdown-item" data-cb-setting-show-line-numbers>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show line numbers</a>\
+    <a class="dropdown-item" data-cb-setting-large-font>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Large font</a>\
 \
     <div class="dropdown-divider"></div>\
 \
     <h5 class="dropdown-header">Playground</h5>\
-    <a href="#" class="dropdown-item" data-cb-setting-playground="show-drawing-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show drawing window</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-playground="show-pixels-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show pixels window</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-playground="show-html-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show HTML window</a>\
+    <a class="dropdown-item" data-cb-setting-playground="show-drawing-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show drawing window</a>\
+    <a class="dropdown-item" data-cb-setting-playground="show-pixels-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show pixels window</a>\
+    <a class="dropdown-item" data-cb-setting-playground="show-html-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show HTML window</a>\
 \
   </div>\
 </span>\
