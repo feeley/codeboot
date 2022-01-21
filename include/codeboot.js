@@ -1279,7 +1279,7 @@ CodeBootVM.prototype.menuSettingsLangHTML = function () {
             var name = levels[level];
             var id_and_level = id + '-' + level;
             var svg = lang.prototype.getSVG(level, false);
-            html += '<a href="#" class="dropdown-item" data-cb-setting-lang="' +
+            html += '<a class="dropdown-item" data-cb-setting-lang="' +
                     id_and_level +
                     '">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;' +
                     svg.onLight + '</i>&nbsp;&nbsp;' + name + '</a>';
@@ -1343,15 +1343,15 @@ CodeBootVM.prototype.menuContextHTML = function () {
     return '\n\
 <div class="cb-menu-context dropdown-menu" style="display: none;">\n\
 \n\
-  <a href="#" class="dropdown-item" data-cb-context-presentation="full">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Full window</a>\n\
+  <a class="dropdown-item" data-cb-context-presentation="full">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Full window</a>\n\
 \n\
-  <a href="#" class="dropdown-item" data-cb-context-presentation="floating">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Floating window</a>\n\
+  <a class="dropdown-item" data-cb-context-presentation="floating">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Floating window</a>\n\
 \n\
-  <a href="#" class="dropdown-item" data-cb-context-presentation="hidden">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Hide codeBoot</a>\n\
+  <a class="dropdown-item" data-cb-context-presentation="hidden">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Hide codeBoot</a>\n\
 \n\
-  <a href="#" class="dropdown-item" data-cb-context-bundle-state>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Bundle state to clipboard</a>\n\
+  <a class="dropdown-item" data-cb-context-bundle-state>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Bundle state to clipboard</a>\n\
 \n\
-  <a href="#" class="dropdown-item" data-cb-context-bundle-executable>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Bundle executable to clipboard</a>\n\
+  <a class="dropdown-item" data-cb-context-bundle-executable>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Bundle executable to clipboard</a>\n\
 \n\
 </div>\n\
 ';
@@ -1412,13 +1412,13 @@ CodeBootVM.prototype.helpHTML = function () {
         <!-- WORKED ON TABS -->\
         <ul class="nav nav-tabs" id="helpTab" role="tablist">\
           <li class="nav-item">\
-            <a class="nav-link active" id="keybindings-tab" data-toggle="tab" href="#keybindings" role="tab" aria-controls="keybindings" aria-selected="true">Key bindings</a>\
+            <a class="nav-link active" id="keybindings-tab" data-toggle="tab" role="tab" aria-controls="keybindings" aria-selected="true">Key bindings</a>\
           </li>\
           <li class="nav-item">\
-            <a class="nav-link" id="files-tab" data-toggle="tab" href="#files" role="tab" aria-controls="files" aria-selected="false">Files</a>\
+            <a class="nav-link" id="files-tab" data-toggle="tab" role="tab" aria-controls="files" aria-selected="false">Files</a>\
           </li>\
           <li class="nav-item">\
-            <a class="nav-link" id="grammar-tab" data-toggle="tab" href="#grammar" role="tab" aria-controls="grammar" aria-selected="false">Grammar</a>\
+            <a class="nav-link" id="grammar-tab" data-toggle="tab" role="tab" aria-controls="grammar" aria-selected="false">Grammar</a>\
           </li>\
         </ul>\
 \
@@ -2306,13 +2306,13 @@ CodeBootVM.prototype.helpHTML = function () {
 \
               <ul class="nav nav-tabs" id="grammarTab" role="tablist">\
                 <li class="nav-item">\
-                  <a class="nav-link active" id="statements-tab" data-toggle="tab" href="#statements" role="tab" aria-controls="statements" aria-selected="true">Statements</a>\
+                  <a class="nav-link active" id="statements-tab" data-toggle="tab" role="tab" aria-controls="statements" aria-selected="true">Statements</a>\
                 </li>\
                 <li class="nav-item">\
-                  <a class="nav-link" id="expressions-tab" data-toggle="tab" href="#expressions" role="tab" aria-controls="expressions" aria-selected="false">Expressions</a>\
+                  <a class="nav-link" id="expressions-tab" data-toggle="tab" role="tab" aria-controls="expressions" aria-selected="false">Expressions</a>\
                 </li>\
                 <li class="nav-item">\
-                  <a class="nav-link" id="tokenEx-tab" data-toggle="tab" href="#tokenEx" role="tab" aria-controls="tokenEx" aria-selected="false">Token examples</a>\
+                  <a class="nav-link" id="tokenEx-tab" data-toggle="tab" role="tab" aria-controls="tokenEx" aria-selected="false">Token examples</a>\
                 </li>\
               </ul>\
 \
