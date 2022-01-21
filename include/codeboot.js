@@ -5,7 +5,6 @@ function CodeBoot() {
     var cb = this;
 
     cb.version = '3.1.12';
-    cb.debugMode = true
 
     cb.cmds = null;
     cb.cmds_valid = false;
@@ -355,9 +354,7 @@ CodeBoot.prototype.init = function () {
 
     var cb = this;
 
-    if (cb.debugMode){
-      cb.setupBeforeunloadHandling();
-    }
+    cb.setupBeforeunloadHandling();
     cb.setupMouseMotionTracking(document.body);
 
     cb.setupAllVM(document);

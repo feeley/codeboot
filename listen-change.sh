@@ -7,7 +7,7 @@ command -v inotifywait || echo "You need to install inotifywait and have it in P
 # I know the loop is not ideal because route needs to be redone everytime... but it works !
 # Listen only to "./include"
 while inotifywait -e modify -r ./include; do
-    make
+    make bundle
 done
 
 
