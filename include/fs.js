@@ -390,7 +390,6 @@ CodeBootFileSystem.prototype.newMenuItem = function (elem, cls, text) {
 
     var item = document.createElement('a');
     item.className = cls;
-    item.href = '#';
 
     var span = document.createElement('span');
     span.innerText = text;
