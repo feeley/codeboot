@@ -384,6 +384,10 @@ class OM_TextIOWrapper(OM_object):
     mode: file mode
     """
 
+class OM_csv_reader(OM_object):
+    """
+    lines: lines iterator
+    """
 
 def make_frame(rte, cont, ast):
     return [rte, cont, ast]
@@ -1431,7 +1435,7 @@ def populate_builtin_list():
 
 
 def populate_builtin_dict():
-    ...
+    pass
 
 
 def populate_builtin_range():
@@ -1509,6 +1513,10 @@ def populate_builtin_BaseException():
 
 def populate_builtin_Exception():
     pass
+
+def populate_builtin_csv_reader():
+    builtin_add_method(class_csv_reader, '__iter__', om_csv_reader_iter)
+    builtin_add_method(class_csv_reader, '__next__', om_csv_reader_next)
 
 def object_class(o):
     if om_is(o, om_None):
@@ -1657,6 +1665,11 @@ def om_TextIOWrapper(cls, name, mode, pointer, opened):
     OM_set_TextIOWrapper_opened(obj, opened)
     return obj
 
+def om_csv_reader(cls, line_iterator):
+    obj = om(cls)
+    OM_set_csv_reader_lines(obj, line_iterator)
+    return obj
+
 def om_WrapperDescriptor(name, cls, code, requires_kwargs):
     obj = om(class_WrapperDescriptor)
     OM_set_code(obj, code)
@@ -1782,6 +1795,9 @@ def OM_BaseException_create():
 
 def OM_TextIOWrapper_create():
     return OM_TextIOWrapper()
+
+def OM_csv_reader_create():
+    return OM_csv_reader()
 
 # Manipulation of om object.
 def OM_set(o, name, value):
@@ -2069,6 +2085,12 @@ def OM_get_TextIOWrapper_opened(o):
 def OM_set_TextIOWrapper_opened(o, opened):
     o.opened = opened
 
+def OM_get_csv_reader_lines(o):
+    return o.lines
+
+def OM_set_csv_reader_lines(o, lines):
+    o.lines = lines
+
 # hidden fields for methods
 
 def OM_get_method_self(o):
@@ -2336,7 +2358,11 @@ class_function = make_builtin_class('function', OM_function_create, ())
 class_method = make_builtin_class('method', OM_method_create, ())
 class_slice = make_builtin_class('slice', OM_slice_create, ())
 
-class_TextIOWrapper = make_builtin_class('TextIOWrapper', OM_TextIOWrapper_create, ())
+# _io classes, TODO: put in an _io module
+class_TextIOWrapper = make_stdlib_class('TextIOWrapper', "_io", OM_TextIOWrapper_create, ())
+
+# _csv classes, TODO: put in an _csv module
+class_csv_reader = make_stdlib_class('reader', "_csv", OM_csv_reader_create, ())
 
 # class available and populated in 'more_builtins' module
 class_struct = make_builtin_class('struct', OM_struct_create, ())
@@ -2377,6 +2403,9 @@ om_NotImplemented = om(class_NotImplementedType)
 # Non top-level exceptions
 # io module
 class_UnsupportedOperation = make_stdlib_class("UnsupportedOperation", "io", OM_BaseException_create, (class_OSError,))
+
+# _csv module
+class_csv_Error = make_stdlib_class("Error", "_csv", OM_BaseException_create, (class_Exception,))
 
 # Helper to build magic_methods
 
@@ -3128,6 +3157,41 @@ def om_TextIOWrapper_write(ctx, args):
             return sem_raise_with_message(ctx, class_TypeError, "write() argument must be str")
     else:
         return sem_raise_with_message(ctx, class_TypeError, "expected 1 argument, got " + str(len(args) - 1))
+
+# class _cvs.reader
+def om_csv_reader_iter(ctx, args):
+    if len(args) == 1:
+        self = args[0]
+        return cont_obj(ctx, self)
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
+
+def om_csv_reader_next(ctx, args):
+    if len(args) == 1:
+        self = args[0]
+        line_iterator = OM_get_csv_reader_lines(self)
+
+        def get_value(rte, nxt_line):
+            if om_isinstance(nxt_line, class_str):
+                # TODO: allow parametrizing linebreak and separator
+                line = csv_parse_line(OM_get_boxed_value(nxt_line), ",", "\n")
+
+                if line is csv_error_bad_new_line:
+                    return sem_raise_with_message(with_rte(ctx, rte), class_csv_Error, "new-line character seen in unquoted field")
+
+                # TODO: just replace elements in the line list for efficiency
+                line_om_elements = []
+
+                for s in line:
+                    line_om_elements.append(om_str(s))
+
+                return cont_list(with_rte(ctx, rte), line_om_elements, len(line_om_elements))
+            else:
+                return sem_raise_with_message(with_rte(ctx, rte), class_csv_Error, "iterator should return strings")
+
+        return sem_next_no_default(with_cont(ctx, get_value), line_iterator)
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
 
 # class_NotImplementedType
 def om_format_NotImplementedType(self, rte):
@@ -7362,6 +7426,7 @@ populate_builtin_getset_descriptor()
 populate_builtin_NotImplementedType()
 populate_builtin_MethodWrapper()
 populate_builtin_TextIOWrapper()
+populate_builtin_csv_reader()
 
 # Basic type and date structure.
 populate_builtin_int()
@@ -8178,6 +8243,24 @@ def make_module_functools():
     return om_module('functools', module_functools_env)
 
 
+def make_module_csv():
+    module_csv_env = make_dict()
+
+    def reader_code(rte, cont):
+        csv_lines = rte_lookup_locals(rte, "csvfile")
+
+        def create_reader(reader_rte, it):
+            reader = om_csv_reader(class_csv_reader, it)
+            return unwind_return(reader_rte, reader)
+
+        return sem_iter(make_out_of_ast_context(rte, create_reader), csv_lines)
+
+    dict_set(module_csv_env, 'reader',
+             om_make_builtin_function_with_signature('reader', reader_code,
+                                                     make_posonly_only_signature(["csvfile"])))
+
+    return om_module('csv', module_csv_env)
+
 # add the mouse event functions to a specify environment
 def make_module_mouse():
     def getMouse_code(rte, cont):
@@ -8966,6 +9049,7 @@ def fresh_rte(options):
     time_module = make_module_time()
     io_module = make_module_io()
     functools_module = make_module_functools()
+    csv_module = make_module_csv()
     mouse_module = make_module_mouse()
     pixels_module = make_module_pixels()
     more_builtins_module = make_module_more_builtins()
@@ -8978,6 +9062,7 @@ def fresh_rte(options):
     rte_add_to_sys_modules(rte, 'time', time_module)
     rte_add_to_sys_modules(rte, 'io', io_module)
     rte_add_to_sys_modules(rte, 'functools', functools_module)
+    rte_add_to_sys_modules(rte, 'csv', csv_module)
     rte_add_to_sys_modules(rte, 'mouse', mouse_module)
     rte_add_to_sys_modules(rte, 'pixels', pixels_module)
     rte_add_to_sys_modules(rte, 'more_builtins', more_builtins_module)
@@ -11649,7 +11734,8 @@ def sem_setitem(ctx, obj, item, val):
 def sem_next(ctx, obj, default_):
     obj_next = getattribute_from_obj_mro(obj, "__next__")
     if obj_next is absent:
-        return sem_raise(ctx, class_TypeError)
+        console.log(obj)
+        return sem_raise_with_message(ctx, class_TypeError, "object is not an iterator")
     elif default_ is absent:
         return sem_simple_call(ctx, obj_next, [obj])
     else:

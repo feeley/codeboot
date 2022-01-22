@@ -199,8 +199,6 @@ def compile_file(input_file):
             runtime += " " + f.read()
         with open("float.js", "r") as f:
             runtime += " " + f.read()
-        with open("csv.js", "r") as f:
-            runtime += " " + f.read()
 
     # Modules
     if cli_args.node or cli_args.browser:
