@@ -379,37 +379,44 @@ function runtime_prompt(msg) {
 }
 
 
-// TODO: move these routines somwwhere else
-function drawing_cs(rte, width, height) {
+// TODO: move these routines somewhere else
+function drawing_cs(rte, width, height, scale) {
 
     var dw = rte.vm.ui.dw;
     var vm = dw.vm;
 
-    if (width !== void 0 || height !== void 0) {
-
-        if (width === void 0 || height === void 0)
-            throw 'clear expects 0 or 2 parameters';
-
-        var max_width = 800;
-        var max_height = 600;
+    if (width !== void 0) {
 
         if (typeof width !== 'number' ||
             Math.floor(width) !== width ||
             width < 1 ||
-            width > max_width) {
-            throw 'width parameter of clear must be a positive integer no greater than ' + max_width;
+            width > dw.max_width) {
+            throw 'width parameter of clear must be a positive integer no greater than ' + dw.max_width;
         }
 
-        if (typeof height !== 'number' ||
-            Math.floor(height) !== height ||
-            height < 1 ||
-            height > max_height) {
-            throw 'height parameter of clear must be a positive integer no greater than ' + max_height;
+        if (height === void 0) {
+            height = Math.min(width, dw.max_height);
+        } else {
+            if (typeof height !== 'number' ||
+                Math.floor(height) !== height ||
+                height < 1 ||
+                height > dw.max_height) {
+                throw 'height parameter of clear must be a positive integer no greater than ' + dw.max_height;
+            }
         }
 
-        if (width !== dw.width || height !== dw.height) {
+        if (scale === void 0) {
+            scale = 1;
+        } else {
+            if (typeof scale !== 'number' ||
+                !isFinite(scale)) {
+                throw 'scale parameter of clear must be a finite number';
+            }
+        }
 
-            dw = new DrawingWindow(vm, width, height);
+        if (width !== dw.width || height !== dw.height || scale !== dw.scale) {
+
+            dw = new DrawingWindow(vm, width, height, scale);
 
             vm.ui.playground_showing = undefined;
             vm.ui.dw = dw;
@@ -444,9 +451,9 @@ function drawing_pu(rte) {
     dw.prepareToShow();
 }
 
-function drawing_nextpu(rte) {
+function drawing_startpath(rte) {
     var dw = rte.vm.ui.dw;
-    dw.nextpu();
+    dw.startpath();
     dw.prepareToShow();
 }
 
@@ -492,6 +499,12 @@ function drawing_setpw(rte, width) {
     dw.prepareToShow();
 }
 
+function drawing_setscale(rte, scale) {
+    var dw = rte.vm.ui.dw;
+    dw.setscale(scale);
+    dw.prepareToShow();
+}
+
 function drawing_drawtext(rte, text) {
     var dw = rte.vm.ui.dw;
     dw.drawtext(text);
@@ -507,21 +520,18 @@ function drawing_setScreenMode(rte, width, height) {
         if (width === void 0 || height === void 0)
             throw 'setScreenMode expects 0 or 2 parameters';
 
-        var max_width = 800;
-        var max_height = 600;
-
         if (typeof width !== 'number' ||
             Math.floor(width) !== width ||
             width < 1 ||
-            width > max_width) {
-            throw 'width parameter of setScreenMode must be a positive integer no greater than ' + max_width;
+            width > pw.max_width) {
+            throw 'width parameter of setScreenMode must be a positive integer no greater than ' + pw.max_width;
         }
 
         if (typeof height !== 'number' ||
             Math.floor(height) !== height ||
             height < 1 ||
-            height > max_height) {
-            throw 'height parameter of setScreenMode must be a positive integer no greater than ' + max_height;
+            height > pw.max_height) {
+            throw 'height parameter of setScreenMode must be a positive integer no greater than ' + pw.max_height;
         }
 
         var scale = Math.max(1, Math.min(20,

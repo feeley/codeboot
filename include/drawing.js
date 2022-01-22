@@ -21,10 +21,6 @@ function dom_create_canvas_cartesian(cls, width, height) {
     return c;
 }
 
-function dom_set_scale(context, x, y) {
-    context.scale(x, y);
-}
-
 function dom_set_rotation(context, angle) {
   context.rotate(angle);
 }
@@ -65,8 +61,8 @@ function dom_set_color(context, color) {
     context.strokeStyle = color;
 }
 
-function dom_set_thickness(context, width) {
-    context.lineWidth = width;
+function dom_set_thickness(context, thickness) {
+    context.lineWidth = thickness;
 }
 
 function dom_clear(canvas) {
@@ -109,13 +105,14 @@ function dom_remove_children(parent) {
     }
 }
 
-function DrawingWindow(vm, width, height) {
+function DrawingWindow(vm, width, height, scale) {
 
     var dw = this;
 
     dw.vm = vm;
     dw.width = width;
     dw.height = height;
+    dw.scale = scale;
 
     dw.turtle_canvas = dom_create_canvas_cartesian('cb-turtle', width, height);
     dw.turtle_context = dom_canvas_context(dw.turtle_canvas);
@@ -152,6 +149,11 @@ function DrawingWindow(vm, width, height) {
 
     drawing_window = dw;//TODO: remove
 }
+
+DrawingWindow.prototype.min_width = 50;
+DrawingWindow.prototype.max_width = 800;
+DrawingWindow.prototype.min_height = 50;
+DrawingWindow.prototype.max_height = 600;
 
 var drawing_window;
 
@@ -198,13 +200,17 @@ DrawingWindow.prototype.excursion = function (thunk) {
     var dw = this;
     var result;
     var pos = dw.pos;
-    var orient = dw.orientation;
+    var scale = dw.scale;
+    var thickness = dw.thickness;
+    var orientation = dw.orientation;
     dom_save(dw.drawing_context);
     dw.turtle_height++;
     result = thunk();
     dom_restore(dw.drawing_context);
     --dw.turtle_height;
-    dw.orientation = orient;
+    dw.orientation = orientation;
+    dw.thickness = thickness;
+    dw.scale = scale;
     dw.pos = pos;
     return result;
 };
@@ -214,7 +220,7 @@ DrawingWindow.prototype.init = function () {
     dom_clear(dw.drawing_canvas);
     dw.turtle_height = 0;
     dw.pen_height = 0;
-    dw.nextpu_mode = -1; // -1 = skip mv only, 1 = skip all, 0 = skip none
+    dw.move_mode = -1; // -1 = skip mv only, 1 = skip all, 0 = skip none
     dw.orientation = 0;
     dw.pos = { x:0, y:0 };
     dw.turtle_visible = false;
@@ -232,10 +238,8 @@ DrawingWindow.prototype.fd = function (xdistance, ydistance) {
     var dw = this;
     if (ydistance === void 0) ydistance = 0;
     var rad = Math.PI * (dw.orientation / 180);
-    var x0 = dw.pos.x;
-    var y0 = dw.pos.y;
-    var x1 = x0 + xdistance * Math.cos(rad) - ydistance * Math.sin(rad);
-    var y1 = y0 + xdistance * Math.sin(rad) + ydistance * Math.cos(rad);
+    var x1 = xdistance * Math.cos(rad) - ydistance * Math.sin(rad);
+    var y1 = xdistance * Math.sin(rad) + ydistance * Math.cos(rad);
     dw.mv(x1, y1, true);
 };
 
@@ -249,16 +253,20 @@ DrawingWindow.prototype.mv = function (x, y, relative) {
     var dw = this;
     var x0 = dw.pos.x;
     var y0 = dw.pos.y;
-    var x1 = x;
-    var y1 = y;
-    if ((relative ? dw.nextpu_mode !== 1 : dw.nextpu_mode === 0) &&
+    var x1 = dw.scale * x;
+    var y1 = dw.scale * y;
+    if (relative) {
+        x1 += x0;
+        y1 += y0;
+    }
+    if ((relative ? dw.move_mode !== 1 : dw.move_mode === 0) &&
         dw.pen_height === 0) {
         dom_line_to(dw.drawing_context, x0, y0, x1, y1);
     }
     dw.update_turtle_visibility(false);
     dw.pos = { x:x1, y:y1 };
     dw.update_turtle_visibility(!!relative);
-    dw.nextpu_mode = 0;
+    dw.move_mode = 0;
 };
 
 DrawingWindow.prototype.set_color = function (color) {
@@ -266,11 +274,12 @@ DrawingWindow.prototype.set_color = function (color) {
     dom_set_color(dw.drawing_context, color);
 };
 
-DrawingWindow.prototype.set_thickness = function (width) {
+DrawingWindow.prototype.set_thickness = function (thickness) {
     var dw = this;
     var ctx = dw.drawing_context;
-    dom_set_font(ctx, (9+width) + 'px Courier');
-    dom_set_thickness(ctx, width);
+    dw.thickness = thickness;
+    dom_set_font(ctx, dw.scale*(9+thickness) + 'px Courier');
+    dom_set_thickness(ctx, dw.scale*thickness);
 };
 
 DrawingWindow.prototype.pd = function () {
@@ -285,9 +294,9 @@ DrawingWindow.prototype.pu = function () {
     dw.pen_height++;
 };
 
-DrawingWindow.prototype.nextpu = function () {
+DrawingWindow.prototype.startpath = function () {
     var dw = this;
-    dw.nextpu_mode = 1;
+    dw.move_mode = 1;
 };
 
 DrawingWindow.prototype.triangle = function (h, base) {
@@ -312,10 +321,11 @@ DrawingWindow.prototype.draw_turtle = function () {
         var save_canvas = dw.drawing_canvas;
         var save_context = dw.drawing_context;
         var save_pen = dw.pen_height;
-        var save_nextpu_mode = dw.nextpu_mode;
+        var save_move_mode = dw.move_mode;
         var save_turtle_visible = dw.turtle_visible;
         dw.pen_height = 0;
-        dw.nextpu_mode = 0;
+        dw.move_mode = 0;
+        dw.scale = 1;
         dw.drawing_canvas = dw.turtle_canvas;
         dw.drawing_context = dw.turtle_context;
         dom_clear(dw.drawing_canvas);
@@ -325,7 +335,7 @@ DrawingWindow.prototype.draw_turtle = function () {
         dw.drawing_canvas = save_canvas;
         dw.drawing_context = save_context;
         dw.pen_height = save_pen;
-        dw.nextpu_mode = save_nextpu_mode;
+        dw.move_mode = save_move_mode;
         dw.turtle_visible = save_turtle_visible;
     });
 };
@@ -375,9 +385,15 @@ DrawingWindow.prototype.setpc = function (r, g, b) {
     dw.set_color(color || blackRGB);
 };
 
-DrawingWindow.prototype.setpw = function (width) {
+DrawingWindow.prototype.setpw = function (thickness) {
     var dw = this;
-    dw.set_thickness(width);
+    dw.set_thickness(thickness);
+};
+
+DrawingWindow.prototype.setscale = function (scale) {
+    var dw = this;
+    dw.scale = scale;
+    dw.set_thickness(dw.thickness);
 };
 
 DrawingWindow.prototype.drawtext = function (text) {
@@ -445,17 +461,21 @@ DrawingWindow.prototype.showing = function () {
     return $('.cb-drawing-window').is(':visible');
 }
 
-function builtin_cs(width, height) {
+function builtin_cs(width, height, scale) {
     var dw = drawing_window;
     var vm = dw.vm;
-    if (width !== void 0 || height !== void 0) {
-        if (width === void 0 || height === void 0)
-            throw 'cs expects 0 or 2 parameters';
+    if (width !== void 0) {
+        if (height === void 0)
+            height = width;
+        if (scale === void 0)
+            scale = 1;
         if (typeof width !== 'number')
             throw 'width parameter of cs must be a number';
         if (typeof height !== 'number')
             throw 'height parameter of cs must be a number';
-        dw = new DrawingWindow(vm, Math.max(50, Math.min(500, width)), Math.max(50, Math.min(500, height)));
+        if (typeof scale !== 'number')
+            throw 'scale parameter of cs must be a number';
+        dw = new DrawingWindow(vm, Math.max(dw.min_width, Math.min(dw.max_width, width)), Math.max(dw.min_height, Math.min(dw.max_height, height)), scale);
         vm.ui.playground_showing = undefined;
     }
     dw.cs();
@@ -486,9 +506,9 @@ function builtin_pu() {
     dw.prepareToShow();
 }
 
-function builtin_nextpu() {
+function builtin_startpath() {
     var dw = drawing_window;
-    dw.nextpu();
+    dw.startpath();
     dw.prepareToShow();
 }
 
@@ -572,6 +592,16 @@ function builtin_setpw(width) {
     dw.prepareToShow();
 }
 
+function builtin_setscale(scale) {
+    var dw = drawing_window;
+    if (scale === void 0)
+        throw 'setscale expects 1 parameter';
+    if (typeof scale !== 'number')
+        throw 'scale parameter of setscale must be a number';
+    dw.setscale(scale);
+    dw.prepareToShow();
+}
+
 function builtin_drawtext(text) {
     var dw = drawing_window;
     if (text === void 0)
@@ -623,6 +653,11 @@ function PixelsWindow(vm, width, height, scale) {
         vm.ui.pw = pw;
     }
 }
+
+PixelsWindow.prototype.min_width = 50;
+PixelsWindow.prototype.max_width = 800;
+PixelsWindow.prototype.min_height = 50;
+PixelsWindow.prototype.max_height = 600;
 
 var pixels_window;
 

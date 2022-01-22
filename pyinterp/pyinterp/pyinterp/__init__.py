@@ -7884,7 +7884,7 @@ def make_module_turtle():
     om_module_turtle_ht = make_set_option_fn(drawing_ht, 'ht')
     om_module_turtle_pd = make_set_option_fn(drawing_pd, 'pd')
     om_module_turtle_pu = make_set_option_fn(drawing_pu, 'pu')
-    om_module_turtle_nextpu = make_set_option_fn(drawing_nextpu, 'nextpu')
+    om_module_turtle_startpath = make_set_option_fn(drawing_startpath, 'startpath')
 
     def make_translation_fn(fn, name, arg1_name, arg2_name):
         def code(rte, cont):
@@ -7914,32 +7914,59 @@ def make_module_turtle():
     def clear_code(rte, cont):
         width = rte_lookup_locals(rte, 'width')
         height = rte_lookup_locals(rte, 'height')
+        scale = rte_lookup_locals(rte, 'scale')
 
         if width is absent:
             drawing_cs(rte)
             return unwind_return(rte, om_None)
-        elif height is absent:
-            return sem_raise_with_message(make_out_of_ast_context(rte, cont), class_TypeError,
-                                          'clear() expected 0 or 2 arguments, got 1')
         else:
-            def get_width_float(width_rte, width_float):
-                def get_height_float(height_rte, height_float):
-                    width_val = float_to_num(OM_get_boxed_value(width_float))
-                    height_val = float_to_num(OM_get_boxed_value(height_float))
 
-                    if not float_is_finite(width_val) or not float_is_finite(height_val):
-                        return sem_raise_with_message(make_out_of_ast_context(height_rte, cont),
-                                                      class_ValueError,
-                                                      "clear() arguments must be finite numbers")
-                    else:
-                        drawing_cs(rte, width_val, height_val)
-                        return unwind_return(rte, om_None)
-                return sem_float(make_out_of_ast_context(width_rte, get_height_float), height)
+            def get_width_float(width_rte, width_float):
+                width_val = float_to_num(OM_get_boxed_value(width_float))
+
+                if not float_is_finite(width_val):
+                    return sem_raise_with_message(make_out_of_ast_context(width_rte, cont),
+                                                  class_ValueError,
+                                                  "clear() width argument must be a finite number")
+                elif height is absent:
+                    drawing_cs(width_rte, width_val)
+                    return unwind_return(width_rte, om_None)
+                else:
+
+                    def get_height_float(height_rte, height_float):
+                        height_val = float_to_num(OM_get_boxed_value(height_float))
+
+                        if not float_is_finite(height_val):
+                            return sem_raise_with_message(make_out_of_ast_context(height_rte, cont),
+                                                          class_ValueError,
+                                                          "clear() height argument must be a finite number")
+
+                        elif scale is absent:
+                            drawing_cs(height_rte, width_val, height_val)
+                            return unwind_return(height_rte, om_None)
+                        else:
+
+                            def get_scale_float(scale_rte, scale_float):
+                                scale_val = float_to_num(OM_get_boxed_value(scale_float))
+
+                                if not float_is_finite(scale_val):
+                                    return sem_raise_with_message(make_out_of_ast_context(scale_rte, cont),
+                                                                  class_ValueError,
+                                                                  "clear() scale argument must be a finite number")
+                                else:
+                                    drawing_cs(scale_rte, width_val, height_val, scale_val)
+                                    return unwind_return(scale_rte, om_None)
+
+                            return sem_float(make_out_of_ast_context(height_rte, get_scale_float), scale)
+
+                    return sem_float(make_out_of_ast_context(width_rte, get_height_float), height)
+
             return sem_float(make_out_of_ast_context(rte, get_width_float), width)
 
     om_module_turtle_clear = om_make_builtin_function_with_signature('clear', clear_code,
-                                                                     make_posonly_defaults_only_signature(('width', 'height'),
-                                                                                                  (absent, absent)))
+                                                                     make_posonly_defaults_only_signature(('width', 'height', 'scale'),
+                                                                                                  (absent, absent, absent)))
+
     def goto_code(rte, cont):
         x = rte_lookup_locals(rte, 'x')
         y = rte_lookup_locals(rte, 'y')
@@ -8030,6 +8057,24 @@ def make_module_turtle():
     om_module_turtle_pensize = om_make_builtin_function_with_signature('pensize', pensize_code,
                                                                        make_posonly_only_signature(('width',)))
 
+    def scale_code(rte, cont):
+        scale = rte_lookup_locals(rte, 'scale')
+
+        def get_scale_float(scale_rte, scale_float):
+            scale_value = OM_get_boxed_value(scale_float)
+
+            if float_is_finite(scale_value) and float_is_pos(scale_value):
+                drawing_setscale(scale_rte, float_to_num(scale_value))
+                return unwind_return(scale_rte, om_None)
+            else:
+                return sem_raise_with_message(make_out_of_ast_context(scale_rte, cont), class_ValueError,
+                                              "scale() argument must be a finite number")
+
+        return sem_float(make_out_of_ast_context(rte, get_scale_float), scale)
+
+    om_module_turtle_scale = om_make_builtin_function_with_signature('scale', scale_code,
+                                                                     make_posonly_only_signature(('scale',)))
+
     def write_code(rte, cont):
         arg = rte_lookup_locals(rte, 'arg')
 
@@ -8051,7 +8096,7 @@ def make_module_turtle():
     dict_set(module_turtle_env, 'ht', om_module_turtle_ht)
     dict_set(module_turtle_env, 'pd', om_module_turtle_pd)
     dict_set(module_turtle_env, 'pu', om_module_turtle_pu)
-    dict_set(module_turtle_env, 'nextpu', om_module_turtle_nextpu)
+    dict_set(module_turtle_env, 'startpath', om_module_turtle_startpath)
     dict_set(module_turtle_env, 'fd', om_module_turtle_fd)
     dict_set(module_turtle_env, 'bk', om_module_turtle_bk)
     dict_set(module_turtle_env, 'goto', om_module_turtle_goto)
@@ -8059,6 +8104,7 @@ def make_module_turtle():
     dict_set(module_turtle_env, 'rt', om_module_turtle_rt)
     dict_set(module_turtle_env, 'pencolor', om_module_turtle_pencolor)
     dict_set(module_turtle_env, 'pensize', om_module_turtle_pensize)
+    dict_set(module_turtle_env, 'scale', om_module_turtle_scale)
     dict_set(module_turtle_env, 'write', om_module_turtle_write)
 
     return om_module('turtle', module_turtle_env)

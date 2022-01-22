@@ -1050,7 +1050,7 @@ CodeBootVM.prototype.UI = function (vm) {
     ui.playground_to_show = null;
     ui.playground_showing = undefined;
 
-    ui.dw = new DrawingWindow(vm, 360, 240);
+    ui.dw = new DrawingWindow(vm, 360, 240, 1);
     ui.pw = new PixelsWindow(vm, 16, 12, 20);
 
     vm.ui = ui;

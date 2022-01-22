@@ -700,7 +700,7 @@ def runtime_random():
 
 
 # Module turtle (graphics) placeholder
-def drawing_cs(rte, width=None, height=None):
+def drawing_cs(rte, width=None, height=None, scale=None):
     pass
 
 def drawing_fd(rte, xdist, ydist):
@@ -727,7 +727,7 @@ def drawing_pd(rte):
 def drawing_pu(rte):
     pass
 
-def drawing_nextpu(rte):
+def drawing_startpath(rte):
     pass
 
 def drawing_mv(rte, x, y):
@@ -737,6 +737,9 @@ def drawing_setpc(rte, r, g, b):
     pass
 
 def drawing_setpw(rte, width):
+    pass
+
+def drawing_setscale(rte, scale):
     pass
 
 def drawing_drawtext(rte, text):
