@@ -17,10 +17,11 @@ function csv_parse_line(line, delimiter, lineterminator){
     if (char === delimiter) {
       // Add element before this delimiter
       elements.push(line.slice(start, i));
-      i++;
-      start = i;
+      start = i + 1;
     } else if (char === lineterminator) {
-      elements.push(line.slice(start, i));
+      if (i !== 0) {
+        elements.push(line.slice(start, i));
+      }
 
       // We only accept lineterminators if they are trailing
       for (let j = i + 1; j < line.length; j++) {
@@ -35,6 +36,7 @@ function csv_parse_line(line, delimiter, lineterminator){
   // add trailing element
   if (line.length > 0) {
     elements.push(line.slice(start));
-    return elements;
   }
+
+  return elements;
 }

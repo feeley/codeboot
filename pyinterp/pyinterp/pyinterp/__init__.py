@@ -1304,9 +1304,12 @@ def populate_builtin_TextIOWrapper():
     builtin_add_method(class_TextIOWrapper, '__repr__', om_TextIOWrapper_repr)
     builtin_add_method(class_TextIOWrapper, '__enter__', om_TextIOWrapper_enter)
     builtin_add_method(class_TextIOWrapper, '__exit__', om_TextIOWrapper_exit)
+    builtin_add_method(class_TextIOWrapper, '__next__', om_TextIOWrapper_next)
+    builtin_add_method(class_TextIOWrapper, '__iter__', om_TextIOWrapper_iter)
     builtin_add_method(class_TextIOWrapper, 'close', om_TextIOWrapper_close)
     builtin_add_method(class_TextIOWrapper, 'read', om_TextIOWrapper_read)
     builtin_add_method(class_TextIOWrapper, 'write', om_TextIOWrapper_write)
+    builtin_add_method(class_TextIOWrapper, 'readline', om_TextIOWrapper_readline)
 
 def populate_builtin_int():
     builtin_add_method(class_int, '__new__', om_int_new)
@@ -3125,6 +3128,74 @@ def om_TextIOWrapper_read(ctx, args):
             return sem_raise_with_message(ctx, class_UnsupportedOperation, "not readable")
     else:
         return raise_operation_on_closed_file(ctx)
+
+def TextIOWrapper_read_next_line(ctx, textiowrapper):
+    opened = OM_get_TextIOWrapper_opened(textiowrapper)
+    if opened:
+        mode = OM_get_TextIOWrapper_mode(textiowrapper)
+
+        if is_read_file_mode(mode):
+            name = OM_get_TextIOWrapper_name(textiowrapper)
+
+            if runtime_file_exists(ctx.rte, name):
+                # Mimic file buffer by slicing file content
+                content = runtime_read_file(ctx.rte, name)
+                file_len = len(content)
+                pointer = OM_get_TextIOWrapper_pointer(textiowrapper)
+                line_end = string_index_of(content, "\n", pointer, file_len)
+
+                if line_end == -1:
+                    line = content[pointer:file_len]
+                    OM_set_TextIOWrapper_pointer(textiowrapper, file_len)
+                else:
+                    # Include the linebreak in the returned slice
+                    next_pointer = line_end + 1
+                    line = content[pointer:next_pointer]
+                    OM_set_TextIOWrapper_pointer(textiowrapper, next_pointer)
+
+                return cont_obj(ctx, line)
+            else:
+                # cPython returns an empty string if the file
+                # no longer exists at a read() after being opened
+                return cont_obj(ctx, "")
+        else:
+            return sem_raise_with_message(ctx, class_UnsupportedOperation, "not readable")
+    else:
+        return raise_operation_on_closed_file(ctx)
+
+def om_TextIOWrapper_readline(ctx, args):
+    if len(args) == 1:
+        self = args[0]
+
+        def convert_str(rte, s):
+            return cont_str(with_rte(ctx, rte), s)
+
+        return TextIOWrapper_read_next_line(with_cont(ctx, convert_str), self)
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
+
+def om_TextIOWrapper_next(ctx, args):
+    if len(args) == 1:
+        self = args[0]
+
+        def check_result(rte, s):
+            if s == "":
+                return sem_raise(with_rte(ctx, rte), class_StopIteration)
+            else:
+                return cont_str(with_rte(ctx, rte), s)
+
+        return TextIOWrapper_read_next_line(with_cont(ctx, check_result), self)
+
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
+
+def om_TextIOWrapper_iter(ctx, args):
+    if len(args) == 1:
+        self = args[0]
+        return cont_obj(ctx, self)
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
+
 
 def om_TextIOWrapper_write(ctx, args):
     if len(args) == 2:
