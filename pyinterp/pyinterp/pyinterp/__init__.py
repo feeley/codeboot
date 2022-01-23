@@ -3314,26 +3314,131 @@ def om_csv_reader_iter(ctx, args):
     else:
         return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
 
+def om_csv_parse_line(ctx, self, line):
+    unexpected_end_of_data_msg = "unexpected end of data"
+    unquoted_newline_msg = "new-line character seen in unquoted field"
+
+    delimiter = OM_get_csv_reader_delimiter(self)
+    escapechar = OM_get_csv_reader_escapechar(self)
+    lineterminator = OM_get_csv_reader_lineterminator(self) # TODO: ignored, '\n' and '\r' are hardcoded
+    quotechar = OM_get_csv_reader_quotechar(self)
+    quoting = OM_get_csv_reader_quoting(self)
+    skipinitialspace = OM_get_csv_reader_skipinitialspace(self)
+    strict = OM_get_csv_reader_strict(self)
+
+    must_cast_unquoted = quoting == csv_param_quote_nonnumeric
+
+    def all_lineterminators(s, start, stop):
+        while start < stop:
+            c = s[start]
+            if c != "\n" or c != "\r":
+                return False
+            start = start + 1
+        return True
+
+    def is_lineterminator(c):
+        return c == "\n" or "\r"
+
+    i = 0
+    line_len = len(line)
+    elements = []
+
+    # element loop
+    while i < line_len:
+        quoted_element = False
+        chars = []
+        c = line[i]
+
+        if skipinitialspace and c == " ":
+            i = i + 1
+
+        if c == quotechar:
+            i = i + 1
+            quoted_element = True
+
+        # element's chars loop
+        while i < line_len:
+            c = line[i]
+
+            if c == escapechar:
+                # Escaped character
+                i = i + 1
+                if i < line_len:
+                    escaped_c = line[i]
+                    if strict and is_lineterminator(escaped_c):
+                        # In strict mode, escapechar cannot be used ot escape linebreaks
+                        return sem_raise_with_message(ctx, class_csv_Error, unexpected_end_of_data_msg)
+                    else:
+                        chars.append(escaped_c)
+                        i = i + 1
+                elif strict:
+                    return sem_raise_with_message(ctx, class_csv_Error, unexpected_end_of_data_msg)
+                else:
+                    chars.append("\n") # as per cPython, in non-strict mode trailing escapes are replaced by \n
+
+            elif is_lineterminator(c) and not quoted_element:
+                # Linebreak indicates end of a line so we stop
+                break
+            elif c == delimiter and not quoted_element:
+                # Delimiter
+                i = i + 1
+                break
+
+            elif c == quotechar and quoted_element:
+                # End of a quoted element
+                if strict:
+                    next_c = line[i + 1]
+                    if next_c == delimiter or is_lineterminator(c):
+                        i = i + 1
+                        continue
+                    else:
+                        return sem_raise_with_message(ctx,
+                                                      class_csv_Error,
+                                                      "'" + delimiter + "' expected after '" + quotechar + "'")
+                else:
+                    quoted_element = False
+                    i = i + 1
+            else:
+                # Normal character
+                chars.append(c)
+                i = i + 1
+
+        if i < line_len and is_lineterminator(line[i]):
+            # If we see unparsed linebreaks at the end of a word, they are discarded
+            # We then expect all remaining characters to be linebreaks
+            if all_lineterminators(line, i + 1, line_len):
+                i = line_len
+            else:
+                return sem_raise_with_message(ctx, class_csv_Error, unquoted_newline_msg)
+
+        element = string_join("", chars)
+
+        # When quoting is QUOTE_NONNUMERIC, we convert unquoted entries to floats
+        if quoted_element and must_cast_unquoted and len(element) > 0:
+            float_conversion = float_str_conversion(element)
+
+            if float_conversion is None:
+                return raise_could_not_convert_str_to_float(ctx, om_str(element))
+            else:
+                elements.append(om_float(float_conversion))
+        else:
+            elements.append(om_str(element))
+
+    return cont_list(ctx, elements, len(elements))
+
+
 def om_csv_reader_next(ctx, args):
     if len(args) == 1:
         self = args[0]
         line_iterator = OM_get_csv_reader_lines(self)
 
         def get_value(rte, nxt_line):
+
+            line_num = OM_get_csv_reader_line_num(self)
+            OM_set_csv_reader_line_num(self, line_num + 1)
+
             if om_isinstance(nxt_line, class_str):
-                # TODO: allow parametrizing linebreak and separator
-                line = csv_parse_line(OM_get_boxed_value(nxt_line), ",", "\n")
-
-                if line is csv_error_bad_new_line:
-                    return sem_raise_with_message(with_rte(ctx, rte), class_csv_Error, "new-line character seen in unquoted field")
-
-                # TODO: just replace elements in the line list for efficiency
-                line_om_elements = []
-
-                for s in line:
-                    line_om_elements.append(om_str(s))
-
-                return cont_list(with_rte(ctx, rte), line_om_elements, len(line_om_elements))
+                return om_csv_parse_line(with_rte(ctx, rte), self, nxt_line)
             else:
                 return sem_raise_with_message(with_rte(ctx, rte), class_csv_Error, "iterator should return strings")
 
@@ -6720,13 +6825,17 @@ def float_str_conversion(s):
         else:
             return float_from_string(s)
 
+def raise_could_not_convert_str_to_float(ctx, s):
+    return sem_raise_with_message(ctx, class_ValueError,
+                                  "could not convert string to float: " + om_format_str_repr(s, ctx.rte))
+
+
 def om_float_str_conversion(ctx, obj):
     if om_isinstance(obj, class_str):
         s = OM_get_boxed_value(obj)
         res = float_str_conversion(s)
         if res is None:
-            return sem_raise_with_message(ctx, class_ValueError,
-                                          "could not convert string to float: " + om_format_str_repr(obj, ctx.rte))
+            return raise_could_not_convert_str_to_float(ctx, obj)
         else:
             return cont_float(ctx, res)
     else:
@@ -8389,19 +8498,19 @@ def make_module_functools():
     return om_module('functools', module_functools_env)
 
 
+# csv module QUOTE_* parameters
+csv_param_quote_minimal = 0
+csv_param_quote_all = 1
+csv_param_quote_nonnumeric = 2
+csv_param_quote_none = 3
+
 def make_module_csv():
     module_csv_env = make_dict()
 
-    # QUOTE_* parameters
-    quote_minimal = 0
-    quote_all = 1
-    quote_nonnumeric = 2
-    quote_none = 3
-
-    QUOTE_MINIMAL = om_int(quote_minimal)
-    QUOTE_ALL = om_int(quote_all)
-    QUOTE_NONNUMERIC = om_int(quote_nonnumeric)
-    QUOTE_NONE = om_int(quote_none)
+    QUOTE_MINIMAL = om_int(csv_param_quote_minimal)
+    QUOTE_ALL = om_int(csv_param_quote_all)
+    QUOTE_NONNUMERIC = om_int(csv_param_quote_nonnumeric)
+    QUOTE_NONE = om_int(csv_param_quote_none)
 
     dict_set(module_csv_env, "QUOTE_MINIMAL", QUOTE_MINIMAL)
     dict_set(module_csv_env, "QUOTE_ALL", QUOTE_ALL)
@@ -8465,7 +8574,7 @@ def make_module_csv():
                     return sem_raise_with_message(make_out_of_ast_context(dq_rte, None), class_TypeError, "quoting must be an interger")
                 else:
                     quoting_value = OM_get_boxed_value(quoting)
-                    if quoting_value < quote_minimal or quoting_value > quote_none:
+                    if quoting_value < csv_param_quote_minimal or quoting_value > csv_param_quote_none:
                         return sem_raise_with_message(make_out_of_ast_context(dq_rte, None), class_TypeError, "bad quoting value")
 
                 def after_skipinitialspace(initialspace_rte, skipinitialspace_as_bool):
