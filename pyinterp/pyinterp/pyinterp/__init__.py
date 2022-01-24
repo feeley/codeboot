@@ -3327,21 +3327,26 @@ def om_csv_parse_line(ctx, self, line):
     strict = OM_get_csv_reader_strict(self)
 
     must_cast_unquoted = quoting == csv_param_quote_nonnumeric
+    must_add_trailing_empty_word = False
 
     def all_lineterminators(s, start, stop):
         while start < stop:
             c = s[start]
-            if c != "\n" or c != "\r":
+            if c != "\n" and c != "\r":
                 return False
             start = start + 1
         return True
 
     def is_lineterminator(c):
-        return c == "\n" or "\r"
+        return c == "\n" or c == "\r"
 
     i = 0
     line_len = len(line)
     elements = []
+
+    if all_lineterminators(line, 0, line_len):
+        # Special case where en empty list is returned instead of a list containing an empty string
+        return cont_list(ctx, [], 0)
 
     # element loop
     while i < line_len:
@@ -3377,11 +3382,21 @@ def om_csv_parse_line(ctx, self, line):
                     chars.append("\n") # as per cPython, in non-strict mode trailing escapes are replaced by \n
 
             elif is_lineterminator(c) and not quoted_element:
-                # Linebreak indicates end of a line so we stop
-                break
+                # If we see unparsed linebreaks at the end of a word, they are discarded
+                # We then expect all remaining characters to be linebreaks
+                if all_lineterminators(line, i + 1, line_len):
+                    i = line_len
+                else:
+                    return sem_raise_with_message(ctx, class_csv_Error, unquoted_newline_msg)
             elif c == delimiter and not quoted_element:
                 # Delimiter
                 i = i + 1
+
+                # When a line end with a delimiter, a empty word will not be accounted for
+                # by the loop, we thus have to add it as a special case
+                if i == line_len:
+                    must_add_trailing_empty_word = True
+
                 break
 
             elif c == quotechar and quoted_element:
@@ -3403,18 +3418,10 @@ def om_csv_parse_line(ctx, self, line):
                 chars.append(c)
                 i = i + 1
 
-        if i < line_len and is_lineterminator(line[i]):
-            # If we see unparsed linebreaks at the end of a word, they are discarded
-            # We then expect all remaining characters to be linebreaks
-            if all_lineterminators(line, i + 1, line_len):
-                i = line_len
-            else:
-                return sem_raise_with_message(ctx, class_csv_Error, unquoted_newline_msg)
-
         element = string_join("", chars)
 
-        # When quoting is QUOTE_NONNUMERIC, we convert unquoted entries to floats
         if quoted_element and must_cast_unquoted and len(element) > 0:
+            # When quoting is QUOTE_NONNUMERIC, we convert unquoted entries to floats
             float_conversion = float_str_conversion(element)
 
             if float_conversion is None:
@@ -3423,6 +3430,9 @@ def om_csv_parse_line(ctx, self, line):
                 elements.append(om_float(float_conversion))
         else:
             elements.append(om_str(element))
+
+    if must_add_trailing_empty_word:
+        elements.append(om_str(""))
 
     return cont_list(ctx, elements, len(elements))
 
@@ -3438,7 +3448,7 @@ def om_csv_reader_next(ctx, args):
             OM_set_csv_reader_line_num(self, line_num + 1)
 
             if om_isinstance(nxt_line, class_str):
-                return om_csv_parse_line(with_rte(ctx, rte), self, nxt_line)
+                return om_csv_parse_line(with_rte(ctx, rte), self, OM_get_boxed_value(nxt_line))
             else:
                 return sem_raise_with_message(with_rte(ctx, rte), class_csv_Error, "iterator should return strings")
 
