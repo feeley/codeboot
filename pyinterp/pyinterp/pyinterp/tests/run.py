@@ -107,7 +107,7 @@ def process_file(file, folder, cpython, pyinterp, shared_lst):
     shared_lst.append(success)
 
 
-def run_all(cpython='python3', pyinterp="python3 -m pyinterp.pyinterp ", pattern=None):
+def run_all(cpython='python3', pyinterp="python3 exec_as_pyinterp.py ", pattern=None):
     """
     Collects all tests and runs them in parallel with multiprocessing using the given commands to run 'cpython',
     'pyinterp' and 'scheme'.
