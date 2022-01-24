@@ -12207,7 +12207,10 @@ def om_unpack_iterable(ctx, it):
     return sem_iter(with_cont(ctx, get_next), it)
 
 def om_unpack_mapping(ctx, mapping):
-    return sem_raise_with_message(ctx, class_NotImplementedError, "mapping unpacking is not yet supported")
+    if om_isinstance(mapping, class_dict):
+        return cont_obj(ctx, OM_get_boxed_value(mapping))
+    else:
+        return sem_raise_with_message(ctx, class_NotImplementedError, "mapping unpacking is not yet supported for non-dict objects")
 
 def sem_maybe_len(ctx, obj):
     obj_len = getattribute_from_obj_mro(obj, "__len__")
