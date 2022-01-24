@@ -3437,7 +3437,7 @@ def om_csv_parse_line(ctx, self, line):
 
         element = string_join("", chars)
 
-        if quoted_element and must_cast_unquoted and len(element) > 0:
+        if not quoted_element and must_cast_unquoted and len(element) > 0:
             # When quoting is QUOTE_NONNUMERIC, we convert unquoted entries to floats
             float_conversion = float_str_conversion(element)
 
