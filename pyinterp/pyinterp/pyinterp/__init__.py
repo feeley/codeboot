@@ -3369,13 +3369,15 @@ def om_csv_parse_line(ctx, self, line):
         while i < line_len:
             c = line[i]
 
-            if c == escapechar:
+            # Note: in non-strict mode the escape can comes after closing the quote character
+            # in which case it is now ignored
+            if c == escapechar and (not quoted_element or current_quote_unclosed):
                 # Escaped character
                 i = i + 1
                 if i < line_len:
                     escaped_c = line[i]
                     if strict and is_lineterminator(escaped_c):
-                        # In strict mode, escapechar cannot be used ot escape linebreaks
+                        # In strict mode, escapechar cannot be used to escape linebreaks
                         return sem_raise_with_message(ctx, class_csv_Error, unexpected_end_of_data_msg)
                     else:
                         chars.append(escaped_c)
@@ -3385,14 +3387,14 @@ def om_csv_parse_line(ctx, self, line):
                 else:
                     chars.append("\n") # as per cPython, in non-strict mode trailing escapes are replaced by \n
 
-            elif is_lineterminator(c) and not quoted_element:
+            elif is_lineterminator(c) and not current_quote_unclosed:
                 # If we see unparsed linebreaks at the end of a word, they are discarded
                 # We then expect all remaining characters to be linebreaks
                 if all_lineterminators(line, i + 1, line_len):
                     i = line_len
                 else:
                     return sem_raise_with_message(ctx, class_csv_Error, unquoted_newline_msg)
-            elif c == delimiter and not quoted_element:
+            elif c == delimiter and not current_quote_unclosed:
                 # Delimiter
                 i = i + 1
 
@@ -3403,7 +3405,7 @@ def om_csv_parse_line(ctx, self, line):
 
                 break
 
-            elif c == quotechar and quoted_element:
+            elif c == quotechar and current_quote_unclosed:
                 # End of a quoted element
                 current_quote_unclosed = False
 
@@ -3424,7 +3426,6 @@ def om_csv_parse_line(ctx, self, line):
                     else:
                         break
                 else:
-                    quoted_element = False
                     i = i + 1
             else:
                 # Normal character
@@ -8590,7 +8591,10 @@ def make_module_csv():
                     lineterminator_value = OM_get_boxed_value(lineterminator)
 
                 # check for quotechar
-                if not om_isinstance(quotechar, class_str) or len(OM_get_boxed_value(quotechar)) != 1:
+                # not clear in the doc, but as per cpython unittests, it can be None
+                if om_is(quotechar, om_None):
+                    quotechar_value = None
+                elif not om_isinstance(quotechar, class_str) or len(OM_get_boxed_value(quotechar)) != 1:
                     return sem_raise_with_message(make_out_of_ast_context(dq_rte, None), class_TypeError, "quotechar must be a 1-character string")
                 else:
                     quotechar_value = OM_get_boxed_value(quotechar)
@@ -8602,6 +8606,8 @@ def make_module_csv():
                     quoting_value = OM_get_boxed_value(quoting)
                     if quoting_value < csv_param_quote_minimal or quoting_value > csv_param_quote_none:
                         return sem_raise_with_message(make_out_of_ast_context(dq_rte, None), class_TypeError, "bad quoting value")
+                    if quoting_value == csv_param_quote_none:
+                        quotechar_value = None
 
                 def after_skipinitialspace(initialspace_rte, skipinitialspace_as_bool):
                     # skipinitialspace truthiness is tested
