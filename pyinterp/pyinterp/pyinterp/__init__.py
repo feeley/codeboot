@@ -3328,6 +3328,7 @@ def om_csv_parse_line(ctx, self, line):
 
     must_cast_unquoted = quoting == csv_param_quote_nonnumeric
     must_add_trailing_empty_word = False
+    current_quote_unclosed = False
 
     def all_lineterminators(s, start, stop):
         while start < stop:
@@ -3351,6 +3352,8 @@ def om_csv_parse_line(ctx, self, line):
     # element loop
     while i < line_len:
         quoted_element = False
+        current_quote_unclosed = False
+
         chars = []
         c = line[i]
 
@@ -3360,6 +3363,7 @@ def om_csv_parse_line(ctx, self, line):
         if c == quotechar:
             i = i + 1
             quoted_element = True
+            current_quote_unclosed = True
 
         # element's chars loop
         while i < line_len:
@@ -3401,15 +3405,24 @@ def om_csv_parse_line(ctx, self, line):
 
             elif c == quotechar and quoted_element:
                 # End of a quoted element
+                current_quote_unclosed = False
+
                 if strict:
-                    next_c = line[i + 1]
-                    if next_c == delimiter or is_lineterminator(c):
-                        i = i + 1
-                        continue
-                    else:
-                        return sem_raise_with_message(ctx,
+                    # In strict mode, the quotechar must be the last of an element
+                    next_i = i + 1
+
+                    if next_i < line_len:
+                        next_c = line[next_i]
+
+                        if next_c == delimiter or is_lineterminator(next_c):
+                            i = next_i
+                            continue
+                        else:
+                            return sem_raise_with_message(ctx,
                                                       class_csv_Error,
                                                       "'" + delimiter + "' expected after '" + quotechar + "'")
+                    else:
+                        break
                 else:
                     quoted_element = False
                     i = i + 1
@@ -3417,6 +3430,9 @@ def om_csv_parse_line(ctx, self, line):
                 # Normal character
                 chars.append(c)
                 i = i + 1
+
+        if current_quote_unclosed and strict:
+            return sem_raise_with_message(ctx, class_csv_Error, unexpected_end_of_data_msg)
 
         element = string_join("", chars)
 
