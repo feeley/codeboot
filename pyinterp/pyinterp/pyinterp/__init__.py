@@ -5377,7 +5377,7 @@ def om_str_new_code(ctx, args):
         return ctx.cont(ctx, om_boxval(cls, ""))
     elif len(args) == 2:
         value = args[1]
-        return sem_str(ctx.rte, value)
+        return sem_str(ctx, value)
     else:
         return sem_raise_with_message(ctx, class_TypeError, "str() takes 0 or 1 argument")
 
@@ -8638,6 +8638,8 @@ def make_module_csv():
                                 om_str('"'), QUOTE_MINIMAL, om_False, om_False], # kw-defaults
                                 None, # **kwargs
                                 [om_str("excel")]))) # dialect default
+
+    dict_set(module_csv_env, 'Error', class_csv_Error)
 
     return om_module('csv', module_csv_env)
 
