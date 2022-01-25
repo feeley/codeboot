@@ -3318,7 +3318,28 @@ def om_csv_reader_iter(ctx, args):
     else:
         return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
 
-def om_csv_parse_line(ctx, self, init_line, line_iterator):
+def om_csv_parse_line(ctx, self, init_line, fetch_line):
+    # IF YOU NEED HELP DEBUGGING THIS FUNCTION, ASK Olivier Melançon
+    #
+    # NOTE: This function had to be written in CPS because an element of the iterator
+    # of csv.reader could have incomplete data. This is the case when a linebreak is escaped
+    # in a file. The file wrapper will then iterate on line, despite some elements spanning
+    # through multiple line. Exemple:
+    #
+    # 1,2,3,"""I see,""
+    # said the blind man","as he picked up his
+    # hammer and saw"
+    # 9,8,7,6
+    #
+    # Which should output
+    # [['1', '2', '3',
+    #     '"I see,"\nsaid the blind man',
+    #     'as he picked up his\nhammer and saw'],
+    #  ['9','8','7','6']]
+    #
+    # Since this requires a call to sem_next, we have no choice but to write the loop over
+    # characters in CPS.
+
     unexpected_end_of_data_msg = "unexpected end of data"
     unquoted_newline_msg = "new-line character seen in unquoted field"
 
@@ -3453,17 +3474,6 @@ def om_csv_parse_line(ctx, self, init_line, line_iterator):
 
             return do_continue()
 
-    # fetch an extra line when encoutnering a \n inside quotes
-    def fetch_line(ctx, success, fail):
-        def get_next(rte, nxt_line):
-            if nxt_line is None:
-                return fail(rte)
-            elif om_isinstance(nxt_line, class_str):
-                return success(rte, OM_get_boxed_value(nxt_line))
-            else:
-                return sem_raise_with_message(with_rte(ctx, rte), class_csv_Error, "iterator should return strings")
-        return sem_next(with_cont(ctx, get_next), line_iterator, None)
-
     # vector loop
     def row_loop_tail(ctx, i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word, escaping):
         def join_element():
@@ -3516,17 +3526,22 @@ def om_csv_reader_next(ctx, args):
         self = args[0]
         line_iterator = OM_get_csv_reader_lines(self)
 
-        def get_value(rte, nxt_line):
+        def fetch_line(ctx, success, fail):
+            def get_next(rte, nxt_line):
+                if nxt_line is None:
+                    return fail(rte)
+                elif om_isinstance(nxt_line, class_str):
+                    line_num = OM_get_csv_reader_line_num(self)
+                    OM_set_csv_reader_line_num(self, line_num + 1)
 
-            line_num = OM_get_csv_reader_line_num(self)
-            OM_set_csv_reader_line_num(self, line_num + 1)
+                    return success(rte, OM_get_boxed_value(nxt_line))
+                else:
+                    return sem_raise_with_message(with_rte(ctx, rte), class_csv_Error, "iterator should return strings")
+            return sem_next(with_cont(ctx, get_next), line_iterator, None)
 
-            if om_isinstance(nxt_line, class_str):
-                return om_csv_parse_line(with_rte(ctx, rte), self, OM_get_boxed_value(nxt_line), line_iterator)
-            else:
-                return sem_raise_with_message(with_rte(ctx, rte), class_csv_Error, "iterator should return strings")
-
-        return sem_next_no_default(with_cont(ctx, get_value), line_iterator)
+        return fetch_line(ctx,
+                          lambda rte, fst_line: om_csv_parse_line(with_rte(ctx, rte), self, fst_line, fetch_line),
+                          lambda rte: sem_raise(ctx, class_StopIteration))
     else:
         return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
 
