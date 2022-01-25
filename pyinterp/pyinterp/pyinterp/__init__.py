@@ -3407,12 +3407,15 @@ def om_csv_parse_line(ctx, self, line):
 
             elif c == quotechar and current_quote_unclosed:
                 # End of a quoted element
-                current_quote_unclosed = False
+                next_i = i + 1
 
-                if strict:
+                if next_i < line_len and line[next_i] == quotechar:
+                    # escape by doubling
+                    chars.append(quotechar)
+                    i = next_i + 1
+                elif strict:
                     # In strict mode, the quotechar must be the last of an element
-                    next_i = i + 1
-
+                    current_quote_unclosed = False
                     if next_i < line_len:
                         next_c = line[next_i]
 
@@ -3426,7 +3429,8 @@ def om_csv_parse_line(ctx, self, line):
                     else:
                         break
                 else:
-                    i = i + 1
+                    current_quote_unclosed = False
+                    i = next_i
             else:
                 # Normal character
                 chars.append(c)
