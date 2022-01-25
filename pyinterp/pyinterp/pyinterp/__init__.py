@@ -3367,44 +3367,41 @@ def om_csv_parse_line(ctx, self, init_line, line_iterator):
                 quoted_element = True
                 current_quote_unclosed = True
 
-            return element_loop(ctx, i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word)
+            return element_loop(ctx, i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word, False)
         else:
             if must_add_trailing_empty_word:
                 elements.append(om_str(""))
-
             return cont_list(ctx, elements, len(elements))
 
     # chars loop
-    def element_loop(ctx, i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word):
+    def element_loop(ctx, i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word, escaping):
         def do_continue():
-            return element_loop(ctx, i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word)
+            return element_loop(ctx, i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word, escaping)
 
         def do_break():
-            return row_loop_tail(ctx, i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word)
+            return row_loop_tail(ctx, i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word, escaping)
 
         if i >= line_len:
             return do_break()
         else:
             c = line[i]
 
+            if escaping:
+                escaped_c = line[i]
+                if strict and not quoted_element and is_lineterminator(escaped_c):
+                    # In strict mode, escapechar cannot be used to escape unquoted linebreaks
+                    return sem_raise_with_message(ctx, class_csv_Error, unexpected_end_of_data_msg)
+                else:
+                    chars.append(escaped_c)
+                    escaping = False
+                    i = i + 1
+
             # Note: in non-strict mode the escape can comes after closing the quote character
             # in which case it is ignored
-            if c == escapechar and (not quoted_element or current_quote_unclosed):
+            elif c == escapechar and (not quoted_element or current_quote_unclosed):
                 # Escaped character
                 i = i + 1
-                if i < line_len:
-                    escaped_c = line[i]
-                    if strict and is_lineterminator(escaped_c):
-                        # In strict mode, escapechar cannot be used to escape unquoted linebreaks
-                        return sem_raise_with_message(ctx, class_csv_Error, unexpected_end_of_data_msg)
-                    else:
-                        chars.append(escaped_c)
-                        i = i + 1
-                elif strict:
-                    return sem_raise_with_message(ctx, class_csv_Error, unexpected_end_of_data_msg)  # TODO: I DONT THINK THIS IS OK!
-                else:
-                    chars.append("\n") # as per cPython, in non-strict mode trailing escapes are replaced by \n
-
+                escaping = True
             elif is_lineterminator(c) and not current_quote_unclosed:
                 # If we see unparsed linebreaks at the end of a word, they are discarded
                 # We then expect all remaining characters to be linebreaks
@@ -3459,16 +3456,16 @@ def om_csv_parse_line(ctx, self, init_line, line_iterator):
     # fetch an extra line when encoutnering a \n inside quotes
     def fetch_line(ctx, success, fail):
         def get_next(rte, nxt_line):
-            if nxt_line is absent:
+            if nxt_line is None:
                 return fail(rte)
             elif om_isinstance(nxt_line, class_str):
                 return success(rte, OM_get_boxed_value(nxt_line))
             else:
                 return sem_raise_with_message(with_rte(ctx, rte), class_csv_Error, "iterator should return strings")
-        return sem_next_no_default(with_cont(ctx, get_next), line_iterator)
+        return sem_next(with_cont(ctx, get_next), line_iterator, None)
 
     # vector loop
-    def row_loop_tail(ctx, i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word):
+    def row_loop_tail(ctx, i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word, escaping):
         def join_element():
             element = string_join("", chars)
 
@@ -3487,12 +3484,24 @@ def om_csv_parse_line(ctx, self, init_line, line_iterator):
 
         if current_quote_unclosed:
             def success(rte, new_line):
-                return element_loop(ctx, 0, new_line, len(new_line), current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word)
+                return element_loop(ctx, 0, new_line, len(new_line), current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word, escaping)
 
             def fail(rte):
                 if strict:
                     return sem_raise_with_message(with_rte(ctx, rte), class_csv_Error, unexpected_end_of_data_msg)
                 else:
+                    return join_element()
+
+            return fetch_line(ctx, success, fail)
+        elif escaping:
+            def success(rte, new_line):
+                return element_loop(ctx, 0, new_line, len(new_line), current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word, escaping)
+
+            def fail(rte):
+                if strict:
+                    return sem_raise_with_message(with_rte(ctx, rte), class_csv_Error, unexpected_end_of_data_msg)
+                else:
+                    chars.append("\n") # as per cPython, in non-strict mode trailing escapes are replaced by \n
                     return join_element()
 
             return fetch_line(ctx, success, fail)
@@ -12170,7 +12179,6 @@ def sem_setitem(ctx, obj, item, val):
 def sem_next(ctx, obj, default_):
     obj_next = getattribute_from_obj_mro(obj, "__next__")
     if obj_next is absent:
-        console.log(obj)
         return sem_raise_with_message(ctx, class_TypeError, "object is not an iterator")
     elif default_ is absent:
         return sem_simple_call(ctx, obj_next, [obj])
