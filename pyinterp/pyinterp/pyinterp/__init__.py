@@ -1148,22 +1148,26 @@ def bootstrap_base_types():
     class_type = om_with_instance_creator(absent, OM_type_create)
     OM_set_object_class(class_type, class_type)
     OM_set_type_instance_creator(class_type, OM_type_create)
+    OM_set_type_is_builtin(class_type, True)
 
     # init class_str
     class_str = om_with_instance_creator(class_type, OM_type_create)
     OM_set_object_class(class_str, class_type)
     OM_set_type_instance_creator(class_str, OM_box_create)
+    OM_set_type_is_builtin(class_str, True)
 
     # init class_object
     class_object = om_with_instance_creator(class_type, OM_object_create)
     OM_set_object_class(class_object, class_type)
     OM_set_type_instance_creator(class_object, OM_object_create)
+    OM_set_type_is_builtin(class_object, True)
 
     # init class_WrapperDescriptor
 
     class_WrapperDescriptor = om_with_instance_creator(class_type, OM_WrapperDescriptor_create)
     OM_set_object_class(class_WrapperDescriptor, class_type)
     OM_set_type_instance_creator(class_WrapperDescriptor, OM_WrapperDescriptor_create)
+    OM_set_type_is_builtin(class_WrapperDescriptor, True)
 
     def om_bootstrap_str(value):
         om_value = om_with_instance_creator(class_str, OM_box_create)
@@ -3314,7 +3318,7 @@ def om_csv_reader_iter(ctx, args):
     else:
         return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
 
-def om_csv_parse_line(ctx, self, line):
+def om_csv_parse_line(ctx, self, init_line):
     unexpected_end_of_data_msg = "unexpected end of data"
     unquoted_newline_msg = "new-line character seen in unquoted field"
 
@@ -3327,8 +3331,6 @@ def om_csv_parse_line(ctx, self, line):
     strict = OM_get_csv_reader_strict(self)
 
     must_cast_unquoted = quoting == csv_param_quote_nonnumeric
-    must_add_trailing_empty_word = False
-    current_quote_unclosed = False
 
     def all_lineterminators(s, start, stop):
         while start < stop:
@@ -3341,32 +3343,48 @@ def om_csv_parse_line(ctx, self, line):
     def is_lineterminator(c):
         return c == "\n" or c == "\r"
 
-    i = 0
-    line_len = len(line)
     elements = []
+    init_line_len = len(init_line)
 
-    if all_lineterminators(line, 0, line_len):
+    if all_lineterminators(init_line, 0, init_line_len):
         # Special case where en empty list is returned instead of a list containing an empty string
         return cont_list(ctx, [], 0)
 
-    # element loop
-    while i < line_len:
-        quoted_element = False
-        current_quote_unclosed = False
+    # vector loop start
+    def row_loop_start(i, line, line_len, must_add_trailing_empty_word):
+        if i < line_len:
+            quoted_element = False
+            current_quote_unclosed = False
 
-        chars = []
-        c = line[i]
+            chars = []
+            c = line[i]
 
-        if skipinitialspace and c == " ":
-            i = i + 1
+            if skipinitialspace and c == " ":
+                i = i + 1
 
-        if c == quotechar:
-            i = i + 1
-            quoted_element = True
-            current_quote_unclosed = True
+            if c == quotechar:
+                i = i + 1
+                quoted_element = True
+                current_quote_unclosed = True
 
-        # element's chars loop
-        while i < line_len:
+            return element_loop(i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word)
+        else:
+            if must_add_trailing_empty_word:
+                elements.append(om_str(""))
+
+            return cont_list(ctx, elements, len(elements))
+
+    # chars loop
+    def element_loop(i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word):
+        def do_continue():
+            return element_loop(i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word)
+
+        def do_break():
+            return row_loop_tail(i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word)
+
+        if i >= line_len:
+            return do_break()
+        else:
             c = line[i]
 
             # Note: in non-strict mode the escape can comes after closing the quote character
@@ -3403,7 +3421,7 @@ def om_csv_parse_line(ctx, self, line):
                 if i == line_len:
                     must_add_trailing_empty_word = True
 
-                break
+                return do_break()
 
             elif c == quotechar and current_quote_unclosed:
                 # End of a quoted element
@@ -3421,13 +3439,13 @@ def om_csv_parse_line(ctx, self, line):
 
                         if next_c == delimiter or is_lineterminator(next_c):
                             i = next_i
-                            continue
+                            return do_continue()
                         else:
                             return sem_raise_with_message(ctx,
                                                       class_csv_Error,
                                                       "'" + delimiter + "' expected after '" + quotechar + "'")
                     else:
-                        break
+                        return do_break()
                 else:
                     current_quote_unclosed = False
                     i = next_i
@@ -3436,6 +3454,10 @@ def om_csv_parse_line(ctx, self, line):
                 chars.append(c)
                 i = i + 1
 
+            return do_continue()
+
+    # vector loop
+    def row_loop_tail(i, line, line_len, current_quote_unclosed, quoted_element, chars, must_add_trailing_empty_word):
         if current_quote_unclosed and strict:
             return sem_raise_with_message(ctx, class_csv_Error, unexpected_end_of_data_msg)
 
@@ -3452,10 +3474,9 @@ def om_csv_parse_line(ctx, self, line):
         else:
             elements.append(om_str(element))
 
-    if must_add_trailing_empty_word:
-        elements.append(om_str(""))
+        return row_loop_start(i, line, line_len, must_add_trailing_empty_word)
 
-    return cont_list(ctx, elements, len(elements))
+    return row_loop_start(0, init_line, init_line_len, False)
 
 
 def om_csv_reader_next(ctx, args):
