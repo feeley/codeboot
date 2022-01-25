@@ -1268,19 +1268,16 @@ def py_parse_and_expr(ts):
         return py_syntax_error(ts, None)
 
 def py_parse_args_tail_after_comma(ts):
-    if ts.token == NAME:
+    if ts.token == DOUBLESTAR:
+        kwargs1 = py_parse_kwargs(ts)
+        return [[], kwargs1]
+    elif ts.token == NAME:
         simple_arg1 = py_parse_simple_arg(ts)
         if ts.token == COMMA:
             py_advance(ts)
-            if ts.token == NAME:
-                args_tail_after_comma1 = py_parse_args_tail_after_comma(ts)
-                args_tail_after_comma1[0].append(simple_arg1) # must be reversed later
-                return args_tail_after_comma1
-            elif ts.token == DOUBLESTAR:
-                kwargs1 = py_parse_kwargs(ts)
-                return [[simple_arg1], kwargs1]
-            else:
-                return py_syntax_error(ts, None)
+            args_tail_after_comma1 = py_parse_args_tail_after_comma(ts)
+            args_tail_after_comma1[0].append(simple_arg1) # must be reversed later
+            return args_tail_after_comma1
     else:
         return py_syntax_error(ts, None)
 
