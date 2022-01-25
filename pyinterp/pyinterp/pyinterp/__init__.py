@@ -3323,8 +3323,8 @@ def om_csv_parse_line(ctx, self, init_line, fetch_line):
     #
     # NOTE: This function had to be written in CPS because an element of the iterator
     # of csv.reader could have incomplete data. This is the case when a linebreak is escaped
-    # in a file. The file wrapper will then iterate on line, despite some elements spanning
-    # through multiple line. Exemple:
+    # in a file. The file wrapper will then iterate on lines, despite some elements spanning
+    # across multiple lines. Exemple:
     #
     # 1,2,3,"""I see,""
     # said the blind man","as he picked up his
