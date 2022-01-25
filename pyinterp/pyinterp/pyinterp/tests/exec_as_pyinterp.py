@@ -8,7 +8,7 @@ if __name__ == "__main__":
     file = args.file
 
     import math
-    scope = {"math": math, "__builtins__": __builtins__}
+    scope = {"math": math, "__builtins__": __builtins__, "__name__": "__main__"}
 
     with open(file, 'r') as f:
         source = f.read()
