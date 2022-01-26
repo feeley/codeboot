@@ -39,3 +39,14 @@ h(1, 8, z=4, foo=100)
 h(x=1, y=6, foo=101)
 h(1, z=2, y=9, bar='bar', baz=4200, foo=101)
 h(*(1, 2, 9, 8), bar=200)
+
+def k(*args, foo, **kwargs):
+    print(args)
+    print(foo)
+    print(kwargs.get('x'))
+    print(kwargs.get('y'))
+    print(kwargs.get('z'))
+
+k(1, 2, 3, foo=4, x=5)
+k(1, 2, 3, x = 5, foo=4)
+k(1, 2, 3, y=5, z=10, foo=4, x=5)
