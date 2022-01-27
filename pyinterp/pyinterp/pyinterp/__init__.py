@@ -3606,7 +3606,7 @@ def om_csv_reader_next(ctx, args):
         return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
 
 # class _csv.writer
-def csv_format_csv_element(text, delimiter, escapechar, lineterminator,
+def csv_format_csv_element(text, delimiter, doublequote, escapechar, lineterminator,
                            quotechar, quoting, skipinitialspace, strict):
     return text # TODO: parse for real
 
@@ -3619,6 +3619,7 @@ def om_csv_writer_writerow(ctx, args):
         write_method = OM_get_csv_writer_write_method(self)
 
         delimiter = OM_get_dialect_delimiter(dialect)
+        doublequote = OM_get_dialect_doublequote(dialect)
         escapechar = OM_get_dialect_escapechar(dialect)
         lineterminator = OM_get_dialect_lineterminator(dialect) # TODO: ignored, '\n' and '\r' are hardcoded
         quotechar = OM_get_dialect_quotechar(dialect)
@@ -3631,11 +3632,11 @@ def om_csv_writer_writerow(ctx, args):
 
             for om_s in strings:
                 s = OM_get_boxed_value(om_s)
-                formatted_strings.append(csv_format_csv_element(s, delimiter, escapechar,
+                formatted_strings.append(csv_format_csv_element(s, delimiter, doublequote, escapechar,
                                                             lineterminator, quotechar,
                                                             quoting, skipinitialspace, strict))
 
-            text_to_write = string_join(delimiter, formatted_strings) + "\n"
+            text_to_write = string_join(delimiter, formatted_strings) + lineterminator
 
             return sem_simple_call(with_rte(ctx, rte), write_method, [om_str(text_to_write)])
         return om_unpack_map_iterable(with_cont(ctx, write_elements), sem_str, row)
