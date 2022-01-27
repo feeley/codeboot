@@ -387,6 +387,20 @@ class OM_TextIOWrapper(OM_object):
 class OM_csv_reader(OM_object):
     """
     lines: lines iterator
+    line_num
+    dialect
+    """
+
+class OM_csv_dialect(OM_object):
+    """
+    delimiter
+    doublequote
+    escapechar
+    lineterminator
+    quotechar
+    quoting
+    skipinitialspace
+    strict
     """
 
 def make_frame(rte, cont, ast):
@@ -1672,21 +1686,25 @@ def om_TextIOWrapper(cls, name, mode, pointer, opened):
     OM_set_TextIOWrapper_opened(obj, opened)
     return obj
 
-def om_csv_reader(cls, line_num, line_iterator, dialect, delimiter,
-                       doublequote, escapechar, lineterminator,
-                       quotechar, quoting, skipinitialspace, strict):
+def om_csv_reader(cls, line_num, line_iterator, dialect):
     obj = om(cls)
     OM_set_csv_reader_line_num(obj, line_num)
     OM_set_csv_reader_lines(obj, line_iterator)
     OM_set_csv_reader_dialect(obj, dialect)
-    OM_set_csv_reader_delimiter(obj, delimiter)
-    OM_set_csv_reader_doublequote(obj, doublequote)
-    OM_set_csv_reader_escapechar(obj, escapechar)
-    OM_set_csv_reader_lineterminator(obj, lineterminator)
-    OM_set_csv_reader_quotechar(obj, quotechar)
-    OM_set_csv_reader_quoting(obj, quoting)
-    OM_set_csv_reader_skipinitialspace(obj, skipinitialspace)
-    OM_set_csv_reader_strict(obj, strict)
+
+    return obj
+
+def om_csv_dialect(cls, delimiter, doublequote, escapechar, lineterminator,
+                   quotechar, quoting, skipinitialspace, strict):
+    obj = om(cls)
+    OM_set_dialect_delimiter(obj, delimiter)
+    OM_set_dialect_doublequote(obj, doublequote)
+    OM_set_dialect_escapechar(obj, escapechar)
+    OM_set_dialect_lineterminator(obj, lineterminator)
+    OM_set_dialect_quotechar(obj, quotechar)
+    OM_set_dialect_quoting(obj, quoting)
+    OM_set_dialect_skipinitialspace(obj, skipinitialspace)
+    OM_set_dialect_strict(obj, strict)
     return obj
 
 def om_WrapperDescriptor(name, cls, code, requires_kwargs):
@@ -1820,6 +1838,9 @@ def OM_TextIOWrapper_create():
 
 def OM_csv_reader_create():
     return OM_csv_reader()
+
+def OM_csv_dialect_create():
+    return OM_csv_dialect()
 
 # Manipulation of om object.
 def OM_set(o, name, value):
@@ -2127,52 +2148,54 @@ def OM_get_csv_reader_dialect(o):
 def OM_set_csv_reader_dialect(o, dialect):
     o.dialect = dialect
 
-def OM_get_csv_reader_delimiter(o):
+# csv dialect
+
+def OM_get_dialect_delimiter(o):
     return o.delimiter
 
-def OM_set_csv_reader_delimiter(o, delimiter):
+def OM_set_dialect_delimiter(o, delimiter):
     o.delimiter = delimiter
 
-def OM_get_csv_reader_doublequote(o):
+def OM_get_dialect_doublequote(o):
     return o.doublequote
 
-def OM_set_csv_reader_doublequote(o, doublequote):
+def OM_set_dialect_doublequote(o, doublequote):
     o.doublequote = doublequote
 
-def OM_get_csv_reader_escapechar(o):
+def OM_get_dialect_escapechar(o):
     return o.escapechar
 
-def OM_set_csv_reader_escapechar(o, escapechar):
+def OM_set_dialect_escapechar(o, escapechar):
     o.escapechar = escapechar
 
-def OM_get_csv_reader_lineterminator(o):
+def OM_get_dialect_lineterminator(o):
     return o.lineterminator
 
-def OM_set_csv_reader_lineterminator(o, lineterminator):
+def OM_set_dialect_lineterminator(o, lineterminator):
     o.lineterminator = lineterminator
 
-def OM_get_csv_reader_quotechar(o):
+def OM_get_dialect_quotechar(o):
     return o.quotechar
 
-def OM_set_csv_reader_quotechar(o, quotechar):
+def OM_set_dialect_quotechar(o, quotechar):
     o.quotechar = quotechar
 
-def OM_get_csv_reader_quoting(o):
+def OM_get_dialect_quoting(o):
     return o.quoting
 
-def OM_set_csv_reader_quoting(o, quoting):
+def OM_set_dialect_quoting(o, quoting):
     o.quoting = quoting
 
-def OM_get_csv_reader_skipinitialspace(o):
+def OM_get_dialect_skipinitialspace(o):
     return o.skipinitialspace
 
-def OM_set_csv_reader_skipinitialspace(o, skipinitialspace):
+def OM_set_dialect_skipinitialspace(o, skipinitialspace):
     o.skipinitialspace = skipinitialspace
 
-def OM_get_csv_reader_strict(o):
+def OM_get_dialect_strict(o):
     return o.strict
 
-def OM_set_csv_reader_strict(o, strict):
+def OM_set_dialect_strict(o, strict):
     o.strict = strict
 
 # hidden fields for methods
@@ -2447,6 +2470,7 @@ class_TextIOWrapper = make_stdlib_class('TextIOWrapper', "_io", OM_TextIOWrapper
 
 # _csv classes, TODO: put in an _csv module
 class_csv_reader = make_stdlib_class('reader', "_csv", OM_csv_reader_create, ())
+class_csv_dialect = make_stdlib_class('Dialect', "_csv", OM_csv_reader_create, ())
 
 # class available and populated in 'more_builtins' module
 class_struct = make_builtin_class('struct', OM_struct_create, ())
@@ -3343,13 +3367,15 @@ def om_csv_parse_line(ctx, self, init_line, fetch_line):
     unexpected_end_of_data_msg = "unexpected end of data"
     unquoted_newline_msg = "new-line character seen in unquoted field"
 
-    delimiter = OM_get_csv_reader_delimiter(self)
-    escapechar = OM_get_csv_reader_escapechar(self)
-    lineterminator = OM_get_csv_reader_lineterminator(self) # TODO: ignored, '\n' and '\r' are hardcoded
-    quotechar = OM_get_csv_reader_quotechar(self)
-    quoting = OM_get_csv_reader_quoting(self)
-    skipinitialspace = OM_get_csv_reader_skipinitialspace(self)
-    strict = OM_get_csv_reader_strict(self)
+    dialect = OM_get_csv_reader_dialect(self)
+
+    delimiter = OM_get_dialect_delimiter(dialect)
+    escapechar = OM_get_dialect_escapechar(dialect)
+    lineterminator = OM_get_dialect_lineterminator(dialect) # TODO: ignored, '\n' and '\r' are hardcoded
+    quotechar = OM_get_dialect_quotechar(dialect)
+    quoting = OM_get_dialect_quoting(dialect)
+    skipinitialspace = OM_get_dialect_skipinitialspace(dialect)
+    strict = OM_get_dialect_strict(dialect)
 
     must_cast_unquoted = quoting == csv_param_quote_nonnumeric
 
@@ -8735,9 +8761,11 @@ def make_module_csv():
                         # strict truthiness is tested
                         strict_value = True if om_is(strict_as_bool, om_True) else False
 
-                        reader = om_csv_reader(class_csv_reader, 0, it, dialect_value, delimiter_value, doublequote_value,
-                                               escapechar_value, lineterminator_value, quotechar_value, quoting_value,
-                                               skipinitialspace_value, strict_value)
+                        dialect_obj = om_csv_dialect(class_csv_dialect, delimiter_value, doublequote_value,
+                                                     escapechar_value, lineterminator_value, quotechar_value, quoting_value,
+                                                     skipinitialspace_value, strict_value)
+
+                        reader = om_csv_reader(class_csv_reader, 0, it, dialect_obj)
                         return unwind_return(initialspace_rte, reader)
 
                     return sem_bool(make_out_of_ast_context(dq_rte, after_strict), strict)
