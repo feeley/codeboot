@@ -3607,7 +3607,7 @@ def om_csv_reader_next(ctx, args):
 
 # class _csv.writer
 def csv_format_csv_element(text, delimiter, doublequote, escapechar, lineterminator,
-                           quotechar, quoting, skipinitialspace, strict):
+                           quotechar, quoting):
     return text # TODO: parse for real
 
 def om_csv_writer_writerow(ctx, args):
@@ -3624,8 +3624,6 @@ def om_csv_writer_writerow(ctx, args):
         lineterminator = OM_get_dialect_lineterminator(dialect) # TODO: ignored, '\n' and '\r' are hardcoded
         quotechar = OM_get_dialect_quotechar(dialect)
         quoting = OM_get_dialect_quoting(dialect)
-        skipinitialspace = OM_get_dialect_skipinitialspace(dialect)
-        strict = OM_get_dialect_strict(dialect)
 
         def write_elements(rte, strings):
             formatted_strings = []
@@ -3633,8 +3631,7 @@ def om_csv_writer_writerow(ctx, args):
             for om_s in strings:
                 s = OM_get_boxed_value(om_s)
                 formatted_strings.append(csv_format_csv_element(s, delimiter, doublequote, escapechar,
-                                                            lineterminator, quotechar,
-                                                            quoting, skipinitialspace, strict))
+                                                            lineterminator, quotechar, quoting))
 
             text_to_write = string_join(delimiter, formatted_strings) + lineterminator
 
