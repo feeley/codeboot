@@ -451,9 +451,9 @@ function drawing_pu(rte) {
     dw.prepareToShow();
 }
 
-function drawing_startpath(rte) {
+function drawing_hop(rte) {
     var dw = rte.vm.ui.dw;
-    dw.startpath();
+    dw.hop();
     dw.prepareToShow();
 }
 

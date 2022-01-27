@@ -727,7 +727,7 @@ def drawing_pd(rte):
 def drawing_pu(rte):
     pass
 
-def drawing_startpath(rte):
+def drawing_hop(rte):
     pass
 
 def drawing_mv(rte, x, y):

@@ -367,12 +367,15 @@ CodeBootFileSystem.prototype.restore = function (json) {
 CodeBootFileSystem.prototype.rebuildFileMenu = function () {
 
     var fs = this;
+    var vm = fs.vm;
 
     fs.vm.forEachElem('.cb-file-selection', function (elem) {
 
         elem.innerHTML = ''; // remove children
 
-        var item = fs.newMenuItem(elem, 'cb-file-new dropdown-item', 'New file');
+        var item = fs.newMenuItem(elem,
+                                  'cb-file-new dropdown-item',
+                                  vm.polyglotHTML('New file'));
 
         elem.appendChild(item);
 
@@ -386,14 +389,14 @@ CodeBootFileSystem.prototype.rebuildFileMenu = function () {
     });
 };
 
-CodeBootFileSystem.prototype.newMenuItem = function (elem, cls, text) {
+CodeBootFileSystem.prototype.newMenuItem = function (elem, cls, html) {
 
     var item = document.createElement('a');
     item.className = cls;
     item.href = '#';
 
     var span = document.createElement('span');
-    span.innerText = text;
+    span.innerHTML = html;
 
     item.appendChild(span);
 
@@ -448,7 +451,9 @@ CodeBootFileSystem.prototype.addFileToMenu = function (elem, file) {
         fs.addDividerToMenu(elem);
     }
 
-    var item = fs.newMenuItem(elem, 'dropdown-item', filename);
+    var item = fs.newMenuItem(elem,
+                              'dropdown-item',
+                              vm.escapeHTML(filename));
 
     item.setAttribute('data-cb-filename', filename);
 
@@ -457,49 +462,6 @@ CodeBootFileSystem.prototype.addFileToMenu = function (elem, file) {
         dismissMenu();
         file.fe.edit();
     });
-
-    var buttons = document.createElement('span');
-    buttons.className = 'cb-file-buttons';
-
-    if (!fs.isBuiltin(file)) {
-        fs.addButton(buttons,
-                     'Delete file',
-                     vm.SVG['trash'],
-                     function (event) {
-                         event.stopPropagation();
-                         dismissMenu();
-                         file.delete();
-                     });
-    }
-
-    fs.addButton(buttons,
-                 'Download file',
-                 vm.SVG['download'],
-                 function (event) {
-                     event.stopPropagation();
-                     dismissMenu();
-                     file.download();
-                 });
-
-    fs.addButton(buttons,
-                 'Email file',
-                 vm.SVG['mail'],
-                 function (event) {
-                     event.stopPropagation();
-                     dismissMenu();
-                     file.email();
-                 });
-
-    fs.addButton(buttons,
-                 'Copy to clipboard',
-                 vm.SVG['clipboard'],
-                 function (event) {
-                     event.stopPropagation();
-                     dismissMenu();
-                     file.copyToClipboard();
-                 });
-
-    item.append(buttons);
 
     var nodes = elem.childNodes;
 
@@ -517,14 +479,21 @@ CodeBootFileSystem.prototype.addFileToMenu = function (elem, file) {
 };
 
 CodeBootFile.prototype.delete = function () {
+
     var file = this;
+    var fs = file.fs;
+    var vm = fs.vm;
     var filename = file.filename;
-    if (confirm('Delete file "' + filename + '"? This cannot be undone.')) {
-        var fs = file.fs;
-        file.fe.disable();
-        fs.deleteFile(file);
-        fs.rebuildFileMenu();
-    }
+
+    vm.confirmHTML(vm.polyglotHTML('Delete file "{}"? This cannot be undone.',
+                                   [filename]),
+                   function (yes) {
+                       if (yes) {
+                           file.fe.disable(); // TODO: do this based on filename decause it is done async and the file may have vanished
+                           fs.deleteFile(file);
+                           fs.rebuildFileMenu();
+                       }
+                   });
 };
 
 CodeBootFile.prototype.download = function () {
@@ -533,7 +502,7 @@ CodeBootFile.prototype.download = function () {
     var filename = file.filename;
     var content = file.getContent();
 
-    download(content, filename, "text/plain");
+    download(content, filename, 'text/plain');
 /*deprecated
     var elem = document.createElement('a');
     elem.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
@@ -796,13 +765,11 @@ CodeBootFileEditorManager.prototype.remove = function (fe) {
     fe.removePresentation();
 
     fe.fileTab = null;
-    fe.fileTabLabel = null;
-    fe.fileTabCloseButton = null;
+    fe.fileTabButton = null;
+    fe.fileTabInput = null;
+    fe.fileTabSpan = null;
     fe.fileContainer = null;
     fe.editor = null;
-    fe.fileTabClickHandler = null;
-    fe.fileTabDblClickHandler = null;
-    fe.fileTabCloseHandler = null;
 
     fem.editors.splice(i, 1); // remove from editors
 
@@ -849,13 +816,12 @@ function CodeBootFileEditor(file) {
 
     fe.file = file;
     fe.fileTab = null;
-    fe.fileTabLabel = null;
-    fe.fileTabCloseButton = null;
+    fe.fileTabButton = null;
+    fe.fileTabInput = null;
+    fe.fileTabSpan = null;
     fe.fileContainer = null;
     fe.editor = null;
-    fe.fileTabClickHandler = null;
-    fe.fileTabDblClickHandler = null;
-    fe.fileTabCloseHandler = null;
+
     file.fe = fe;
 }
 
@@ -951,6 +917,54 @@ CodeBootFileEditor.prototype.focus = function () {
     fe.file.fs.vm.trackEditorFocus(fe.editor, true);
 };
 
+CodeBootFileEditor.prototype.menuHTML = function () {
+
+    var fe = this;
+    var vm = fe.file.fs.vm;
+
+    return '\
+  <div class="cb-tab" data-toggle="dropdown"><input spellcheck="false"></input><span></span></div>\
+  <div class="dropdown-menu">\
+\
+    <a href="#" class="dropdown-item" data-cb-file-tab-close>' + vm.SVG['close'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Close tab') + '</a>\
+    <a href="#" class="dropdown-item" data-cb-file-tab-rename>' + vm.SVG['rename'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Rename file') + '</a>\
+    <a href="#" class="dropdown-item" data-cb-file-tab-download>' + vm.SVG['download'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Download file') + '</a>\
+    <a href="#" class="dropdown-item" data-cb-file-tab-mail>' + vm.SVG['mail'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Share by email') + '</a>\
+    <a href="#" class="dropdown-item" data-cb-file-tab-clipboard>' + vm.SVG['clipboard'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Copy to clipboard') + '</a>\
+\
+      <div class="dropdown-divider"></div>\
+\
+      <a href="#" class="dropdown-item" data-cb-file-tab-delete>' + vm.SVG['trash'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Delete file') + '</a>\
+\
+    <div class="cb-file-tab-editor-type">\
+\
+      <div class="dropdown-divider"></div>\
+\
+      <h5 class="dropdown-header">' + vm.polyglotHTML('Editor') + '</h5>\
+      <a href="#" class="dropdown-item" data-cb-file-tab-editor="text">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Text') + '</a>\
+      <a href="#" class="dropdown-item" data-cb-file-tab-editor="spreadsheet"><span style="visibility:hidden">' + vm.SVG['checkmark'] + '</span>&nbsp;&nbsp;' + vm.polyglotHTML('Spreadsheet') + '</a>\
+\
+    </div>\
+  </div>\
+';
+};
+
+CodeBootFileEditor.prototype.setFilename = function (filename) {
+
+    var fe = this;
+
+    fe.fileTabSpan.innerText = filename;
+
+    var dot = filename.lastIndexOf('.');
+    var slash = filename.lastIndexOf('/');
+    var ext = '';
+
+    if (dot > slash) ext = filename.slice(dot);
+
+    fe.fileTab.setAttribute('data-cb-file-tab-filename', filename);
+    fe.fileTab.setAttribute('data-cb-file-tab-extension', ext);
+};
+
 CodeBootFileEditor.prototype.enable = function () {
 
     var fe = this;
@@ -965,19 +979,43 @@ CodeBootFileEditor.prototype.enable = function () {
     // create file tab
 
     var fileTab = document.createElement('li');
-    fileTab.className = 'cb-file-tab nav-link';
+    fileTab.className = 'cb-file-tab dropdown';
 
-    var fileTabCloseButton =
-        fs.addButton(fileTab,
-                     '',
-                     vm.SVG['close'],
-                     function (event) { fs.fem.remove(fe); return false; });
+    fileTab.innerHTML = fe.menuHTML();
 
-    var fileTabLabel = document.createElement('span');
-    fileTabLabel.className = 'cb-tab-label';
-    fileTabLabel.innerText = filename;
+    var fileTabButton = fileTab.querySelector(':scope > .cb-tab');
+    var fileTabInput = fileTabButton.querySelector(':scope > input');
+    var fileTabSpan  = fileTabButton.querySelector(':scope > span');
 
-    fileTab.appendChild(fileTabLabel);
+    fileTab.querySelectorAll('.dropdown-item').forEach(function (elem) {
+        elem.addEventListener('click', function (event) {
+
+            var elem = event.currentTarget;
+            var val;
+
+            if (elem.hasAttribute('data-cb-file-tab-close')) {
+                fe.disable();
+            } else if (elem.hasAttribute('data-cb-file-tab-rename')) {
+                fe.rename();
+            } else if (elem.hasAttribute('data-cb-file-tab-download')) {
+                fe.file.download();
+            } else if (elem.hasAttribute('data-cb-file-tab-mail')) {
+                fe.file.email();
+            } else if (elem.hasAttribute('data-cb-file-tab-clipboard')) {
+                fe.file.copyToClipboard();
+            } else if (elem.hasAttribute('data-cb-file-tab-delete')) {
+                fe.file.delete();
+            } else if (val = elem.getAttribute('data-cb-file-tab-editor')) {
+                if (val === 'text') {
+                    console.log('text');
+                } else if (val === 'spreadsheet') {
+                    console.log('spreadsheet');
+                }
+            }
+
+            return true;
+        });
+    });
 
     // create file container
 
@@ -1009,6 +1047,17 @@ CodeBootFileEditor.prototype.enable = function () {
         editor.setCursor(file.cursor);
     }
 
+    fileTabButton.addEventListener('click', function (event) {
+        if (fileTab.hasAttribute('data-cb-editing')) {
+            // show dropdown menu so that the click will end up hiding it
+            $(fileTabButton).dropdown('show');
+        } else if (!fe.isActivated()) {
+            // show dropdown menu so that the click will end up hiding it
+            $(fileTabButton).dropdown('show');
+            fe.activate();
+        }
+    });
+
     fileContainer.addEventListener('click', function (event) {
         editor.focus();
     });
@@ -1016,50 +1065,19 @@ CodeBootFileEditor.prototype.enable = function () {
     // remember each element for quick access
 
     fe.fileTab = fileTab;
-    fe.fileTabLabel = fileTabLabel;
-    fe.fileTabCloseButton = fileTabCloseButton;
+    fe.fileTabButton = fileTabButton;
+    fe.fileTabInput = fileTabInput;
+    fe.fileTabSpan = fileTabSpan;
     fe.fileContainer = fileContainer;
     fe.editor = editor;
 
-    fe.fileTabClickHandler = function (event) {
-        if (fe.isEnabled()) fe.edit();
-    };
-
-    fe.fileTabDblClickHandler = function (event) {
-        if (fe.isEnabled()) fe.rename();
-    };
-
-    fe.fileTabCloseHandler = function (event) {
-        if (fe.isEnabled()) fe.disable();
-    };
-
-    fe.fileTabCloseButton.addEventListener('click', fe.fileTabCloseHandler);
-
-    fe.normalTabEvents();
+    fe.setFilename(filename);
 
     file.fs.fem.add(fe);
 };
 
 // length of window (in ms) during which changes will be buffered
 var SAVE_DELAY = 300;
-
-CodeBootFileEditor.prototype.normalTabEvents = function () {
-
-    var fe = this;
-
-    fe.fileTab.addEventListener('click', fe.fileTabClickHandler);
-    fe.fileTab.addEventListener('dblclick', fe.fileTabDblClickHandler);
-    fe.fileTabCloseButton.style.display = 'inline';
-};
-
-CodeBootFileEditor.prototype.renameTabEvents = function () {
-
-    var fe = this;
-
-    fe.fileTab.removeEventListener('click', fe.fileTabClickHandler);
-    fe.fileTab.removeEventListener('dblclick', fe.fileTabDblClickHandler);
-    fe.fileTabCloseButton.style.display = 'none';
-};
 
 CodeBootFileEditor.prototype.disable = function () {
 
@@ -1075,6 +1093,9 @@ CodeBootFileEditor.prototype.disable = function () {
 CodeBootFileEditor.prototype.rename = function () {
 
     var fe = this;
+    var file = fe.file;
+    var fs = file.fs;
+    var vm = fs.vm;
 
     if (!fe.isEnabled()) return; // noop if currently not enabled
 
@@ -1082,51 +1103,76 @@ CodeBootFileEditor.prototype.rename = function () {
     fe.file.fs.vm.lastFocusedEditor = null; // allow focus to leave editor
 
     var oldFilename = fe.file.filename;
-    var inputBox = document.createElement('input');
-    inputBox.className = 'cb-rename-box';
-    inputBox.value = oldFilename;
+    var fileTab = fe.fileTab;
+    var fileTabInput = fe.fileTabInput;
+    var fileTabSpan  = fe.fileTabSpan;
 
-    fe.fileTabLabel.innerText = '';
-    fe.fileTabLabel.appendChild(inputBox);
+    fileTabInput.value = oldFilename;
 
-    function removeInputBox() {
-        if (inputBox) {
-            fe.fileTabLabel.removeChild(inputBox);
-            inputBox = null;
+    function startEditing() {
+        if (fileTabInput) {
+
+            fileTab.setAttribute('data-cb-editing', '');
+
+            fileTabInput.addEventListener('focusout', function (event) {
+                doneRenaming();
+            });
+
+            fileTabInput.addEventListener('keydown', function (event) {
+                if (event.keyCode === 27) {
+                    event.stopPropagation();
+                    resetTabToOldFilename();
+                }
+            });
+
+            fileTabInput.addEventListener('keypress', function (event) {
+                if (event.keyCode === 13) {
+                    event.stopPropagation();
+                    doneRenaming();
+                }
+            });
+
+            fileTabInput.focus();
+        }
+    }
+
+    function endEditing() {
+        if (fileTabInput) {
+            fileTab.removeAttribute('data-cb-editing');
+            fileTabInput = null;
         }
     }
 
     function resetTabTo(filename) {
-        removeInputBox();
-        fe.fileTabLabel.innerText = filename;
-        fe.normalTabEvents();
+        endEditing();
+        fe.setFilename(filename);
         fe.file.fs.vm.lastFocusedEditor = lastFocusedEditor;
         fe.file.fs.vm.focusLastFocusedEditor();
     }
 
     function resetTabToOldFilename() {
-        removeInputBox();
+        endEditing();
         resetTabTo(oldFilename);
     }
 
     function doneRenaming() {
-        if (inputBox) {
+        if (fileTabInput) {
 
-            var newFilename = inputBox.value;
+            var newFilename = fileTabInput.value;
 
-            removeInputBox();
+            endEditing();
 
             if (newFilename !== oldFilename) {
 
                 if (newFilename === '') {
-                    alert('Filename must not be empty');
                     resetTabToOldFilename();
+                    vm.alertHTML(vm.polyglotHTML('Filename must not be empty'));
                     return;
                 }
 
                 if (fe.file.fs.hasFile(newFilename)) {
-                    alert('Filename must not be an existing file');
                     resetTabToOldFilename();
+                    vm.alertHTML(vm.polyglotHTML('Filename must not be an existing file'));
                     return;
                 }
 
@@ -1139,27 +1185,7 @@ CodeBootFileEditor.prototype.rename = function () {
         fe.file.fs.rebuildFileMenu();
     }
 
-    fe.renameTabEvents();
-
-    inputBox.addEventListener('focusout', function (event) {
-        doneRenaming();
-    });
-
-    inputBox.addEventListener('keydown', function (event) {
-        if (event.keyCode === 27) {
-            event.stopPropagation();
-            resetTabToOldFilename();
-        }
-    });
-
-    inputBox.addEventListener('keypress', function (event) {
-        if (event.keyCode === 13) {
-            event.stopPropagation();
-            doneRenaming();
-        }
-    });
-
-    inputBox.focus();
+    startEditing();
 };
 
 CodeBootFileEditor.prototype.setReadOnly = function (readOnly) {
