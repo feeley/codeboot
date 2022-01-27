@@ -3,6 +3,8 @@ body {
     --cb-focus-repl-navbar-controls-color: #7db6d5;
     --cb-focus-repl-navbar-controls-hover-color: #afd3e6;
     --cb-repl-container-color: #e0f0f6;
+    --cb-file-container-color: #f6f6f6;
+    --cb-file-tab-inactive-color: #fdfdfd;
     --cb-exec-point-color: yellow;
     --cb-exec-point-bubble-color: var(--cb-exec-point-color);
     --cb-console-height: 260px;    /* initial console height */
@@ -28,6 +30,62 @@ body {
     text-align: left;
     z-index: 10;
     width: 100%;
+}
+
+.cb-en:lang(de),
+.cb-en:lang(es),
+.cb-en:lang(fr),
+.cb-en:lang(hi),
+.cb-en:lang(ja),
+.cb-en:lang(pt),
+.cb-en:lang(zh),
+.cb-de,
+.cb-es,
+.cb-fr,
+.cb-hi,
+.cb-ja,
+.cb-pt,
+.cb-zh {
+    display: none;
+}
+
+.cb-en:not(:lang(de)):not(:lang(es)):not(:lang(fr)):not(:lang(hi)):not(:lang(ja)):not(:lang(pt)):not(:lang(zh)),
+.cb-de:lang(de),
+.cb-es:lang(es),
+.cb-fr:lang(fr),
+.cb-hi:lang(hi),
+.cb-ja:lang(ja),
+.cb-pt:lang(pt),
+.cb-zh:lang(zh) {
+    display: inline;
+}
+
+[data-cb-setting-ui-lang="en"]:lang(de) > svg,
+[data-cb-setting-ui-lang="en"]:lang(es) > svg,
+[data-cb-setting-ui-lang="en"]:lang(fr) > svg,
+[data-cb-setting-ui-lang="en"]:lang(hi) > svg,
+[data-cb-setting-ui-lang="en"]:lang(ja) > svg,
+[data-cb-setting-ui-lang="en"]:lang(pt) > svg,
+[data-cb-setting-ui-lang="en"]:lang(zh) > svg,
+[data-cb-setting-ui-lang="de"]:not(:lang(de)) > svg,
+[data-cb-setting-ui-lang="es"]:not(:lang(es)) > svg,
+[data-cb-setting-ui-lang="fr"]:not(:lang(fr)) > svg,
+[data-cb-setting-ui-lang="hi"]:not(:lang(hi)) > svg,
+[data-cb-setting-ui-lang="ja"]:not(:lang(ja)) > svg,
+[data-cb-setting-ui-lang="pt"]:not(:lang(pt)) > svg,
+[data-cb-setting-ui-lang="zh"]:not(:lang(zh)) > svg {
+    visibility: hidden;
+}
+
+[data-cb-setting-ui-lang="en"]:not(:lang(de)):not(:lang(es)):not(:lang(fr)):not(:lang(hi)):not(:lang(ja)):not(:lang(pt)):not(:lang(zh)) > svg,
+[data-cb-setting-ui-lang="de"]:lang(de) > svg,
+[data-cb-setting-ui-lang="es"]:lang(es) > svg,
+[data-cb-setting-ui-lang="fr"]:lang(fr) > svg,
+[data-cb-setting-ui-lang="hi"]:lang(hi) > svg,
+[data-cb-setting-ui-lang="ja"]:lang(ja) > svg,
+[data-cb-setting-ui-lang="pt"]:lang(pt) > svg,
+[data-cb-setting-ui-lang="zh"]:lang(zh) > svg {
+    visibility: visible;
 }
 
 pre.cb-vm{
@@ -196,10 +254,11 @@ pre.cb-vm{
 
 .cb-file-tabs {
 /*    height: 2.8em; */
-    overflow: hidden;
+//    overflow: hidden;
     text-overflow: ellipsis;
     flex-wrap: nowrap;
     flex-shrink: 0;
+    height: 1.75em;/***************************/
 }
 
 /**************************/
@@ -208,8 +267,9 @@ ul.cb-file-tabs {
 }
 
 .cb-file-tab {
-    overflow: hidden;
-    height: 2.0em;
+//    overflow: hidden;/***************************/
+    margin-left: var(--cb-container-border-radius);
+    height: 1.75em;/***************************/
 }
 
 .dropdown-item[data-cb-filename] > span > .close {
@@ -229,17 +289,13 @@ ul.cb-file-tabs {
 
 .cb-file-container {
     max-height: calc(100%);
-    height: calc(100% - 1em);
+    height: calc(100% - 1.5em);
     margin: 0;
     padding: 0;
-    border: 3px solid #f6f6f6;
+    border: 3px solid var(--cb-file-container-color);
     border-radius: var(--cb-container-border-radius);
-    background-color: #f6f6f6;
+    background-color: var(--cb-file-container-color);
     position: relative;
-}
-
-.cb-file-container {
-    height: calc(100% - 2em);
 }
 
 .cb-vm:not([data-cb-show-header]):not([data-cb-show-footer]) .cb-file-container .CodeMirror-scroll {
@@ -298,6 +354,53 @@ ul.cb-file-tabs {
 
 .cb-file-tab > button > svg {
     width: 1.5em;
+}
+
+.cb-file-tab > .cb-tab > span,
+.cb-file-tab > .cb-tab > input {
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+  padding: 0;
+  border: 0;
+  background-color: inherit;
+  color: #bbb;
+  white-space: pre;
+}
+
+.cb-file-tab.active > .cb-tab > span,
+.cb-file-tab.active > .cb-tab > input {
+  color: black;
+}
+
+.cb-file-tab > .cb-tab > span {
+  -webkit-touch-callout: none;
+    -webkit-user-select: none;
+     -khtml-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+}
+
+.cb-file-tab > .cb-tab > input {
+    width: 20em;
+}
+
+.cb-file-tab:not([data-cb-editing]) > .cb-tab > span,
+.cb-file-tab[data-cb-editing] > .cb-tab > input {
+    display: inline;
+}
+.cb-file-tab:not([data-cb-editing]) > .cb-tab > input,
+.cb-file-tab[data-cb-editing] > .cb-tab > span {
+    display: none;
+}
+
+.cb-file-tab[data-cb-file-tab-extension=".csv"] > div > .cb-file-tab-editor-type,
+.cb-file-tab[data-cb-file-tab-extension=".tsv"] > div > .cb-file-tab-editor-type {
+    display: inline;
+}
+
+.cb-file-tab:not([data-cb-file-tab-extension=".csv"]):not([data-cb-file-tab-extension=".tsv"]) > div > .cb-file-tab-editor-type {
+    display: none;
 }
 
 .cb-resize-handle > svg {
@@ -427,8 +530,10 @@ ul.cb-file-tabs {
     transition: filter 200ms ease-out;
 }
 
-.cb-button {
+.cb-button,
+.cb-tab {
     border: 0;
+    outline: none;
 }
 
 .cb-button:active {
@@ -453,8 +558,13 @@ ul.cb-file-tabs {
 .cb-svg-mail,
 .cb-svg-clipboard,
 .cb-svg-close,
+.cb-svg-rename,
 .cb-svg-checkmark {
     width: 1em;
+}
+
+.cb-svg-udem-logo {
+    width: 10em;
 }
 
 .cb-file-selection .cb-file-new {
@@ -522,12 +632,11 @@ ul.cb-file-tabs {
 
 .cb-file-tabs > .cb-file-tab {
     border-bottom: 0;
-    border-top: 1px solid #f6f6f6;
-    border-left: 1px solid #f6f6f6;
-    border-right: 1px solid #f6f6f6;
-    background-color: #fdfdfd;
+    border-top: 1px solid var(--cb-file-container-color);
+    border-left: 1px solid var(--cb-file-container-color);
+    border-right: 1px solid var(--cb-file-container-color);
+    background-color: var(--cb-file-tab-inactive-color);
     color: #ccc;
-    margin-right: 1em;
     display: flex;
     border-top-left-radius: var(--cb-file-tab-border-radius);
     border-top-right-radius: var(--cb-file-tab-border-radius);
@@ -535,9 +644,8 @@ ul.cb-file-tabs {
 
 .cb-file-tabs > .cb-file-tab.active,
 .cb-file-tabs > .cb-file-tab.active:hover {
-    border: 0;
     color: black;
-    background-color: #f6f6f6;
+    background-color: var(--cb-file-container-color);
 }
 
 .cb-file-tabs > .cb-file-tab > button.close {

@@ -131,7 +131,7 @@ function DrawingWindow(vm, width, height, scale) {
 
     for (var x=0; x<=w2; x+=grid_step) {
         var i = (x/grid_step)%10;
-        dom_set_thickness(dw.grid_context, (i===0 ? 1.5 : i===5 ? 1 : 0.5));
+        dom_set_thickness(dw.grid_context, (i===0 ? 1.5 : i===5 ? 0.8 : 0.5));
         dom_line_to(dw.grid_context, x, -h2, x, h2);
         if (x>0)
             dom_line_to(dw.grid_context, -x, -h2, -x, h2);
@@ -139,7 +139,7 @@ function DrawingWindow(vm, width, height, scale) {
 
     for (var y=0; y<=h2; y+=grid_step) {
         var i = (y/grid_step)%10;
-        dom_set_thickness(dw.grid_context, (i===0 ? 1.5 : i===5 ? 1 : 0.5));
+        dom_set_thickness(dw.grid_context, (i===0 ? 1.5 : i===5 ? 0.8 : 0.5));
         dom_line_to(dw.grid_context, -w2, y, w2, y);
         if (y>0)
             dom_line_to(dw.grid_context, -w2, -y, w2, -y);
@@ -226,7 +226,7 @@ DrawingWindow.prototype.init = function () {
     dw.turtle_visible = false;
     dw.update_turtle_visibility(true);
     dw.set_color('#000');
-    dw.set_thickness(1);
+    dw.set_thickness(0);
 };
 
 DrawingWindow.prototype.cs = function () {
@@ -277,9 +277,11 @@ DrawingWindow.prototype.set_color = function (color) {
 DrawingWindow.prototype.set_thickness = function (thickness) {
     var dw = this;
     var ctx = dw.drawing_context;
+    var s = Math.abs(dw.scale);
+    var t = (thickness <= 0) ? 1 : s*thickness;
     dw.thickness = thickness;
-    dom_set_font(ctx, dw.scale*(9+thickness) + 'px Courier');
-    dom_set_thickness(ctx, dw.scale*thickness);
+    dom_set_font(ctx, ((thickness <= 0) ? 10 : s*(9+t)) + 'px Courier');
+    dom_set_thickness(ctx, t);
 };
 
 DrawingWindow.prototype.pd = function () {
@@ -294,7 +296,7 @@ DrawingWindow.prototype.pu = function () {
     dw.pen_height++;
 };
 
-DrawingWindow.prototype.startpath = function () {
+DrawingWindow.prototype.hop = function () {
     var dw = this;
     dw.move_mode = 1;
 };
@@ -506,9 +508,9 @@ function builtin_pu() {
     dw.prepareToShow();
 }
 
-function builtin_startpath() {
+function builtin_hop() {
     var dw = drawing_window;
-    dw.startpath();
+    dw.hop();
     dw.prepareToShow();
 }
 

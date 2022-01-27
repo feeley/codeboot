@@ -409,7 +409,7 @@ CodeBootVM.prototype.event_queue_service = function () {
 CodeBootVM.prototype.updateStepCounter = function () {
     var vm = this;
     if (vm.ui.execStepCounter) {
-        vm.ui.execStepCounter.innerText = vm.textStepCounter();
+        vm.ui.execStepCounter.innerHTML = vm.HTMLStepCounter();
     }
 };
 
@@ -436,10 +436,10 @@ CodeBootVM.prototype.hideStepCounter = function () {
     }
 };
 
-CodeBootVM.prototype.textStepCounter = function () {
+CodeBootVM.prototype.HTMLStepCounter = function () {
     var vm = this;
     var count = vm.lang.getStepCount();
-    return count + ' step' + (count>1 ? 's' : '');
+    return vm.polyglotHTML((count>1 ? '{} steps' : '{} step'), [count+'']);
 };
 
 CodeBootVM.prototype.updatePopupPos = function () {
@@ -935,7 +935,7 @@ CodeBootVM.prototype.showReason = function (reason) {
             if (msg !== '') msg += ' after ';
             elem.text(msg);
             var counter = $('<span class="badge badge-primary badge-pill cb-step-counter"/>');
-            counter.text(vm.textStepCounter());
+            counter.html(vm.HTMLStepCounter());
             elem.append(counter);
             vm.hideStepCounter(); //TODO: belongs elsewhere
         } else {

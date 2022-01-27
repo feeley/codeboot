@@ -1106,6 +1106,8 @@ CodeBootVM.prototype.updatePlayground = function () {
 
     if (vm.ui.playground_showing !== to_show) {
 
+        //TODO: simplify this logic
+
         switch (to_show) {
 
         case 'drawing':
@@ -1116,16 +1118,27 @@ CodeBootVM.prototype.updatePlayground = function () {
             vm.ui.pw.setShow(true);
             break;
 
+        case 'chart':
+            vm.ui.dw.setShow(false);
+            vm.ui.pw.setShow(false);
+            vm.setCheckmark('data-cb-setting-playground', 'show-chart-window', true);
+            $('.cb-chart-window').css('display', 'inline');
+            $('.cb-html-window').css('display', 'none');
+            break;
+
         case 'html':
             vm.ui.dw.setShow(false);
             vm.ui.pw.setShow(false);
             vm.setCheckmark('data-cb-setting-playground', 'show-html-window', true);
+            $('.cb-chart-window').css('display', 'none');
             $('.cb-html-window').css('display', 'inline');
             break;
 
         default:
             to_show = null;
+            vm.setCheckmark('data-cb-setting-playground', 'show-chart-window', false);
             vm.setCheckmark('data-cb-setting-playground', 'show-html-window', false);
+            $('.cb-chart-window').css('display', 'none');
             $('.cb-html-window').css('display', 'none');
             vm.ui.dw.setShow(false);
             vm.ui.pw.setShow(false);
@@ -1257,8 +1270,8 @@ CodeBootVM.prototype.menuLangHTML = function () {
   <div class="dropdown-menu cb-menu-settings-lang">\
 ' + vm.menuSettingsLangHTML() + '\
   <div class="dropdown-divider"></div>\
-  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">About codeBoot v' + CodeBoot.prototype.cb.version + '</a>\
-  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-help-box">Help</a>\
+  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-about-box">' + vm.polyglotHTML('About codeBoot {}', ['v' + CodeBoot.prototype.cb.version]) + '</a>\
+  <a href="#" class="dropdown-item" data-toggle="modal" data-target="#cb-help-box">' + vm.polyglotHTML('Help') + '</a>\
   </div>\
 </span>\
 ';
@@ -1303,30 +1316,35 @@ CodeBootVM.prototype.menuSettingsHTML = function () {
     var vm = this;
 
     return '\
-<span class="dropdown cb-menu-settings">\
+<span class="cb-menu-settings dropdown">\
 \
   <button class="btn btn-secondary cb-button cb-menu-settings-btn" type="button" data-toggle="dropdown">' + vm.SVG['gears'] + '</button>\
   <div class="dropdown-menu">\
 \
-    <h5 class="dropdown-header">Animation speed</h5>\
-    <a href="#" class="dropdown-item" data-cb-setting-speed="slow">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Slow</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-speed="normal">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Normal</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-speed="fast">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Fast</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-speed="turbo">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Turbo</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-speed="lightning">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Lightning</a>\
+    <h5 class="dropdown-header">' + vm.polyglotHTML('Animation speed') + '</h5>\
+    <a href="#" class="dropdown-item" data-cb-setting-speed="slow">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Slow') + '</a>\
+    <a href="#" class="dropdown-item" data-cb-setting-speed="normal">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Normal') + '</a>\
+    <a href="#" class="dropdown-item" data-cb-setting-speed="fast">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Fast') + '</a>\
+    <a href="#" class="dropdown-item" data-cb-setting-speed="lightning">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Lightning') + '</a>\
 \
     <div class="dropdown-divider"></div>\
 \
-    <h5 class="dropdown-header">Editing</h5>\
-    <a href="#" class="dropdown-item" data-cb-setting-show-line-numbers>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show line numbers</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-large-font>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Large font</a>\
+    <h5 class="dropdown-header">' + vm.polyglotHTML('Editing') + '</h5>\
+    <a href="#" class="dropdown-item" data-cb-setting-show-line-numbers>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Line numbers') + '</a>\
+    <a href="#" class="dropdown-item" data-cb-setting-large-font>' + vm.SVG['checkmark'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Large font') + '</a>\
 \
     <div class="dropdown-divider"></div>\
 \
-    <h5 class="dropdown-header">Playground</h5>\
-    <a href="#" class="dropdown-item" data-cb-setting-playground="show-drawing-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show drawing window</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-playground="show-pixels-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show pixels window</a>\
-    <a href="#" class="dropdown-item" data-cb-setting-playground="show-html-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;Show HTML window</a>\
+    <h5 class="dropdown-header">' + vm.polyglotHTML('Playground') + '</h5>\
+    <a href="#" class="dropdown-item" data-cb-setting-playground="show-drawing-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Show drawing window') + '</a>\
+    <a href="#" class="dropdown-item" data-cb-setting-playground="show-pixels-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Show pixels window') + '</a>\
+    <a href="#" class="dropdown-item" data-cb-setting-playground="show-chart-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Show chart window') + '</a>\
+    <a href="#" class="dropdown-item" data-cb-setting-playground="show-html-window">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;' + vm.polyglotHTML('Show HTML window') + '</a>\
+\
+    <div class="dropdown-divider"></div>\
+\
+    <h5 class="dropdown-header">' + vm.polyglotHTML('Language') + '</h5>\
+' + vm.langsUI.map(function (x) { return '    <a href="#" class="dropdown-item" data-cb-setting-ui-lang="' + x[0] + '">' + vm.SVG['checkmark'] + '&nbsp;&nbsp;' + vm.escapeHTML(x[1]) + '</a>\n'; }).join('') + '\
 \
   </div>\
 </span>\
@@ -1365,6 +1383,24 @@ CodeBootVM.prototype.menuHTML = function () {
 ';
 };
 
+CodeBootVM.prototype.modalDialogHTML = function () {
+
+    var vm = this;
+
+    return '\
+\
+<div class="cb-modal-dialog modal" role="dialog" tabindex="-1">\
+  <div class="modal-dialog modal-dialog-centered">\
+    <div class="modal-content">\
+      <div class="modal-body"></div>\
+      <div class="modal-footer"></div>\
+    </div>\
+  </div>\
+</div>\
+\
+';
+}
+
 CodeBootVM.prototype.helpHTML = function () {
 
     var vm = this;
@@ -1372,7 +1408,7 @@ CodeBootVM.prototype.helpHTML = function () {
     return '\
 \
 <div id="cb-about-box" class="modal fade" role="dialog">\
-  <div class="modal-dialog">\
+  <div class="modal-dialog modal-dialog-centered">\
     <div class="modal-content">\
       <div class="modal-header">\
         <h4 class="modal-title">About codeBoot</h4>\
@@ -1381,6 +1417,7 @@ CodeBootVM.prototype.helpHTML = function () {
         </button>\
       </div>\
       <div class="modal-body">\
+        <svg class="cb-svg-udem-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 102"><g><path fill="#0059AB" d="M208.673,49.313v13.49l0.028,0.502l-0.521-0.033h-6.538l-0.516,0.033l0.028-0.502v-12.3 c0-3.59-2.063-5.301-4.612-5.301c-2.541,0-4.599,1.711-4.599,5.301v12.3l0.023,0.502l-0.516-0.033h-6.539l-0.521,0.033l0.038-0.502 v-12.3c0-6.698,5.423-12.126,12.112-12.126c2.85,0,5.47,0.994,7.537,2.634l0.149,0.45l0.141-0.441 c0.216-0.234,0.427-0.45,0.666-0.661l0.44-0.108l-0.412-0.178c-1.786-2.001-2.893-4.631-2.893-7.514V5.664l-0.023-0.515 l0.521,0.023h6.534l0.516-0.023L209.7,5.664V32.56c0,2.92,1.668,4.308,3.745,4.308c2.063,0,3.74-1.387,3.74-4.308V5.664 l-0.028-0.515l0.525,0.023h6.543l0.511-0.023l-0.037,0.515V32.56c0,2.883-1.097,5.512-2.878,7.514l-0.417,0.178l0.454,0.108 c0.226,0.211,0.44,0.426,0.656,0.661l0.146,0.441l0.136-0.45c2.081-1.641,4.697-2.634,7.542-2.634 c6.698,0,12.117,5.428,12.117,12.126v12.3l0.037,0.502l-0.521-0.033h-6.538l-0.521,0.033l0.032-0.502v-12.3 c0-3.59-2.063-5.301-4.607-5.301c-2.55,0-4.612,1.711-4.612,5.301v12.3l0.028,0.502l-0.511-0.033h-6.544l-0.516,0.033l0.038-0.502 v-13.49c0-3.717-2.147-5.489-4.776-5.489C210.806,43.824,208.673,45.596,208.673,49.313"/><path fill="#051922" d="M61.243,96.467h6.923v-0.74l-2.568-0.596V71.572h-7.111v0.812l2.756,0.764v7.95 c-1.209-1.013-3.038-1.843-5.47-1.843c-4.317,0-7.504,3.797-7.504,9.065c0,5.391,2.911,8.531,7.537,8.531 c2.259,0,4.13-0.877,5.438-2.063V96.467 M61.243,93.261c-0.961,0.76-2.142,1.406-3.938,1.406c-2.372,0-4.401-1.72-4.401-6.389 c0-4.805,1.659-7.031,4.369-7.031c1.814,0,3.094,0.651,3.97,1.632V93.261z"/><polyline fill="#051922" points="126.326,71.572 126.326,72.332 123.729,73.025 123.729,95.023 126.326,95.688 126.326,96.467 115.518,96.467 115.518,95.665 118.981,95.023 118.981,77.497 110.91,96.467 109.03,96.467 101.099,77.423 101.099,95.023 104.432,95.581 104.432,96.467 96.614,96.467 96.614,95.688 98.835,95.056 98.835,72.988 96.614,72.332 96.614,71.572 103.574,71.572 111.313,90.627 119.263,71.572 126.326,71.572"/><path fill="#051922" d="M137.191,79.255c-4.898,0-9.3,3.408-9.3,8.799c0,5.23,4.439,8.798,9.3,8.798 c4.889,0,9.328-3.567,9.328-8.798C146.52,82.663,142.08,79.255,137.191,79.255 M137.191,80.488c2.981,0,4.547,3.328,4.547,7.532 c0,4.167-1.565,7.612-4.547,7.612c-2.943,0-4.551-3.445-4.551-7.612S134.248,80.488,137.191,80.488z"/><path fill="#051922" d="M227.23,84.458v2.869l-3.872,0.191c-3.73,0.113-6.065,2.143-6.065,4.937c0,2.816,2.101,4.396,4.889,4.396 c2.293,0,3.938-1.125,5.049-1.913v1.528h6.337v-0.74l-2.063-0.596V83.731c0-2.484-1.631-4.477-5.343-4.477 c-3.793,0-6.159,1.078-7.495,1.655v3.933h1.884l0.628-3.281c0.437-0.179,1.612-0.586,3.487-0.432 C226.921,81.317,227.188,82.888,227.23,84.458 M227.23,93.674c-0.886,0.576-1.646,1.152-3.028,1.152 c-2.212,0.033-2.826-1.34-2.826-2.953c0-1.641,1.11-2.756,3.141-3.084l2.714-0.313V93.674z"/><polyline fill="#051922" points="245,95.727 245,96.467 235.531,96.467 235.531,95.727 238.101,95.131 238.101,73.03 235.531,72.379 235.531,71.572 242.455,71.572 242.455,95.131 245,95.727"/><path fill="#051922" d="M25.793,39.905l-3.708-0.722v-0.806h8.61v0.759l-2.639,0.769V54.97c0,6.263-3.417,8.808-10.406,8.808 c-7.176,0-10.087-2.751-10.087-8.418V39.792L5,39.136v-0.759h11.01v0.844l-3.74,0.647V55.12c0,4.622,1.575,6.896,6.384,6.896 c5.217,0,7.139-2.358,7.139-7.304V39.905"/><path fill="#051922" d="M40.609,62.545v0.727h-9.29v-0.727l2.521-0.609v-14.23l-2.292-0.656v-0.788h6.656v2.597 c0.764-0.647,3.173-2.789,6.267-2.789c3.216,0,4.856,1.791,4.856,4.931v10.894l2.447,0.623v0.755h-9.019v-0.755l2.254-0.581V51.497 c0-1.65-0.501-3.099-2.559-3.099c-1.842,0-3.717,1.298-4.247,1.646v11.892L40.609,62.545"/><polyline fill="#051922" points="60.212,61.936 62.738,62.545 62.738,63.271 53.289,63.271 53.289,62.545 55.857,61.936 55.857,47.705 53.561,47.049 53.561,46.261 60.212,46.261 60.212,61.936"/><path fill="#051922" d="M60.446,40.402c0,1.308-1.144,2.372-2.522,2.372c-1.34,0-2.526-1.064-2.526-2.372 c0-1.298,1.186-2.409,2.526-2.409C59.303,37.993,60.446,39.104,60.446,40.402"/><polyline fill="#051922" points="135.331,61.936 137.862,62.545 137.862,63.271 128.403,63.271 128.403,62.545 130.972,61.936 130.972,47.705 128.68,47.049 128.68,46.261 135.331,46.261 135.331,61.936"/><path fill="#051922" d="M135.551,40.402c0,1.308-1.144,2.372-2.512,2.372c-1.341,0-2.531-1.064-2.531-2.372 c0-1.298,1.19-2.409,2.531-2.409C134.407,37.993,135.551,39.104,135.551,40.402"/><polyline fill="#051922" points="64.121,47.442 62.893,46.945 62.893,46.261 71.157,46.261 71.157,46.945 68.513,47.602 72.31,57.956 76.069,47.518 73.772,46.945 73.772,46.261 79.435,46.261 79.435,46.945 78.057,47.602 71.579,63.543 70.172,63.543 64.121,47.442"/><path fill="#051922" d="M84.474,53.714h11.245c-0.117-4.701-2.564-7.645-7.495-7.645c-4.861,0-8.451,4.2-8.451,8.793 c0,5.311,3.473,8.789,8.489,8.789c4.284,0,6.497-1.679,7.8-2.635l-0.727-1.148c-0.994,0.619-2.991,1.96-6.271,1.763 C85.776,61.401,84.126,57.956,84.474,53.714 M91.434,52.373h-6.769c0.384-2.906,1.528-5.053,3.558-5.053 C90.52,47.32,91.275,50.001,91.434,52.373z"/><path fill="#051922" d="M124.981,46.941l-0.38,4.171h-1.561l-0.384-2.831c-0.577-0.305-1.34-0.961-3.019-0.961 c-1.383,0-2.452,0.731-2.452,2.217c0,1.767,1.95,2.456,3.9,3.337c1.875,0.797,4.936,1.95,4.936,4.969 c0,3.436-2.831,5.808-6.229,5.808c-3.146,0-4.973-0.722-5.517-0.919l-0.3-4.617l1.603-0.159l0.918,3.141 c0.464,0.342,1.729,1.336,3.253,1.303c2.18,0,3.211-1.148,3.211-2.798c0-1.95-2.714-2.789-4.509-3.628 c-1.683-0.812-4.284-1.528-4.284-5.016c0-2.859,2.372-4.889,5.583-4.889C122.506,46.069,124.222,46.716,124.981,46.941"/><polyline fill="#051922" points="166.834,40.636 165.18,38.189 159.335,42.783 160.291,44.152 166.834,40.636"/><path fill="#051922" d="M156.658,53.714h11.24c-0.117-4.701-2.564-7.645-7.5-7.645c-4.852,0-8.446,4.2-8.446,8.793 c0,5.311,3.482,8.789,8.498,8.789c4.274,0,6.501-1.679,7.795-2.635l-0.731-1.148c-0.993,0.619-2.977,1.96-6.271,1.763 C157.956,61.401,156.316,57.956,156.658,53.714 M163.614,52.373h-6.764c0.379-2.906,1.527-5.053,3.548-5.053 C162.7,47.32,163.464,50.001,163.614,52.373z"/><path fill="#051922" d="M110.104,46.092c-2.447,0-4.209,1.969-5.203,4.176h-0.075v-4.007h-6.933v0.703l2.569,0.741v14.23 l-2.569,0.609v0.727h10.636v-0.839l-3.703-0.604v-9.675c1.008-2.222,2.503-3.126,3.455-3.126c0.717,0,0.984,0.136,1.542,0.619 c0.197,0.159,0.924,0.366,1.369,0.168c0.825-0.347,1.06-0.965,1.06-1.861C112.25,46.974,111.294,46.092,110.104,46.092"/><path fill="#051922" d="M157.534,95.727v0.74h-9.295v-0.74l2.518-0.596V80.91l-2.287-0.661v-0.792h6.655v2.597 c0.765-0.656,3.169-2.799,6.263-2.799c3.216,0,4.86,1.805,4.86,4.94v10.894l2.447,0.6v0.778h-9.023v-0.778l2.255-0.558V84.688 c0-1.645-0.492-3.094-2.564-3.094c-1.828,0-3.707,1.294-4.237,1.641v11.896L157.534,95.727"/><path fill="#051922" d="M195.708,79.283c-2.451,0-4.214,1.974-5.212,4.186h-0.075v-4.012h-6.923v0.703l2.563,0.75v14.221 l-2.563,0.596v0.74h10.626v-0.834l-3.703-0.609v-9.67c1.013-2.231,2.513-3.136,3.464-3.136c0.713,0,0.979,0.136,1.528,0.628 c0.206,0.154,0.938,0.365,1.364,0.159c0.839-0.36,1.068-0.961,1.068-1.86C197.846,80.169,196.898,79.283,195.708,79.283"/><path fill="#051922" d="M150.621,61.373c-0.633,0.422-1.294,0.727-2.265,0.727c-1.527,0-2.024-1.111-2.024-3.638V47.747 l4.359-0.642v-0.844h-4.359v-7.884h-1.43c-0.281,4.514-1.875,7.472-5.906,7.884h-0.661v0.844l3.633,0.642v10.945 c0,3.464,0.839,4.959,4.097,4.959c2.339,0,4.224-0.872,4.987-1.599L150.621,61.373"/><path fill="#051922" d="M181.506,94.568c-0.638,0.413-1.299,0.731-2.255,0.731c-1.542,0-2.029-1.12-2.029-3.642V80.942l4.359-0.646 v-0.839h-4.359v-7.885h-1.425c-0.291,4.505-1.88,7.472-5.906,7.885h-0.666v0.839l3.628,0.646v10.94 c0,3.478,0.844,4.969,4.097,4.969c2.339,0,4.214-0.877,4.982-1.604L181.506,94.568"/><path fill="#051922" d="M74.138,86.909h11.245c-0.112-4.701-2.559-7.654-7.5-7.654c-4.847,0-8.447,4.214-8.447,8.799 c0,5.319,3.478,8.798,8.484,8.798c4.284,0,6.506-1.683,7.8-2.64l-0.727-1.147c-0.994,0.609-2.977,1.959-6.267,1.762 C75.441,94.597,73.796,91.151,74.138,86.909 M81.099,85.573H74.33c0.38-2.91,1.533-5.058,3.553-5.058 C80.18,80.516,80.949,83.202,81.099,85.573z"/><path fill="#051922" d="M202.945,86.905h11.24c-0.107-4.697-2.563-7.65-7.485-7.65c-4.861,0-8.456,4.214-8.456,8.799 c0,5.319,3.473,8.798,8.488,8.798c4.28,0,6.497-1.683,7.805-2.64l-0.736-1.147c-0.988,0.609-2.976,1.959-6.267,1.762 C204.244,94.597,202.599,91.146,202.945,86.905 M213.117,73.832l-1.641-2.447l-5.85,4.589l0.956,1.369L213.117,73.832z M209.906,85.573h-6.764c0.379-2.91,1.523-5.058,3.558-5.058C208.987,80.516,209.751,83.202,209.906,85.573z"/></g></svg>\
         <p>codeBoot was created by Marc Feeley and Bruno Dufour.  The following people have also contributed to its development:</p>\
         <blockquote>\
           Marc-André Bélanger,\
@@ -2798,8 +2835,14 @@ CodeBootVM.prototype.SVG =
         'window':
         '<svg class="cb-svg-window" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><g><path d="M 55 60 L 55 206 L 201 206 L 201 60 Z M 65 85 L 191 85 L 191 196 L 65 196 Z"/></g></svg>',
 
+        'cross':
+        '<svg class="cb-svg-cross" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><g><path d="M 80 60 L 128 108 L 176 60 L 201 85 L 153 133 L 201 181 L 176 206 L 128 158 L 80 206 L 55 181 L 103 133 L 55 85 Z""/></g></svg>',
+
         'close':
-        '<svg class="cb-svg-close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><g><path d="M 80 60 L 128 108 L 176 60 L 201 85 L 153 133 L 201 181 L 176 206 L 128 158 L 80 206 L 55 181 L 103 133 L 55 85 Z""/></g></svg>',
+        '<svg class="cb-svg-close" xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 44 44"><g transform="translate(36,4)"><path d="m -32,32 c -2.209,0 -4,-1.791 -4,-4 l 0,-28 c 0,-2.209 1.791,-4 4,-4 l 28,0 c 2.209,0 4,1.791 4,4 l 0,28 c 0,2.209 -1.791,4 -4,4 l -28,0 z M -28,26.5 c 0.64,0 1.262,-0.2365 1.75,-0.725 l 8.25,-8.25 8.225,8.25 c 0.977,0.977 2.574,0.977 3.55,0 0.977,-0.976 0.977,-2.574 0,-3.55 L -14.475,14 -6.225,5.75 c 0.977,-0.976 0.977,-2.548 0,-3.525 C -6.713,1.737 -7.361,1.5 -8,1.5 -8.64,1.5 -9.287,1.737 -9.775,2.225 L -18,10.45 -26.275,2.2 c -0.488,-0.489 -1.11,-0.725 -1.75,-0.725 -0.639,0 -1.287,0.236 -1.775,0.725 -0.977,0.976 -0.977,2.548 0,3.525 l 8.25,8.275 -8.225,8.225 c -0.976,0.976 -0.976,2.574 0,3.55 0.488,0.4885 1.135,0.725 1.775,0.725 z" style="fill:#000000;fill-opacity:1;fill-rule:oddeven;stroke:none" /></g></svg>',
+
+        'rename':
+        '<svg class="cb-svg-rename" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g transform="translate(0,512) scale(0.100000,-0.100000)" fill="#000000" stroke="none"><path d="M3520 4778 c-53 -28 -80 -75 -80 -138 0 -50 25 -100 64 -125 13 -9 51 -20 83 -25 32 -4 70 -13 84 -18 40 -16 88 -61 112 -106 l22 -41 0 -1765 0 -1765 -22 -41 c-24 -45 -72 -90 -112 -106 -14 -5 -52 -14 -84 -18 -32 -5 -70 -16 -83 -25 -61 -40 -82 -135 -46 -205 23 -43 91 -80 147 -80 99 1 238 52 313 115 l42 36 42 -34 c85 -69 216 -116 323 -117 88 0 155 66 155 154 0 92 -47 141 -147 156 -32 4 -70 13 -84 18 -42 16 -91 64 -110 107 -18 38 -19 114 -19 1805 0 1691 1 1767 19 1805 19 43 68 91 110 107 14 5 52 14 84 18 100 15 147 64 147 156 0 61 -28 108 -80 135 -85 46 -280 -2 -398 -98 l-42 -34 -42 36 c-53 45 -128 80 -210 100 -88 21 -137 19 -188 -7z"/><path d="M387 4045 c-179 -49 -336 -210 -376 -385 -14 -62 -14 -2138 0 -2200 41 -178 198 -337 380 -385 46 -13 291 -15 1592 -15 l1537 0 0 1500 0 1500 -1542 -1 c-1246 -1 -1552 -3 -1591 -14z m1670 -515 c65 -39 68 -53 71 -376 l3 -291 97 49 c53 26 124 55 157 63 70 18 240 21 308 6 361 -82 606 -419 566 -780 -30 -270 -223 -507 -484 -597 -63 -22 -104 -29 -192 -32 -146 -5 -235 14 -362 79 -53 27 -97 49 -98 49 -2 0 -3 -7 -3 -15 0 -30 -29 -73 -63 -94 -67 -41 -154 -21 -198 45 -18 28 -19 64 -19 924 0 860 1 896 19 924 43 65 132 86 198 46z m-557 -542 c18 -13 43 -36 54 -51 21 -28 21 -35 21 -645 0 -575 -1 -619 -18 -650 -67 -123 -267 -78 -267 61 0 20 -2 37 -5 37 -3 0 -35 -15 -72 -34 -121 -61 -254 -85 -379 -66 -215 32 -402 167 -495 355 -58 119 -72 187 -67 325 6 128 27 203 89 307 43 72 150 178 222 221 187 112 431 122 622 27 38 -19 72 -35 77 -35 4 0 8 15 8 33 0 102 127 171 210 115z"/><path d="M2425 2687 c-118 -39 -207 -117 -258 -225 -30 -63 -32 -73 -32 -182 0 -110 1 -118 33 -183 44 -88 110 -155 197 -198 67 -33 74 -34 185 -34 109 0 119 2 182 32 320 151 320 616 0 766 -59 28 -79 32 -167 34 -63 2 -115 -2 -140 -10z"/><path d="M808 2637 c-100 -38 -176 -106 -220 -196 -33 -69 -37 -206 -8 -283 26 -71 105 -160 169 -193 199 -100 435 -11 511 193 30 79 29 187 -1 267 -27 72 -109 159 -184 195 -62 29 -208 38 -267 17z"/><path d="M4410 2560 l0 -1500 133 0 c144 0 204 12 296 56 74 36 189 151 225 225 58 120 56 73 56 1219 0 688 -4 1071 -11 1100 -20 88 -69 172 -143 246 -119 118 -216 154 -423 154 l-133 0 0 -1500z"/></g></svg>',
 
         'resize':
         '<svg class="cb-svg-resize" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill=rgb(0,0,0,0.5) d="M8 16 L16 8 L16 9 L9 16 L9 16 M11 16 L16 11 L16 12 L12 16 L12 16M14 16 L16 14 L16 15 L15 16 L14 16"></path></svg>',
@@ -2821,7 +2864,15 @@ CodeBootVM.prototype.SVG =
 
         'stop':
         '<svg class="cb-exec-stop" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><g><path d="M 55 60 L 55 206 L 201 206 L 201 60 Z"/></g></svg>'
+
     };
+
+CodeBootVM.prototype.localHTML = function (execBtns, closeBtn, cloneBtn) {
+
+    var vm = this;
+
+    return vm.modalDialogHTML();
+};
 
 CodeBootVM.prototype.execControlsHTML = function (execBtns, closeBtn, cloneBtn) {
 
@@ -2836,30 +2887,30 @@ CodeBootVM.prototype.execControlsHTML = function (execBtns, closeBtn, cloneBtn) 
 \
   <div class="btn-group cb-exec-controls-buttons" role="group" data-toggle="tooltip" data-delay="2000" data-trigger="manual" data-placement="left" title="">\
 ' + (execBtns ? '\
-    <button class="btn btn-secondary cb-button cb-exec-btn-step" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Single step/Pause">' +
+    <button class="btn btn-secondary cb-button cb-exec-btn-step" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" data-html="true" title="' + vm.escapeHTML(vm.polyglotHTML('Single step/Pause')) + '">' +
 vm.SVG['play-1'] +
 vm.SVG['pause'] +
 vm.SVG['play-pause'] + '\
     </button>\
 \
-    <button class="btn btn-secondary cb-button cb-exec-btn-animate" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Execute with animation">' +
+    <button class="btn btn-secondary cb-button cb-exec-btn-animate" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" data-html="true" title="' + vm.escapeHTML(vm.polyglotHTML('Execute with animation')) + '">' +
 vm.SVG['play'] + '\
     </button>\
 \
-    <button class="btn btn-secondary cb-button cb-exec-btn-eval" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Execute to end">' +
+    <button class="btn btn-secondary cb-button cb-exec-btn-eval" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" data-html="true" title="' + vm.escapeHTML(vm.polyglotHTML('Execute to end')) + '">' +
 vm.SVG['play-inf'] + '\
     </button>\
 \
-    <button class="btn btn-secondary cb-button cb-exec-btn-stop" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Stop">' +
+    <button class="btn btn-secondary cb-button cb-exec-btn-stop" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" data-html="true" title="' + vm.escapeHTML(vm.polyglotHTML('Stop')) + '">' +
 vm.SVG['stop'] + '\
     </button>\
 ' + (closeBtn ? '\
-    <button class="btn btn-secondary cb-button cb-exec-btn-close" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Close">' +
+    <button class="btn btn-secondary cb-button cb-exec-btn-close" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" data-html="true" title="' + vm.escapeHTML(vm.polyglotHTML('Close')) + '">' +
 vm.SVG['close'] + '\
     </button>\
 ' : '') : '') + '\
 ' + (cloneBtn ? '\
-    <button class="btn btn-secondary cb-button cb-exec-btn-clone" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" title="Clone">' +
+    <button class="btn btn-secondary cb-button cb-exec-btn-clone" type="button" data-toggle="tooltip" data-delay="750" data-placement="bottom" data-html="true" title="' + vm.escapeHTML(vm.polyglotHTML('Clone')) + '">' +
 vm.SVG['window'] + '\
     </button>\
 ' : '') + '\
@@ -2903,6 +2954,7 @@ CodeBootVM.prototype.consoleHTML = function () {
   <div class="cb-playground cb-pane-rigid">\
     <div class="cb-drawing-window"></div>\
     <div class="cb-pixels-window"></div>\
+    <div class="cb-chart-window"></div>\
     <div class="cb-html-window"></div>\
   </div>\
 </div>\
@@ -2970,19 +3022,19 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
         // In order to resize the repl's height, the CodeMirror-scroll
         // element's max-height must be explicitly changed
 
-        // var bodyElem = vm.root.querySelector('.cb-body');
-        // if (bodyElem) {
-        //     var replContElem = bodyElem.querySelector('.cb-repl-container');
-        //     if (replContElem) {
-        //         vm.setupSplitter(bodyElem, function (size) {
-        //             var replScrollElem = replContElem.querySelector('.CodeMirror-scroll');
-        //             if (replScrollElem) {
-        //                 replScrollElem.style.maxHeight = size + 'px';
-        //                 vm.replScrollToEnd();
-        //             }
-        //         });
-        //     }
-        // }
+        var bodyElem = vm.root.querySelector('.cb-body');
+        if (bodyElem) {
+            var replContElem = bodyElem.querySelector('.cb-repl-container');
+            if (replContElem) {
+                vm.setupSplitter(bodyElem, function (size) {
+                    var replScrollElem = replContElem.querySelector('.CodeMirror-scroll');
+                    if (replScrollElem) {
+                        replScrollElem.style.maxHeight = size + 'px';
+                        vm.replScrollToEnd();
+                    }
+                });
+            }
+        }
 
         vm.root.querySelector('.CodeMirror').CodeMirror.refresh()
 
@@ -2990,8 +3042,9 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
         if (consoleElem) {
             vm.setupSplitter(consoleElem);
         }
-    }
 
+        vm.setUILanguageFromBrowser();
+    }
     
     if (vm.root.tagName === 'PRE') {
 
@@ -3003,7 +3056,8 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
 
         elem.innerHTML =
             vm.execControlsHTML(false, false, true) +
-            vm.bodyHTML(true, false);
+            vm.bodyHTML(true, false) +
+            vm.localHTML();
 
         vm.root.replaceWith(elem);
         vm.root = elem;
@@ -3021,14 +3075,14 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
             vm.navbarHTML(true, floating, false) +
             vm.bodyHTML(false, true) +
             vm.footerHTML() +
-            vm.resizeHandleHTML();
+            vm.resizeHandleHTML() +
+            vm.localHTML();
 
         vm.setAttribute('data-cb-show-console', true);
         vm.setAttribute('data-cb-show-repl-container', true);
         vm.setAttribute('data-cb-show-editors', true);
 
         vm.editable = true;
-
 
         if (opts.filename !== undefined)
             filename = opts.filename;
@@ -3046,7 +3100,8 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
 
             vm.root.innerHTML =
                 vm.execControlsHTML(false, false, true) +
-                vm.bodyHTML(true, false);
+                vm.bodyHTML(true, false) +
+                vm.localHTML();
 
             vm.setAttribute('data-cb-show-editors', true);
             vm.setAttribute('data-cb-runable-code', true);
@@ -3056,6 +3111,42 @@ CodeBootVM.prototype.initRoot = function (opts, floating) {
     }
 
     return initLast;
+};
+
+CodeBootVM.prototype.setUILanguageFromBrowser = function () {
+
+    var vm = this;
+
+    var languages = navigator.languages;
+    var lang = null;
+
+    for (var i=vm.langsUI.length-1; i>=0; i--) {
+        var langUI = vm.langsUI[i][0];
+        for (var j=0; j<languages.length; j++) {
+            if (langUI === languages[j]) {
+                lang = langUI;
+                break;
+            }
+        }
+    }
+
+    if (lang === null) {
+        for (var i=vm.langsUI.length-1; i>=0; i--) {
+            var langUI = vm.langsUI[i][0];
+            for (var j=0; j<languages.length; j++) {
+                if (languages[j].indexOf(langUI+'-') === 0) {
+                    lang = langUI;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (lang === null) {
+        lang = 'en';
+    }
+
+    vm.setAttribute('lang', lang);
 };
 
 CodeBootVM.prototype.initCommon = function (opts) {
@@ -3355,16 +3446,20 @@ CodeBootVM.prototype.setupTooltip = function () {
 
     var vm = this;
 
-    //TODO: limit to the VM
-    $('[data-toggle="tooltip"]').tooltip();
+    vm.forEachElem('[data-toggle="tooltip"]', function (elem) {
+        elem.setAttribute('data-container', vm.id);
+        $(elem).tooltip();
+    });
 };
 
 CodeBootVM.prototype.hideTooltip = function () {
 
     var vm = this;
 
-    //TODO: limit to the VM
-    $('[data-toggle="tooltip"]').tooltip('hide');
+    vm.forEachElem('[data-toggle="tooltip"]', function (elem) {
+        elem.setAttribute('data-container', vm.id);
+        $(elem).tooltip('hide');
+    });
 };
 
 CodeBootVM.prototype.setupEventHandlers = function () {
@@ -3407,7 +3502,6 @@ CodeBootVM.prototype.setupEventHandlers = function () {
         });
     });
 
-
     vm.forEachElem('.cb-menu-settings .dropdown-item', function (elem) {
         elem.addEventListener('click', function (event) {
 
@@ -3425,10 +3519,14 @@ CodeBootVM.prototype.setupEventHandlers = function () {
                     vm.setPlaygroundToShow(vm.ui.dw.showing()?null:'drawing');
                 } else if (val === 'show-pixels-window') {
                     vm.setPlaygroundToShow(vm.ui.pw.showing()?null:'pixels');
+                } else if (val === 'show-chart-window') {
+                    vm.setPlaygroundToShow(vm.ui.playground_showing === 'chart' ? null : 'chart');
                 } else if (val === 'show-html-window') {
                     vm.setPlaygroundToShow(vm.ui.playground_showing === 'html' ? null : 'html');
                 }
                 vm.updatePlayground();
+            } else if (val = elem.getAttribute('data-cb-setting-ui-lang')) {
+                vm.setAttribute('lang', val);
             }
 
             return true;
@@ -3808,10 +3906,6 @@ CodeBootVM.prototype.setAnimationSpeed = function (speed) {
 
         case 'fast':
             vm.setStepDelay(0.2*normalStepDelay);
-            break;
-
-        case 'turbo':
-            vm.setStepDelay(40);
             break;
 
         case 'lightning':

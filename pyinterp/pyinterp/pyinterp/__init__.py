@@ -8303,7 +8303,7 @@ def make_module_turtle():
     om_module_turtle_ht = make_set_option_fn(drawing_ht, 'ht')
     om_module_turtle_pd = make_set_option_fn(drawing_pd, 'pd')
     om_module_turtle_pu = make_set_option_fn(drawing_pu, 'pu')
-    om_module_turtle_startpath = make_set_option_fn(drawing_startpath, 'startpath')
+    om_module_turtle_hop = make_set_option_fn(drawing_hop, 'hop')
 
     def make_translation_fn(fn, name, arg1_name, arg2_name):
         def code(rte, cont):
@@ -8464,12 +8464,12 @@ def make_module_turtle():
         def get_width_float(width_rte, width_float):
             width_value = OM_get_boxed_value(width_float)
 
-            if float_is_finite(width_value) and float_is_pos(width_value):
+            if float_is_finite(width_value) and not float_is_neg(width_value):
                 drawing_setpw(width_rte, float_to_num(width_value))
                 return unwind_return(width_rte, om_None)
             else:
                 return sem_raise_with_message(make_out_of_ast_context(width_rte, cont), class_ValueError,
-                                              "pensize() argument must be a positive number")
+                                              "pensize() argument must be a non-negative number")
 
         return sem_float(make_out_of_ast_context(rte, get_width_float), width)
 
@@ -8515,7 +8515,7 @@ def make_module_turtle():
     dict_set(module_turtle_env, 'ht', om_module_turtle_ht)
     dict_set(module_turtle_env, 'pd', om_module_turtle_pd)
     dict_set(module_turtle_env, 'pu', om_module_turtle_pu)
-    dict_set(module_turtle_env, 'startpath', om_module_turtle_startpath)
+    dict_set(module_turtle_env, 'hop', om_module_turtle_hop)
     dict_set(module_turtle_env, 'fd', om_module_turtle_fd)
     dict_set(module_turtle_env, 'bk', om_module_turtle_bk)
     dict_set(module_turtle_env, 'goto', om_module_turtle_goto)
