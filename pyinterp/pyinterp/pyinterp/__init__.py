@@ -1545,6 +1545,9 @@ def populate_builtin_csv_reader():
     builtin_add_method(class_csv_reader, '__iter__', om_csv_reader_iter)
     builtin_add_method(class_csv_reader, '__next__', om_csv_reader_next)
 
+def populate_builtin_csv_writer():
+    builtin_add_method(class_csv_writer, 'writerow', om_csv_writer_writerow)
+
 def object_class(o):
     if om_is(o, om_None):
         # This is equivalent to javascript bool
@@ -1700,9 +1703,9 @@ def om_csv_reader(cls, line_num, line_iterator, dialect):
 
     return obj
 
-def om_csv_writer(cls, line_iterator, dialect):
+def om_csv_writer(cls, write_method, dialect):
     obj = om(cls)
-    OM_set_csv_writer_lines(obj, line_iterator)
+    OM_set_csv_writer_write_method(obj, write_method)
     OM_set_csv_writer_dialect(obj, dialect)
 
     return obj
@@ -2166,11 +2169,11 @@ def OM_set_csv_reader_dialect(o, dialect):
 
 # csv writer
 
-def OM_get_csv_writer_lines(o):
-    return o.lines
+def OM_get_csv_writer_write_method(o):
+    return o.write_method
 
-def OM_set_csv_writer_lines(o, lines):
-    o.lines = lines
+def OM_set_csv_writer_write_method(o, write_method):
+    o.write_method = write_method
 
 def OM_get_csv_writer_dialect(o):
     return o.dialect
@@ -3601,6 +3604,43 @@ def om_csv_reader_next(ctx, args):
                           lambda rte: sem_raise(ctx, class_StopIteration))
     else:
         return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
+
+# class _csv.writer
+def csv_format_csv_element(text, delimiter, escapechar, lineterminator,
+                           quotechar, quoting, skipinitialspace, strict):
+    return text # TODO: parse for real
+
+def om_csv_writer_writerow(ctx, args):
+    if len(args) == 2:
+        self = args[0]
+        row = args[1]
+
+        dialect = OM_get_csv_writer_dialect(self)
+        write_method = OM_get_csv_writer_write_method(self)
+
+        delimiter = OM_get_dialect_delimiter(dialect)
+        escapechar = OM_get_dialect_escapechar(dialect)
+        lineterminator = OM_get_dialect_lineterminator(dialect) # TODO: ignored, '\n' and '\r' are hardcoded
+        quotechar = OM_get_dialect_quotechar(dialect)
+        quoting = OM_get_dialect_quoting(dialect)
+        skipinitialspace = OM_get_dialect_skipinitialspace(dialect)
+        strict = OM_get_dialect_strict(dialect)
+
+        def write_elements(rte, strings):
+            formatted_strings = []
+
+            for om_s in strings:
+                s = OM_get_boxed_value(om_s)
+                formatted_strings.append(csv_format_csv_element(s, delimiter, escapechar,
+                                                            lineterminator, quotechar,
+                                                            quoting, skipinitialspace, strict))
+
+            text_to_write = string_join(delimiter, formatted_strings) + "\n"
+
+            return sem_simple_call(with_rte(ctx, rte), write_method, [om_str(text_to_write)])
+        return om_unpack_map_iterable(with_cont(ctx, write_elements), sem_str, row)
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 1 argument, got " + str(len(args) - 1))
 
 # class_NotImplementedType
 def om_format_NotImplementedType(self, rte):
@@ -7838,6 +7878,7 @@ populate_builtin_NotImplementedType()
 populate_builtin_MethodWrapper()
 populate_builtin_TextIOWrapper()
 populate_builtin_csv_reader()
+populate_builtin_csv_writer()
 
 # Basic type and date structure.
 populate_builtin_int()
@@ -8811,15 +8852,26 @@ def make_module_csv():
 
     def check_csvfile_writable(ctx, csvfile):
         # NOTE: We do not check that the object is a writable file, we check that the object is writable (has callable write attribute)
-        write_method = getattribute_from_obj_mro(csvfile, "write")
+        no_write_method_msg = 'first argument must have a "write" method'
 
-        if write_method is not absent and om_iscallable(write_method):
-            return cont_obj(ctx, csvfile)
-        else:
-            return sem_raise_with_message(ctx, class_TypeError, 'first argument must have a "write" method')
+        def return_write_method(rte, write_method):
+            if om_iscallable(write_method):
+                return cont_obj(ctx, write_method)
+            else:
+                return sem_raise_with_message(ctx, class_TypeError, no_write_method_msg)
 
+        def catch_AttributeError(exn):
+            if om_isinstance(exc, class_AttributeError):
+                return sem_raise_with_message(ctx, class_TypeError, no_write_method_msg)
+            else:
+                return sem_raise_unsafe(ctx.rte, exn)
+
+        return sem_getattribute(with_cont_and_catch(ctx, return_write_method, catch_AttributeError), csvfile, om_str("write"))
+
+    # As per cPython, the writer does not saves the file, but the write method instead
+    # Thus writing still happens even if the method is deleted or updated
     writer_code = do_reader_writer_code(check_csvfile_writable,
-                                        lambda it, dialect: om_csv_writer(class_csv_writer, it, dialect))
+                                        lambda write_method, dialect: om_csv_writer(class_csv_writer, write_method, dialect))
 
     # See full details on formatting parameters here:
     # https://docs.python.org/3.8/library/csv.html#dialects-and-formatting-parameters
@@ -12410,6 +12462,23 @@ def om_unpack_iterable(ctx, it):
                 return get_next(rte, iterator)
         return sem_next_with_return_to_trampoline(Context(rte, accumulate, ctx.ast), iterator, for_loop_end_marker)
 
+    return sem_iter(with_cont(ctx, get_next), it)
+
+# A version of unpack which applies a fn to each item before unpacking the next
+def om_unpack_map_iterable(ctx, fn, it):
+    seq = []
+
+    def get_next(rte, iterator):
+        def apply(rte, val):
+            def accumulate(rte, res):
+                seq.append(res)
+                return get_next(rte, iterator)
+
+            if val is for_loop_end_marker:
+                return cont_obj(ctx, seq)
+            else:
+                return fn(with_cont(ctx, accumulate), val)
+        return sem_next_with_return_to_trampoline(with_cont(ctx, apply), iterator, for_loop_end_marker)
     return sem_iter(with_cont(ctx, get_next), it)
 
 def om_unpack_mapping(ctx, mapping):
