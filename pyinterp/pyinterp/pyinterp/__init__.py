@@ -1779,6 +1779,10 @@ def om_isinstance(obj, cls):
 def om_has_type(obj, cls):
     return om_is(OM_get_object_class(obj), cls)
 
+def om_isnumeric(obj):
+    cls = OM_get_object_class(obj)
+    return om_issubclass(cls, class_int) or om_issubclass(cls, class_float)
+
 # Creation of om object from class
 def OM_object_create():
     return OM_object()
@@ -3606,9 +3610,67 @@ def om_csv_reader_next(ctx, args):
         return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
 
 # class _csv.writer
-def csv_format_csv_element(text, delimiter, doublequote, escapechar, lineterminator,
-                           quotechar, quoting):
-    return text # TODO: parse for real
+def om_csv_format_element(ctx, text, delimiter, doublequote, escapechar, lineterminator,
+                           quotechar, must_quote, must_not_quote):
+
+    need_to_escape_msg = "need to escape, but no escapechar set"
+
+    chars = []
+    text_len = len(text)
+    line_terminator_len = len(lineterminator)
+
+    def must_be_escaped(text, i, inquote):
+        # Return how many characters must be escaped starting at position i
+        # It may be that multiple characters have to be escaped if lineterminator is longer than 1
+        c = text[i]
+
+        if  c == delimiter or c == escapechar or c == quotechar:
+            return 1
+        elif c[i:i+line_terminator_len] == lineterminator:
+            return line_terminator_len
+        else:
+            return 0
+
+    def append_escaped(c):
+        if escapechar is None:
+            return False
+        else:
+            chars.append(escapechar + c)
+            return True
+
+    quoted = must_quote
+
+    i = 0
+
+    while i < text_len:
+        c = text[i]
+
+        # Check if requires escape
+        if  not quoted and (c == delimiter or c == escapechar or string_contains(lineterminator, c)):
+            if must_not_quote and not append_escaped(c):
+                return sem_raise_with_message(ctx, class_csv_Error, need_to_escape_msg)
+            else:
+                quoted = True
+                chars.append(c)
+        elif c == quotechar:
+            if quoted:
+                if doublequote:
+                    chars.append(quotechar + quotechar)
+                elif not append_escaped(quotechar):
+                    return sem_raise_with_message(ctx, class_csv_Error, need_to_escape_msg)
+            elif must_not_quote and not append_escaped(quotechar):
+                return sem_raise_with_message(ctx, class_csv_Error, need_to_escape_msg)
+        else:
+            chars.append(c)
+
+        i += 1
+
+    formatted_string = string_join("", chars)
+
+    if quoted:
+        formatted_string = quotechar + formatted_string + quotechar
+
+    return cont_obj(ctx, formatted_string)
 
 def om_csv_writer_writerow(ctx, args):
     if len(args) == 2:
@@ -3625,18 +3687,33 @@ def om_csv_writer_writerow(ctx, args):
         quotechar = OM_get_dialect_quotechar(dialect)
         quoting = OM_get_dialect_quoting(dialect)
 
-        def write_elements(rte, strings):
-            formatted_strings = []
+        quote_all = quoting == csv_param_quote_all
+        # no need to compute
+        # quote_minial = quoting == csv_param_quote_minial
+        quote_nonumeric = quoting == csv_param_quote_nonnumeric
+        quote_none = quoting == csv_param_quote_none
 
-            for om_s in strings:
-                s = OM_get_boxed_value(om_s)
-                formatted_strings.append(csv_format_csv_element(s, delimiter, doublequote, escapechar,
-                                                            lineterminator, quotechar, quoting))
-
+        def write_result(rte, formatted_strings):
             text_to_write = string_join(delimiter, formatted_strings) + lineterminator
-
             return sem_simple_call(with_rte(ctx, rte), write_method, [om_str(text_to_write)])
-        return om_unpack_map_iterable(with_cont(ctx, write_elements), sem_str, row)
+
+        def parse_elements(rte, data):
+            # data contains pairs of string and boolean indi9cating whether the element was a numeric
+            def parse_string(ctx, data):
+                s = data[0]
+                must_quote = quote_all or quote_nonumeric and not data[1] # data[1] <- isnumeric
+
+                return om_csv_format_element(ctx, s, delimiter, doublequote, escapechar,
+                                             lineterminator, quotechar, must_quote, quote_none)
+            return cps_map(with_cont(ctx, write_result), parse_string, data)
+
+        def extract_element(ctx, val):
+            def cont(rte, val_as_str):
+                str_value = OM_get_boxed_value(val_as_str)
+                return cont_obj(ctx, [str_value, om_isnumeric(val)])
+            return sem_str(with_cont(ctx, cont), val)
+
+        return om_unpack_map_iterable(with_cont(ctx, parse_elements), extract_element, row)
     else:
         return sem_raise_with_message(ctx, class_TypeError, "expected 1 argument, got " + str(len(args) - 1))
 
@@ -8798,8 +8875,6 @@ def make_module_csv():
                         return sem_raise_with_message(make_out_of_ast_context(dq_rte, None), class_TypeError, "escapechar must be a string or None")
 
                     # check for lineterminator
-                    # TODO: we ignore lineterminator since even cPython 3.8 seems to ignore it
-                    # https://docs.python.org/3.8/library/csv.html#csv.Dialect.lineterminator
                     if not om_isinstance(lineterminator, class_str):
                         return sem_raise_with_message(make_out_of_ast_context(dq_rte, None), class_TypeError, "lineterminator must be a string")
                     else:
