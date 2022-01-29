@@ -3610,14 +3610,16 @@ def om_csv_reader_next(ctx, args):
         return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
 
 # class _csv.writer
-def csv_element_quoted(text, delimiter, lineterminator, quotechar):
+def csv_element_quoted(text, delimiter, lineterminator, quotechar, doublequote):
     i = 0
     text_len = len(text)
 
     while i < text_len:
         c = text[i]
 
-        if c == quotechar or c == delimiter or string_contains(lineterminator, c):
+        if c == quotechar and doublequote:
+            return True
+        elif c == delimiter or string_contains(lineterminator, c):
             return True
         i += 1
 
@@ -3628,7 +3630,6 @@ def om_csv_format_element(ctx, text, delimiter, doublequote, escapechar, lineter
 
     need_to_escape_msg = "need to escape, but no escapechar set"
 
-    chars = []
     text_len = len(text)
     line_terminator_len = len(lineterminator)
 
@@ -3641,17 +3642,17 @@ def om_csv_format_element(ctx, text, delimiter, doublequote, escapechar, lineter
 
     # Decide beforehand if the element will have to be quoted
     # if the element must not be quoted, any character which need to be escaped will generate and exception
-    if len(text) == 0:
-        if must_not_quote:
-            return sem_raise_with_message(ctx, class_csv_Error, "single empty field record must be quoted")
-        else:
-            quoted = True
-    elif must_quote:
+    if must_quote:
         quoted = True
     elif must_not_quote:
         quoted = False
     else:
-        quoted = csv_element_quoted(text, delimiter, lineterminator, quotechar) or must_quote
+        quoted = csv_element_quoted(text, delimiter, lineterminator, quotechar, doublequote) or must_quote
+
+    chars = []
+
+    if quoted:
+        chars.append(quotechar)
 
     i = 0
 
@@ -3679,10 +3680,10 @@ def om_csv_format_element(ctx, text, delimiter, doublequote, escapechar, lineter
 
         i += 1
 
-    formatted_string = string_join("", chars)
-
     if quoted:
-        formatted_string = quotechar + formatted_string + quotechar
+        chars.append(quotechar)
+
+    formatted_string = string_join("", chars)
 
     return cont_obj(ctx, formatted_string)
 
@@ -3711,7 +3712,7 @@ def om_csv_writer_writerow(ctx, args):
             text_to_write = string_join(delimiter, formatted_strings) + lineterminator
             return sem_simple_call(with_rte(ctx, rte), write_method, [om_str(text_to_write)])
 
-        def parse_elements(rte, data):
+        def parse_elements(rte, strings_data):
             # data contains pairs of string and boolean indicating whether the element was a numeric
             def parse_string(ctx, data):
                 s = data[0]
@@ -3719,7 +3720,13 @@ def om_csv_writer_writerow(ctx, args):
 
                 return om_csv_format_element(ctx, s, delimiter, doublequote, escapechar,
                                              lineterminator, quotechar, must_quote, quote_none)
-            return cps_map(with_cont(ctx, write_result), parse_string, data)
+            if len(strings_data) == 1 and len(strings_data[0][0]) == 0:
+                if quote_none or quotechar is None:
+                    return sem_raise_with_message(ctx, class_csv_Error, "single empty field record must be quoted")
+                else:
+                    return write_result(ctx.rte, [quotechar + quotechar])
+            else:
+                return cps_map(with_cont(ctx, write_result), parse_string, strings_data)
 
         def extract_element(ctx, val):
             def cont(rte, val_as_str):
@@ -8923,8 +8930,6 @@ def make_module_csv():
                         quoting_value = OM_get_boxed_value(quoting)
                         if quoting_value < csv_param_quote_minimal or quoting_value > csv_param_quote_none:
                             return sem_raise_with_message(make_out_of_ast_context(dq_rte, None), class_TypeError, "bad quoting value")
-                        if quoting_value == csv_param_quote_none:
-                            quotechar_value = None
 
                     def after_skipinitialspace(initialspace_rte, skipinitialspace_as_bool):
                         # skipinitialspace truthiness is tested
