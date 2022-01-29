@@ -3610,6 +3610,19 @@ def om_csv_reader_next(ctx, args):
         return sem_raise_with_message(ctx, class_TypeError, "expected 0 argument, got " + str(len(args) - 1))
 
 # class _csv.writer
+def csv_element_quoted(text, delimiter, lineterminator, quotechar):
+    i = 0
+    text_len = len(text)
+
+    while i < text_len:
+        c = text[i]
+
+        if c == quotechar or c == delimiter or string_contains(lineterminator, c):
+            return True
+        i += 1
+
+    return False
+
 def om_csv_format_element(ctx, text, delimiter, doublequote, escapechar, lineterminator,
                            quotechar, must_quote, must_not_quote):
 
@@ -3619,18 +3632,6 @@ def om_csv_format_element(ctx, text, delimiter, doublequote, escapechar, lineter
     text_len = len(text)
     line_terminator_len = len(lineterminator)
 
-    def must_be_escaped(text, i, inquote):
-        # Return how many characters must be escaped starting at position i
-        # It may be that multiple characters have to be escaped if lineterminator is longer than 1
-        c = text[i]
-
-        if  c == delimiter or c == escapechar or c == quotechar:
-            return 1
-        elif c[i:i+line_terminator_len] == lineterminator:
-            return line_terminator_len
-        else:
-            return 0
-
     def append_escaped(c):
         if escapechar is None:
             return False
@@ -3638,7 +3639,19 @@ def om_csv_format_element(ctx, text, delimiter, doublequote, escapechar, lineter
             chars.append(escapechar + c)
             return True
 
-    quoted = must_quote
+    # Decide beforehand if the element will have to be quoted
+    # if the element must not be quoted, any character which need to be escaped will generate and exception
+    if len(text) == 0:
+        if must_not_quote:
+            return sem_raise_with_message(ctx, class_csv_Error, "single empty field record must be quoted")
+        else:
+            quoted = True
+    elif must_quote:
+        quoted = True
+    elif must_not_quote:
+        quoted = False
+    else:
+        quoted = csv_element_quoted(text, delimiter, lineterminator, quotechar) or must_quote
 
     i = 0
 
@@ -3646,20 +3659,21 @@ def om_csv_format_element(ctx, text, delimiter, doublequote, escapechar, lineter
         c = text[i]
 
         # Check if requires escape
-        if  not quoted and (c == delimiter or c == escapechar or string_contains(lineterminator, c)):
-            if must_not_quote and not append_escaped(c):
-                return sem_raise_with_message(ctx, class_csv_Error, need_to_escape_msg)
-            else:
-                quoted = True
+        if c == delimiter or string_contains(lineterminator, c):
+            if quoted:
                 chars.append(c)
+            elif not append_escaped(c):
+                return sem_raise_with_message(ctx, class_csv_Error, need_to_escape_msg)
         elif c == quotechar:
             if quoted:
                 if doublequote:
                     chars.append(quotechar + quotechar)
                 elif not append_escaped(quotechar):
                     return sem_raise_with_message(ctx, class_csv_Error, need_to_escape_msg)
-            elif must_not_quote and not append_escaped(quotechar):
+            elif not append_escaped(quotechar):
                 return sem_raise_with_message(ctx, class_csv_Error, need_to_escape_msg)
+        elif c == escapechar:
+            chars.append(escapechar + escapechar)
         else:
             chars.append(c)
 
@@ -3698,7 +3712,7 @@ def om_csv_writer_writerow(ctx, args):
             return sem_simple_call(with_rte(ctx, rte), write_method, [om_str(text_to_write)])
 
         def parse_elements(rte, data):
-            # data contains pairs of string and boolean indi9cating whether the element was a numeric
+            # data contains pairs of string and boolean indicating whether the element was a numeric
             def parse_string(ctx, data):
                 s = data[0]
                 must_quote = quote_all or quote_nonumeric and not data[1] # data[1] <- isnumeric
@@ -3711,9 +3725,22 @@ def om_csv_writer_writerow(ctx, args):
             def cont(rte, val_as_str):
                 str_value = OM_get_boxed_value(val_as_str)
                 return cont_obj(ctx, [str_value, om_isnumeric(val)])
-            return sem_str(with_cont(ctx, cont), val)
 
-        return om_unpack_map_iterable(with_cont(ctx, parse_elements), extract_element, row)
+            if om_is(val, om_None):
+                return cont_obj(ctx, ["", False])
+            else:
+                return sem_str(with_cont(ctx, cont), val)
+
+        def catch_TypeError(exc):
+            if om_isinstance(exc, class_TypeError):
+                return sem_raise_with_message(ctx, class_csv_Error, "iterable expected")
+            else:
+                return sem_raise_unsafe(ctx.rte, exc)
+
+        def cont(rte, iterator):
+            return om_unpack_map_iterator(with_cont(ctx, parse_elements), extract_element, iterator)
+
+        return sem_iter(with_cont_and_catch(ctx, cont, catch_TypeError), row)
     else:
         return sem_raise_with_message(ctx, class_TypeError, "expected 1 argument, got " + str(len(args) - 1))
 
@@ -12539,6 +12566,11 @@ def om_unpack_iterable(ctx, it):
 
 # A version of unpack which applies a fn to each item before unpacking the next
 def om_unpack_map_iterable(ctx, fn, it):
+    def cont(rte, iterator):
+        return om_unpack_map_iterator(ctx, fn, iterator)
+    return sem_iter(with_cont(ctx, cont), it)
+
+def om_unpack_map_iterator(ctx, fn, iterator):
     seq = []
 
     def get_next(rte, iterator):
@@ -12552,7 +12584,7 @@ def om_unpack_map_iterable(ctx, fn, it):
             else:
                 return fn(with_cont(ctx, accumulate), val)
         return sem_next_with_return_to_trampoline(with_cont(ctx, apply), iterator, for_loop_end_marker)
-    return sem_iter(with_cont(ctx, get_next), it)
+    return get_next(ctx.rte, iterator)
 
 def om_unpack_mapping(ctx, mapping):
     if om_isinstance(mapping, class_dict):
