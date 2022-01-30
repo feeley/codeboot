@@ -159,40 +159,40 @@ print("OK")
 # TODO: uncomment when csv.writer.writerows exist
 
 # test_writerows
-#print("test_writerows")
+print("test_writerows")
 
-#writer = csv.writer(BrokenFile())
-#self.assertRaises(OSError, writer.writerows, [['a']])
+writer = csv.writer(BrokenFile())
+self.assertRaises(OSError, writer.writerows, [['a']])
 
-#with FakeFile() as fileobj:
-#    writer = csv.writer(fileobj, lineterminator="\n")
-#    self.assertRaises(TypeError, writer.writerows, None)
-#    writer.writerows([['a', 'b'], ['c', 'd']])
-#    self.assertEqual(fileobj.read(), "a,b\nc,d\n")
-#print("OK")
+with FakeFile() as fileobj:
+    writer = csv.writer(fileobj, lineterminator="\n")
+    self.assertRaises(TypeError, writer.writerows, None)
+    writer.writerows([['a', 'b'], ['c', 'd']])
+    self.assertEqual(fileobj.read(), "a,b\nc,d\n")
+print("OK")
 
 # test_writerows_with_none
-#print("test_writerows_with_none")
-#with FakeFile() as fileobj:
-#    writer = csv.writer(fileobj, lineterminator="\n")
-#    writer.writerows([['a', None], [None, 'd']])
-#    self.assertEqual(fileobj.read(), "a,\n,d\n")
+print("test_writerows_with_none")
+with FakeFile() as fileobj:
+    writer = csv.writer(fileobj, lineterminator="\n")
+    writer.writerows([['a', None], [None, 'd']])
+    self.assertEqual(fileobj.read(), "a,\n,d\n")
 
-#with FakeFile() as fileobj:
-#    writer = csv.writer(fileobj, lineterminator="\n")
-#    writer.writerows([[None], ['a']])
-#    self.assertEqual(fileobj.read(), '""\na\n')
+with FakeFile() as fileobj:
+    writer = csv.writer(fileobj, lineterminator="\n")
+    writer.writerows([[None], ['a']])
+    self.assertEqual(fileobj.read(), '""\na\n')
 
-#with FakeFile() as fileobj:
-#    writer = csv.writer(fileobj, lineterminator="\n")
-#    writer.writerows([['a'], [None]])
-#    self.assertEqual(fileobj.read(), 'a\n""\n')
-#print("OK")
+with FakeFile() as fileobj:
+    writer = csv.writer(fileobj, lineterminator="\n")
+    writer.writerows([['a'], [None]])
+    self.assertEqual(fileobj.read(), 'a\n""\n')
+print("OK")
 
 # test_writerows_errors
-#print("test_writerows_errors")
-#with FakeFile() as fileobj:
-#    writer = csv.writer(fileobj)
-#    self.assertRaises(TypeError, writer.writerows, None)
-#    self.assertRaises(OSError, writer.writerows, BadIterable())
-#print("OK")
+print("test_writerows_errors")
+with FakeFile() as fileobj:
+    writer = csv.writer(fileobj)
+    self.assertRaises(TypeError, writer.writerows, None)
+    self.assertRaises(OSError, writer.writerows, BadIterable())
+print("OK")

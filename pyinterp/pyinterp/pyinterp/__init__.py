@@ -1547,6 +1547,7 @@ def populate_builtin_csv_reader():
 
 def populate_builtin_csv_writer():
     builtin_add_method(class_csv_writer, 'writerow', om_csv_writer_writerow)
+    builtin_add_method(class_csv_writer, 'writerows', om_csv_writer_writerows)
 
 def object_class(o):
     if om_is(o, om_None):
@@ -3692,6 +3693,50 @@ def om_csv_format_element(ctx, text, delimiter, doublequote, escapechar, lineter
 
     return cont_obj(ctx, formatted_string)
 
+def om_csv_write_one_row(ctx, row, write_method, delimiter, doublequote, escapechar, lineterminator,
+                         quotechar, quote_all, quote_nonumeric, quote_none):
+
+    def write_result(rte, formatted_strings):
+        text_to_write = string_join(delimiter, formatted_strings) + lineterminator
+        return sem_simple_call(with_rte(ctx, rte), write_method, [om_str(text_to_write)])
+
+    def parse_elements(rte, strings_data):
+        # data contains pairs of string and boolean indicating whether the element was a numeric
+        def parse_string(ctx, data):
+            s = data[0]
+            must_quote = quote_all or quote_nonumeric and not data[1] # data[1] <- isnumeric
+
+            return om_csv_format_element(ctx, s, delimiter, doublequote, escapechar,
+                                         lineterminator, quotechar, must_quote, quote_none)
+        if len(strings_data) == 1 and len(strings_data[0][0]) == 0:
+            if quote_none or quotechar is None:
+                return sem_raise_with_message(ctx, class_csv_Error, "single empty field record must be quoted")
+            else:
+                return write_result(ctx.rte, [quotechar + quotechar])
+        else:
+            return cps_map(with_cont(ctx, write_result), parse_string, strings_data)
+
+    def extract_element(ctx, val):
+        def cont(rte, val_as_str):
+            str_value = OM_get_boxed_value(val_as_str)
+            return cont_obj(ctx, [str_value, om_isnumeric(val)])
+
+        if om_is(val, om_None):
+            return cont_obj(ctx, ["", False])
+        else:
+            return sem_str(with_cont(ctx, cont), val)
+
+    def catch_TypeError(exc):
+        if om_isinstance(exc, class_TypeError):
+            return sem_raise_with_message(ctx, class_csv_Error, "iterable expected")
+        else:
+            return sem_raise_unsafe(ctx.rte, exc)
+
+    def cont(rte, iterator):
+        return om_unpack_map_iterator(with_cont(ctx, parse_elements), extract_element, iterator)
+
+    return sem_iter(with_cont_and_catch(ctx, cont, catch_TypeError), row)
+
 def om_csv_writer_writerow(ctx, args):
     if len(args) == 2:
         self = args[0]
@@ -3713,46 +3758,39 @@ def om_csv_writer_writerow(ctx, args):
         quote_nonumeric = quoting == csv_param_quote_nonnumeric
         quote_none = quoting == csv_param_quote_none
 
-        def write_result(rte, formatted_strings):
-            text_to_write = string_join(delimiter, formatted_strings) + lineterminator
-            return sem_simple_call(with_rte(ctx, rte), write_method, [om_str(text_to_write)])
+        return om_csv_write_one_row(ctx, row, write_method, delimiter, doublequote, escapechar, lineterminator,
+                                    quotechar, quote_all, quote_nonumeric, quote_none)
 
-        def parse_elements(rte, strings_data):
-            # data contains pairs of string and boolean indicating whether the element was a numeric
-            def parse_string(ctx, data):
-                s = data[0]
-                must_quote = quote_all or quote_nonumeric and not data[1] # data[1] <- isnumeric
+    else:
+        return sem_raise_with_message(ctx, class_TypeError, "expected 1 argument, got " + str(len(args) - 1))
 
-                return om_csv_format_element(ctx, s, delimiter, doublequote, escapechar,
-                                             lineterminator, quotechar, must_quote, quote_none)
-            if len(strings_data) == 1 and len(strings_data[0][0]) == 0:
-                if quote_none or quotechar is None:
-                    return sem_raise_with_message(ctx, class_csv_Error, "single empty field record must be quoted")
-                else:
-                    return write_result(ctx.rte, [quotechar + quotechar])
-            else:
-                return cps_map(with_cont(ctx, write_result), parse_string, strings_data)
+def om_csv_writer_writerows(ctx, args):
+    if len(args) == 2:
+        self = args[0]
+        rows = args[1]
 
-        def extract_element(ctx, val):
-            def cont(rte, val_as_str):
-                str_value = OM_get_boxed_value(val_as_str)
-                return cont_obj(ctx, [str_value, om_isnumeric(val)])
+        dialect = OM_get_csv_writer_dialect(self)
+        write_method = OM_get_csv_writer_write_method(self)
 
-            if om_is(val, om_None):
-                return cont_obj(ctx, ["", False])
-            else:
-                return sem_str(with_cont(ctx, cont), val)
+        delimiter = OM_get_dialect_delimiter(dialect)
+        doublequote = OM_get_dialect_doublequote(dialect)
+        escapechar = OM_get_dialect_escapechar(dialect)
+        lineterminator = OM_get_dialect_lineterminator(dialect) # TODO: ignored, '\n' and '\r' are hardcoded
+        quotechar = OM_get_dialect_quotechar(dialect)
+        quoting = OM_get_dialect_quoting(dialect)
 
-        def catch_TypeError(exc):
-            if om_isinstance(exc, class_TypeError):
-                return sem_raise_with_message(ctx, class_csv_Error, "iterable expected")
-            else:
-                return sem_raise_unsafe(ctx.rte, exc)
+        quote_all = quoting == csv_param_quote_all
+        # no need to compute
+        # quote_minial = quoting == csv_param_quote_minial
+        quote_nonumeric = quoting == csv_param_quote_nonnumeric
+        quote_none = quoting == csv_param_quote_none
 
-        def cont(rte, iterator):
-            return om_unpack_map_iterator(with_cont(ctx, parse_elements), extract_element, iterator)
+        def write_one_row(ctx, row):
+            return om_csv_write_one_row(with_cont(ctx, lambda rte, _: cont_no_val(ctx)), row, write_method, delimiter, doublequote, escapechar, lineterminator,
+                                        quotechar, quote_all, quote_nonumeric, quote_none)
 
-        return sem_iter(with_cont_and_catch(ctx, cont, catch_TypeError), row)
+        return om_foreach_iterable(with_cont(ctx, lambda rte: cont_obj(ctx, om_None)), write_one_row, rows)
+
     else:
         return sem_raise_with_message(ctx, class_TypeError, "expected 1 argument, got " + str(len(args) - 1))
 
@@ -5492,7 +5530,6 @@ def cps_map(ctx, fn, lst):
             return cont_obj(ctx, new_lst)
 
     return do_next(0)
-
 
 def om_map_new_code(ctx, args):
     args_len = len(args)
@@ -12595,6 +12632,21 @@ def om_unpack_map_iterator(ctx, fn, iterator):
                 return fn(with_cont(ctx, accumulate), val)
         return sem_next_with_return_to_trampoline(with_cont(ctx, apply), iterator, for_loop_end_marker)
     return get_next(ctx.rte, iterator)
+
+def om_foreach_iterator(ctx, fn, iterator):
+    def get_next(rte, iterator):
+        def apply(rte, val):
+            if val is for_loop_end_marker:
+                return cont_no_val(ctx)
+            else:
+                return fn(with_cont(ctx, lambda rte: get_next(rte, iterator)), val)
+        return sem_next_with_return_to_trampoline(with_cont(ctx, apply), iterator, for_loop_end_marker)
+    return get_next(ctx.rte, iterator)
+
+def om_foreach_iterable(ctx, fn, it):
+    def cont(rte, iterator):
+        return om_foreach_iterator(ctx, fn, iterator)
+    return sem_iter(with_cont(ctx, cont), it)
 
 def om_unpack_mapping(ctx, mapping):
     if om_isinstance(mapping, class_dict):
