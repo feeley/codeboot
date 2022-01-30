@@ -99,34 +99,41 @@ print("OK")
 # test_write_escape
 print("test_write_escape")
 _write_test(['a',1,'p,q'], 'a,1,"p,q"',
-                     escapechar='\\')
+             escapechar='\\')
 _write_error_test(csv.Error, ['a',1,'p,"q"'],
-                           escapechar=None, doublequote=False)
+                   escapechar=None, doublequote=False)
 _write_test(['a',1,'p,"q"'], 'a,1,"p,\\"q\\""',
-                     escapechar='\\', doublequote = False)
+             escapechar='\\', doublequote = False)
 _write_test(['"'], '""""',
-                     escapechar='\\', quoting = csv.QUOTE_MINIMAL)
+             escapechar='\\', quoting = csv.QUOTE_MINIMAL)
 _write_test(['"'], '\\"',
-                     escapechar='\\', quoting = csv.QUOTE_MINIMAL,
-                     doublequote = False)
+             escapechar='\\', quoting = csv.QUOTE_MINIMAL,
+             doublequote = False)
 _write_test(['"'], '\\"',
-                     escapechar='\\', quoting = csv.QUOTE_NONE)
+             escapechar='\\', quoting = csv.QUOTE_NONE)
 _write_test(['a',1,'p,q'], 'a,1,p\\,q',
-                     escapechar='\\', quoting = csv.QUOTE_NONE)
-_write_test(['\\', 'a'], '\\\\,a',
-                     escapechar='\\', quoting=csv.QUOTE_NONE)
-_write_test(['\\', 'a'], '\\\\,a',
-                     escapechar='\\', quoting=csv.QUOTE_MINIMAL)
-_write_test(['\\', 'a'], '"\\\\","a"',
-                     escapechar='\\', quoting=csv.QUOTE_ALL)
-_write_test(['\\ ', 'a'], '\\\\ ,a',
-                     escapechar='\\', quoting=csv.QUOTE_MINIMAL)
-_write_test(['\\,', 'a'], '\\\\\\,,a',
-                     escapechar='\\', quoting=csv.QUOTE_NONE)
-_write_test([',\\', 'a'], '",\\\\",a',
-                     escapechar='\\', quoting=csv.QUOTE_MINIMAL)
-_write_test(['C\\', '6', '7', 'X"'], 'C\\\\,6,7,"X"""',
-                     escapechar='\\', quoting=csv.QUOTE_MINIMAL)
+             escapechar='\\', quoting = csv.QUOTE_NONE)
+
+# TODO: we should do those tests too, but Python <=3.10 (I think?) fails those tests
+# due to a bug (fixed in later versions: https://github.com/python/cpython/pull/13710)
+# since our tests work by testing pyinterp's output against cPython, we cannot yet
+# use the full test suite when a bug exists in cPython
+#
+#_write_test(['\\', 'a'], '\\\\,a',
+#             escapechar='\\', quoting=csv.QUOTE_NONE)
+#_write_test(['\\', 'a'], '\\\\,a',
+#             escapechar='\\', quoting=csv.QUOTE_MINIMAL)
+#_write_test(['\\', 'a'], '"\\\\","a"',
+#             escapechar='\\', quoting=csv.QUOTE_ALL)
+#_write_test(['\\ ', 'a'], '\\\\ ,a',
+#             escapechar='\\', quoting=csv.QUOTE_MINIMAL)
+#_write_test(['\\,', 'a'], '\\\\\\,,a',
+#             escapechar='\\', quoting=csv.QUOTE_NONE)
+#_write_test([',\\', 'a'], '",\\\\",a',
+#             escapechar='\\', quoting=csv.QUOTE_MINIMAL)
+#_write_test(['C\\', '6', '7', 'X"'], 'C\\\\,6,7,"X"""',
+#             escapechar='\\', quoting=csv.QUOTE_MINIMAL)
+
 print("OK")
 
 # test_write_lineterminator
