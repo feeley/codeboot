@@ -136,7 +136,7 @@ for lineterminator in '\r\n', '\n', '\r', '!@#', '\0':
         writer = csv.writer(f, lineterminator=lineterminator)
         writer.writerow(['a', 'b'])
         writer.writerow([1, 2])
-        self.assertEqual(f.read(), 'a,b' + lineterminator + '1,2' + lineterminator)
+        assertEqual(f.read(), 'a,b' + lineterminator + '1,2' + lineterminator)
 print("OK")
 
 # test_write_iterable

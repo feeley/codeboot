@@ -3416,6 +3416,11 @@ def om_csv_parse_line(ctx, self, init_line, fetch_line):
     strict = OM_get_dialect_strict(dialect)
 
     must_cast_unquoted = quoting == csv_param_quote_nonnumeric
+    quote_none = quoting == csv_param_quote_none
+
+    if quote_none:
+        # quotechar is no longer considered a special char when no quoting is allowed
+        quotechar = None
 
     def all_lineterminators(s, start, stop):
         while start < stop:
