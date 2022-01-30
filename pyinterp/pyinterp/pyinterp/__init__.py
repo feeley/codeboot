@@ -3357,9 +3357,17 @@ def om_TextIOWrapper_write(ctx, args):
                 if is_write_truncate_mode(mode):
                     name = OM_get_TextIOWrapper_name(self)
 
+                    # current content
+                    current_content = runtime_read_file(ctx.rte, name)
+
+                    pointer = OM_get_TextIOWrapper_pointer(self)
+                    new_content = current_content[:pointer] + content_value
+
+                    OM_set_TextIOWrapper_pointer(self, len(new_content))
+
                     # TODO: cPython on Linux does not recreate file if it was deleted
                     # is that expected or quirk of my OS?
-                    runtime_write_file(ctx.rte, name, content_value)
+                    runtime_write_file(ctx.rte, name, new_content)
 
                     # TODO: we should in fact return the number of written bytes
                     # fix that once we have a better filesystem in codeBoot?
